@@ -1,17 +1,25 @@
-import 'package:aicc/common/widgets/app_background.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../../common/widgets/app_background.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/routes/app_routes.dart';
+import '../../data/models/audition_model.dart';
 import '../widgets/bottom_action_bar.dart';
 import '../widgets/detail_card.dart';
 import '../widgets/info_tile.dart';
 import '../widgets/section_title.dart';
-import '../../data/models/audition_model.dart';
 
 class AuditionDetails extends StatelessWidget {
-  AuditionDetails({super.key});
+  final AuditionModel? audition;
 
-  final audition = AuditionModel(
+  const AuditionDetails({
+    super.key,
+    this.audition,
+  });
+
+  static final AuditionModel _defaultAudition = const AuditionModel(
+    id: "1",
     title: "Music Video Backup Dancer",
     category: "Dancer",
     role: "Hip Hop Choreography Crew",
@@ -28,6 +36,8 @@ class AuditionDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final item = audition ?? _defaultAudition;
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AppBackground(
@@ -43,9 +53,8 @@ class AuditionDetails extends StatelessWidget {
                         Icons.arrow_back_ios_new,
                         color: AppColors.white,
                       ),
-                      onPressed: () => context.go("/auditions")
+                      onPressed: () => context.go(AppRoutes.auditions),
                     ),
-
                     const Expanded(
                       child: Text(
                         "Audition Spec",
@@ -62,7 +71,6 @@ class AuditionDetails extends StatelessWidget {
                 ),
               ),
 
-
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -74,7 +82,7 @@ class AuditionDetails extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              audition.title,
+                              item.title,
                               style: const TextStyle(
                                 fontSize: 22,
                                 color: AppColors.primary,
@@ -100,17 +108,17 @@ class AuditionDetails extends StatelessWidget {
                             InfoTile(
                               icon: Icons.movie_creation_outlined,
                               label: "Category",
-                              value: audition.category,
+                              value: item.category,
                             ),
                             InfoTile(
                               icon: Icons.groups,
                               label: "Role",
-                              value: audition.role,
+                              value: item.role,
                             ),
                             InfoTile(
                               icon: Icons.language,
                               label: "Language",
-                              value: audition.language,
+                              value: item.language,
                             ),
                           ],
                         ),
@@ -126,17 +134,17 @@ class AuditionDetails extends StatelessWidget {
                             InfoTile(
                               icon: Icons.currency_rupee,
                               label: "Pay Scale",
-                              value: audition.pay,
+                              value: item.pay,
                             ),
                             InfoTile(
                               icon: Icons.location_on_outlined,
                               label: "Location",
-                              value: audition.location,
+                              value: item.location,
                             ),
                             InfoTile(
                               icon: Icons.hourglass_bottom,
                               label: "Deadline",
-                              value: audition.deadline,
+                              value: item.deadline,
                             ),
                           ],
                         ),
@@ -148,7 +156,7 @@ class AuditionDetails extends StatelessWidget {
 
                       DetailCard(
                         child: Text(
-                          audition.description,
+                          item.description,
                           style: const TextStyle(
                             color: AppColors.greyText,
                             fontSize: 15,
@@ -167,17 +175,17 @@ class AuditionDetails extends StatelessWidget {
                             InfoTile(
                               icon: Icons.person_outline,
                               label: "Director",
-                              value: audition.director,
+                              value: item.director,
                             ),
                             InfoTile(
                               icon: Icons.phone_outlined,
                               label: "Phone",
-                              value: audition.phone,
+                              value: item.phone,
                             ),
                             InfoTile(
                               icon: Icons.email_outlined,
                               label: "Email",
-                              value: audition.email,
+                              value: item.email,
                             ),
                           ],
                         ),
@@ -193,7 +201,7 @@ class AuditionDetails extends StatelessWidget {
                 padding: EdgeInsets.fromLTRB(16, 0, 16, 20),
                 child: BottomActionBar(),
               ),
-              SizedBox(height: 10)
+              const SizedBox(height: 10)
             ],
           ),
         ),

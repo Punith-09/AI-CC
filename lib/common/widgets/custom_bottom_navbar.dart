@@ -1,22 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/routes/app_routes.dart';
 
 class CustomBottomNavbar extends StatelessWidget {
-  const CustomBottomNavbar({super.key});
+  final String currentLocation;
+  final ValueChanged<String> onItemSelected;
 
-  int _currentIndex(String location) {
-    switch (location) {
-      case '/home':
+  const CustomBottomNavbar({
+    super.key,
+    required this.currentLocation,
+    required this.onItemSelected,
+  });
+
+  int get currentIndex {
+    switch (currentLocation) {
+      case AppRoutes.home:
         return 0;
-      case '/explore':
+      case AppRoutes.explore:
         return 1;
-      case '/post':
+      case AppRoutes.post:
         return 2;
-      case '/auditions':
+      case AppRoutes.auditions:
         return 3;
-      case '/artistProfile':
+      case AppRoutes.artistProfile:
         return 4;
       default:
         return 0;
@@ -25,8 +32,7 @@ class CustomBottomNavbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).uri.toString();
-    final currentIndex = _currentIndex(location);
+    final index = currentIndex;
 
     return SizedBox(
       height: 82,
@@ -34,10 +40,7 @@ class CustomBottomNavbar extends StatelessWidget {
         clipBehavior: Clip.none,
         alignment: Alignment.topCenter,
         children: [
-
-
           Positioned(
-
             bottom: 0,
             left: 0,
             right: 0,
@@ -52,56 +55,47 @@ class CustomBottomNavbar extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   Expanded(
                     child: _NavItem(
                       icon: Icons.home_outlined,
                       label: "Home",
-                      selected: currentIndex == 0,
-                      onTap: () => context.go('/home'),
+                      selected: index == 0,
+                      onTap: () => onItemSelected(AppRoutes.home),
                     ),
                   ),
-
                   Expanded(
                     child: _NavItem(
                       icon: Icons.search,
                       label: "Explore",
-                      selected: currentIndex == 1,
-                      onTap: () => context.go('/explore'),
+                      selected: index == 1,
+                      onTap: () => onItemSelected(AppRoutes.explore),
                     ),
                   ),
-
-
                   const SizedBox(width: 70),
-
-
                   Expanded(
                     child: _NavItem(
                       icon: Icons.mic_none,
                       label: "Auditions",
-                      selected: currentIndex == 3,
-                      onTap: () => context.go('/auditions'),
+                      selected: index == 3,
+                      onTap: () => onItemSelected(AppRoutes.auditions),
                     ),
                   ),
-
                   Expanded(
                     child: _NavItem(
                       icon: Icons.person_outline,
                       label: "Profile",
-                      selected: currentIndex == 4,
-                      onTap: () => context.go('/artistProfile'),
+                      selected: index == 4,
+                      onTap: () => onItemSelected(AppRoutes.artistProfile),
                     ),
                   ),
                 ],
               ),
             ),
           ),
-
-
           Positioned(
             top: -8,
             child: GestureDetector(
-              onTap: () => context.go('/post'),
+              onTap: () => onItemSelected(AppRoutes.post),
               child: Container(
                 width: 58,
                 height: 58,
@@ -115,15 +109,13 @@ class CustomBottomNavbar extends StatelessWidget {
                       AppColors.secondary,
                     ],
                   ),
-
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     width: 2,
                   ),
-
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.6),
+                      color: AppColors.primary.withValues(alpha: 0.6),
                       blurRadius: 18,
                       spreadRadius: 2,
                       offset: const Offset(0, 8),
@@ -143,7 +135,6 @@ class CustomBottomNavbar extends StatelessWidget {
     );
   }
 }
-
 
 class _NavItem extends StatelessWidget {
   final IconData icon;
@@ -167,24 +158,17 @@ class _NavItem extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-
             Icon(
               icon,
               size: 24,
-              color: selected
-                  ? AppColors.primary
-                  : AppColors.hint,
+              color: selected ? AppColors.primary : AppColors.hint,
             ),
-
             const SizedBox(height: 4),
-
             Text(
               label,
               style: TextStyle(
                 fontSize: 11,
-                color: selected
-                    ? AppColors.primary
-                    : AppColors.hint,
+                color: selected ? AppColors.primary : AppColors.hint,
               ),
             ),
           ],

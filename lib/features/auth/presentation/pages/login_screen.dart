@@ -1,17 +1,27 @@
-import 'signup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class Login extends StatefulWidget {
-  const Login({super.key});
+import '../../../../core/routes/app_routes.dart';
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  State<Login> createState() => _LoginState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginState extends State<Login> {
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   bool isPasswordVisible = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,10 +43,11 @@ class _LoginState extends State<Login> {
           child: Stack(
             children: [
               /// 🔝 Top Text
-              Align(
+              const Align(
+                alignment: Alignment.topCenter,
                 child: Column(
-                  children: const [
-                    SizedBox(height: 100),
+                  children: [
+                    SizedBox(height: 60),
                     Text(
                       "Welcome Back",
                       textAlign: TextAlign.center,
@@ -47,9 +58,7 @@ class _LoginState extends State<Login> {
                         letterSpacing: 1.1,
                       ),
                     ),
-                
                     SizedBox(height: 5),
-                
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 40),
                       child: Text(
@@ -58,7 +67,7 @@ class _LoginState extends State<Login> {
                         style: TextStyle(
                           color: Colors.white54,
                           fontSize: 15,
-                          fontWeight: FontWeight.bold
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
@@ -66,44 +75,47 @@ class _LoginState extends State<Login> {
                 ),
               ),
 
-
               Align(
                 alignment: Alignment.bottomCenter,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 100),
+                child: SingleChildScrollView(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 80),
                   child: Container(
-                    height: 480,
-                    padding: const EdgeInsets.fromLTRB(30, 45, 30, 0),
+                    padding: const EdgeInsets.fromLTRB(30, 35, 30, 35),
                     decoration: BoxDecoration(
                       color: const Color(0xFF1E1E2C),
-                      borderRadius: BorderRadius.circular(30), // full rounded
+                      borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.4),
+                          color: Colors.black.withValues(alpha: 0.4),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
                       ],
                     ),
-
                     child: Column(
-                      mainAxisSize: MainAxisSize.min, // 🔥 IMPORTANT
+                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-
                         /// EMAIL
                         const Text(
                           "EMAIL OR HCC ID",
-                          style: TextStyle(color: Colors.white70, fontSize: 15,fontWeight: FontWeight.w700),
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                         const SizedBox(height: 8),
 
                         TextField(
+                          controller: _emailController,
                           style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
                             hintText: "name@example.com",
                             hintStyle: const TextStyle(color: Colors.white38),
-                            prefixIcon: const Icon(Icons.email, color: Colors.white54),
+                            prefixIcon:
+                                const Icon(Icons.email, color: Colors.white54),
                             filled: true,
                             fillColor: const Color(0xFF2A2A3D),
                             border: OutlineInputBorder(
@@ -116,16 +128,24 @@ class _LoginState extends State<Login> {
                         const SizedBox(height: 20),
 
                         /// PASSWORD
-                        Row(
+                        const Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: const [
+                          children: [
                             Text(
                               "PASSWORD",
-                              style: TextStyle(color: Colors.white70, fontSize: 15,fontWeight: FontWeight.w700),
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                             Text(
                               "Forgot Password?",
-                              style: TextStyle(color: Colors.white70, fontSize: 14,fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ],
                         ),
@@ -133,12 +153,14 @@ class _LoginState extends State<Login> {
                         const SizedBox(height: 8),
 
                         TextField(
+                          controller: _passwordController,
                           obscureText: !isPasswordVisible,
                           style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
                             hintText: "••••••••",
                             hintStyle: const TextStyle(color: Colors.white38),
-                            prefixIcon: const Icon(Icons.lock, color: Colors.white54),
+                            prefixIcon:
+                                const Icon(Icons.lock, color: Colors.white54),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 isPasswordVisible
@@ -176,12 +198,16 @@ class _LoginState extends State<Login> {
                               ),
                             ),
                             onPressed: () {
-                              context.go('/home');
-
+                              context.go(AppRoutes.home);
                             },
                             child: const Text(
                               "Log In to Dashboard →",
-                              style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18,letterSpacing: 1,color: Colors.black54),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                letterSpacing: 1,
+                                color: Colors.black54,
+                              ),
                             ),
                           ),
                         ),
@@ -189,14 +215,15 @@ class _LoginState extends State<Login> {
                         const SizedBox(height: 24),
 
                         /// OR CONTINUE WITH
-                        Row(
-                          children: const [
+                        const Row(
+                          children: [
                             Expanded(child: Divider(color: Colors.white24)),
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 10),
                               child: Text(
                                 "OR CONTINUE WITH",
-                                style: TextStyle(color: Colors.white54, fontSize: 14),
+                                style: TextStyle(
+                                    color: Colors.white54, fontSize: 14),
                               ),
                             ),
                             Expanded(child: Divider(color: Colors.white24)),
@@ -217,14 +244,14 @@ class _LoginState extends State<Login> {
                       ],
                     ),
                   ),
-
                 ),
               ),
-              /// Bottom Text (Outside Container)
+
+              /// Bottom Text
               Align(
                 alignment: Alignment.bottomCenter,
                 child: Padding(
-                  padding: const EdgeInsets.only(bottom: 50),
+                  padding: const EdgeInsets.only(bottom: 24),
                   child: RichText(
                     text: TextSpan(
                       style: const TextStyle(
@@ -239,12 +266,7 @@ class _LoginState extends State<Login> {
                           alignment: PlaceholderAlignment.middle,
                           child: GestureDetector(
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const SignUpWizardPage(),
-                                ),
-                              );
+                              context.go(AppRoutes.signup);
                             },
                             child: const Text(
                               "Sign Up Now",
@@ -267,7 +289,6 @@ class _LoginState extends State<Login> {
     );
   }
 
-  /// 🔘 Social Button
   Widget _socialBtn(IconData icon) {
     return Container(
       height: 55,

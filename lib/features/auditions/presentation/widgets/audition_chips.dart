@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'category_chip.dart';
+import '../../../../common/widgets/category_chip.dart';
 
 class AuditionChips extends StatelessWidget {
   final List<String> categories;

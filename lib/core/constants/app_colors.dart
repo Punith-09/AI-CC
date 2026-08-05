@@ -1,33 +1,3 @@
-// import 'package:flutter/material.dart';
-//
-// class AppColors {
-//   AppColors._();
-//
-//
-//   static const primary = Color(0xFF000E24);
-//   static const secondary = Color(0xFF1E5AA8);
-//   static const background = Color(0xFF00132F);
-//
-//   static const white = Colors.white;
-//   static const black = Colors.black;
-//   static const blackShade = Color(0xFFACACAC);
-//   static const blackShade1 = Color(0xFF7A7A7A);
-//
-//   static const primaryBtn = Color(0xFFFDFDFD);
-//   static const secondaryBtn = Color(0xFF0B1F2A);
-//
-//
-//   static const grey50 = Color(0xFFF8FAFC);
-//   static const grey100 = Color(0xFFF1F5F9);
-//   static const grey300 = Color(0xFFA8AEBC);
-//   static const grey500 = Color(0xFF646A7C);
-//
-//   static const success = Color(0xFF22C55E);
-//   static const error = Color(0xFFEF4444);
-//   static const warning = Color(0xFFF59E0B);
-// }
-
-
 import 'package:flutter/material.dart';
 
 class AppColors {

@@ -2,6 +2,8 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/routes/app_routes.dart';
+
 class PostScreen extends StatefulWidget {
   const PostScreen({super.key});
 
@@ -15,14 +17,17 @@ class _PostScreenState extends State<PostScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:Color(0xFF123B4A),
-
-
+      backgroundColor: const Color(0xFF123B4A),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        leading: IconButton(onPressed:(){context.go("/home");}, icon: Icon(Icons.arrow_back, color: Colors.white)),
+        leading: IconButton(
+          onPressed: () {
+            context.go(AppRoutes.home);
+          },
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+        ),
         title: const Text(
           "Create Audition",
           style: TextStyle(
@@ -37,7 +42,6 @@ class _PostScreenState extends State<PostScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               //---------------- Upload Poster ----------------//
 
               DottedBorder(
@@ -55,11 +59,10 @@ class _PostScreenState extends State<PostScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.deepPurple.withOpacity(.15),
+                          color: Colors.deepPurple.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -68,9 +71,7 @@ class _PostScreenState extends State<PostScreen> {
                           size: 30,
                         ),
                       ),
-
                       const SizedBox(height: 16),
-
                       const Text(
                         "Upload Audition Poster",
                         style: TextStyle(
@@ -79,9 +80,7 @@ class _PostScreenState extends State<PostScreen> {
                           fontSize: 16,
                         ),
                       ),
-
                       const SizedBox(height: 5),
-
                       Text(
                         "JPG, PNG up to 5MB",
                         style: TextStyle(
@@ -138,21 +137,20 @@ class _PostScreenState extends State<PostScreen> {
 
               const SizedBox(height: 10),
 
-              buildTextField(
+              _InputField(
                 icon: Icons.work_outline,
                 hint: "e.g. Lead Male - Feature Film",
+                borderColor: borderColor,
               ),
 
               const SizedBox(height: 20),
 
               Row(
                 children: [
-
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-
                         const Text(
                           "Age Range",
                           style: TextStyle(
@@ -160,24 +158,20 @@ class _PostScreenState extends State<PostScreen> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-
                         const SizedBox(height: 10),
-
-                        buildTextField(
+                        _InputField(
                           icon: Icons.people_outline,
                           hint: "18-25",
+                          borderColor: borderColor,
                         ),
                       ],
                     ),
                   ),
-
                   const SizedBox(width: 15),
-
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-
                         const Text(
                           "Location",
                           style: TextStyle(
@@ -185,12 +179,11 @@ class _PostScreenState extends State<PostScreen> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-
                         const SizedBox(height: 10),
-
-                        buildTextField(
+                        _InputField(
                           icon: Icons.location_on_outlined,
                           hint: "Mumbai, MH",
+                          borderColor: borderColor,
                         ),
                       ],
                     ),
@@ -221,18 +214,19 @@ class _PostScreenState extends State<PostScreen> {
 
               const SizedBox(height: 10),
 
-              buildTextField(
+              _InputField(
                 icon: Icons.currency_rupee,
                 hint: "₹ 50,000 - 1,00,000",
+                borderColor: borderColor,
               ),
 
               const SizedBox(height: 28),
 
-//---------------- Required Skills ----------------//
+              //---------------- Required Skills ----------------//
 
               Row(
                 children: [
-                  Text(
+                  const Text(
                     "Required Skills",
                     style: TextStyle(
                       color: Colors.white,
@@ -268,15 +262,13 @@ class _PostScreenState extends State<PostScreen> {
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-
-                  skillChip("Classical Dance", true),
-                  skillChip("Method Acting", false),
-                  skillChip("Stunt Work", false),
-                  skillChip("Singing", true),
-                  skillChip("Dialect Coach", false),
-                  skillChip("Martial Arts", false),
-                  skillChip("Swimming", false),
-
+                  const _PostSkillTag(title: "Classical Dance", selected: true),
+                  const _PostSkillTag(title: "Method Acting", selected: false),
+                  const _PostSkillTag(title: "Stunt Work", selected: false),
+                  const _PostSkillTag(title: "Singing", selected: true),
+                  const _PostSkillTag(title: "Dialect Coach", selected: false),
+                  const _PostSkillTag(title: "Martial Arts", selected: false),
+                  const _PostSkillTag(title: "Swimming", selected: false),
                   DottedBorder(
                     borderType: BorderType.RRect,
                     radius: const Radius.circular(30),
@@ -311,7 +303,7 @@ class _PostScreenState extends State<PostScreen> {
 
               const SizedBox(height: 30),
 
-//---------------- Full Details ----------------//
+              //---------------- Full Details ----------------//
 
               Text(
                 "FULL DETAILS",
@@ -339,7 +331,7 @@ class _PostScreenState extends State<PostScreen> {
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText:
-                  "Detail the character requirements, shoot dates, and special instructions...",
+                      "Detail the character requirements, shoot dates, and special instructions...",
                   hintStyle: TextStyle(
                     color: Colors.grey.shade500,
                   ),
@@ -428,40 +420,43 @@ class _PostScreenState extends State<PostScreen> {
           ),
         ),
       ),
-
     );
   }
+}
 
-  Widget buildTextField({
-    required IconData icon,
-    required String hint,
-  }) {
+class _InputField extends StatelessWidget {
+  final IconData icon;
+  final String hint;
+  final Color borderColor;
+
+  const _InputField({
+    required this.icon,
+    required this.hint,
+    required this.borderColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return TextField(
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         filled: true,
         fillColor: const Color(0xff1F1F27),
-
         prefixIcon: Icon(
           icon,
           color: Colors.grey,
         ),
-
         hintText: hint,
-
         hintStyle: TextStyle(
           color: Colors.grey.shade500,
         ),
-
         contentPadding: const EdgeInsets.symmetric(vertical: 18),
-
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(
             color: borderColor,
           ),
         ),
-
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(
@@ -471,9 +466,19 @@ class _PostScreenState extends State<PostScreen> {
       ),
     );
   }
+}
 
+class _PostSkillTag extends StatelessWidget {
+  final String title;
+  final bool selected;
 
-  Widget skillChip(String title, bool selected) {
+  const _PostSkillTag({
+    required this.title,
+    required this.selected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: 16,
@@ -481,21 +486,17 @@ class _PostScreenState extends State<PostScreen> {
       ),
       decoration: BoxDecoration(
         color: selected
-            ? Colors.deepPurple.withOpacity(.15)
+            ? Colors.deepPurple.withValues(alpha: 0.15)
             : const Color(0xff2A2A33),
         borderRadius: BorderRadius.circular(30),
         border: Border.all(
-          color: selected
-              ? Colors.deepPurpleAccent
-              : Colors.grey.shade700,
+          color: selected ? Colors.deepPurpleAccent : Colors.grey.shade700,
         ),
       ),
       child: Text(
         title,
         style: TextStyle(
-          color: selected
-              ? Colors.deepPurpleAccent
-              : Colors.white70,
+          color: selected ? Colors.deepPurpleAccent : Colors.white70,
           fontSize: 14,
         ),
       ),

@@ -14,13 +14,11 @@ class CommentsBottomSheet extends StatefulWidget {
 class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
   final TextEditingController _commentController = TextEditingController();
 
-
   @override
   void dispose() {
     _commentController.dispose();
     super.dispose();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -37,9 +35,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
               borderRadius: BorderRadius.circular(20),
             ),
           ),
-
           const SizedBox(height: 15),
-
           const Text(
             "Comments",
             style: TextStyle(
@@ -47,7 +43,6 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
               fontWeight: FontWeight.bold,
             ),
           ),
-
           const Divider(),
           Expanded(
             child: ListView.builder(
@@ -95,7 +90,6 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                       ),
                     ],
                   ),
-
                   trailing: SizedBox(
                     width: 30,
                     child: Column(
@@ -105,8 +99,14 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                         GestureDetector(
                           onTap: () {
                             setState(() {
-                              comment.isLiked = !comment.isLiked;
-                              comment.isLiked?comment.likes++:comment.likes--;
+                              final updatedLiked = !comment.isLiked;
+                              final updatedLikes = updatedLiked
+                                  ? comment.likes + 1
+                                  : comment.likes - 1;
+                              dummyComments[index] = comment.copyWith(
+                                isLiked: updatedLiked,
+                                likes: updatedLikes,
+                              );
                             });
                           },
                           child: Icon(
@@ -131,12 +131,10 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                       ],
                     ),
                   ),
-
                 );
               },
             ),
           ),
-
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
@@ -159,15 +157,15 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                       ),
                       child: Container(
                         decoration: BoxDecoration(
-                          color:AppColors.card,
+                          color: AppColors.card,
                           borderRadius: BorderRadius.circular(13),
                         ),
-                        child:  TextField(
+                        child: TextField(
                           autofocus: true,
                           controller: _commentController,
-                          style: TextStyle(color: Colors.white),
-                          cursorColor: Color(0xFF00FFD9),
-                          decoration: InputDecoration(
+                          style: const TextStyle(color: Colors.white),
+                          cursorColor: const Color(0xFF00FFD9),
+                          decoration: const InputDecoration(
                             hintText: "Write a comment...",
                             hintStyle: TextStyle(color: Colors.grey),
                             border: InputBorder.none,
@@ -180,17 +178,12 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                       ),
                     ),
                   ),
-
                   const SizedBox(width: 10),
-
                   Container(
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
-                        colors: [
-                          AppColors.primary,
-                          Color(0xffCC3EFF)
-                        ],
+                        colors: [AppColors.primary, Color(0xffCC3EFF)],
                       ),
                       boxShadow: [
                         BoxShadow(
@@ -201,7 +194,6 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                       ],
                     ),
                     child: IconButton(
-
                       onPressed: () {
                         if (_commentController.text.trim().isEmpty) return;
 
@@ -209,6 +201,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                           dummyComments.insert(
                             0,
                             CommentModel(
+                              id: DateTime.now().millisecondsSinceEpoch.toString(),
                               profileImage: 'assets/images/profile5.jpeg',
                               username: 'You',
                               comment: _commentController.text.trim(),
