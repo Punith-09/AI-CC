@@ -1,70 +1,3 @@
-// import 'package:flutter/material.dart';
-//
-// import '../../../../common/models/post_model.dart';
-// import '../../../../core/constants/app_colors.dart';
-//
-// import 'feed_header.dart';
-// import 'feed_image.dart';
-//
-// class FeedCard extends StatelessWidget {
-//
-//   final PostModel post;
-//
-//   const FeedCard({
-//     super.key,
-//     required this.post,
-//   });
-//
-//   @override
-//   Widget build(BuildContext context) {
-//
-//     return Container(
-//
-//       padding: const EdgeInsets.all(16),
-//
-//       decoration: BoxDecoration(
-//
-//         color: AppColors.card,
-//
-//         borderRadius: BorderRadius.circular(24),
-//
-//         border: Border.all(
-//           color: Colors.white10,
-//         ),
-//
-//       ),
-//
-//       child: Column(
-//
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//
-//         children: [
-//
-//           FeedHeader(post: post),
-//
-//           const SizedBox(height: 16),
-//
-//           FeedImage(
-//             image: post.postImage,
-//           ),
-//
-//           const SizedBox(height: 16),
-//
-//           // FeedActions()
-//
-//           // FeedCaption()
-//
-//         ],
-//
-//       ),
-//
-//     );
-//
-//   }
-//
-// }
-
-
 import 'package:flutter/material.dart';
 
 import '../../../../common/models/post_model.dart';
@@ -85,7 +18,6 @@ class FeedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // padding: const EdgeInsets.all(16),
 
       decoration: BoxDecoration(
         color: AppColors.card,

@@ -7,14 +7,14 @@ import '../widgets/analytics_card.dart';
 import '../widgets/audition_search_bar.dart';
 import '../widgets/new_audition_card.dart';
 
-class AIRecommendationScreen extends StatefulWidget {
-  const AIRecommendationScreen({super.key});
+class AuditionScreen extends StatefulWidget {
+  const AuditionScreen({super.key});
 
   @override
-  State<AIRecommendationScreen> createState() => _AIRecommendationScreenState();
+  State<AuditionScreen> createState() => _AuditionScreenState();
 }
 
-class _AIRecommendationScreenState extends State<AIRecommendationScreen> {
+class _AuditionScreenState extends State<AuditionScreen> {
   int selectedIndex = 0;
 
   @override

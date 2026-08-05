@@ -1,31 +1,42 @@
 import 'package:flutter/material.dart';
 
-import 'package:aicc/core/constants/app_colors.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../data/models/audition_model.dart';
 
 class AuditionCard extends StatelessWidget {
-  final String title;
-  final String category;
-  final String location;
-  final String deadline;
-  final String payout;
-  final String applicants;
-  final String description;
+  final AuditionModel? audition;
+  final String? title;
+  final String? category;
+  final String? location;
+  final String? deadline;
+  final String? payout;
+  final String? applicants;
+  final String? description;
 
   final VoidCallback onView;
   final VoidCallback onApply;
 
   const AuditionCard({
     super.key,
-    required this.title,
-    required this.category,
-    required this.location,
-    required this.deadline,
-    required this.payout,
-    required this.applicants,
-    required this.description,
+    this.audition,
+    this.title,
+    this.category,
+    this.location,
+    this.deadline,
+    this.payout,
+    this.applicants,
+    this.description,
     required this.onView,
     required this.onApply,
   });
+
+  String get displayTitle => audition?.title ?? title ?? '';
+  String get displayCategory => audition?.category ?? category ?? '';
+  String get displayLocation => audition?.location ?? location ?? '';
+  String get displayDeadline => audition?.deadline ?? deadline ?? '';
+  String get displayPayout => audition?.pay ?? payout ?? '';
+  String get displayApplicants => applicants ?? 'N/A';
+  String get displayDescription => audition?.description ?? description ?? '';
 
   @override
   Widget build(BuildContext context) {
@@ -33,15 +44,12 @@ class AuditionCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 18),
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 22),
       decoration: BoxDecoration(
-        color: Color(0xFF0E2730),
+        color: const Color(0xFF0E2730),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: AppColors.primary,
-          width: 1.0
-        ),
+        border: Border.all(color: AppColors.primary, width: 1.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 12,
             offset: const Offset(0, 4),
           )
@@ -50,27 +58,22 @@ class AuditionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           /// Title + Deadline
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               Expanded(
                 child: Text(
-                  title,
-                  style:  TextStyle(
+                  displayTitle,
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-
                   ),
                 ),
               ),
-
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-
                   Text(
                     "Deadline",
                     style: TextStyle(
@@ -78,11 +81,9 @@ class AuditionCard extends StatelessWidget {
                       fontSize: 12,
                     ),
                   ),
-
                   const SizedBox(height: 4),
-
                   Text(
-                    deadline,
+                    displayDeadline,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -113,7 +114,7 @@ class AuditionCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              category,
+              displayCategory,
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
@@ -127,23 +128,19 @@ class AuditionCard extends StatelessWidget {
             spacing: 18,
             runSpacing: 12,
             children: [
-
-              info(Icons.groups_2, payout),
-
-              info(Icons.location_on_outlined, location),
-
-              info(Icons.currency_rupee, payout),
-
-              info(Icons.people_alt_outlined, applicants),
+              _info(Icons.groups_2, displayPayout),
+              _info(Icons.location_on_outlined, displayLocation),
+              _info(Icons.currency_rupee, displayPayout),
+              _info(Icons.people_alt_outlined, displayApplicants),
             ],
           ),
 
           const SizedBox(height: 18),
 
           Text(
-            description,
-            style: TextStyle(
-              color:AppColors.white,
+            displayDescription,
+            style: const TextStyle(
+              color: AppColors.white,
               height: 1.5,
             ),
           ),
@@ -152,7 +149,6 @@ class AuditionCard extends StatelessWidget {
 
           Row(
             children: [
-
               Expanded(
                 child: SizedBox(
                   height: 48,
@@ -160,7 +156,7 @@ class AuditionCard extends StatelessWidget {
                     onPressed: onView,
                     style: OutlinedButton.styleFrom(
                       backgroundColor: const Color(0xFF06233E),
-                      side: BorderSide(
+                      side: const BorderSide(
                         color: AppColors.primary,
                         width: 1.2,
                       ),
@@ -192,7 +188,6 @@ class AuditionCard extends StatelessWidget {
 
               const SizedBox(width: 14),
 
-
               Expanded(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
@@ -200,8 +195,7 @@ class AuditionCard extends StatelessWidget {
                     gradient: const LinearGradient(
                       colors: [
                         AppColors.primary,
-                        // AppColors.secondary,
-                        AppColors.gradient
+                        AppColors.gradient,
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -221,7 +215,6 @@ class AuditionCard extends StatelessWidget {
                     ),
                     child: const Text(
                       "APPLY NOW",
-
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                       ),
@@ -236,22 +229,18 @@ class AuditionCard extends StatelessWidget {
     );
   }
 
-  Widget info(IconData icon, String text) {
+  Widget _info(IconData icon, String text) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-
         Icon(
           icon,
           size: 18,
-          // color: Colors.black87,
         ),
-
         const SizedBox(width: 5),
-
         Text(
           text,
-          style: const TextStyle(fontSize: 14,color: AppColors.white),
+          style: const TextStyle(fontSize: 14, color: AppColors.white),
         ),
       ],
     );
