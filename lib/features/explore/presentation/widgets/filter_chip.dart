@@ -22,7 +22,7 @@ class FilterChipWidget extends StatelessWidget {
         onTap: onTap,
         child: Container(
 
-          padding: EdgeInsetsGeometry.symmetric(vertical:5,horizontal: 0 ),
+          padding: const EdgeInsets.symmetric(vertical:5,horizontal: 0 ),
           decoration: BoxDecoration(
             border: Border.all(color: AppColors.border),
             borderRadius: BorderRadius.circular(30)

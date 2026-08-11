@@ -124,8 +124,11 @@ class MainScreen extends StatelessWidget {
         currentLocation: GoRouterState.of(context).uri.toString(),
 
         onItemSelected: (route) {
-
-          context.go(route);
+          if(route == "/home") {
+            context.go(route);
+          }else{
+            context.push(route);
+          }
 
         },
       ),

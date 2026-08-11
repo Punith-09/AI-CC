@@ -130,7 +130,7 @@ class CandidateCard extends StatelessWidget {
 
           const Text(
             "AI Match Score",
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w600,
             ),

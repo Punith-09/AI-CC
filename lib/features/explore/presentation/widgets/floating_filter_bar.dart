@@ -18,7 +18,7 @@ class FloatingFilterBar extends StatelessWidget {
             height: 58,
             width: 30,
             margin: const EdgeInsets.symmetric(horizontal: 70),
-            padding: EdgeInsetsGeometry.all(10),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: AppColors.card,
               borderRadius: BorderRadius.circular(18),

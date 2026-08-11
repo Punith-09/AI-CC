@@ -12,7 +12,7 @@ class ExploreAppbar extends StatelessWidget{
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Container(
-          padding: EdgeInsetsGeometry.all(5),
+          padding: EdgeInsets.all(5),
           decoration: BoxDecoration(
             color:AppColors.white ,
             borderRadius: BorderRadius.circular(8),

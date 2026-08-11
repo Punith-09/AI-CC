@@ -1,3 +1,4 @@
+import 'package:aicc/core/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -13,7 +14,7 @@ class ApplyAppBar extends StatelessWidget {
 
         InkWell(
           borderRadius: BorderRadius.circular(30),
-          onTap: () => context.go("/auditionDetails"),
+          onTap: () => context.push(AppRoutes.auditionDetails),
           child: Row(
             children: const [
 
