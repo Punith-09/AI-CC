@@ -141,7 +141,7 @@ class StoryAvatar extends StatelessWidget {
             maxLines: 1,
 
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
+            style: const TextStyle(
               fontWeight: FontWeight.w500
             ),
 

@@ -1,6 +1,10 @@
+import 'package:aicc/common/widgets/app_background.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routes/app_routes.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -26,60 +30,64 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
+      body: SizedBox(
         width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF1F5A6A),
-              Color(0xFF123B4A),
-              Color(0xFF0B1F2A),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
+        child: AppBackground(child:SafeArea(
           child: Stack(
             children: [
-              /// 🔝 Top Text
-              const Align(
+              Align(
                 alignment: Alignment.topCenter,
                 child: Column(
                   children: [
-                    SizedBox(height: 60),
+                    const SizedBox(height: 60),
+
                     Text(
                       "Welcome Back",
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 37,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.1,
+                      // style: TextStyle(
+                      //   color: Colors.white,
+                      //   fontSize: 37,
+                      //   fontWeight: FontWeight.w900,
+                      //   letterSpacing: 1.1,
+                      // ),
+                      style: GoogleFonts.plusJakartaSans(
+                        color: AppColors.white,
+                          fontSize: 37,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.1,
                       ),
-                    ),
-                    SizedBox(height: 5),
+                    )
+                        .animate()
+                        .fade(duration: 1000.ms)
+                        .slideY(begin: -0.5, end: 0),
+
+                    const SizedBox(height: 5),
+
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 40),
+                      padding: const EdgeInsets.symmetric(horizontal: 40),
                       child: Text(
                         "Log in to continue your journey with\nAICC AI-Matched Auditions",
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white54,
+                        style: const TextStyle(
+                          color: AppColors.whiteShade,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
+                    )
+                        .animate(delay: 300.ms)
+                        .fade(duration: 1000.ms)
+                        .slideY(begin: 0.5, end: 0),
                   ],
                 ),
               ),
 
+
               Align(
-                alignment: Alignment.bottomCenter,
+                alignment: AlignmentGeometry.directional(0.2,0.3 ),
                 child: SingleChildScrollView(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 80),
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 80),
                   child: Container(
                     padding: const EdgeInsets.fromLTRB(30, 35, 30, 35),
                     decoration: BoxDecoration(
@@ -87,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.4),
+                          color: AppColors.black.withValues(alpha: 0.4),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -97,11 +105,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        /// EMAIL
+
                         const Text(
                           "EMAIL OR HCC ID",
                           style: TextStyle(
-                            color: Colors.white70,
+                            color: AppColors.whiteShade,
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
                           ),
@@ -110,12 +118,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         TextField(
                           controller: _emailController,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: AppColors.white),
                           decoration: InputDecoration(
                             hintText: "name@example.com",
-                            hintStyle: const TextStyle(color: Colors.white38),
+                            hintStyle: const TextStyle(color: AppColors.whiteShade),
                             prefixIcon:
-                                const Icon(Icons.email, color: Colors.white54),
+                            const Icon(Icons.email, color: AppColors.whiteShade),
                             filled: true,
                             fillColor: const Color(0xFF2A2A3D),
                             border: OutlineInputBorder(
@@ -127,14 +135,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         const SizedBox(height: 20),
 
-                        /// PASSWORD
+
                         const Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
                               "PASSWORD",
                               style: TextStyle(
-                                color: Colors.white70,
+                                color:AppColors.whiteShade,
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -142,7 +150,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             Text(
                               "Forgot Password?",
                               style: TextStyle(
-                                color: Colors.white70,
+                                color: AppColors.whiteShade,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -158,15 +166,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
                             hintText: "••••••••",
-                            hintStyle: const TextStyle(color: Colors.white38),
+                            hintStyle: const TextStyle(color: AppColors.whiteShade),
                             prefixIcon:
-                                const Icon(Icons.lock, color: Colors.white54),
+                            const Icon(Icons.lock, color: AppColors.whiteShade),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 isPasswordVisible
                                     ? Icons.visibility
                                     : Icons.visibility_off,
-                                color: Colors.white54,
+                                color: AppColors.whiteShade,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -206,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
                                 letterSpacing: 1,
-                                color: Colors.black54,
+                                color:AppColors.purple,
                               ),
                             ),
                           ),
@@ -247,9 +255,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              /// Bottom Text
+
               Align(
-                alignment: Alignment.bottomCenter,
+                alignment: AlignmentGeometry.directional(0,0.9 ),
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 24),
                   child: RichText(
@@ -271,7 +279,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: const Text(
                               "Sign Up Now",
                               style: TextStyle(
-                                color: Color(0xFFE91E63),
+                                color: AppColors.pink,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -284,7 +292,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ],
           ),
-        ),
+        ) ),
+
       ),
     );
   }
@@ -295,9 +304,9 @@ class _LoginScreenState extends State<LoginScreen> {
       width: 55,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.white24),
+        border: Border.all(color: AppColors.white),
       ),
-      child: Icon(icon, color: Colors.white),
+      child: Icon(icon, color: AppColors.white),
     );
   }
 }

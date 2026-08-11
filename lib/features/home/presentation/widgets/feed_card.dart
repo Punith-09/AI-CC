@@ -25,6 +25,7 @@ class FeedCard extends StatelessWidget {
         border: Border.all(
           color: Colors.white10,
         ),
+
       ),
 
       child: Column(

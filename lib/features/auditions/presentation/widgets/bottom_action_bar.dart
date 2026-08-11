@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:aicc/core/constants/app_colors.dart';
 
+import '../../../../core/routes/app_routes.dart';
+
 class BottomActionBar extends StatelessWidget {
   const BottomActionBar({super.key});
 
@@ -17,7 +19,8 @@ class BottomActionBar extends StatelessWidget {
               child: SizedBox(
                 height: 48,
                 child: OutlinedButton(
-                  onPressed: (){context.go("/auditions");},
+                  onPressed: (){
+                    context.push(AppRoutes.auditions);},
                   style: OutlinedButton.styleFrom(
                     backgroundColor: const Color(0xFF06233E), // Dark blue
                     side: const BorderSide(

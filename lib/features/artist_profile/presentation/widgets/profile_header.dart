@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/routes/app_routes.dart';
+
 class ProfileHeader extends StatelessWidget {
   const ProfileHeader({super.key});
 
@@ -22,10 +24,10 @@ class ProfileHeader extends StatelessWidget {
             ),
           ),
 
-          // Darken the entire image slightly
+
           Positioned.fill(
             child: Container(
-              color: Colors.black.withOpacity(0.18),
+              color: AppColors.black.withOpacity(0.18),
             ),
           ),
 
@@ -81,20 +83,9 @@ class ProfileHeader extends StatelessWidget {
             left: 16,
             child: _CircleButton(
               icon: LucideIcons.chevronLeft,
-              onTap: () => context.go("/home"),
+              onTap: () => context.pop(),
             ),
           ),
-
-          // Positioned(
-          //   top: 18,
-          //   right: 16,
-          //   child: _CircleButton(
-          //     icon: LucideIcons.ellipsisVertical,
-          //     onTap: () {
-          //       // TODO: Show menu
-          //     },
-          //   ),
-          // ),
 
           Positioned(
             top: 18,
@@ -104,10 +95,8 @@ class ProfileHeader extends StatelessWidget {
                 return _CircleButton(
                   icon: LucideIcons.ellipsisVertical,
                   onTap: () async {
-                    final RenderBox button =
-                    context.findRenderObject() as RenderBox;
-                    final RenderBox overlay =
-                    Overlay.of(context).context.findRenderObject() as RenderBox;
+                    final RenderBox button = context.findRenderObject() as RenderBox;
+                    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
 
                     final position = RelativeRect.fromRect(
                       Rect.fromPoints(
@@ -161,7 +150,7 @@ class ProfileHeader extends StatelessWidget {
                         break;
 
                       case 'logout':
-                      context.go("/login");
+                      context.go(AppRoutes.login);
                         break;
                     }
                   },
@@ -193,10 +182,10 @@ class _CircleButton extends StatelessWidget {
         width: 46,
         height: 46,
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(.35),
+          color: AppColors.black.withOpacity(.35),
           shape: BoxShape.circle,
           border: Border.all(
-            color: Colors.white.withOpacity(.08),
+            color: AppColors.white.withOpacity(.08),
           ),
         ),
         child: Icon(

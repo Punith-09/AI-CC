@@ -1,14 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class AnalyticsCard extends StatefulWidget {
+class AnalyticsCard extends StatelessWidget {
   const AnalyticsCard({super.key});
 
-  @override
-  State<AnalyticsCard> createState() => _AnalyticsCardState();
-}
-
-class _AnalyticsCardState extends State<AnalyticsCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -109,8 +104,6 @@ class _AnalyticsCardState extends State<AnalyticsCard> {
 
     );
   }
-
-
 
   Widget analyticsItem({
     required IconData icon,

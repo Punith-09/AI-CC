@@ -460,7 +460,7 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
                 );
 
                 Future.delayed(const Duration(milliseconds: 500), () {
-                  context.go(AppRoutes.home);
+                  context.push(AppRoutes.home);
                 });
               } else {
                 _next();

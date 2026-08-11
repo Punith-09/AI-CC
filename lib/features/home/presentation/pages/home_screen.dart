@@ -17,8 +17,8 @@ class HomeScreen extends StatelessWidget {
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 12,
+              horizontal: 12,
+              vertical: 12
             ),
             child: Column(
               children: [
@@ -33,7 +33,7 @@ class HomeScreen extends StatelessWidget {
                     itemCount: postsData.length + 2,
 
                     separatorBuilder: (_, __) =>
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 40),
 
                     itemBuilder: (context, index) {
 
@@ -45,10 +45,10 @@ class HomeScreen extends StatelessWidget {
                         return const RecommendationCard();
                       }
 
-                      return FeedCard(
-                        post: postsData[index - 1],
-                      );
+                      return  FeedCard(
+                          post: postsData[index - 1],
 
+                      );
                     },
                   ),
                 ),
