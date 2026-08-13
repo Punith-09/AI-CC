@@ -16,6 +16,11 @@ class AppColors {
     Color(0xFF0B1F2A),
   ];
 
+  static const List<Color> authBtnGradient=[
+    Color(0xFF9940E9),
+    Color(0xFF6525B7),
+  ];
+
 
   /// Backgrounds
   static const Color background = Color(0xff061B39);
@@ -25,6 +30,8 @@ class AppColors {
   static const Color card = Color(0xff0e2730);
 
   static const Color textField = Color(0xff0e2730);
+  static const Color logo = Color(0xff051925);
+
 
   /// Text
 

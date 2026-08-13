@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../widgets/social_buttons.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -41,25 +42,49 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     const SizedBox(height: 60),
 
-                    Text(
-                      "Welcome Back",
-                      textAlign: TextAlign.center,
-                      // style: TextStyle(
-                      //   color: Colors.white,
-                      //   fontSize: 37,
-                      //   fontWeight: FontWeight.w900,
-                      //   letterSpacing: 1.1,
-                      // ),
-                      style: GoogleFonts.plusJakartaSans(
-                        color: AppColors.white,
-                          fontSize: 37,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.1,
+                    // Text(
+                    //   "Welcome Back",
+                    //   style: GoogleFonts.plusJakartaSans(
+                    //     color: AppColors.white,
+                    //       fontSize: 37,
+                    //       fontWeight: FontWeight.w900,
+                    //       letterSpacing: 1.1,
+                    //   ),
+                    // )
+                    //     .animate()
+                    //     .fade(duration: 1000.ms)
+                    //     .slideY(begin: -0.5, end: 0),
+
+                    RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'Welcome ',
+                            style: GoogleFonts.plusJakartaSans(
+                              color: AppColors.white,
+                              fontSize: 37,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
+                          TextSpan(
+                            text: 'Back!',
+                            style: GoogleFonts.plusJakartaSans(
+                              color: const Color(0xFFB16CFF),
+                              fontSize: 37,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
+                        ],
                       ),
                     )
                         .animate()
                         .fade(duration: 1000.ms)
-                        .slideY(begin: -0.5, end: 0),
+                        .slideY(
+                      begin: -0.5,
+                      end: 0,
+                    ),
 
                     const SizedBox(height: 5),
 
@@ -193,28 +218,62 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         const SizedBox(height: 25),
 
-                        /// LOGIN BUTTON
                         SizedBox(
                           width: double.infinity,
-                          height: 55,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: Colors.black,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
+                          height: 60,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: AppColors.authBtnGradient,
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
                               ),
+                              borderRadius: BorderRadius.circular(9),
+                              border: Border.all(
+                                color: const Color(0xFFB66AF5),
+                                width: 0.6,
+                              ),
+                              boxShadow: [
+                                const BoxShadow(
+                                  color:  Color(0x889B3FE4),
+                                  blurRadius: 10,
+                                  spreadRadius: 0,
+                                ),
+                              ],
                             ),
-                            onPressed: () {
-                              context.go(AppRoutes.home);
-                            },
-                            child: const Text(
-                              "Log In to Dashboard →",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                letterSpacing: 1,
-                                color:AppColors.purple,
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(9),
+                                onTap: () {
+                                  context.go(AppRoutes.home);
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Text(
+                                        'Login',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: 0.2,
+                                        ),
+                                      ),
+
+                                      const SizedBox(width: 12),
+
+                                      // Right arrow
+                                      const Icon(
+                                        Icons.chevron_right,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -241,13 +300,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 20),
 
                         /// SOCIAL BUTTONS
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _socialBtn(Icons.public),
-                            _socialBtn(Icons.apple),
-                            _socialBtn(Icons.facebook),
-                          ],
+
+                        SocialButtons(
+                          onGoogleTap: () {
+                            // Google login
+                          },
+                          onAppleTap: () {
+                            // Apple login
+                          },
+                          onFacebookTap: () {
+                            // Facebook login
+                          },
                         ),
                       ],
                     ),
