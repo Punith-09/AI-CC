@@ -128,7 +128,7 @@ class AuditionCard extends StatelessWidget {
             spacing: 18,
             runSpacing: 12,
             children: [
-              _info(Icons.groups_2, displayPayout),
+              _info(Icons.groups_2, displayCategory),
               _info(Icons.location_on_outlined, displayLocation),
               _info(Icons.currency_rupee, displayPayout),
               _info(Icons.people_alt_outlined, displayApplicants),

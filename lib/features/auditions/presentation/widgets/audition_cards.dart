@@ -32,7 +32,7 @@ class AuditionCards extends StatelessWidget {
     const AuditionModel(
       id: "2",
       title: "Music Video Backup Dancer",
-      category: "Dancer",
+      category: "Hero(18-28)",
       role: "Backup Crew",
       language: "N/A",
       pay: "₹15,000 project payout",
