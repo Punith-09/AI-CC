@@ -23,7 +23,6 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.darkTheme,
 
       routerConfig: appRouter,
-
     );
   }
 }
