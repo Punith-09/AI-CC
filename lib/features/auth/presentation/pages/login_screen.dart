@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../widgets/social_buttons.dart';
+import '../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -30,6 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
     return Scaffold(
       body: SizedBox(
         width: double.infinity,
@@ -245,33 +248,66 @@ class _LoginScreenState extends State<LoginScreen> {
                               color: Colors.transparent,
                               child: InkWell(
                                 borderRadius: BorderRadius.circular(9),
-                                onTap: () {
-                                  context.go(AppRoutes.home);
-                                },
+                                onTap: authProvider.isLoading
+                                    ? null
+                                    : () async {
+                                        final email = _emailController.text;
+                                        final password = _passwordController.text;
+                                        if (email.isEmpty || password.isEmpty) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Please enter email and password.'),
+                                            ),
+                                          );
+                                          return;
+                                        }
+                                        final success = await context.read<AuthProvider>().login(email, password);
+                                        if (success) {
+                                          if (context.mounted) {
+                                            context.go(AppRoutes.home);
+                                          }
+                                        } else {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text(context.read<AuthProvider>().errorMessage ?? 'Login failed'),
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      },
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 16),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const Text(
-                                        'Login',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w600,
-                                          letterSpacing: 0.2,
-                                        ),
-                                      ),
-
-                                      const SizedBox(width: 12),
-
-                                      // Right arrow
-                                      const Icon(
-                                        Icons.chevron_right,
-                                        color: Colors.white,
-                                        size: 20,
-                                      ),
-                                    ],
+                                    children: authProvider.isLoading
+                                        ? [
+                                            const SizedBox(
+                                              width: 24,
+                                              height: 24,
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2.5,
+                                              ),
+                                            ),
+                                          ]
+                                        : [
+                                            const Text(
+                                              'Login',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w600,
+                                                letterSpacing: 0.2,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            const Icon(
+                                              Icons.chevron_right,
+                                              color: Colors.white,
+                                              size: 20,
+                                            ),
+                                          ],
                                   ),
                                 ),
                               ),
