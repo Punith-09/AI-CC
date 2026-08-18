@@ -1,0 +1,214 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import '../widgets/signup_button.dart';
+import '../widgets/signup_dropdown.dart';
+import '../widgets/signup_header.dart';
+import '../widgets/signup_textfield.dart';
+
+
+class AudienceSignUpScreen extends StatefulWidget {
+  const AudienceSignUpScreen({super.key});
+
+  @override
+  State<AudienceSignUpScreen> createState() =>
+      _AudienceSignUpScreenState();
+}
+
+class _AudienceSignUpScreenState extends State<AudienceSignUpScreen> {
+  final _formKey = GlobalKey<FormState>();
+
+  final TextEditingController _fullName = TextEditingController();
+  final TextEditingController _email = TextEditingController();
+  final TextEditingController _phone = TextEditingController();
+
+  String? _gender;
+  String? _country;
+  String? _state;
+  String? _city;
+
+  @override
+  void dispose() {
+    _fullName.dispose();
+    _email.dispose();
+    _phone.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFF1F5A6A),
+            Color(0xFF123B4A),
+            Color(0xFF0B1F2A),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          foregroundColor: Colors.white,
+          title: const Text(
+            "Audience Sign Up",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+
+        body: SafeArea(
+          child: Column(
+            children: [
+              const SignupHeader(
+                title: "Audience Registration",
+                subtitle: "Complete your audience profile",
+                icon: Icons.person,
+              ),
+
+              Expanded(
+                child: Container(
+                  margin: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF123B4A),
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                  child: Form(
+                    key: _formKey,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Basic Information",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+
+                          const SizedBox(height: 25),
+
+                          SignupTextField(
+                            controller: _fullName,
+                            label: "Full Name",
+                            requiredField: true,
+                          ),
+
+                          SignupTextField(
+                            controller: _email,
+                            label: "Email",
+                            keyboardType: TextInputType.emailAddress,
+                            requiredField: true,
+                          ),
+
+                          SignupTextField(
+                            controller: _phone,
+                            label: "Phone Number",
+                            keyboardType: TextInputType.phone,
+                            requiredField: true,
+                          ),
+
+                          SignupDropdown(
+                            label: "Gender",
+                            items: const [
+                              "Male",
+                              "Female",
+                              "Other",
+                            ],
+                            value: _gender,
+                            requiredField: true,
+                            onChanged: (value) {
+                              setState(() {
+                                _gender = value;
+                              });
+                            },
+                          ),
+
+                          SignupDropdown(
+                            label: "Country",
+                            items: const [
+                              "India",
+                              "USA",
+                              "UK",
+                            ],
+                            value: _country,
+                            requiredField: true,
+                            onChanged: (value) {
+                              setState(() {
+                                _country = value;
+                              });
+                            },
+                          ),
+
+                          SignupDropdown(
+                            label: "State",
+                            items: const [
+                              "Andhra Pradesh",
+                              "Telangana",
+                              "Karnataka",
+                            ],
+                            value: _state,
+                            requiredField: true,
+                            onChanged: (value) {
+                              setState(() {
+                                _state = value;
+                              });
+                            },
+                          ),
+
+                          SignupDropdown(
+                            label: "City",
+                            items: const [
+                              "Hyderabad",
+                              "Bengaluru",
+                              "Vijayawada",
+                            ],
+                            value: _city,
+                            requiredField: true,
+                            onChanged: (value) {
+                              setState(() {
+                                _city = value;
+                              });
+                            },
+                          ),
+
+                          const SizedBox(height: 30),
+
+                          SignupButton(
+                            text: "Create Account",
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      "Audience account created successfully!",
+                                    ),
+                                  ),
+                                );
+                                context.go('/home');
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

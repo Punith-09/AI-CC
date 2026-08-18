@@ -1,3 +1,4 @@
+import 'package:aicc/features/roles/presentation/pages/roles_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -52,6 +53,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.auditionDetails,
       builder: (_, __) =>  AuditionDetails(),
+    ),
+    GoRoute(
+      path: AppRoutes.role,
+      builder: (_, __) =>  RolesScreen(),
     ),
 
     ShellRoute(

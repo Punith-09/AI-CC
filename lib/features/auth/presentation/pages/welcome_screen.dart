@@ -382,7 +382,7 @@ class WelcomeScreen extends StatelessWidget {
                                 backgroundColor: const Color(0xFF071F2A),
                                 borderColor: const Color(0xFF17647C),
                                 onTap: () {
-                                  context.push(AppRoutes.signup);
+                                  context.push(AppRoutes.role);
                                 },
                               ),
                             )
