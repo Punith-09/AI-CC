@@ -32,6 +32,8 @@ dependencies:
     sdk: flutter
   go_router: ^17.2.3
   provider: ^6.1.5
+  dio: ^5.7.0
+  shared_preferences: ^2.3.2
   material_symbols_icons: ^4.2951.0
   lucide_icons_flutter: ^3.0.3
   dotted_border: ^2.1.0
