@@ -6,20 +6,24 @@ class ApiEndpoints {
 
   static String get baseUrl {
     if (kIsWeb) {
-      return "http://localhost:3000";
+      return 'http://localhost:3000';
     }
+
     try {
       if (Platform.isAndroid) {
-        // Android emulator connects to host localhost via 10.0.2.2
-        return "http://10.0.2.2:3000";
+        // Android Emulator → computer localhost
+        return 'http://10.0.2.2:3000';
       }
-    } catch (_) {
-      // Platform check can fail on some platforms if not guarded
-    }
-    return "http://localhost:3000";
+
+      if (Platform.isIOS) {
+        // iOS Simulator
+        return 'http://localhost:3000';
+      }
+    } catch (_) {}
+
+    return 'http://localhost:3000';
   }
 
-  static const String login = "/auth/login";
-  static const String register = "/auth/register";
-
+  static const String login = '/auth/login';
+  static const String register = '/auth/register';
 }

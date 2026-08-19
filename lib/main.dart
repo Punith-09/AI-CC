@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'core/di/injection_container.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routes/app_router.dart';
 import 'core/storage/local_storage.dart';
@@ -12,7 +13,7 @@ import 'features/auth/presentation/providers/auth_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await LocalStorage.init();
-
+  await initDependencies();
   final dioClient = DioClient();
   final authRemoteDataSource = AuthRemoteDataSourceImpl(dioClient);
   final authRepository = AuthRepositoryImpl(authRemoteDataSource, LocalStorage.instance);
