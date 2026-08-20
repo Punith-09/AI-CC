@@ -21,5 +21,9 @@ class ApiEndpoints {
 
   static const String login = "/auth/login";
   static const String register = "/auth/register";
-
+  static const String auditions = "/auditions";
+  static String auditionDetail(String id) => "/auditions/$id";
+  static const String photos = "/photos";
+  static const String videos = "/videos";
 }
+

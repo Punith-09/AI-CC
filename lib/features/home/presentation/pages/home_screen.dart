@@ -33,7 +33,7 @@ class HomeScreen extends StatelessWidget {
                     itemCount: postsData.length + 2,
 
                     separatorBuilder: (_, __) =>
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 30),
 
                     itemBuilder: (context, index) {
 

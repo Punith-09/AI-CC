@@ -1,9 +1,9 @@
-import 'package:aicc/features/auditions/presentation/widgets/audition_cards.dart';
-import 'package:aicc/features/auditions/presentation/widgets/audition_chips.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-
+import 'package:provider/provider.dart';
+import '../providers/auditions_provider.dart';
 import '../widgets/analytics_card.dart';
+import '../widgets/audition_cards.dart';
+import '../widgets/audition_chips.dart';
 import '../widgets/audition_search_bar.dart';
 import '../widgets/new_audition_card.dart';
 
@@ -17,11 +17,40 @@ class AuditionScreen extends StatefulWidget {
 class _AuditionScreenState extends State<AuditionScreen> {
   int selectedIndex = 0;
 
+  static const List<String> categories = [
+    "All",
+    "Actor",
+    "Film",
+    "Dancer",
+    "Singer",
+    "Model",
+    "Voice Artist",
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AuditionsProvider>().fetchAuditions();
+    });
+  }
+
+  void _onCategorySelected(int index) {
+    setState(() {
+      selectedIndex = index;
+    });
+    final selectedCategory = categories[index];
+    context.read<AuditionsProvider>().fetchAuditions(
+          category: selectedCategory == 'All' ? null : selectedCategory,
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final auditionsProvider = context.watch<AuditionsProvider>();
+
     return Scaffold(
       backgroundColor: Colors.transparent,
-
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -37,13 +66,11 @@ class _AuditionScreenState extends State<AuditionScreen> {
         child: SafeArea(
           child: Column(
             children: [
-
               /// Top Section (Non-Scrollable)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
-
                     /// Header
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -56,7 +83,6 @@ class _AuditionScreenState extends State<AuditionScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: const BoxDecoration(
@@ -79,20 +105,9 @@ class _AuditionScreenState extends State<AuditionScreen> {
                     const SizedBox(height: 18),
 
                     AuditionChips(
-                      categories: const [
-                        "All",
-                        "Actor",
-                        "Dancer",
-                        "Singer",
-                        "Model",
-                        "Voice Artist",
-                      ],
+                      categories: categories,
                       selectedIndex: selectedIndex,
-                      onSelected: (index) {
-                        setState(() {
-                          selectedIndex = index;
-                        });
-                      },
+                      onSelected: _onCategorySelected,
                     ),
 
                     const SizedBox(height: 15),
@@ -106,7 +121,6 @@ class _AuditionScreenState extends State<AuditionScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
                     children: [
-
                       const AnalyticsCard(),
 
                       const SizedBox(height: 24),
@@ -134,7 +148,25 @@ class _AuditionScreenState extends State<AuditionScreen> {
 
                       const SizedBox(height: 16),
 
-                      const AuditionCards(),
+                      if (auditionsProvider.isLoading)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 32),
+                          child: Center(
+                            child: CircularProgressIndicator(color: Colors.white),
+                          ),
+                        )
+                      else if (auditionsProvider.errorMessage != null)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 32),
+                          child: Center(
+                            child: Text(
+                              auditionsProvider.errorMessage!,
+                              style: const TextStyle(color: Colors.redAccent, fontSize: 14),
+                            ),
+                          ),
+                        )
+                      else
+                        AuditionCards(auditions: auditionsProvider.auditions),
 
                       const SizedBox(height: 24),
 

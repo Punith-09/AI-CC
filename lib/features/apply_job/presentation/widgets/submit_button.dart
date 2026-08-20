@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/app_colors.dart';
+
 class SubmitButton extends StatelessWidget {
   const SubmitButton({super.key});
 
@@ -14,10 +16,7 @@ class SubmitButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
 
           gradient: const LinearGradient(
-            colors: [
-              Color(0xff20D5FF),
-              Color(0xffCC3EFF),
-            ],
+            colors: AppColors.BtnGradient
           ),
 
           boxShadow: [

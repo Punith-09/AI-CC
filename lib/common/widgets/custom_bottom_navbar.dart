@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/routes/app_routes.dart';
+import '../../features/create/presentation/widgets/create_bottom_sheet.dart';
 
 class CustomBottomNavbar extends StatelessWidget {
   final String currentLocation;
@@ -95,7 +96,18 @@ class CustomBottomNavbar extends StatelessWidget {
           Positioned(
             top: -8,
             child: GestureDetector(
-              onTap: () => onItemSelected(AppRoutes.post),
+              onTap: () async => onItemSelected(
+                  // AppRoutes.post
+                  await showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    barrierColor: Colors.black.withOpacity(0.65),
+                    builder: (context) {
+                      return const CreateBottomSheet();
+                    },
+                  )
+              ),
               child: Container(
                 width: 58,
                 height: 58,

@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../common/widgets/app_background.dart';
+import '../../../auditions/data/models/audition_model.dart';
 import '../widgets/apply_appbar.dart';
 import '../widgets/audition_info_card.dart';
 import '../widgets/cover_letter_field.dart';
@@ -12,7 +13,12 @@ import '../widgets/submit_button.dart';
 import '../widgets/upload_file_card.dart';
 
 class ApplyScreen extends StatefulWidget {
-  const ApplyScreen({super.key});
+  final AuditionModel? audition;
+
+  const ApplyScreen({
+    super.key,
+    this.audition,
+  });
 
   @override
   State<ApplyScreen> createState() => _ApplyScreenState();
@@ -34,7 +40,7 @@ class _ApplyScreenState extends State<ApplyScreen> {
               children: [
                 const ApplyAppBar(),
                 const SizedBox(height: 25),
-                const AuditionInfoCard(),
+                AuditionInfoCard(audition: widget.audition),
                 const SizedBox(height: 30),
                 const GradientTextField(
                   label: "Your Full Name (Auto-filled)",

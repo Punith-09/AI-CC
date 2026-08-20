@@ -18,4 +18,6 @@ class AppRoutes {
   static const String applyJob = "/applyJob";
   static const String auditionDetails = "/auditionDetails";
   static const String activity = "/activity";
+  static const String uploadPhoto = "/uploadPhoto";
+  static const String uploadVideo = "/uploadVideo";
 }

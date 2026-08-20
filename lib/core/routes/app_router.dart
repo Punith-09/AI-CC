@@ -8,6 +8,7 @@ import '../../common/widgets/custom_bottom_navbar.dart';
 
 import '../../features/apply_job/presentation/pages/apply_screen.dart';
 import '../../features/artist_profile/presentation/pages/artist_profile_screen.dart';
+import '../../features/auditions/data/models/audition_model.dart';
 import '../../features/auditions/presentation/pages/audition_details.dart';
 import '../../features/auditions/presentation/pages/auditions_screen.dart';
 import '../../features/auth/presentation/pages/login_screen.dart';
@@ -19,6 +20,8 @@ import '../../features/home/presentation/pages/home_screen.dart';
 import '../../features/messages/presentation/pages/chat_screen.dart';
 import '../../features/notifications/presentation/pages/activity_screen.dart';
 import '../../features/post/presentation/pages/post_screen.dart';
+import '../../features/post/presentation/pages/upload_photo_screen.dart';
+import '../../features/post/presentation/pages/upload_video_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: AppRoutes.welcome,
@@ -47,16 +50,38 @@ final GoRouter appRouter = GoRouter(
 
     GoRoute(
       path: AppRoutes.applyJob,
-      builder: (_, __) => const ApplyScreen(),
+      builder: (context, state) {
+        final extra = state.extra;
+        if (extra is AuditionModel) {
+          return ApplyScreen(audition: extra);
+        }
+        return const ApplyScreen();
+      },
     ),
 
     GoRoute(
       path: AppRoutes.auditionDetails,
-      builder: (_, __) =>  AuditionDetails(),
+      builder: (context, state) {
+        final extra = state.extra;
+        if (extra is AuditionModel) {
+          return AuditionDetails(audition: extra, auditionId: extra.id);
+        } else if (extra is String) {
+          return AuditionDetails(auditionId: extra);
+        }
+        return const AuditionDetails();
+      },
     ),
     GoRoute(
       path: AppRoutes.role,
       builder: (_, __) =>  RolesScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.uploadPhoto,
+      builder: (_, __) => const UploadPhotoScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.uploadVideo,
+      builder: (_, __) => const UploadVideoScreen(),
     ),
 
     ShellRoute(

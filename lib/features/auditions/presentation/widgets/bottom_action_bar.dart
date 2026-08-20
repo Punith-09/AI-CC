@@ -4,9 +4,17 @@ import 'package:go_router/go_router.dart';
 import 'package:aicc/core/constants/app_colors.dart';
 
 import '../../../../core/routes/app_routes.dart';
+import '../../data/models/audition_model.dart';
 
 class BottomActionBar extends StatelessWidget {
-  const BottomActionBar({super.key});
+  final AuditionModel? audition;
+  final VoidCallback? onApply;
+
+  const BottomActionBar({
+    super.key,
+    this.audition,
+    this.onApply,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,12 +27,15 @@ class BottomActionBar extends StatelessWidget {
               child: SizedBox(
                 height: 48,
                 child: OutlinedButton(
-                  onPressed: (){
-                    context.push(AppRoutes.auditions);},
+                  onPressed: () {
+
+                      context.go(AppRoutes.auditions);
+
+                  },
                   style: OutlinedButton.styleFrom(
-                    backgroundColor: const Color(0xFF06233E), // Dark blue
+                    backgroundColor: const Color(0xFF06233E),
                     side: const BorderSide(
-                      color: Color(0xFF1CC8FF), // Cyan border
+                      color: Color(0xFF1CC8FF),
                       width: 1.2,
                     ),
                     shape: RoundedRectangleBorder(
@@ -37,7 +48,7 @@ class BottomActionBar extends StatelessWidget {
                       Text(
                         "Not Interested",
                         style: TextStyle(
-                          color: Color(0xFF66E0FF),
+                          color: AppColors.white,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -45,32 +56,30 @@ class BottomActionBar extends StatelessWidget {
                       Icon(
                         Icons.arrow_forward,
                         size: 18,
-                        color: Color(0xFF66E0FF),
+                        color: AppColors.white,
                       ),
                     ],
                   ),
                 ),
               ),
             ),
-
             const SizedBox(width: 16),
-
             Expanded(
               child: Container(
                 height: 55,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      AppColors.primary,
-                      AppColors.secondary
-                    ],
+                  gradient:  LinearGradient(
+                    colors: AppColors.BtnGradient,
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
                   borderRadius: BorderRadius.circular(30),
                 ),
                 child: ElevatedButton(
-                  onPressed: () {context.go("/applyScreen");},
+                  onPressed: onApply ??
+                      () {
+                        context.push(AppRoutes.applyJob, extra: audition);
+                      },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
