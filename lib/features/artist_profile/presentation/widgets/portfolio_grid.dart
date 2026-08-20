@@ -1,4 +1,3 @@
-import 'package:aicc/features/artist_profile/data/datasource/portfolio_data.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/models/portfolio_model.dart';
@@ -11,15 +10,15 @@ class PortfolioGrid extends StatelessWidget {
     super.key,
     required this.items,
   });
+
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
-
       shrinkWrap: true,
 
       physics: const NeverScrollableScrollPhysics(),
 
-      itemCount: portfolioList.length,
+      itemCount: items.length,
 
       gridDelegate:
       const SliverGridDelegateWithFixedCrossAxisCount(
@@ -31,7 +30,7 @@ class PortfolioGrid extends StatelessWidget {
 
       itemBuilder: (_, index) {
         return PortfolioCard(
-          item: portfolioList[index],
+          item: items[index],
         );
       },
     );

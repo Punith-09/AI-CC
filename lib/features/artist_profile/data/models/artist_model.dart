@@ -4,7 +4,8 @@ import 'package:flutter/foundation.dart';
 class ArtistModel {
   final String id;
   final String name;
-  final String location;
+  final String state;
+  final String city;
   final String profileImage;
   final String coverImage;
   final List<String> roles;
@@ -20,7 +21,8 @@ class ArtistModel {
   const ArtistModel({
     this.id = '',
     required this.name,
-    required this.location,
+    required this.state,
+    required this.city,
     required this.profileImage,
     required this.coverImage,
     required this.roles,
@@ -34,33 +36,173 @@ class ArtistModel {
 
   factory ArtistModel.fromJson(Map<String, dynamic> json) {
     return ArtistModel(
-      id: json['id'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      location: json['location'] as String? ?? '',
-      profileImage: json['profile_image'] as String? ?? '',
-      coverImage: json['cover_image'] as String? ?? '',
-      roles: (json['roles'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
-      projects: json['projects'] as int? ?? 0,
-      followers: json['followers'] as String? ?? '0',
-      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
-      awards: json['awards'] as int? ?? 0,
-      experience: json['experience'] as String? ?? '',
-      languages: json['languages'] as String? ?? '',
+      id: _stringValue(
+        json['_id'] ?? json['id'],
+      ),
+
+      name: _stringValue(
+        json['fullName'] ?? json['name'],
+      ),
+
+      state: _stringValue(
+        json['state'],
+      ),
+
+      city: _stringValue(
+        json['city'],
+      ),
+
+      profileImage: _imageValue(
+        json['profilePhoto'] ??
+            json['profile_image'] ??
+            json['profileImage'],
+      ),
+
+      coverImage: _imageValue(
+        json['cover_image'] ??
+            json['coverImage'] ??
+            json['coverPhoto'],
+      ),
+
+      roles: _listValue(
+        json['roles'] ?? json['role'],
+      ),
+
+      projects: _intValue(
+        json['projects'],
+      ),
+
+      followers: _stringValue(
+        json['followers'],
+      ),
+
+      rating: _doubleValue(
+        json['rating'],
+      ),
+
+      awards: _intValue(
+        json['awards'],
+      ),
+
+      experience: _stringValue(
+        json['experience'],
+      ),
+
+      languages: _stringValue(
+        json['languages'],
+      ),
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'location': location,
-        'profile_image': profileImage,
-        'cover_image': coverImage,
-        'roles': roles,
-        'projects': projects,
-        'followers': followers,
-        'rating': rating,
-        'awards': awards,
-        'experience': experience,
-        'languages': languages,
-      };
+  static String _stringValue(dynamic value) {
+    if (value == null) {
+      return '';
+    }
+
+    if (value is String) {
+      return value;
+    }
+
+    if (value is List) {
+      return value
+          .map((item) => item.toString())
+          .where((item) => item.isNotEmpty)
+          .join(', ');
+    }
+
+    return value.toString();
+  }
+
+  static String _imageValue(dynamic value) {
+    if (value == null) {
+      return '';
+    }
+
+    if (value is String) {
+      return value;
+    }
+
+    if (value is List && value.isNotEmpty) {
+      return value.first.toString();
+    }
+
+    return value.toString();
+  }
+
+  static List<String> _listValue(dynamic value) {
+    if (value == null) {
+      return [];
+    }
+
+    if (value is String) {
+      if (value.trim().isEmpty) {
+        return [];
+      }
+
+      return value
+          .split(',')
+          .map((item) => item.trim())
+          .where((item) => item.isNotEmpty)
+          .toList();
+    }
+
+    if (value is List) {
+      return value
+          .map((item) => item.toString())
+          .where((item) => item.isNotEmpty)
+          .toList();
+    }
+
+    return [];
+  }
+
+  static int _intValue(dynamic value) {
+    if (value == null) {
+      return 0;
+    }
+
+    if (value is int) {
+      return value;
+    }
+
+    if (value is num) {
+      return value.toInt();
+    }
+
+    return int.tryParse(value.toString()) ?? 0;
+  }
+
+  static double _doubleValue(dynamic value) {
+    if (value == null) {
+      return 0.0;
+    }
+
+    if (value is double) {
+      return value;
+    }
+
+    if (value is num) {
+      return value.toDouble();
+    }
+
+    return double.tryParse(value.toString()) ?? 0.0;
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'state': state,
+      'city': city,
+      'profile_image': profileImage,
+      'cover_image': coverImage,
+      'roles': roles,
+      'projects': projects,
+      'followers': followers,
+      'rating': rating,
+      'awards': awards,
+      'experience': experience,
+      'languages': languages,
+    };
+  }
 }

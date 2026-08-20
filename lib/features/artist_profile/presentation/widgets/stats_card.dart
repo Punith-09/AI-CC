@@ -4,7 +4,11 @@ import 'package:flutter/material.dart';
 import 'stat_item.dart';
 
 class StatsCard extends StatelessWidget {
-  const StatsCard({super.key});
+  final int? projects;
+  final String? followers;
+  final int? awards;
+
+  const StatsCard({super.key, this.projects, this.followers, this.awards});
 
   @override
   Widget build(BuildContext context) {
@@ -15,13 +19,10 @@ class StatsCard extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: AppColors.card.withOpacity(.55),
-
         borderRadius: BorderRadius.circular(24),
-
         border: Border.all(
           color: AppColors.border.withOpacity(.6),
         ),
-
         boxShadow: [
           BoxShadow(
             color: AppColors.primary.withOpacity(.08),
@@ -29,38 +30,33 @@ class StatsCard extends StatelessWidget {
           ),
         ],
       ),
-
       child: IntrinsicHeight(
         child: Row(
           children: [
-            const StatItem(
+            StatItem(
               icon: Icons.work_outline,
-              iconColor: Color(0xff8A2BE2),
-              value: "120+",
+              iconColor: const Color(0xff8A2BE2),
+              value: projects != null ? projects.toString() : "120+",
               title: "Projects",
             ),
-
             VerticalDivider(
               color: AppColors.border.withOpacity(.5),
               thickness: 1,
             ),
-
-            const StatItem(
+            StatItem(
               icon: Icons.groups_2_outlined,
-              iconColor: Color(0xffFF4FA3),
-              value: "125K",
+              iconColor: const Color(0xffFF4FA3),
+              value: followers?.isNotEmpty == true ? followers! : "125K",
               title: "Followers",
             ),
-
             VerticalDivider(
               color: AppColors.border.withOpacity(.5),
               thickness: 1,
             ),
-
-            const StatItem(
+            StatItem(
               icon: Icons.emoji_events_outlined,
-              iconColor: Color(0xff00E5FF),
-              value: "8",
+              iconColor: const Color(0xff00E5FF),
+              value: awards != null ? awards.toString() : "8",
               title: "Awards",
             ),
           ],

@@ -30,10 +30,19 @@ class TalentCard extends StatelessWidget {
         children: [
 
           Positioned.fill(
-            child: Image.asset(
-              talent.image,
-              fit: BoxFit.cover,
-            ),
+            child: talent.image.isNotEmpty && talent.image.startsWith('http')
+                ? Image.network(
+                    talent.image,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Center(child: Icon(Icons.error, color: Colors.white)),
+                  )
+                : Image.asset(
+                    talent.image.isNotEmpty ? talent.image : 'assets/images/default.jpg',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Center(child: Icon(Icons.person, color: Colors.white, size: 50)),
+                  ),
           ),
 
           Positioned.fill(

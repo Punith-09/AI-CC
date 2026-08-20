@@ -2,52 +2,57 @@ import 'package:aicc/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class ArtistInfo extends StatelessWidget {
-  const ArtistInfo({super.key});
+  final String? name;
+  final String? state;
+  final String? city;
+  
+  const ArtistInfo({super.key, this.name, this.state,this.city});
 
   @override
   Widget build(BuildContext context) {
+    String location = "";
+    if(city!=null && city!.isNotEmpty&& state!=null && state!.isNotEmpty){
+      location = '$city, $state';
+    }else if (city != null && city!.isNotEmpty){
+      location = city!;
+    }else if (state != null && state!.isNotEmpty) {
+      location = state!;
+    } else {
+      location = 'Location not available';
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-
         Row(
           children: [
-
-            const Text(
-              "Isha Sharma",
-              style: TextStyle(
+            Text(
+              name?.isNotEmpty == true ? name! : "",
+              style: const TextStyle(
                 fontSize: 34,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
-
             const SizedBox(width: 8),
-
-            Icon(
+            const Icon(
               Icons.verified,
               color: AppColors.primary,
               size: 28,
             )
           ],
         ),
-
         const SizedBox(height: 8),
-
         Row(
           children: [
-
-            Icon(
+            const Icon(
               Icons.location_on_outlined,
               size: 20,
               color: AppColors.greyText,
             ),
-
             const SizedBox(width: 6),
-
-            const Text(
-              "Mumbai, Maharashtra",
-              style: TextStyle(
+            Text(
+              location,
+              style: const TextStyle(
                 color: AppColors.greyText,
                 fontSize: 18,
               ),

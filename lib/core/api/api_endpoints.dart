@@ -26,4 +26,10 @@ class ApiEndpoints {
 
   static const String login = '/auth/login';
   static const String register = '/auth/register';
+  
+  static const String exploreUsers = '/users/explore';
+  static const String profileMe = '/profile/me';
+  
+  static String userProfile(String id) => '/users/$id';
+  static String followUser(String id) => '/users/$id/follow';
 }

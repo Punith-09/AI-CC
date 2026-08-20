@@ -17,12 +17,19 @@ class TalentModel {
   });
 
   factory TalentModel.fromJson(Map<String, dynamic> json) {
+    String parsedRole = '';
+    if (json['role'] is String) {
+      parsedRole = json['role'];
+    } else if (json['roles'] is List && (json['roles'] as List).isNotEmpty) {
+      parsedRole = (json['roles'] as List).first.toString();
+    }
+
     return TalentModel(
-      id: json['id'] as String? ?? '',
-      image: json['image'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      role: json['role'] as String? ?? '',
-      match: json['match'] as int? ?? 0,
+      id: (json['_id'] as String?) ?? (json['id'] as String?) ?? '',
+      image: (json['profilePhoto'] as String?) ?? (json['image'] as String?) ?? '',
+      name: (json['fullName'] as String?) ?? (json['name'] as String?) ?? '',
+      role: parsedRole,
+      match: json['match'] as int? ?? 90, // default match to some value if null
     );
   }
 
