@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'core/di/injection_container.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routes/app_router.dart';
 import 'core/storage/local_storage.dart';
@@ -18,9 +19,16 @@ import 'features/post/data/datasource/videos_remote_datasource.dart';
 import 'features/post/data/repository/videos_repository.dart';
 import 'features/post/presentation/providers/videos_provider.dart';
 
+import 'features/explore/data/repository/explore_repository.dart';
+import 'features/explore/presentation/providers/explore_provider.dart';
+import 'features/artist_profile/data/repository/profile_repository.dart';
+import 'features/artist_profile/presentation/providers/profile_provider.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await LocalStorage.init();
+  await initDependencies();
+
 
   final dioClient = DioClient();
   final authRemoteDataSource = AuthRemoteDataSourceImpl(dioClient);
@@ -39,7 +47,13 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => AuthProvider(authRepository),
+          create: (_) => AuthProvider(sl<AuthRepository>()),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ExploreProvider(sl<ExploreRepository>()),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ProfileProvider(sl<ProfileRepository>()),
         ),
         ChangeNotifierProvider(
           create: (_) => AuditionsProvider(auditionsRepository),

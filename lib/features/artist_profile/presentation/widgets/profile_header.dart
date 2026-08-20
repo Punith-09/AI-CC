@@ -6,7 +6,8 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/routes/app_routes.dart';
 
 class ProfileHeader extends StatelessWidget {
-  const ProfileHeader({super.key});
+  final String? coverImage;
+  const ProfileHeader({super.key, this.coverImage});
 
   @override
   Widget build(BuildContext context) {
@@ -17,11 +18,22 @@ class ProfileHeader extends StatelessWidget {
       Stack(
         children: [
           Positioned.fill(
-            child: Image.asset(
-              "assets/images/coverPic.png",
-              fit: BoxFit.cover,
-              alignment: Alignment.centerRight,
-            ),
+            child: (coverImage != null && coverImage!.isNotEmpty && coverImage!.startsWith('http'))
+                ? Image.network(
+                    coverImage!,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.centerRight,
+                    errorBuilder: (_, __, ___) => Image.asset(
+                      "assets/images/coverPic.png",
+                      fit: BoxFit.cover,
+                      alignment: Alignment.centerRight,
+                    ),
+                  )
+                : Image.asset(
+                    coverImage != null && coverImage!.isNotEmpty ? coverImage! : "assets/images/coverPic.png",
+                    fit: BoxFit.cover,
+                    alignment: Alignment.centerRight,
+                  ),
           ),
 
 

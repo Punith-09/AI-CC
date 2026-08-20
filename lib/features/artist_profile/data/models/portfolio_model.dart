@@ -12,17 +12,21 @@ class PortfolioModel {
     this.isVideo = false,
   });
 
-  factory PortfolioModel.fromJson(Map<String, dynamic> json) {
+  factory PortfolioModel.fromJson(
+      Map<String, dynamic> json,
+      ) {
     return PortfolioModel(
-      id: json['id'] as String? ?? '',
-      image: json['image'] as String? ?? '',
-      isVideo: json['is_video'] as bool? ?? false,
+      id: json['id']?.toString() ?? '',
+      image: json['image']?.toString() ?? '',
+      isVideo: json['is_video'] == true,
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'image': image,
-        'is_video': isVideo,
-      };
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'image': image,
+      'is_video': isVideo,
+    };
+  }
 }

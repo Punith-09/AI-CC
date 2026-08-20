@@ -44,20 +44,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   children: [
                     const SizedBox(height: 60),
-
-                    // Text(
-                    //   "Welcome Back",
-                    //   style: GoogleFonts.plusJakartaSans(
-                    //     color: AppColors.white,
-                    //       fontSize: 37,
-                    //       fontWeight: FontWeight.w900,
-                    //       letterSpacing: 1.1,
-                    //   ),
-                    // )
-                    //     .animate()
-                    //     .fade(duration: 1000.ms)
-                    //     .slideY(begin: -0.5, end: 0),
-
                     RichText(
                       text: TextSpan(
                         children: [

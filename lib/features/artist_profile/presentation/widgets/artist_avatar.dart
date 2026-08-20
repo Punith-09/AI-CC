@@ -2,14 +2,14 @@ import 'package:aicc/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class ArtistAvatar extends StatelessWidget {
-  const ArtistAvatar({super.key});
+  final String? profileImage;
+  const ArtistAvatar({super.key, this.profileImage});
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-
         Container(
           width: 120,
           height: 120,
@@ -28,10 +28,19 @@ class ArtistAvatar extends StatelessWidget {
             ],
           ),
           child: ClipOval(
-            child: Image.asset(
-              "assets/images/profile2.jpeg",
-              fit: BoxFit.cover,
-            ),
+            child: (profileImage != null && profileImage!.isNotEmpty && profileImage!.startsWith('http'))
+                ? Image.network(
+                    profileImage!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Image.asset(
+                      "assets/images/profile2.jpeg",
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : Image.asset(
+                    profileImage != null && profileImage!.isNotEmpty ? profileImage! : "assets/images/profile2.jpeg",
+                    fit: BoxFit.cover,
+                  ),
           ),
         ),
 
