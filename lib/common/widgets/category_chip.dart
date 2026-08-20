@@ -22,34 +22,43 @@ class CategoryChip extends StatelessWidget {
       borderRadius: BorderRadius.circular(30),
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
+        duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(
           horizontal: title.isEmpty ? 18 : 20,
-          vertical: 12,
+          vertical: 10,
         ),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.18)
-              : Colors.transparent,
+              ? const Color(0xFF8E3CF7)
+              : Colors.white.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(30),
           border: Border.all(
             color: isSelected
-                ? AppColors.primary
-                : AppColors.border.withValues(alpha: 0.5),
+                ? const Color(0xFF8E3CF7)
+                : Colors.white.withValues(alpha: 0.08),
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF8E3CF7).withValues(alpha: 0.35),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: icon != null
             ? Icon(
                 icon,
-                color: isSelected ? AppColors.primary : AppColors.greyText,
-                size: 22,
+                color: isSelected ? Colors.white : AppColors.greyText,
+                size: 20,
               )
             : Text(
                 title,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 13.5,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: isSelected ? Colors.white : AppColors.greyText,
+                  color: isSelected ? Colors.white : Colors.white70,
                 ),
               ),
       ),

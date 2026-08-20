@@ -6,6 +6,7 @@ import '../widgets/audition_cards.dart';
 import '../widgets/audition_chips.dart';
 import '../widgets/audition_search_bar.dart';
 import '../widgets/new_audition_card.dart';
+import '../../data/models/audition_model.dart';
 
 class AuditionScreen extends StatefulWidget {
   const AuditionScreen({super.key});
@@ -16,15 +17,15 @@ class AuditionScreen extends StatefulWidget {
 
 class _AuditionScreenState extends State<AuditionScreen> {
   int selectedIndex = 0;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   static const List<String> categories = [
     "All",
-    "Actor",
     "Film",
+    "Ad",
     "Dancer",
-    "Singer",
-    "Model",
-    "Voice Artist",
+    "TV",
   ];
 
   @override
@@ -33,6 +34,12 @@ class _AuditionScreenState extends State<AuditionScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AuditionsProvider>().fetchAuditions();
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _onCategorySelected(int index) {
@@ -45,9 +52,39 @@ class _AuditionScreenState extends State<AuditionScreen> {
         );
   }
 
+  void _onSearchChanged(String value) {
+    setState(() {
+      _searchQuery = value;
+    });
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    setState(() {
+      _searchQuery = '';
+    });
+  }
+
+  List<AuditionModel> _filterAuditions(List<AuditionModel> list) {
+    if (_searchQuery.trim().isEmpty) {
+      return list;
+    }
+    final q = _searchQuery.toLowerCase().trim();
+    return list.where((a) {
+      return a.title.toLowerCase().contains(q) ||
+          a.role.toLowerCase().contains(q) ||
+          a.location.toLowerCase().contains(q) ||
+          a.language.toLowerCase().contains(q) ||
+          a.category.toLowerCase().contains(q) ||
+          a.description.toLowerCase().contains(q) ||
+          a.effectiveContact.toLowerCase().contains(q);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final auditionsProvider = context.watch<AuditionsProvider>();
+    final displayedAuditions = _filterAuditions(auditionsProvider.auditions);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -100,7 +137,11 @@ class _AuditionScreenState extends State<AuditionScreen> {
 
                     const SizedBox(height: 18),
 
-                    const AuditionSearchBar(),
+                    AuditionSearchBar(
+                      controller: _searchController,
+                      onChanged: _onSearchChanged,
+                      onClear: _clearSearch,
+                    ),
 
                     const SizedBox(height: 18),
 
@@ -165,8 +206,45 @@ class _AuditionScreenState extends State<AuditionScreen> {
                             ),
                           ),
                         )
+                      else if (_searchQuery.trim().isNotEmpty && displayedAuditions.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 36),
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.search_off_rounded,
+                                  size: 48,
+                                  color: Colors.white38,
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  "No auditions matching \"$_searchQuery\"",
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 10),
+                                TextButton(
+                                  onPressed: _clearSearch,
+                                  child: const Text(
+                                    "Clear search",
+                                    style: TextStyle(
+                                      color: Color(0xFF4AD0FB),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
                       else
-                        AuditionCards(auditions: auditionsProvider.auditions),
+                        AuditionCards(auditions: displayedAuditions),
 
                       const SizedBox(height: 24),
 

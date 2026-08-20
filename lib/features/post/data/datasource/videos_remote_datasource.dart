@@ -54,12 +54,22 @@ class VideosRemoteDataSourceImpl implements VideosRemoteDataSource {
     });
 
     final response = await _dioClient.post(
-      ApiEndpoints.videos,
+      ApiEndpoints.uploadVideo,
       data: formData,
     );
 
     if (response.data is Map<String, dynamic>) {
-      return VideoModel.fromJson(response.data as Map<String, dynamic>);
+      final map = response.data as Map<String, dynamic>;
+      if (map.containsKey('data') && map['data'] is Map<String, dynamic>) {
+        return VideoModel.fromJson(map['data'] as Map<String, dynamic>);
+      }
+      return VideoModel.fromJson(map);
+    } else if (response.data is Map) {
+      final map = Map<String, dynamic>.from(response.data as Map);
+      if (map.containsKey('data') && map['data'] is Map) {
+        return VideoModel.fromJson(Map<String, dynamic>.from(map['data'] as Map));
+      }
+      return VideoModel.fromJson(map);
     } else {
       throw Exception('Invalid server response format for video upload');
     }
