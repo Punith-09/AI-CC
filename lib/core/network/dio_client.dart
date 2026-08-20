@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../api/api_endpoints.dart';
+import '../storage/local_storage.dart';
 
 class DioClient {
   late final Dio _dio;
@@ -22,7 +23,14 @@ class DioClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-           // We would need to import LocalStorage, wait let's just make get/post accept options
+          try {
+            final token = LocalStorage.instance.getToken();
+            if (token != null && token.isNotEmpty) {
+              options.headers['Authorization'] = 'Bearer $token';
+            }
+          } catch (_) {
+            // LocalStorage might not be initialized in isolated tests
+          }
           return handler.next(options);
         },
       ),
@@ -40,12 +48,14 @@ class DioClient {
     );
   }
 
+  Dio get dio => _dio;
+
   Future<Response> post(
-      String path, {
-        dynamic data,
-        Map<String, dynamic>? queryParameters,
-        Options? options,
-      }) async {
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
     return await _dio.post(
       path,
       data: data,
@@ -55,10 +65,10 @@ class DioClient {
   }
 
   Future<Response> get(
-      String path, {
-        Map<String, dynamic>? queryParameters,
-        Options? options,
-      }) async {
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
     return await _dio.get(
       path,
       queryParameters: queryParameters,
@@ -67,10 +77,10 @@ class DioClient {
   }
 
   Future<Response> put(
-      String path, {
-        dynamic data,
-        Options? options,
-      }) async {
+    String path, {
+    dynamic data,
+    Options? options,
+  }) async {
     return await _dio.put(
       path,
       data: data,
@@ -79,10 +89,10 @@ class DioClient {
   }
 
   Future<Response> delete(
-      String path, {
-        dynamic data,
-        Options? options,
-      }) async {
+    String path, {
+    dynamic data,
+    Options? options,
+  }) async {
     return await _dio.delete(
       path,
       data: data,

@@ -30,9 +30,7 @@ void main() async {
   await initDependencies();
 
 
-  final dioClient = DioClient();
-  final authRemoteDataSource = AuthRemoteDataSourceImpl(dioClient);
-  final authRepository = AuthRepositoryImpl(authRemoteDataSource, LocalStorage.instance);
+  final dioClient = sl<DioClient>();
 
   final auditionsRemoteDataSource = AuditionsRemoteDataSourceImpl(dioClient);
   final auditionsRepository = AuditionsRepositoryImpl(auditionsRemoteDataSource);
