@@ -42,6 +42,12 @@ class ApiEndpoints {
 
   static const String photos = "/photos";
   static const String videos = "/videos";
+  static const String uploadVideo = "/videos/upload";
+
+  // static const String login = "/auth/login";
+  // static const String register = "/auth/register";
+
+
 
   static const String chats = "/chats";
   static String startChat(String userId) => "/chats/start/$userId";
