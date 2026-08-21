@@ -6,7 +6,6 @@ import 'core/theme/app_theme.dart';
 import 'core/routes/app_router.dart';
 import 'core/storage/local_storage.dart';
 import 'core/network/dio_client.dart';
-import 'features/auth/data/datasource/auth_remote_datasource.dart';
 import 'features/auth/data/repository/auth_repository.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/auditions/data/datasource/auditions_remote_datasource.dart';
@@ -23,6 +22,8 @@ import 'features/explore/data/repository/explore_repository.dart';
 import 'features/explore/presentation/providers/explore_provider.dart';
 import 'features/artist_profile/data/repository/profile_repository.dart';
 import 'features/artist_profile/presentation/providers/profile_provider.dart';
+import 'features/home/data/repository/home_repository.dart';
+import 'features/home/presentation/providers/home_feed_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,6 +53,9 @@ void main() async {
         ),
         ChangeNotifierProvider(
           create: (_) => ProfileProvider(sl<ProfileRepository>()),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => HomeFeedProvider(sl<HomeRepository>()),
         ),
         ChangeNotifierProvider(
           create: (_) => AuditionsProvider(auditionsRepository),

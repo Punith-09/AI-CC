@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/di/injection_container.dart';
@@ -11,36 +12,28 @@ import '../../data/repository/auth_repository.dart';
 import '../widgets/signup_step_header.dart';
 
 class SignUpWizardPage extends StatefulWidget {
-  const SignUpWizardPage({
-    super.key,
-  });
+  const SignUpWizardPage({super.key});
 
   @override
-  State<SignUpWizardPage> createState() =>
-      _SignUpWizardPageState();
+  State<SignUpWizardPage> createState() => _SignUpWizardPageState();
 }
 
-class _SignUpWizardPageState
-    extends State<SignUpWizardPage> {
-
+class _SignUpWizardPageState extends State<SignUpWizardPage> {
   // ============================================================
   // DEPENDENCY
   // ============================================================
 
-  final AuthRepository _authRepository =
-  GetIt.instance<AuthRepository>();
+  final AuthRepository _authRepository = GetIt.instance<AuthRepository>();
 
   // ============================================================
   // PAGE CONTROLLER
   // ============================================================
 
-  final PageController _pageController =
-  PageController();
+  final PageController _pageController = PageController();
 
-  final List<GlobalKey<FormState>> _formKeys =
-  List.generate(
+  final List<GlobalKey<FormState>> _formKeys = List.generate(
     4,
-        (_) => GlobalKey<FormState>(),
+    (_) => GlobalKey<FormState>(),
   );
 
   int _currentStep = 0;
@@ -49,41 +42,29 @@ class _SignUpWizardPageState
   // TEXT CONTROLLERS
   // ============================================================
 
-  final _fullName =
-  TextEditingController();
+  final _fullName = TextEditingController();
 
-  final _stageName =
-  TextEditingController();
+  final _stageName = TextEditingController();
 
-  final _phone =
-  TextEditingController();
+  final _phone = TextEditingController();
 
-  final _email =
-  TextEditingController();
+  final _email = TextEditingController();
 
-  final _password =
-  TextEditingController();
+  final _password = TextEditingController();
 
-  final _institute =
-  TextEditingController();
+  final _institute = TextEditingController();
 
-  final _instagram =
-  TextEditingController();
+  final _instagram = TextEditingController();
 
-  final _youtube =
-  TextEditingController();
+  final _youtube = TextEditingController();
 
-  final _imdb =
-  TextEditingController();
+  final _imdb = TextEditingController();
 
-  final _website =
-  TextEditingController();
+  final _website = TextEditingController();
 
-  final _awards =
-  TextEditingController();
+  final _awards = TextEditingController();
 
-  final _bio =
-  TextEditingController();
+  final _bio = TextEditingController();
 
   // ============================================================
   // BASIC INFORMATION
@@ -166,8 +147,7 @@ class _SignUpWizardPageState
   // COLORS
   // ============================================================
 
-  static const _blue =
-  Color(0xFF2F5BEA);
+  static const _blue = Color(0xFF2F5BEA);
 
   static const _steps = [
     'Basic Information',
@@ -209,18 +189,13 @@ class _SignUpWizardPageState
   // ============================================================
 
   void _next() {
-    final isValid =
-        _formKeys[_currentStep]
-            .currentState
-            ?.validate() ??
-            false;
+    final isValid = _formKeys[_currentStep].currentState?.validate() ?? false;
 
     if (!isValid) {
       return;
     }
 
-    if (_currentStep ==
-        _steps.length - 1) {
+    if (_currentStep == _steps.length - 1) {
       _submitProfile();
       return;
     }
@@ -231,8 +206,7 @@ class _SignUpWizardPageState
 
     _pageController.animateToPage(
       _currentStep,
-      duration:
-      const Duration(milliseconds: 280),
+      duration: const Duration(milliseconds: 280),
       curve: Curves.easeOut,
     );
   }
@@ -252,8 +226,7 @@ class _SignUpWizardPageState
 
     _pageController.animateToPage(
       _currentStep,
-      duration:
-      const Duration(milliseconds: 280),
+      duration: const Duration(milliseconds: 280),
       curve: Curves.easeOut,
     );
   }
@@ -262,12 +235,8 @@ class _SignUpWizardPageState
   // REQUIRED VALIDATOR
   // ============================================================
 
-  String? _required(
-      String? value, [
-        String label = 'This field',
-      ]) {
-    if (value == null ||
-        value.trim().isEmpty) {
+  String? _required(String? value, [String label = 'This field']) {
+    if (value == null || value.trim().isEmpty) {
       return '$label is required';
     }
 
@@ -279,11 +248,7 @@ class _SignUpWizardPageState
   // ============================================================
 
   Future<void> _submitProfile() async {
-    final isValid =
-        _formKeys[3]
-            .currentState
-            ?.validate() ??
-            false;
+    final isValid = _formKeys[3].currentState?.validate() ?? false;
 
     if (!isValid) {
       return;
@@ -302,15 +267,7 @@ class _SignUpWizardPageState
       // ========================================================
 
       final heightValue =
-          int.tryParse(
-            _height
-                ?.replaceAll(
-              RegExp(r'[^0-9]'),
-              '',
-            ) ??
-                '',
-          ) ??
-              0;
+          int.tryParse(_height?.replaceAll(RegExp(r'[^0-9]'), '') ?? '') ?? 0;
 
       // ========================================================
       // WEIGHT
@@ -318,159 +275,98 @@ class _SignUpWizardPageState
       // ========================================================
 
       final weightValue =
-          int.tryParse(
-            _weight
-                ?.replaceAll(
-              RegExp(r'[^0-9]'),
-              '',
-            ) ??
-                '',
-          ) ??
-              0;
+          int.tryParse(_weight?.replaceAll(RegExp(r'[^0-9]'), '') ?? '') ?? 0;
 
       // ========================================================
       // CREATE REGISTER REQUEST
       // ========================================================
 
       final request = RegisterRequest(
-        email:
-        _email.text.trim(),
+        email: _email.text.trim(),
 
-        password:
-        _password.text,
+        password: _password.text,
 
-        fullName:
-        _fullName.text.trim(),
+        fullName: _fullName.text.trim(),
 
-        role:
-        'artist',
+        role: 'artist',
 
-        mobile:
-        _phone.text.trim(),
+        mobile: _phone.text.trim(),
 
-        stageName:
-        _stageName.text.trim(),
+        stageName: _stageName.text.trim(),
 
-        dob: _dob != null
-            ? _dob!
-            .toIso8601String()
-            .split('T')
-            .first
-            : '',
+        dob: _dob != null ? _dob!.toIso8601String().split('T').first : '',
 
-        gender:
-        _gender ?? '',
+        gender: _gender ?? '',
 
-        country:
-        _country ?? '',
+        country: _country ?? '',
 
-        state:
-        _state ?? '',
+        state: _state ?? '',
 
-        city:
-        _city ?? '',
+        city: _city ?? '',
 
-        profilePhoto:
-        _profilePhoto,
+        profilePhoto: _profilePhoto,
 
-        category:
-        _category ?? '',
+        category: _category ?? '',
 
-        experience:
-        _experience ?? '',
+        experience: _experience ?? '',
 
-        skills:
-        _skills.toList(),
+        skills: _skills.toList(),
 
-        languages:
-        _languages.toList(),
+        languages: _languages.toList(),
 
-        preferredLanguage:
-        _actingLanguages.toList(),
+        preferredLanguage: _actingLanguages.toList(),
 
-        qualification:
-        _qualification ?? '',
+        qualification: _qualification ?? '',
 
-        institute:
-        _institute.text.trim(),
+        institute: _institute.text.trim(),
 
-        occupation:
-        _occupation ?? '',
+        occupation: _occupation ?? '',
 
-        availableFor:
-        _availableFor.toList(),
+        availableFor: _availableFor.toList(),
 
-        union:
-        _unionMember
-            ? 'Yes'
-            : 'No',
+        union: _unionMember ? 'Yes' : 'No',
 
-        relocate:
-        _relocate
-            ? 'Yes'
-            : 'No',
+        relocate: _relocate ? 'Yes' : 'No',
 
-        height:
-        heightValue,
+        height: heightValue,
 
-        weight:
-        weightValue,
+        weight: weightValue,
 
-        bodyType:
-        _bodyType ?? '',
+        bodyType: _bodyType ?? '',
 
-        skinTone:
-        _skinTone ?? '',
+        skinTone: _skinTone ?? '',
 
-        hairColor:
-        _hairColor ?? '',
+        hairColor: _hairColor ?? '',
 
-        eyeColor:
-        _eyeColor ?? '',
+        eyeColor: _eyeColor ?? '',
 
-        preferredRole:
-        _roles.toList(),
+        preferredRole: _roles.toList(),
 
-        travelAvailability:
-        _travelAvailability ?? '',
+        travelAvailability: _travelAvailability ?? '',
 
-        nightShoots:
-        _nightShoots
-            ? 'Yes'
-            : 'No',
+        nightShoots: _nightShoots ? 'Yes' : 'No',
 
-        headshot:
-        _headshot,
+        headshot: _headshot,
 
-        fullBody:
-        _fullBody,
+        fullBody: _fullBody,
 
-        introVideo:
-        _introVideo,
+        introVideo: _introVideo,
 
-        previousWork:
-        _previousWork.toList(),
+        previousWork: _previousWork.toList(),
 
-        instagram:
-        _instagram.text.trim(),
+        instagram: _instagram.text.trim(),
 
-        youtube:
-        _youtube.text.trim(),
+        youtube: _youtube.text.trim(),
 
-        imdb:
-        _imdb.text.trim(),
+        imdb: _imdb.text.trim(),
 
-        website:
-        _website.text.trim(),
+        website: _website.text.trim(),
 
-        resume:
-        _resume,
+        resume: _resume,
 
-        awards:
-        _awards.text.trim(),
+        awards: _awards.text.trim(),
 
-        bio:
-        _bio.text.trim(),
+        bio: _bio.text.trim(),
       );
 
       // ========================================================
@@ -478,59 +374,36 @@ class _SignUpWizardPageState
       // ========================================================
 
       debugPrint('');
-      debugPrint(
-        '==========================================',
-      );
-      debugPrint(
-        'REGISTERING USER',
-      );
-      debugPrint(
-        '==========================================',
-      );
-      debugPrint(
-        request.toJson().toString(),
-      );
-      debugPrint(
-        '==========================================',
-      );
+      debugPrint('==========================================');
+      debugPrint('REGISTERING USER');
+      debugPrint('==========================================');
+      debugPrint(request.toJson().toString());
+      debugPrint('==========================================');
 
       // ========================================================
       // CALL API
       // ========================================================
 
-      final response =
-      await _authRepository.register(
-        request,
-      );
+      final response = await _authRepository.register(request);
 
       // ========================================================
       // SUCCESS
       // ========================================================
 
-      debugPrint(
-        'REGISTER SUCCESS',
-      );
+      debugPrint('REGISTER SUCCESS');
 
-      debugPrint(
-        'TOKEN: ${response.token}',
-      );
+      debugPrint('TOKEN: ${response.token}');
 
-      debugPrint(
-        'USER: ${response.user}',
-      );
+      debugPrint('USER: ${response.user}');
 
       if (!mounted) {
         return;
       }
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Profile created successfully!',
-          ),
-          backgroundColor:
-          Colors.green,
+          content: Text('Profile created successfully!'),
+          backgroundColor: Colors.green,
         ),
       );
 
@@ -538,62 +411,37 @@ class _SignUpWizardPageState
       // NAVIGATE TO HOME
       // ========================================================
 
-      await Future.delayed(
-        const Duration(
-          milliseconds: 500,
-        ),
-      );
+      await Future.delayed(const Duration(milliseconds: 500));
 
       if (!mounted) {
         return;
       }
 
-      context.go(
-        AppRoutes.home,
-      );
-
+      context.go(AppRoutes.home);
     } catch (e) {
-
       // ========================================================
       // ERROR
       // ========================================================
 
       debugPrint('');
-      debugPrint(
-        '==========================================',
-      );
-      debugPrint(
-        'REGISTER FAILED',
-      );
-      debugPrint(
-        '==========================================',
-      );
-      debugPrint(
-        e.toString(),
-      );
-      debugPrint(
-        '==========================================',
-      );
+      debugPrint('==========================================');
+      debugPrint('REGISTER FAILED');
+      debugPrint('==========================================');
+      debugPrint(e.toString());
+      debugPrint('==========================================');
 
       if (!mounted) {
         return;
       }
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'Registration failed: $e',
-          ),
-          backgroundColor:
-          Colors.red,
-          duration:
-          const Duration(seconds: 5),
+          content: Text('Registration failed: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
         ),
       );
-
     } finally {
-
       if (mounted) {
         setState(() {
           _isSubmitting = false;
@@ -607,140 +455,88 @@ class _SignUpWizardPageState
   // ============================================================
 
   @override
-  Widget build(
-      BuildContext context,
-      ) {
+  Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-      const Color(0xFF0B1F2A),
+      backgroundColor: const Color(0xFF0B1F2A),
 
       appBar: AppBar(
         elevation: 0,
 
-        backgroundColor:
-        const Color(0xFF0B1F2A),
+        backgroundColor: const Color(0xFF0B1F2A),
 
-        foregroundColor:
-        Colors.white70,
+        foregroundColor: Colors.white70,
+        leading: IconButton(
+            onPressed: (){
+              context.go(AppRoutes.welcome);
+            },
+            icon:Icon(
+              LucideIcons.chevronLeft,
+              size: 24,
+            ),
+        ),
 
         title: const Text(
           'Create your artist profile',
-          style: TextStyle(
-            fontWeight:
-            FontWeight.w700,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
 
       body: SafeArea(
         child: Column(
           children: [
-
             // ==================================================
             // STEP HEADER
             // ==================================================
-
-            SignUpStepHeader(
-              currentStep:
-              _currentStep,
-            ),
+            SignUpStepHeader(currentStep: _currentStep),
 
             // ==================================================
             // PAGE CONTENT
             // ==================================================
-
             Expanded(
               child: Container(
-                margin:
-                const EdgeInsets.all(14),
+                margin: const EdgeInsets.all(14),
 
-                decoration:
-                const BoxDecoration(
-                  color:
-                  Color(0xFF123B4A),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF123B4A),
 
-                  borderRadius:
-                  BorderRadius.vertical(
-                    top:
-                    Radius.circular(28),
-                  ),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
                 ),
 
                 child: Theme(
-                  data:
-                  Theme.of(context).copyWith(
-                    inputDecorationTheme:
-                    const InputDecorationTheme(
-                      labelStyle:
-                      TextStyle(
-                        color:
-                        Color(0xFFC5C8D0),
+                  data: Theme.of(context).copyWith(
+                    inputDecorationTheme: const InputDecorationTheme(
+                      labelStyle: TextStyle(color: Color(0xFFC5C8D0)),
+
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF5E6472)),
                       ),
 
-                      enabledBorder:
-                      OutlineInputBorder(
-                        borderSide:
-                        BorderSide(
-                          color:
-                          Color(0xFF5E6472),
-                        ),
-                      ),
-
-                      focusedBorder:
-                      OutlineInputBorder(
-                        borderSide:
-                        BorderSide(
-                          color:
-                          _blue,
-                          width: 2,
-                        ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: _blue, width: 2),
                       ),
                     ),
 
-                    dropdownMenuTheme:
-                    const DropdownMenuThemeData(
-                      textStyle:
-                      TextStyle(
-                        color:
-                        Colors.white,
-                      ),
+                    dropdownMenuTheme: const DropdownMenuThemeData(
+                      textStyle: TextStyle(color: Colors.white),
                     ),
                   ),
 
                   child: DefaultTextStyle(
-                    style:
-                    const TextStyle(
-                      color:
-                      Colors.white,
-                    ),
+                    style: const TextStyle(color: Colors.white),
 
                     child: PageView(
-                      controller:
-                      _pageController,
+                      controller: _pageController,
 
-                      physics:
-                      const NeverScrollableScrollPhysics(),
+                      physics: const NeverScrollableScrollPhysics(),
 
                       children: [
-                        _form(
-                          0,
-                          _basicInformation(),
-                        ),
+                        _form(0, _basicInformation()),
 
-                        _form(
-                          1,
-                          _professionalProfile(),
-                        ),
+                        _form(1, _professionalProfile()),
 
-                        _form(
-                          2,
-                          _personalDetails(),
-                        ),
+                        _form(2, _personalDetails()),
 
-                        _form(
-                          3,
-                          _portfolio(),
-                        ),
+                        _form(3, _portfolio()),
                       ],
                     ),
                   ),
@@ -751,7 +547,6 @@ class _SignUpWizardPageState
             // ==================================================
             // BOTTOM ACTIONS
             // ==================================================
-
             _bottomActions(),
           ],
         ),
@@ -763,26 +558,14 @@ class _SignUpWizardPageState
   // FORM WRAPPER
   // ============================================================
 
-  Widget _form(
-      int index,
-      Widget child,
-      ) {
+  Widget _form(int index, Widget child) {
     return Form(
-      key:
-      _formKeys[index],
+      key: _formKeys[index],
 
-      child:
-      SingleChildScrollView(
-        padding:
-        const EdgeInsets.fromLTRB(
-          20,
-          24,
-          20,
-          24,
-        ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
 
-        child:
-        child,
+        child: child,
       ),
     );
   }
@@ -791,48 +574,27 @@ class _SignUpWizardPageState
   // TITLE
   // ============================================================
 
-  Widget _title(
-      String title,
-      String subtitle,
-      ) {
+  Widget _title(String title, String subtitle) {
     return Padding(
-      padding:
-      const EdgeInsets.only(
-        bottom: 22,
-      ),
+      padding: const EdgeInsets.only(bottom: 22),
 
       child: Column(
-        crossAxisAlignment:
-        CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
 
         children: [
           Text(
             title,
 
-            style:
-            const TextStyle(
-              color:
-              Colors.white,
-              fontSize:
-              24,
-              fontWeight:
-              FontWeight.w800,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
             ),
           ),
 
-          const SizedBox(
-            height: 5,
-          ),
+          const SizedBox(height: 5),
 
-          Text(
-            subtitle,
-
-            style:
-            const TextStyle(
-              color:
-              Color(0xFFB0B6C4),
-            ),
-          ),
+          Text(subtitle, style: const TextStyle(color: Color(0xFFB0B6C4))),
         ],
       ),
     );
@@ -844,56 +606,30 @@ class _SignUpWizardPageState
 
   Widget _basicInformation() {
     return Column(
-      crossAxisAlignment:
-      CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
 
       children: [
+        _title('Basic information', 'Tell casting teams about yourself.'),
 
-        _title(
-          'Basic information',
-          'Tell casting teams about yourself.',
-        ),
+        _text(_fullName, 'Full name', required: true),
 
-        _text(
-          _fullName,
-          'Full name',
-          required: true,
-        ),
-
-        _text(
-          _stageName,
-          'Stage name (optional)',
-        ),
+        _text(_stageName, 'Stage name (optional)'),
 
         _text(
           _phone,
           'Mobile number',
           required: true,
-          keyboard:
-          TextInputType.phone,
+          keyboard: TextInputType.phone,
           validator: (v) {
-            final requiredError =
-            _required(
-              v,
-              'Mobile number',
-            );
+            final requiredError = _required(v, 'Mobile number');
 
-            if (requiredError !=
-                null) {
+            if (requiredError != null) {
               return requiredError;
             }
 
-            final digits =
-            v!
-                .replaceAll(
-              RegExp(
-                r'[^0-9]',
-              ),
-              '',
-            );
+            final digits = v!.replaceAll(RegExp(r'[^0-9]'), '');
 
-            if (digits.length <
-                10) {
+            if (digits.length < 10) {
               return 'Enter a valid mobile number';
             }
 
@@ -905,27 +641,17 @@ class _SignUpWizardPageState
           _email,
           'Email address',
           required: true,
-          keyboard:
-          TextInputType.emailAddress,
+          keyboard: TextInputType.emailAddress,
           validator: (v) {
-            final requiredError =
-            _required(
-              v,
-              'Email address',
-            );
+            final requiredError = _required(v, 'Email address');
 
-            if (requiredError !=
-                null) {
+            if (requiredError != null) {
               return requiredError;
             }
 
-            final emailRegex =
-            RegExp(
-              r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
-            );
+            final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
-            if (!emailRegex
-                .hasMatch(v!.trim())) {
+            if (!emailRegex.hasMatch(v!.trim())) {
               return 'Enter a valid email address';
             }
 
@@ -939,14 +665,9 @@ class _SignUpWizardPageState
           required: true,
           obscureText: true,
           validator: (v) {
-            final requiredError =
-            _required(
-              v,
-              'Password',
-            );
+            final requiredError = _required(v, 'Password');
 
-            if (requiredError !=
-                null) {
+            if (requiredError != null) {
               return requiredError;
             }
 
@@ -962,14 +683,9 @@ class _SignUpWizardPageState
 
         _choice(
           'Gender',
-          [
-            'Male',
-            'Female',
-            'Other',
-            'Prefer not to say',
-          ],
+          ['Male', 'Female', 'Other', 'Prefer not to say'],
           _gender,
-              (v) {
+          (v) {
             setState(() {
               _gender = v;
             });
@@ -979,14 +695,9 @@ class _SignUpWizardPageState
 
         _dropdown(
           'Country',
-          [
-            'India',
-            'United States',
-            'United Kingdom',
-            'Other',
-          ],
+          ['India', 'United States', 'United Kingdom', 'Other'],
           _country,
-              (v) {
+          (v) {
             setState(() {
               _country = v;
             });
@@ -1005,7 +716,7 @@ class _SignUpWizardPageState
             'Other',
           ],
           _state,
-              (v) {
+          (v) {
             setState(() {
               _state = v;
             });
@@ -1015,16 +726,9 @@ class _SignUpWizardPageState
 
         _dropdown(
           'City',
-          [
-            'Bengaluru',
-            'Chennai',
-            'Hyderabad',
-            'Mumbai',
-            'New Delhi',
-            'Other',
-          ],
+          ['Bengaluru', 'Chennai', 'Hyderabad', 'Mumbai', 'New Delhi', 'Other'],
           _city,
-              (v) {
+          (v) {
             setState(() {
               _city = v;
             });
@@ -1032,10 +736,7 @@ class _SignUpWizardPageState
           required: true,
         ),
 
-        _upload(
-          'Profile photo (optional)',
-          Icons.person_outline,
-        ),
+        _upload('Profile photo (optional)', Icons.person_outline),
       ],
     );
   }
@@ -1046,15 +747,10 @@ class _SignUpWizardPageState
 
   Widget _professionalProfile() {
     return Column(
-      crossAxisAlignment:
-      CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
 
       children: [
-
-        _title(
-          'Professional profile',
-          'Show us the work you want to do.',
-        ),
+        _title('Professional profile', 'Show us the work you want to do.'),
 
         _choice(
           'Category',
@@ -1068,7 +764,7 @@ class _SignUpWizardPageState
             'Influencer',
           ],
           _category,
-              (v) {
+          (v) {
             setState(() {
               _category = v;
             });
@@ -1078,15 +774,9 @@ class _SignUpWizardPageState
 
         _choice(
           'Experience',
-          [
-            'Fresher',
-            '1–2 Years',
-            '3–5 Years',
-            '5–10 Years',
-            '10+ Years',
-          ],
+          ['Fresher', '1–2 Years', '3–5 Years', '5–10 Years', '10+ Years'],
           _experience,
-              (v) {
+          (v) {
             setState(() {
               _experience = v;
             });
@@ -1125,18 +815,14 @@ class _SignUpWizardPageState
           required: true,
         ),
 
-        _multi(
-          'Preferred acting language',
-          [
-            'English',
-            'Hindi',
-            'Telugu',
-            'Tamil',
-            'Kannada',
-            'Malayalam',
-          ],
-          _actingLanguages,
-        ),
+        _multi('Preferred acting language', [
+          'English',
+          'Hindi',
+          'Telugu',
+          'Tamil',
+          'Kannada',
+          'Malayalam',
+        ], _actingLanguages),
 
         _dropdown(
           'Highest qualification',
@@ -1149,17 +835,14 @@ class _SignUpWizardPageState
             'Other',
           ],
           _qualification,
-              (v) {
+          (v) {
             setState(() {
               _qualification = v;
             });
           },
         ),
 
-        _text(
-          _institute,
-          'Acting institute (optional)',
-        ),
+        _text(_institute, 'Acting institute (optional)'),
 
         _dropdown(
           'Current occupation',
@@ -1172,46 +855,34 @@ class _SignUpWizardPageState
             'Other',
           ],
           _occupation,
-              (v) {
+          (v) {
             setState(() {
               _occupation = v;
             });
           },
         ),
 
-        _multi(
-          'Available for',
-          [
-            'Movies',
-            'OTT',
-            'TV Serials',
-            'Advertisements',
-            'Music Videos',
-            'Theatre',
-            'Web Series',
-          ],
-          _availableFor,
-        ),
+        _multi('Available for', [
+          'Movies',
+          'OTT',
+          'TV Serials',
+          'Advertisements',
+          'Music Videos',
+          'Theatre',
+          'Web Series',
+        ], _availableFor),
 
-        _switchTile(
-          'Union membership',
-          _unionMember,
-              (v) {
-            setState(() {
-              _unionMember = v;
-            });
-          },
-        ),
+        _switchTile('Union membership', _unionMember, (v) {
+          setState(() {
+            _unionMember = v;
+          });
+        }),
 
-        _switchTile(
-          'Willing to relocate',
-          _relocate,
-              (v) {
-            setState(() {
-              _relocate = v;
-            });
-          },
-        ),
+        _switchTile('Willing to relocate', _relocate, (v) {
+          setState(() {
+            _relocate = v;
+          });
+        }),
       ],
     );
   }
@@ -1222,11 +893,9 @@ class _SignUpWizardPageState
 
   Widget _personalDetails() {
     return Column(
-      crossAxisAlignment:
-      CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
 
       children: [
-
         _title(
           'Personal & physical details',
           'These details help find the right fit.',
@@ -1234,13 +903,9 @@ class _SignUpWizardPageState
 
         _dropdown(
           'Height',
-          List.generate(
-            25,
-                (i) =>
-            '${150 + i * 3} cm',
-          ),
+          List.generate(25, (i) => '${150 + i * 3} cm'),
           _height,
-              (v) {
+          (v) {
             setState(() {
               _height = v;
             });
@@ -1250,13 +915,9 @@ class _SignUpWizardPageState
 
         _dropdown(
           'Weight',
-          List.generate(
-            25,
-                (i) =>
-            '${30 + i * 5} kg',
-          ),
+          List.generate(25, (i) => '${30 + i * 5} kg'),
           _weight,
-              (v) {
+          (v) {
             setState(() {
               _weight = v;
             });
@@ -1266,15 +927,9 @@ class _SignUpWizardPageState
 
         _dropdown(
           'Body type',
-          [
-            'Slim',
-            'Athletic',
-            'Average',
-            'Heavy',
-            'Muscular',
-          ],
+          ['Slim', 'Athletic', 'Average', 'Heavy', 'Muscular'],
           _bodyType,
-              (v) {
+          (v) {
             setState(() {
               _bodyType = v;
             });
@@ -1283,15 +938,9 @@ class _SignUpWizardPageState
 
         _dropdown(
           'Skin tone',
-          [
-            'Very Fair',
-            'Fair',
-            'Wheatish',
-            'Brown',
-            'Dark',
-          ],
+          ['Very Fair', 'Fair', 'Wheatish', 'Brown', 'Dark'],
           _skinTone,
-              (v) {
+          (v) {
             setState(() {
               _skinTone = v;
             });
@@ -1300,16 +949,9 @@ class _SignUpWizardPageState
 
         _dropdown(
           'Hair color',
-          [
-            'Black',
-            'Brown',
-            'Blonde',
-            'Grey',
-            'Red',
-            'Dyed',
-          ],
+          ['Black', 'Brown', 'Blonde', 'Grey', 'Red', 'Dyed'],
           _hairColor,
-              (v) {
+          (v) {
             setState(() {
               _hairColor = v;
             });
@@ -1318,60 +960,40 @@ class _SignUpWizardPageState
 
         _dropdown(
           'Eye color',
-          [
-            'Black',
-            'Brown',
-            'Blue',
-            'Green',
-            'Hazel',
-            'Grey',
-          ],
+          ['Black', 'Brown', 'Blue', 'Green', 'Hazel', 'Grey'],
           _eyeColor,
-              (v) {
+          (v) {
             setState(() {
               _eyeColor = v;
             });
           },
         ),
 
-        _multi(
-          'Preferred role',
-          [
-            'Hero',
-            'Heroine',
-            'Villain',
-            'Supporting Artist',
-            'Character Artist',
-            'Child Artist',
-          ],
-          _roles,
-        ),
+        _multi('Preferred role', [
+          'Hero',
+          'Heroine',
+          'Villain',
+          'Supporting Artist',
+          'Character Artist',
+          'Child Artist',
+        ], _roles),
 
         _choice(
           'Travel availability',
-          [
-            'Anywhere',
-            'Within State',
-            'Within City',
-            'Not Willing',
-          ],
+          ['Anywhere', 'Within State', 'Within City', 'Not Willing'],
           _travelAvailability,
-              (v) {
+          (v) {
             setState(() {
               _travelAvailability = v;
             });
           },
         ),
 
-        _switchTile(
-          'Available for night shoots',
-          _nightShoots,
-              (v) {
-            setState(() {
-              _nightShoots = v;
-            });
-          },
-        ),
+        _switchTile('Available for night shoots', _nightShoots, (v) {
+          setState(() {
+            _nightShoots = v;
+          });
+        }),
       ],
     );
   }
@@ -1382,83 +1004,52 @@ class _SignUpWizardPageState
 
   Widget _portfolio() {
     return Column(
-      crossAxisAlignment:
-      CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
 
       children: [
-
         _title(
           'Portfolio & experience',
           'Add the material that represents your work.',
         ),
 
-        _upload(
-          'Headshot upload',
-          Icons.add_a_photo_outlined,
-        ),
+        _upload('Headshot upload', Icons.add_a_photo_outlined),
 
-        _upload(
-          'Full body photo',
-          Icons.photo_camera_back_outlined,
-        ),
+        _upload('Full body photo', Icons.photo_camera_back_outlined),
 
         _upload(
           'Introduction video (30–60 seconds)',
           Icons.video_camera_back_outlined,
         ),
 
-        _multi(
-          'Previous work',
-          [
-            'Movie',
-            'TV Serial',
-            'OTT',
-            'Advertisement',
-            'Theatre',
-            'Short Film',
-            'Music Video',
-          ],
-          _previousWork,
-        ),
+        _multi('Previous work', [
+          'Movie',
+          'TV Serial',
+          'OTT',
+          'Advertisement',
+          'Theatre',
+          'Short Film',
+          'Music Video',
+        ], _previousWork),
 
         _text(
           _instagram,
           'Instagram URL (optional)',
-          keyboard:
-          TextInputType.url,
+          keyboard: TextInputType.url,
         ),
 
-        _text(
-          _youtube,
-          'YouTube URL (optional)',
-          keyboard:
-          TextInputType.url,
-        ),
+        _text(_youtube, 'YouTube URL (optional)', keyboard: TextInputType.url),
 
-        _text(
-          _imdb,
-          'IMDb URL (optional)',
-          keyboard:
-          TextInputType.url,
-        ),
+        _text(_imdb, 'IMDb URL (optional)', keyboard: TextInputType.url),
 
         _text(
           _website,
           'Personal website (optional)',
-          keyboard:
-          TextInputType.url,
+          keyboard: TextInputType.url,
         ),
 
-        _upload(
-          'Resume upload (PDF, optional)',
-          Icons.upload_file_outlined,
-        ),
+        _upload('Resume upload (PDF, optional)', Icons.upload_file_outlined),
 
-        _text(
-          _awards,
-          'Awards & achievements (optional)',
-          maxLines: 3,
-        ),
+        _text(_awards, 'Awards & achievements (optional)', maxLines: 3),
 
         _text(
           _bio,
@@ -1476,87 +1067,52 @@ class _SignUpWizardPageState
 
   Widget _bottomActions() {
     return Container(
-      padding:
-      const EdgeInsets.fromLTRB(
-        20,
-        12,
-        20,
-        20,
-      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
 
-      decoration:
-      const BoxDecoration(
-        color:
-        Color(0xFF0B1F2A),
+      decoration: const BoxDecoration(
+        color: Color(0xFF0B1F2A),
 
         boxShadow: [
           BoxShadow(
-            color:
-            Color(0x11000000),
-            blurRadius:
-            12,
-            offset:
-            Offset(0, -3),
+            color: Color(0x11000000),
+            blurRadius: 12,
+            offset: Offset(0, -3),
           ),
         ],
       ),
 
       child: Row(
         children: [
-
           if (_currentStep > 0) ...[
             OutlinedButton(
-              onPressed:
-              _isSubmitting
-                  ? null
-                  : _back,
+              onPressed: _isSubmitting ? null : _back,
 
-              child:
-              const Text('Back'),
+              child: const Text('Back'),
             ),
 
-            const SizedBox(
-              width: 12,
-            ),
+            const SizedBox(width: 12),
           ],
 
           Expanded(
             child: FilledButton(
-              style:
-              FilledButton.styleFrom(
-                backgroundColor:
-                const Color(
-                  0xFF2F5BEA,
-                ),
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF2F5BEA),
 
-                padding:
-                const EdgeInsets
-                    .symmetric(
-                  vertical: 15,
-                ),
+                padding: const EdgeInsets.symmetric(vertical: 15),
               ),
 
-              onPressed:
-              _isSubmitting
-                  ? null
-                  : _next,
+              onPressed: _isSubmitting ? null : _next,
 
               child: _isSubmitting
                   ? const SizedBox(
-                height: 22,
-                width: 22,
-                child:
-                CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color:
-                  Colors.white,
-                ),
-              )
-                  : Text(
-                _currentStep == 3
-                    ? 'Submit profile'
-                    : 'Continue',
-              ),
+                      height: 22,
+                      width: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(_currentStep == 3 ? 'Submit profile' : 'Continue'),
             ),
           ),
         ],
@@ -1569,55 +1125,35 @@ class _SignUpWizardPageState
   // ============================================================
 
   Widget _text(
-      TextEditingController controller,
-      String label, {
-        bool required = false,
-        TextInputType? keyboard,
-        int maxLines = 1,
-        int? maxLength,
-        bool obscureText = false,
-        String? Function(String?)? validator,
-      }) {
+    TextEditingController controller,
+    String label, {
+    bool required = false,
+    TextInputType? keyboard,
+    int maxLines = 1,
+    int? maxLength,
+    bool obscureText = false,
+    String? Function(String?)? validator,
+  }) {
     return Padding(
-      padding:
-      const EdgeInsets.only(
-        bottom: 16,
-      ),
+      padding: const EdgeInsets.only(bottom: 16),
 
       child: TextFormField(
-        controller:
-        controller,
+        controller: controller,
 
-        keyboardType:
-        keyboard,
+        keyboardType: keyboard,
 
-        maxLines:
-        obscureText
-            ? 1
-            : maxLines,
+        maxLines: obscureText ? 1 : maxLines,
 
-        maxLength:
-        maxLength,
+        maxLength: maxLength,
 
-        obscureText:
-        obscureText,
+        obscureText: obscureText,
 
-        validator:
-        validator ??
-            (required
-                ? (v) => _required(
-              v,
-              label,
-            )
-                : null),
+        validator: validator ?? (required ? (v) => _required(v, label) : null),
 
-        decoration:
-        InputDecoration(
-          labelText:
-          '$label${required ? ' *' : ''}',
+        decoration: InputDecoration(
+          labelText: '$label${required ? ' *' : ''}',
 
-          border:
-          const OutlineInputBorder(),
+          border: const OutlineInputBorder(),
         ),
       ),
     );
@@ -1628,58 +1164,33 @@ class _SignUpWizardPageState
   // ============================================================
 
   Widget _dropdown(
-      String label,
-      List<String> items,
-      String? value,
-      ValueChanged<String?> onChanged, {
-        bool required = false,
-      }) {
+    String label,
+    List<String> items,
+    String? value,
+    ValueChanged<String?> onChanged, {
+    bool required = false,
+  }) {
     return Padding(
-      padding:
-      const EdgeInsets.only(
-        bottom: 16,
-      ),
+      padding: const EdgeInsets.only(bottom: 16),
 
-      child:
-      DropdownButtonFormField<String>(
-        value:
-        value,
+      child: DropdownButtonFormField<String>(
+        value: value,
 
-        isExpanded:
-        true,
+        isExpanded: true,
 
-        validator:
-        required
-            ? (v) => _required(
-          v,
-          label,
-        )
-            : null,
+        validator: required ? (v) => _required(v, label) : null,
 
-        decoration:
-        InputDecoration(
-          labelText:
-          '$label${required ? ' *' : ''}',
+        decoration: InputDecoration(
+          labelText: '$label${required ? ' *' : ''}',
 
-          border:
-          const OutlineInputBorder(),
+          border: const OutlineInputBorder(),
         ),
 
-        items:
-        items.map(
-              (item) {
-            return DropdownMenuItem(
-              value:
-              item,
+        items: items.map((item) {
+          return DropdownMenuItem(value: item, child: Text(item));
+        }).toList(),
 
-              child:
-              Text(item),
-            );
-          },
-        ).toList(),
-
-        onChanged:
-        onChanged,
+        onChanged: onChanged,
       ),
     );
   }
@@ -1689,96 +1200,61 @@ class _SignUpWizardPageState
   // ============================================================
 
   Widget _choice(
-      String label,
-      List<String> options,
-      String? value,
-      ValueChanged<String> onChanged, {
-        bool required = false,
-      }) {
+    String label,
+    List<String> options,
+    String? value,
+    ValueChanged<String> onChanged, {
+    bool required = false,
+  }) {
     return FormField<String>(
-      validator:
-      required
-          ? (v) => value == null
-          ? 'Please select $label'
-          : null
+      validator: required
+          ? (v) => value == null ? 'Please select $label' : null
           : null,
 
-      builder:
-          (state) => Padding(
-        padding:
-        const EdgeInsets.only(
-          bottom: 16,
-        ),
+      builder: (state) => Padding(
+        padding: const EdgeInsets.only(bottom: 16),
 
         child: Column(
-          crossAxisAlignment:
-          CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
 
           children: [
-
             Text(
               '$label${required ? ' *' : ''}',
 
-              style:
-              const TextStyle(
-                fontWeight:
-                FontWeight.w600,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
 
-            const SizedBox(
-              height: 8,
-            ),
+            const SizedBox(height: 8),
 
             Wrap(
               spacing: 8,
               runSpacing: 8,
 
-              children:
-              options.map(
-                    (item) {
-                  return ChoiceChip(
-                    label:
-                    Text(item),
+              children: options.map((item) {
+                return ChoiceChip(
+                  label: Text(item),
 
-                    selected:
-                    value == item,
+                  selected: value == item,
 
-                    selectedColor:
-                    _blue.withValues(
-                      alpha: 0.14,
-                    ),
+                  selectedColor: _blue.withValues(alpha: 0.14),
 
-                    onSelected:
-                        (_) {
-                      onChanged(item);
+                  onSelected: (_) {
+                    onChanged(item);
 
-                      state.didChange(
-                        item,
-                      );
-                    },
-                  );
-                },
-              ).toList(),
+                    state.didChange(item);
+                  },
+                );
+              }).toList(),
             ),
 
             if (state.hasError)
               Padding(
-                padding:
-                const EdgeInsets.only(
-                  top: 6,
-                ),
+                padding: const EdgeInsets.only(top: 6),
 
                 child: Text(
                   state.errorText!,
 
-                  style:
-                  const TextStyle(
-                    color:
-                    Colors.red,
-                    fontSize:
-                    12,
-                  ),
+                  style: const TextStyle(color: Colors.red, fontSize: 12),
                 ),
               ),
           ],
@@ -1792,106 +1268,65 @@ class _SignUpWizardPageState
   // ============================================================
 
   Widget _multi(
-      String label,
-      List<String> options,
-      Set<String> selected, {
-        bool required = false,
-      }) {
+    String label,
+    List<String> options,
+    Set<String> selected, {
+    bool required = false,
+  }) {
     return FormField<bool>(
-      validator:
-          (_) => required &&
-          selected.isEmpty
-          ? 'Select at least one option'
-          : null,
+      validator: (_) =>
+          required && selected.isEmpty ? 'Select at least one option' : null,
 
-      builder:
-          (state) => Padding(
-        padding:
-        const EdgeInsets.only(
-          bottom: 16,
-        ),
+      builder: (state) => Padding(
+        padding: const EdgeInsets.only(bottom: 16),
 
         child: Column(
-          crossAxisAlignment:
-          CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
 
           children: [
-
             Text(
               '$label${required ? ' *' : ''}',
 
-              style:
-              const TextStyle(
-                fontWeight:
-                FontWeight.w600,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
 
-            const SizedBox(
-              height: 8,
-            ),
+            const SizedBox(height: 8),
 
             Wrap(
               spacing: 8,
               runSpacing: 8,
 
-              children:
-              options.map(
-                    (item) {
-                  return FilterChip(
-                    label:
-                    Text(item),
+              children: options.map((item) {
+                return FilterChip(
+                  label: Text(item),
 
-                    selected:
-                    selected.contains(
-                      item,
-                    ),
+                  selected: selected.contains(item),
 
-                    selectedColor:
-                    _blue.withValues(
-                      alpha: 0.14,
-                    ),
+                  selectedColor: _blue.withValues(alpha: 0.14),
 
-                    onSelected:
-                        (on) {
-                      setState(() {
-                        if (on) {
-                          selected.add(
-                            item,
-                          );
-                        } else {
-                          selected.remove(
-                            item,
-                          );
-                        }
-                      });
+                  onSelected: (on) {
+                    setState(() {
+                      if (on) {
+                        selected.add(item);
+                      } else {
+                        selected.remove(item);
+                      }
+                    });
 
-                      state.didChange(
-                        selected.isNotEmpty,
-                      );
-                    },
-                  );
-                },
-              ).toList(),
+                    state.didChange(selected.isNotEmpty);
+                  },
+                );
+              }).toList(),
             ),
 
             if (state.hasError)
               Padding(
-                padding:
-                const EdgeInsets.only(
-                  top: 6,
-                ),
+                padding: const EdgeInsets.only(top: 6),
 
                 child: Text(
                   state.errorText!,
 
-                  style:
-                  const TextStyle(
-                    color:
-                    Colors.red,
-                    fontSize:
-                    12,
-                  ),
+                  style: const TextStyle(color: Colors.red, fontSize: 12),
                 ),
               ),
           ],
@@ -1904,31 +1339,19 @@ class _SignUpWizardPageState
   // SWITCH
   // ============================================================
 
-  Widget _switchTile(
-      String label,
-      bool value,
-      ValueChanged<bool> onChanged,
-      ) {
+  Widget _switchTile(String label, bool value, ValueChanged<bool> onChanged) {
     return SwitchListTile.adaptive(
-      contentPadding:
-      EdgeInsets.zero,
+      contentPadding: EdgeInsets.zero,
 
-      title:
-      Text(label),
+      title: Text(label),
 
-      subtitle:
-      Text(
-        value ? 'Yes' : 'No',
-      ),
+      subtitle: Text(value ? 'Yes' : 'No'),
 
-      value:
-      value,
+      value: value,
 
-      activeColor:
-      _blue,
+      activeColor: _blue,
 
-      onChanged:
-      onChanged,
+      onChanged: onChanged,
     );
   }
 
@@ -1938,35 +1361,21 @@ class _SignUpWizardPageState
 
   Widget _dateField() {
     return Padding(
-      padding:
-      const EdgeInsets.only(
-        bottom: 16,
-      ),
+      padding: const EdgeInsets.only(bottom: 16),
 
-      child:
-      FormField<DateTime>(
-        validator:
-            (v) => _dob == null
-            ? 'Date of birth is required'
-            : null,
+      child: FormField<DateTime>(
+        validator: (v) => _dob == null ? 'Date of birth is required' : null,
 
-        builder:
-            (state) => InkWell(
-          onTap:
-              () async {
-            final picked =
-            await showDatePicker(
-              context:
-              context,
+        builder: (state) => InkWell(
+          onTap: () async {
+            final picked = await showDatePicker(
+              context: context,
 
-              firstDate:
-              DateTime(1940),
+              firstDate: DateTime(1940),
 
-              lastDate:
-              DateTime.now(),
+              lastDate: DateTime.now(),
 
-              initialDate:
-              DateTime(2000),
+              initialDate: DateTime(2000),
             );
 
             if (picked != null) {
@@ -1974,28 +1383,20 @@ class _SignUpWizardPageState
                 _dob = picked;
               });
 
-              state.didChange(
-                picked,
-              );
+              state.didChange(picked);
             }
           },
 
-          child:
-          InputDecorator(
-            decoration:
-            InputDecoration(
-              labelText:
-              'Date of birth *',
+          child: InputDecorator(
+            decoration: InputDecoration(
+              labelText: 'Date of birth *',
 
-              errorText:
-              state.errorText,
+              errorText: state.errorText,
 
-              border:
-              const OutlineInputBorder(),
+              border: const OutlineInputBorder(),
             ),
 
-            child:
-            Text(
+            child: Text(
               _dob == null
                   ? 'Select date'
                   : '${_dob!.day}/${_dob!.month}/${_dob!.year}',
@@ -2010,18 +1411,11 @@ class _SignUpWizardPageState
   // UPLOAD PLACEHOLDER
   // ============================================================
 
-  Widget _upload(
-      String label,
-      IconData icon,
-      ) {
+  Widget _upload(String label, IconData icon) {
     return Padding(
-      padding:
-      const EdgeInsets.only(
-        bottom: 16,
-      ),
+      padding: const EdgeInsets.only(bottom: 16),
 
-      child:
-      OutlinedButton.icon(
+      child: OutlinedButton.icon(
         onPressed: () {
           // ====================================================
           // FILE UPLOAD WILL BE IMPLEMENTED HERE
@@ -2038,21 +1432,14 @@ class _SignUpWizardPageState
           //
         },
 
-        icon:
-        Icon(icon),
+        icon: Icon(icon),
 
-        label:
-        Text(label),
+        label: Text(label),
 
-        style:
-        OutlinedButton.styleFrom(
-          minimumSize:
-          const Size.fromHeight(
-            52,
-          ),
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size.fromHeight(52),
 
-          alignment:
-          Alignment.centerLeft,
+          alignment: Alignment.centerLeft,
         ),
       ),
     );

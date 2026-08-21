@@ -99,7 +99,17 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         print('PROFILE DATA AFTER EXTRACTION');
         print(data);
 
-        return ArtistModel.fromJson(data);
+        final artist = ArtistModel.fromJson(data);
+        if (artist.id.isNotEmpty) {
+          _localStorage.saveUserId(artist.id);
+        }
+        if (artist.name.isNotEmpty) {
+          _localStorage.saveUserName(artist.name);
+        }
+        if (artist.profileImage.isNotEmpty) {
+          _localStorage.saveUserProfilePhoto(artist.profileImage);
+        }
+        return artist;
       }
 
       throw Exception(

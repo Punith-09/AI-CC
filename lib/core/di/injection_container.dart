@@ -9,6 +9,8 @@ import '../../features/explore/data/datasource/explore_remote_datasource.dart';
 import '../../features/explore/data/repository/explore_repository.dart';
 import '../../features/artist_profile/data/datasource/profile_remote_datasource.dart';
 import '../../features/artist_profile/data/repository/profile_repository.dart';
+import '../../features/home/data/datasource/home_remote_datasource.dart';
+import '../../features/home/data/repository/home_repository.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -71,6 +73,22 @@ Future<void> initDependencies() async {
     sl.registerLazySingleton<ProfileRepository>(
           () => ProfileRepositoryImpl(
         sl<ProfileRemoteDataSource>(),
+      ),
+    );
+  }
+
+  // Home Feature
+  if (!sl.isRegistered<HomeRemoteDataSource>()) {
+    sl.registerLazySingleton<HomeRemoteDataSource>(
+      () => HomeRemoteDataSourceImpl(
+        sl<DioClient>(),
+      ),
+    );
+  }
+  if (!sl.isRegistered<HomeRepository>()) {
+    sl.registerLazySingleton<HomeRepository>(
+      () => HomeRepositoryImpl(
+        sl<HomeRemoteDataSource>(),
       ),
     );
   }

@@ -518,7 +518,7 @@ class _RolesScreenState extends State<RolesScreen> {
                       height: 60,
                       child: OutlinedButton(
                         onPressed: () {
-                          Navigator.pop(context);
+                          context.pop();
                         },
                         style: OutlinedButton.styleFrom(
                           backgroundColor: const Color(0xFF062331),

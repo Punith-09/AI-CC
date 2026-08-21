@@ -36,6 +36,26 @@ class ApiEndpoints {
   static const String photos = "/photos";
   static const String videos = "/videos";
   static const String uploadVideo = "/videos/upload";
+  static String likeVideo(String id) => "/videos/$id/like";
+  static String likePhoto(String id) => "/photos/$id/like";
+  static String viewVideo(String id) => "/videos/$id/view";
+  static String videoComments(String id) => "/videos/$id/comments";
+  static String likeComment(String commentId) => "/videos/comments/$commentId/like";
+
+  static String formatMediaUrl(String url) {
+    if (url.isEmpty) return url;
+    if (url.startsWith('/')) {
+      return '$baseUrl$url';
+    }
+    if (url.startsWith('http://localhost:3000') && !kIsWeb) {
+      try {
+        if (Platform.isAndroid) {
+          return url.replaceFirst('http://localhost:3000', 'http://10.0.2.2:3000');
+        }
+      } catch (_) {}
+    }
+    return url;
+  }
 }
   // static const String login = "/auth/login";
   // static const String register = "/auth/register";

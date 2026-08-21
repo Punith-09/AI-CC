@@ -359,7 +359,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           alignment: PlaceholderAlignment.middle,
                           child: GestureDetector(
                             onTap: () {
-                              context.go(AppRoutes.signup);
+                              context.push(AppRoutes.role);
                             },
                             child: const Text(
                               "Sign Up Now",
