@@ -24,6 +24,10 @@ import 'features/artist_profile/data/repository/profile_repository.dart';
 import 'features/artist_profile/presentation/providers/profile_provider.dart';
 import 'features/home/data/repository/home_repository.dart';
 import 'features/home/presentation/providers/home_feed_provider.dart';
+import 'features/apply_job/data/repository/apply_job_repository.dart';
+import 'features/apply_job/presentation/providers/apply_job_provider.dart';
+import 'features/messages/data/repository/messages_repository.dart';
+import 'features/messages/presentation/providers/messages_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -65,6 +69,12 @@ void main() async {
         ),
         ChangeNotifierProvider(
           create: (_) => VideosProvider(videosRepository),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ApplyJobProvider(sl<ApplyJobRepository>()),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => MessagesProvider(sl<MessagesRepository>()),
         ),
       ],
       child: const MyApp(),
