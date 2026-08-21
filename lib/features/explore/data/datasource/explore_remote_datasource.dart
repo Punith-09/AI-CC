@@ -26,8 +26,31 @@ class ExploreRemoteDataSourceImpl implements ExploreRemoteDataSource {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = response.data['data'] ?? response.data;
-        return data.map((json) => TalentModel.fromJson(json)).toList();
+        final rawData = response.data;
+
+        // Handle various API response shapes:
+        // 1. Direct list:          [{ ... }, { ... }]
+        // 2. Wrapped in 'data':    { "data": [ ... ] }
+        // 3. Wrapped in 'users':   { "users": [ ... ] }
+        // 4. Wrapped in 'results': { "results": [ ... ] }
+        List<dynamic> list;
+        if (rawData is List) {
+          list = rawData;
+        } else if (rawData is Map) {
+          final inner = rawData['data'] ??
+              rawData['users'] ??
+              rawData['results'] ??
+              rawData['talents'] ??
+              [];
+          list = inner is List ? inner : [];
+        } else {
+          list = [];
+        }
+
+        return list
+            .whereType<Map<String, dynamic>>()
+            .map((json) => TalentModel.fromJson(json))
+            .toList();
       } else {
         throw Exception('Failed to fetch explore users');
       }
