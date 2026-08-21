@@ -14,6 +14,7 @@ class AppRoutes {
   static const String artistProfile = "/artistProfile";
   static const String creatorProfile = "/creatorProfile";
 
+  static const String messages = "/messages";
   static const String chat = "/chat";
   static const String applyJob = "/applyJob";
   static const String auditionDetails = "/auditionDetails";

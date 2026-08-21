@@ -6,6 +6,7 @@ import 'app_routes.dart';
 
 import '../../common/widgets/custom_bottom_navbar.dart';
 
+import '../../features/apply_job/data/models/application_model.dart';
 import '../../features/apply_job/presentation/pages/apply_screen.dart';
 import '../../features/artist_profile/presentation/pages/artist_profile_screen.dart';
 import '../../features/auditions/data/models/audition_model.dart';
@@ -18,6 +19,7 @@ import '../../features/creator_profile/presentation/pages/creator_profile_screen
 import '../../features/explore/presentation/pages/explore_screen.dart';
 import '../../features/home/presentation/pages/home_screen.dart';
 import '../../features/messages/presentation/pages/chat_screen.dart';
+import '../../features/messages/presentation/pages/messages_screen.dart';
 import '../../features/notifications/presentation/pages/activity_screen.dart';
 import '../../features/post/presentation/pages/post_screen.dart';
 import '../../features/post/presentation/pages/upload_photo_screen.dart';
@@ -27,114 +29,253 @@ final GoRouter appRouter = GoRouter(
   initialLocation: AppRoutes.welcome,
 
   routes: [
+    // =========================================================
+    // WELCOME
+    // =========================================================
 
     GoRoute(
       path: AppRoutes.welcome,
-      builder: (_, __) => const WelcomeScreen(),
+      builder: (_, __) =>
+      const WelcomeScreen(),
     ),
+
+    // =========================================================
+    // LOGIN
+    // =========================================================
 
     GoRoute(
       path: AppRoutes.login,
-      builder: (_, __) => const LoginScreen(),
+      builder: (_, __) =>
+      const LoginScreen(),
     ),
+
+    // =========================================================
+    // SIGN UP
+    // =========================================================
 
     GoRoute(
       path: AppRoutes.signup,
-      builder: (_, __) => const SignUpWizardPage(),
+      builder: (_, __) =>
+      const SignUpWizardPage(),
     ),
+
+    // =========================================================
+    // MESSAGES INBOX
+    // =========================================================
+
+    GoRoute(
+      path: AppRoutes.messages,
+      builder: (_, __) => const MessagesScreen(),
+    ),
+
+    // =========================================================
+    // CHAT
+    // =========================================================
 
     GoRoute(
       path: AppRoutes.chat,
-      builder: (_, __) => const ChatScreen(),
+      builder: (_, __) =>
+      const ChatScreen(),
     ),
+
+    // =========================================================
+    // APPLY / EDIT APPLICATION
+    // =========================================================
 
     GoRoute(
       path: AppRoutes.applyJob,
+
       builder: (context, state) {
         final extra = state.extra;
+
+        print('');
+        print('========================================');
+        print('🧭 APPLY ROUTE');
+        print('========================================');
+        print('EXTRA TYPE: ${extra.runtimeType}');
+        print('EXTRA: $extra');
+        print('========================================');
+
+        // -----------------------------------------------------
+        // CREATE APPLICATION
+        // -----------------------------------------------------
+
         if (extra is AuditionModel) {
-          return ApplyScreen(audition: extra);
+          return ApplyScreen(
+            audition: extra,
+          );
         }
+
+        // -----------------------------------------------------
+        // EDIT APPLICATION
+        // -----------------------------------------------------
+
+        if (extra is ApplicationModel) {
+          return ApplyScreen(
+            application: extra,
+          );
+        }
+
+        // -----------------------------------------------------
+        // FALLBACK
+        // -----------------------------------------------------
+
         return const ApplyScreen();
       },
     ),
 
+    // =========================================================
+    // AUDITION DETAILS
+    // =========================================================
+
     GoRoute(
       path: AppRoutes.auditionDetails,
+
       builder: (context, state) {
         final extra = state.extra;
+
         if (extra is AuditionModel) {
-          return AuditionDetails(audition: extra, auditionId: extra.id);
-        } else if (extra is String) {
-          return AuditionDetails(auditionId: extra);
+          return AuditionDetails(
+            audition: extra,
+            auditionId: extra.id,
+          );
         }
+
+        if (extra is String) {
+          return AuditionDetails(
+            auditionId: extra,
+          );
+        }
+
         return const AuditionDetails();
       },
     ),
+
+    // =========================================================
+    // ROLES
+    // =========================================================
+
     GoRoute(
       path: AppRoutes.role,
-      builder: (_, __) =>  RolesScreen(),
+      builder: (_, __) =>
+          RolesScreen(),
     ),
+
+    // =========================================================
+    // UPLOAD PHOTO
+    // =========================================================
+
     GoRoute(
       path: AppRoutes.uploadPhoto,
-      builder: (_, __) => const UploadPhotoScreen(),
+      builder: (_, __) =>
+      const UploadPhotoScreen(),
     ),
+
+    // =========================================================
+    // UPLOAD VIDEO
+    // =========================================================
+
     GoRoute(
       path: AppRoutes.uploadVideo,
-      builder: (_, __) => const UploadVideoScreen(),
+      builder: (_, __) =>
+      const UploadVideoScreen(),
     ),
 
+    // =========================================================
+    // MAIN SHELL
+    // =========================================================
+
     ShellRoute(
-
-      builder: (_, __, child) {
-
-        return MainScreen(child: child);
-
+      builder: (
+          context,
+          state,
+          child,
+          ) {
+        return MainScreen(
+          child: child,
+        );
       },
 
       routes: [
+        // -----------------------------------------------------
+        // HOME
+        // -----------------------------------------------------
 
         GoRoute(
           path: AppRoutes.home,
-          builder: (_, __) => const HomeScreen(),
+          builder: (_, __) =>
+          const HomeScreen(),
         ),
+
+        // -----------------------------------------------------
+        // EXPLORE
+        // -----------------------------------------------------
 
         GoRoute(
           path: AppRoutes.explore,
-          builder: (_, __) => const ExploreScreen(),
+          builder: (_, __) =>
+          const ExploreScreen(),
         ),
+
+        // -----------------------------------------------------
+        // POST
+        // -----------------------------------------------------
 
         GoRoute(
           path: AppRoutes.post,
-          builder: (_, __) => const PostScreen(),
+          builder: (_, __) =>
+          const PostScreen(),
         ),
+
+        // -----------------------------------------------------
+        // AUDITIONS
+        // -----------------------------------------------------
 
         GoRoute(
           path: AppRoutes.auditions,
-          builder: (_, __) => const AuditionScreen(),
+          builder: (_, __) =>
+          const AuditionScreen(),
         ),
+
+        // -----------------------------------------------------
+        // ACTIVITY
+        // -----------------------------------------------------
 
         GoRoute(
           path: AppRoutes.activity,
-          builder: (_, __) => const ActivityScreen(),
+          builder: (_, __) =>
+          const ActivityScreen(),
         ),
+
+        // -----------------------------------------------------
+        // ARTIST PROFILE
+        // -----------------------------------------------------
 
         GoRoute(
           path: AppRoutes.artistProfile,
-          builder: (_, __) => const ArtistProfileScreen(),
+          builder: (_, __) =>
+          const ArtistProfileScreen(),
         ),
+
+        // -----------------------------------------------------
+        // CREATOR PROFILE
+        // -----------------------------------------------------
 
         GoRoute(
           path: AppRoutes.creatorProfile,
-          builder: (_, __) => const CreatorProfileScreen(),
+          builder: (_, __) =>
+          const CreatorProfileScreen(),
         ),
       ],
-    )
+    ),
   ],
 );
 
-class MainScreen extends StatelessWidget {
+// ===========================================================
+// MAIN SCREEN
+// ===========================================================
 
+class MainScreen extends StatelessWidget {
   final Widget child;
 
   const MainScreen({
@@ -144,22 +285,34 @@ class MainScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currentLocation =
+    GoRouterState.of(context)
+        .uri
+        .toString();
 
     return Scaffold(
       extendBody: true,
+
       body: child,
 
-      bottomNavigationBar: CustomBottomNavbar(
-
-        currentLocation: GoRouterState.of(context).uri.toString(),
+      bottomNavigationBar:
+      CustomBottomNavbar(
+        currentLocation:
+        currentLocation,
 
         onItemSelected: (route) {
-          if(route == "/home") {
-            context.go(route);
-          }else{
-            context.push(route);
-          }
+          // IMPORTANT:
+          // Always use GO for bottom navigation.
+          //
+          // PUSH will create:
+          //
+          // Home -> Explore -> Auditions -> Home
+          //
+          // which causes navigation-stack problems.
 
+          if (currentLocation != route) {
+            context.go(route);
+          }
         },
       ),
     );

@@ -10,12 +10,25 @@ class DioClient {
     _dio = Dio(
       BaseOptions(
         baseUrl: ApiEndpoints.baseUrl,
-        connectTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 15),
-        sendTimeout: const Duration(seconds: 15),
+
+        connectTimeout:
+        const Duration(seconds: 15),
+
+        receiveTimeout:
+        const Duration(seconds: 15),
+
+        sendTimeout:
+        const Duration(seconds: 15),
+
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
+        },
+
+        validateStatus: (status) {
+          return status != null &&
+              status >= 200 &&
+              status < 300;
         },
       ),
     );
@@ -24,14 +37,76 @@ class DioClient {
       InterceptorsWrapper(
         onRequest: (options, handler) {
           try {
-            final token = LocalStorage.instance.getToken();
-            if (token != null && token.isNotEmpty) {
-              options.headers['Authorization'] = 'Bearer $token';
+            final token =
+            LocalStorage.instance.getToken();
+
+            if (token != null &&
+                token.isNotEmpty) {
+              options.headers['Authorization'] =
+              'Bearer $token';
             }
-          } catch (_) {
-            // LocalStorage might not be initialized in isolated tests
+
+            print(
+              "TOKEN EXISTS: ${token != null && token.isNotEmpty}",
+            );
+          } catch (e) {
+            print(
+              "TOKEN ERROR: $e",
+            );
           }
+
+          print("REQUEST URL: ${options.uri}");
+          print("REQUEST METHOD: ${options.method}");
+          print("REQUEST HEADERS: ${options.headers}");
+          print("REQUEST BODY: ${options.data}");
+
           return handler.next(options);
+        },
+
+        onResponse: (response, handler) {
+          print(
+            "RESPONSE STATUS: ${response.statusCode}",
+          );
+
+          print(
+            "RESPONSE DATA: ${response.data}",
+          );
+
+          return handler.next(response);
+        },
+
+        onError: (DioException error, handler) {
+          print("==============================");
+          print("DIO ERROR");
+          print("==============================");
+
+          print(
+            "URL: ${error.requestOptions.uri}",
+          );
+
+          print(
+            "METHOD: ${error.requestOptions.method}",
+          );
+
+          print(
+            "REQUEST DATA: ${error.requestOptions.data}",
+          );
+
+          print(
+            "STATUS: ${error.response?.statusCode}",
+          );
+
+          print(
+            "SERVER RESPONSE: ${error.response?.data}",
+          );
+
+          print(
+            "ERROR MESSAGE: ${error.message}",
+          );
+
+          print("==============================");
+
+          return handler.next(error);
         },
       ),
     );
@@ -51,11 +126,11 @@ class DioClient {
   Dio get dio => _dio;
 
   Future<Response> post(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) async {
+      String path, {
+        dynamic data,
+        Map<String, dynamic>? queryParameters,
+        Options? options,
+      }) async {
     return await _dio.post(
       path,
       data: data,
@@ -65,10 +140,10 @@ class DioClient {
   }
 
   Future<Response> get(
-    String path, {
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) async {
+      String path, {
+        Map<String, dynamic>? queryParameters,
+        Options? options,
+      }) async {
     return await _dio.get(
       path,
       queryParameters: queryParameters,
@@ -77,10 +152,10 @@ class DioClient {
   }
 
   Future<Response> put(
-    String path, {
-    dynamic data,
-    Options? options,
-  }) async {
+      String path, {
+        dynamic data,
+        Options? options,
+      }) async {
     return await _dio.put(
       path,
       data: data,
@@ -89,13 +164,27 @@ class DioClient {
   }
 
   Future<Response> delete(
-    String path, {
-    dynamic data,
-    Options? options,
-  }) async {
+      String path, {
+        dynamic data,
+        Options? options,
+      }) async {
     return await _dio.delete(
       path,
       data: data,
+      options: options,
+    );
+  }
+
+  Future<Response> patch(
+      String path, {
+        dynamic data,
+        Map<String, dynamic>? queryParameters,
+        Options? options,
+      }) async {
+    return await _dio.patch(
+      path,
+      data: data,
+      queryParameters: queryParameters,
       options: options,
     );
   }

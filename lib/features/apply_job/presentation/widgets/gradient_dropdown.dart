@@ -18,34 +18,78 @@ class GradientDropdown extends StatefulWidget {
   });
 
   @override
-  State<GradientDropdown> createState() => _GradientDropdownState();
+  State<GradientDropdown> createState() =>
+      _GradientDropdownState();
 }
 
-class _GradientDropdownState extends State<GradientDropdown> {
+class _GradientDropdownState
+    extends State<GradientDropdown> {
   String? selected;
 
   @override
   void initState() {
     super.initState();
-    selected = widget.value ?? widget.items.first;
+
+    _initializeSelectedValue();
   }
+
+  // ----------------------------------------------------------
+  // Initialize selected value safely
+  // ----------------------------------------------------------
+
+  void _initializeSelectedValue() {
+    if (widget.value != null &&
+        widget.items.contains(widget.value)) {
+      selected = widget.value;
+    } else if (widget.items.isNotEmpty) {
+      selected = widget.items.first;
+    } else {
+      selected = null;
+    }
+  }
+
+  // ----------------------------------------------------------
+  // Update when parent changes value
+  // ----------------------------------------------------------
+
+  @override
+  void didUpdateWidget(
+      covariant GradientDropdown oldWidget,
+      ) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.value != oldWidget.value ||
+        widget.items != oldWidget.items) {
+      _initializeSelectedValue();
+    }
+  }
+
+  // ----------------------------------------------------------
+  // BUILD
+  // ----------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+      CrossAxisAlignment.start,
+
       children: [
+        // ------------------------------------------------------
+        // LABEL
+        // ------------------------------------------------------
 
         Row(
           children: [
-
             ShaderMask(
-              shaderCallback: (bounds) => const LinearGradient(
-                colors: [
-                  Color(0xff20D5FF),
-                  Color(0xffCC3EFF),
-                ],
-              ).createShader(bounds),
+              shaderCallback: (bounds) =>
+                  const LinearGradient(
+                    colors: [
+                      Color(0xff20D5FF),
+                      Color(0xffCC3EFF),
+                    ],
+                  ).createShader(bounds),
+
               child: Icon(
                 widget.icon,
                 color: Colors.white,
@@ -53,25 +97,42 @@ class _GradientDropdownState extends State<GradientDropdown> {
               ),
             ),
 
-            const SizedBox(width: 10),
+            const SizedBox(
+              width: 10,
+            ),
 
-            Text(
-              widget.label,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
+            Expanded(
+              child: Text(
+                widget.label,
+
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight:
+                  FontWeight.w500,
+                ),
               ),
             ),
           ],
         ),
 
-        const SizedBox(height: 14),
+        const SizedBox(
+          height: 14,
+        ),
+
+        // ------------------------------------------------------
+        // OUTER GRADIENT
+        // ------------------------------------------------------
 
         Container(
-          padding: const EdgeInsets.all(1),
+          padding:
+          const EdgeInsets.all(1),
+
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            gradient: const LinearGradient(
+            borderRadius:
+            BorderRadius.circular(18),
+
+            gradient:
+            const LinearGradient(
               colors: [
                 Color(0xff20D5FF),
                 Color(0xffCC3EFF),
@@ -79,42 +140,88 @@ class _GradientDropdownState extends State<GradientDropdown> {
             ),
           ),
 
+          // ----------------------------------------------------
+          // INNER CONTAINER
+          // ----------------------------------------------------
+
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 18),
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(17),
+            padding:
+            const EdgeInsets.symmetric(
+              horizontal: 18,
             ),
 
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
+            decoration:
+            BoxDecoration(
+              color:
+              AppColors.background,
+
+              borderRadius:
+              BorderRadius.circular(17),
+            ),
+
+            // --------------------------------------------------
+            // DROPDOWN
+            // --------------------------------------------------
+
+            child:
+            DropdownButtonHideUnderline(
+              child:
+              DropdownButton<String>(
                 value: selected,
+
                 isExpanded: true,
-                dropdownColor: AppColors.card,
+
+                dropdownColor:
+                AppColors.card,
+
                 icon: const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: AppColors.greyText,
+                  Icons
+                      .keyboard_arrow_down_rounded,
+
+                  color:
+                  AppColors.greyText,
+
                   size: 28,
                 ),
 
-                style: const TextStyle(
-                  color: Colors.white,
+                style:
+                const TextStyle(
+                  color:
+                  Colors.white,
+
                   fontSize: 18,
                 ),
 
-                items: widget.items.map((item) {
-                  return DropdownMenuItem(
-                    value: item,
-                    child: Text(item),
-                  );
-                }).toList(),
+                // ------------------------------------------------
+                // ITEMS
+                // ------------------------------------------------
+
+                items: widget.items
+                    .map(
+                      (
+                      item,
+                      ) =>
+                      DropdownMenuItem<
+                          String>(
+                        value: item,
+
+                        child:
+                        Text(item),
+                      ),
+                )
+                    .toList(),
+
+                // ------------------------------------------------
+                // ON CHANGE
+                // ------------------------------------------------
 
                 onChanged: (value) {
                   setState(() {
                     selected = value;
                   });
 
-                  widget.onChanged?.call(value);
+                  widget.onChanged
+                      ?.call(value);
                 },
               ),
             ),

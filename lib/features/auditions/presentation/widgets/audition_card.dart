@@ -16,6 +16,14 @@ class AuditionCard extends StatelessWidget {
   final VoidCallback onView;
   final VoidCallback onApply;
 
+  /// Called when the user taps the Edit icon.
+  /// Only shown when [audition.applied] is true.
+  final VoidCallback? onEdit;
+
+  /// Called when the user taps the Delete icon.
+  /// Only shown when [audition.applied] is true.
+  final VoidCallback? onDelete;
+
   const AuditionCard({
     super.key,
     this.audition,
@@ -28,6 +36,8 @@ class AuditionCard extends StatelessWidget {
     this.description,
     required this.onView,
     required this.onApply,
+    this.onEdit,
+    this.onDelete,
   });
 
   String get displayTitle => audition?.title ?? title ?? '';
@@ -38,6 +48,9 @@ class AuditionCard extends StatelessWidget {
   String get displayPayout => audition?.pay ?? payout ?? '';
   String get displayLanguage => audition?.language ?? '';
   String get displayDescription => audition?.description ?? description ?? '';
+
+  /// Show edit+delete row only if the user has already applied
+  bool get _hasApplied => audition?.applied ?? false;
 
   @override
   Widget build(BuildContext context) {
@@ -183,9 +196,21 @@ class AuditionCard extends StatelessWidget {
             ),
           ],
 
-          const SizedBox(height: 20),
+          // -----------------------------------------------
+          // "Applied" badge + Edit / Delete icons row
+          // Shown only when the user has already applied
+          // -----------------------------------------------
+          if (_hasApplied) ...[
+            const SizedBox(height: 14),
+            _AppliedActionRow(
+              onEdit: onEdit,
+              onDelete: onDelete,
+            ),
+          ],
 
-          /// Action Buttons
+          const SizedBox(height: 16),
+
+          /// Main Action Buttons: View details + Apply Now
           Row(
             children: [
               Expanded(
@@ -230,24 +255,32 @@ class AuditionCard extends StatelessWidget {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
-                    gradient: const LinearGradient(
-                      colors: AppColors.BtnGradient,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    gradient: _hasApplied
+                        ? const LinearGradient(
+                            colors: [Color(0xFF1B4D3E), Color(0xFF27AE60)],
+                          )
+                        : const LinearGradient(
+                            colors: AppColors.BtnGradient,
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.gradient.withValues(alpha: 0.3),
+                        color: (_hasApplied
+                                ? const Color(0xFF27AE60)
+                                : AppColors.gradient)
+                            .withValues(alpha: 0.3),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
                     ],
                   ),
                   child: ElevatedButton(
-                    onPressed: onApply,
+                    onPressed: _hasApplied ? null : onApply,
                     style: ElevatedButton.styleFrom(
                       elevation: 0,
                       backgroundColor: Colors.transparent,
+                      disabledBackgroundColor: Colors.transparent,
                       shadowColor: Colors.transparent,
                       foregroundColor: Colors.white,
                       minimumSize: const Size.fromHeight(44),
@@ -255,13 +288,25 @@ class AuditionCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
-                      "APPLY NOW",
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (_hasApplied)
+                          const Icon(
+                            Icons.check_circle_outline_rounded,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                        if (_hasApplied) const SizedBox(width: 6),
+                        Text(
+                          _hasApplied ? "APPLIED" : "APPLY NOW",
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -302,6 +347,118 @@ class AuditionCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// -----------------------------------------------------------
+// Applied action row: "Applied ✓" badge + Edit + Delete icons
+// -----------------------------------------------------------
+
+class _AppliedActionRow extends StatelessWidget {
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+
+  const _AppliedActionRow({
+    this.onEdit,
+    this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF27AE60).withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFF27AE60).withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          // "Applied" status badge
+          const Icon(
+            Icons.check_circle_rounded,
+            color: Color(0xFF27AE60),
+            size: 16,
+          ),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text(
+              "You've applied · Manage your application",
+              style: TextStyle(
+                color: Color(0xFF27AE60),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+
+          // Edit icon button
+          _IconBtn(
+            icon: Icons.edit_outlined,
+            tooltip: "Edit application",
+            gradient: const [Color(0xff20D5FF), Color(0xffCC3EFF)],
+            onTap: onEdit,
+          ),
+
+          const SizedBox(width: 8),
+
+          // Delete icon button
+          _IconBtn(
+            icon: Icons.delete_outline_rounded,
+            tooltip: "Delete application",
+            gradient: const [Color(0xffEB5757), Color(0xffFF8C42)],
+            onTap: onDelete,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IconBtn extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final List<Color> gradient;
+  final VoidCallback? onTap;
+
+  const _IconBtn({
+    required this.icon,
+    required this.tooltip,
+    required this.gradient,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: gradient),
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: gradient.last.withValues(alpha: 0.4),
+                blurRadius: 8,
+                spreadRadius: -2,
+              ),
+            ],
+          ),
+          child: Icon(
+            icon,
+            color: Colors.white,
+            size: 17,
+          ),
+        ),
       ),
     );
   }

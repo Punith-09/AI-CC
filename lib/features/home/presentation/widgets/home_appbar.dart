@@ -35,7 +35,7 @@ class HomeAppbar extends StatelessWidget{
               children: [
                 IconButton(
                     onPressed: (){
-                      context.push(AppRoutes.creatorProfile);
+                      context.push(AppRoutes.messages);
                     },
                     icon: Icon(LucideIcons.mail,size: 26,)
                 )

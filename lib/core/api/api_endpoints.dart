@@ -33,11 +33,17 @@ class ApiEndpoints {
   static String followUser(String id) => '/users/$id/follow';
   static const String auditions = "/auditions";
   static String auditionDetail(String id) => "/auditions/$id";
+  static String applyAudition(String id) => "/auditions/$id/apply";
+
+  static const String myApplications = "/applications/me";
+  static String withdrawApplication(String id) => "/applications/$id";
+  static String updateApplication(String id) => "/applications/$id";
+  static String updateApplicationStatus(String id) => "/applications/$id/status";
+
   static const String photos = "/photos";
   static const String videos = "/videos";
+
+  static const String chats = "/chats";
+  static String startChat(String userId) => "/chats/start/$userId";
+  static String chatMessages(String chatId) => "/chats/$chatId/messages";
 }
-  // static const String login = "/auth/login";
-  // static const String register = "/auth/register";
-
-
-

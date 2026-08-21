@@ -1,32 +1,56 @@
-import 'package:aicc/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 
+import 'package:aicc/core/constants/app_colors.dart';
+
 class CoverLetterField extends StatefulWidget {
-  const CoverLetterField({super.key});
+  final TextEditingController controller;
+
+  const CoverLetterField({
+    super.key,
+    required this.controller,
+  });
 
   @override
-  State<CoverLetterField> createState() => _CoverLetterFieldState();
+  State<CoverLetterField> createState() =>
+      _CoverLetterFieldState();
 }
 
-class _CoverLetterFieldState extends State<CoverLetterField> {
-  final TextEditingController controller = TextEditingController();
+class _CoverLetterFieldState
+    extends State<CoverLetterField> {
+  @override
+  void initState() {
+    super.initState();
+
+    widget.controller.addListener(_onTextChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onTextChanged);
+    super.dispose();
+  }
+
+  void _onTextChanged() {
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
+    final length = widget.controller.text.length;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-
         Row(
           children: [
-
             ShaderMask(
-              shaderCallback: (bounds) => const LinearGradient(
-                colors: [
-                  Color(0xff20D5FF),
-                  Color(0xffCC3EFF),
-                ],
-              ).createShader(bounds),
+              shaderCallback: (bounds) =>
+                  const LinearGradient(
+                    colors: [
+                      Color(0xff20D5FF),
+                      Color(0xffCC3EFF),
+                    ],
+                  ).createShader(bounds),
               child: const Icon(
                 Icons.edit_outlined,
                 color: Colors.white,
@@ -36,11 +60,13 @@ class _CoverLetterFieldState extends State<CoverLetterField> {
 
             const SizedBox(width: 10),
 
-            const Text(
-              "Cover Letter (Minimum 20 characters)",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
+            const Expanded(
+              child: Text(
+                "Cover Letter (Minimum 20 characters)",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],
@@ -58,7 +84,6 @@ class _CoverLetterFieldState extends State<CoverLetterField> {
               ],
             ),
           ),
-
           padding: const EdgeInsets.all(1),
 
           child: Container(
@@ -71,9 +96,9 @@ class _CoverLetterFieldState extends State<CoverLetterField> {
 
             child: Column(
               children: [
-
                 TextField(
-                  controller: controller,
+                  controller: widget.controller,
+
                   maxLines: 7,
                   minLines: 7,
 
@@ -86,7 +111,7 @@ class _CoverLetterFieldState extends State<CoverLetterField> {
 
                   decoration: const InputDecoration(
                     border: InputBorder.none,
-                    fillColor: AppColors.background,
+
                     hintText:
                     "Pitch why you are the perfect candidate for this role...",
 
@@ -95,18 +120,14 @@ class _CoverLetterFieldState extends State<CoverLetterField> {
                       fontSize: 17,
                     ),
                   ),
-
-                  onChanged: (_) {
-                    setState(() {});
-                  },
                 ),
 
                 Align(
                   alignment: Alignment.bottomRight,
                   child: Text(
-                    "${controller.text.length} / 20",
+                    "$length / 20",
                     style: TextStyle(
-                      color: controller.text.length >= 20
+                      color: length >= 20
                           ? Colors.green
                           : Colors.redAccent,
                       fontSize: 15,

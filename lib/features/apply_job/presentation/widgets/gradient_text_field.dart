@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/app_colors.dart';
+import 'package:aicc/core/constants/app_colors.dart';
 
 class GradientTextField extends StatelessWidget {
   final String label;
@@ -19,19 +19,25 @@ class GradientTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+      CrossAxisAlignment.start,
+
       children: [
+        // ------------------------------------------------------
+        // LABEL
+        // ------------------------------------------------------
 
         Row(
           children: [
-
             ShaderMask(
-              shaderCallback: (bounds) => const LinearGradient(
-                colors: [
-                  Color(0xff20D5FF),
-                  Color(0xffCC3EFF),
-                ],
-              ).createShader(bounds),
+              shaderCallback: (bounds) =>
+                  const LinearGradient(
+                    colors: [
+                      Color(0xff20D5FF),
+                      Color(0xffCC3EFF),
+                    ],
+                  ).createShader(bounds),
+
               child: Icon(
                 icon,
                 color: Colors.white,
@@ -39,27 +45,41 @@ class GradientTextField extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(width: 10),
+            const SizedBox(
+              width: 10,
+            ),
 
             Expanded(
               child: Text(
                 label,
-                style: const TextStyle(
+
+                style:
+                const TextStyle(
                   fontSize: 18,
-                  fontWeight: FontWeight.w500,
+                  fontWeight:
+                  FontWeight.w500,
                 ),
               ),
             ),
           ],
         ),
 
-        const SizedBox(height: 14),
+        const SizedBox(
+          height: 14,
+        ),
+
+        // ------------------------------------------------------
+        // TEXT FIELD
+        // ------------------------------------------------------
 
         Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            color: AppColors.textField,
-            gradient: const LinearGradient(
+          decoration:
+          BoxDecoration(
+            borderRadius:
+            BorderRadius.circular(15),
+
+            gradient:
+            const LinearGradient(
               colors: [
                 Color(0xff20D5FF),
                 Color(0xffCC3EFF),
@@ -67,35 +87,53 @@ class GradientTextField extends StatelessWidget {
             ),
           ),
 
-          padding: const EdgeInsets.all(1),
+          padding:
+          const EdgeInsets.all(1),
 
           child: Container(
-            decoration: BoxDecoration(
+            decoration:
+            BoxDecoration(
               color: AppColors.white,
-              borderRadius: BorderRadius.circular(15),
+
+              borderRadius:
+              BorderRadius.circular(15),
             ),
 
             child: TextField(
-              controller: controller,
+              controller:
+              controller,
 
-              style: const TextStyle(
+              style:
+              const TextStyle(
                 fontSize: 18,
+                color: Colors.black,
               ),
 
-              cursorColor: AppColors.primary,
+              cursorColor:
+              AppColors.primary,
 
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                fillColor: AppColors.background,
-                contentPadding: const EdgeInsets.symmetric(
+              decoration:
+              InputDecoration(
+                border:
+                InputBorder.none,
+
+                fillColor:
+                AppColors.background,
+
+                contentPadding:
+                const EdgeInsets.symmetric(
                   horizontal: 20,
                   vertical: 18,
                 ),
 
-                hintText: hint,
+                hintText:
+                hint,
 
-                hintStyle: const TextStyle(
-                  color: AppColors.hint,
+                hintStyle:
+                const TextStyle(
+                  color:
+                  AppColors.hint,
+
                   fontSize: 18,
                 ),
               ),

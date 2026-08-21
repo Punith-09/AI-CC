@@ -9,6 +9,10 @@ import '../../features/explore/data/datasource/explore_remote_datasource.dart';
 import '../../features/explore/data/repository/explore_repository.dart';
 import '../../features/artist_profile/data/datasource/profile_remote_datasource.dart';
 import '../../features/artist_profile/data/repository/profile_repository.dart';
+import '../../features/apply_job/data/datasource/apply_job_remote_datasource.dart';
+import '../../features/apply_job/data/repository/apply_job_repository.dart';
+import '../../features/messages/data/datasource/messages_remote_datasource.dart';
+import '../../features/messages/data/repository/messages_repository.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -71,6 +75,38 @@ Future<void> initDependencies() async {
     sl.registerLazySingleton<ProfileRepository>(
           () => ProfileRepositoryImpl(
         sl<ProfileRemoteDataSource>(),
+      ),
+    );
+  }
+
+  // Apply Job Feature
+  if (!sl.isRegistered<ApplyJobRemoteDataSource>()) {
+    sl.registerLazySingleton<ApplyJobRemoteDataSource>(
+          () => ApplyJobRemoteDataSourceImpl(
+        sl<DioClient>(),
+      ),
+    );
+  }
+  if (!sl.isRegistered<ApplyJobRepository>()) {
+    sl.registerLazySingleton<ApplyJobRepository>(
+          () => ApplyJobRepositoryImpl(
+        sl<ApplyJobRemoteDataSource>(),
+      ),
+    );
+  }
+
+  // Messages Feature
+  if (!sl.isRegistered<MessagesRemoteDataSource>()) {
+    sl.registerLazySingleton<MessagesRemoteDataSource>(
+          () => MessagesRemoteDataSourceImpl(
+        sl<DioClient>(),
+      ),
+    );
+  }
+  if (!sl.isRegistered<MessagesRepository>()) {
+    sl.registerLazySingleton<MessagesRepository>(
+          () => MessagesRepositoryImpl(
+        sl<MessagesRemoteDataSource>(),
       ),
     );
   }

@@ -1,38 +1,41 @@
-import 'package:aicc/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 
-class GradientCheckbox extends StatefulWidget {
-  const GradientCheckbox({super.key});
+import 'package:aicc/core/constants/app_colors.dart';
 
-  @override
-  State<GradientCheckbox> createState() => _GradientCheckboxState();
-}
+class GradientCheckbox extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool> onChanged;
 
-class _GradientCheckboxState extends State<GradientCheckbox> {
-  bool checked = false;
+  const GradientCheckbox({
+    super.key,
+    required this.value,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(12),
+
       onTap: () {
-        setState(() {
-          checked = !checked;
-        });
+        onChanged(!value);
       },
+
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: const Duration(
+              milliseconds: 200,
+            ),
+
             width: 24,
             height: 24,
 
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(6),
 
-              gradient: checked
+              gradient: value
                   ? const LinearGradient(
                 colors: [
                   Color(0xff20D5FF),
@@ -41,16 +44,16 @@ class _GradientCheckboxState extends State<GradientCheckbox> {
               )
                   : null,
 
-              color: checked ? null : AppColors.card,
+              color: value ? null : AppColors.card,
 
               border: Border.all(
-                color: checked
+                color: value
                     ? Colors.transparent
                     : AppColors.border,
               ),
             ),
 
-            child: checked
+            child: value
                 ? const Icon(
               Icons.check,
               size: 16,
