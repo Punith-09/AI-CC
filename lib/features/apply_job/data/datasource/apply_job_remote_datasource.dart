@@ -16,11 +16,6 @@ abstract class ApplyJobRemoteDataSource {
       String applicationId,
       );
 
-  Future<void> updateApplicationCoverLetter(
-      String applicationId,
-      String coverLetter,
-      );
-
   Future<void> updateApplicationStatus(
       String applicationId,
       String status,
@@ -215,56 +210,6 @@ class ApplyJobRemoteDataSourceImpl
     } on DioException catch (e) {
       _printDioError(
         'WITHDRAW APPLICATION ERROR',
-        e,
-      );
-
-      rethrow;
-    }
-  }
-
-  // =========================================================
-  // UPDATE COVER LETTER
-  // =========================================================
-
-  @override
-  Future<void> updateApplicationCoverLetter(
-      String applicationId,
-      String coverLetter,
-      ) async {
-    try {
-      print('');
-      print('========================================');
-      print('✏️ UPDATE APPLICATION');
-      print('========================================');
-      print('APPLICATION ID: $applicationId');
-      print(
-        'URL: ${ApiEndpoints.updateApplication(applicationId)}',
-      );
-      print('METHOD: PATCH');
-      print('BODY:');
-      print({
-        'coverLetter': coverLetter,
-      });
-      print('========================================');
-
-      final response = await _dioClient.patch(
-        ApiEndpoints.updateApplication(
-          applicationId,
-        ),
-        data: {
-          'coverLetter': coverLetter,
-        },
-      );
-
-      print('');
-      print('========================================');
-      print('✅ APPLICATION UPDATED');
-      print('STATUS: ${response.statusCode}');
-      print('RESPONSE: ${response.data}');
-      print('========================================');
-    } on DioException catch (e) {
-      _printDioError(
-        'UPDATE APPLICATION ERROR',
         e,
       );
 

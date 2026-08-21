@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../apply_job/presentation/providers/apply_job_provider.dart';
 import '../../data/models/audition_model.dart';
+import '../../presentation/providers/auditions_provider.dart';
 import 'audition_card.dart';
 
 class AuditionCards extends StatelessWidget {
@@ -56,19 +57,6 @@ class AuditionCards extends StatelessWidget {
             AppRoutes.applyJob,
             extra: audition,
           ),
-
-          // -----------------------------------------------
-          // Edit application — opens ApplyScreen in view-
-          // mode with the audition so the user can re-
-          // submit / update their cover letter
-          // Only shown when audition.applied == true
-          // -----------------------------------------------
-          onEdit: audition.applied
-              ? () => context.push(
-                    AppRoutes.applyJob,
-                    extra: audition,
-                  )
-              : null,
 
           // -----------------------------------------------
           // Delete application — calls DELETE /applications
@@ -152,14 +140,43 @@ class AuditionCards extends StatelessWidget {
 
     if (confirmed != true || !context.mounted) return;
 
-    // Use the audition ID as the application ID for withdrawal.
-    // The backend uses audition.id to look up the application.
     final provider = context.read<ApplyJobProvider>();
+
+    // If applications haven't been fetched yet, fetch them first so we can
+    // resolve the actual application ID (which is different from audition.id).
+    if (provider.applications.isEmpty) {
+      await provider.fetchMyApplications();
+    }
+
+    if (!context.mounted) return;
+
+    // Look up the application for this audition.
+    // The backend requires the APPLICATION ID, not the audition ID.
+    final application = provider.getApplicationForAudition(audition.id);
+
+    if (application == null || application.id.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Could not find your application. Please try again."),
+          backgroundColor: Color(0xffEB5757),
+        ),
+      );
+      return;
+    }
+
     final success = await provider.deleteApplication(
-      applicationId: audition.id,
+      applicationId: application.id,
     );
 
     if (!context.mounted) return;
+
+    if (success) {
+      // Immediately update the applied flag in the auditions list so the card
+      // flips from APPLIED → APPLY NOW without waiting for a server re-fetch.
+      context
+          .read<AuditionsProvider>()
+          .markAuditionUnapplied(audition.id);
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

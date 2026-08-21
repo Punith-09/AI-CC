@@ -13,11 +13,6 @@ abstract class ApplyJobRepository {
       String applicationId,
       );
 
-  Future<void> updateApplicationCoverLetter(
-      String applicationId,
-      String coverLetter,
-      );
-
   Future<void> updateApplicationStatus(
       String applicationId,
       String status,
@@ -55,18 +50,6 @@ class ApplyJobRepositoryImpl
       ) {
     return _remoteDataSource.withdrawApplication(
       applicationId,
-    );
-  }
-
-  @override
-  Future<void> updateApplicationCoverLetter(
-      String applicationId,
-      String coverLetter,
-      ) {
-    return _remoteDataSource
-        .updateApplicationCoverLetter(
-      applicationId,
-      coverLetter,
     );
   }
 

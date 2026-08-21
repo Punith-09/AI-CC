@@ -6,13 +6,14 @@ import '../../../../core/constants/app_colors.dart';
 import '../../data/models/application_model.dart';
 import '../providers/apply_job_provider.dart';
 
-
 import '../widgets/apply_appbar.dart';
 import '../widgets/audition_info_card.dart';
 import '../widgets/cover_letter_field.dart';
 import '../widgets/submit_button.dart';
 
 import '../../../auditions/data/models/audition_model.dart';
+import '../../../auditions/presentation/providers/auditions_provider.dart';
+import '../../../artist_profile/presentation/providers/profile_provider.dart';
 
 class ApplyScreen extends StatefulWidget {
   final AuditionModel? audition;
@@ -37,13 +38,9 @@ class _ApplyScreenState
   late final TextEditingController
   _coverLetterController;
 
-  bool _isEditing = false;
-
   @override
   void initState() {
     super.initState();
-
-    _isEditing = !widget.isEditMode;
 
     _coverLetterController =
         TextEditingController(
@@ -51,6 +48,14 @@ class _ApplyScreenState
           widget.application?.coverLetter ??
               '',
         );
+
+    // Fetch logged-in user profile if not yet loaded
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final profileProvider = context.read<ProfileProvider>();
+      if (profileProvider.currentProfile == null && !profileProvider.isLoading) {
+        profileProvider.fetchMyProfile();
+      }
+    });
   }
 
   @override
@@ -163,6 +168,14 @@ class _ApplyScreenState
     }
 
     if (success) {
+      // Update local audition state immediately so the list/details
+      // reflect the applied status without waiting for a server re-fetch.
+      if (mounted) {
+        context
+            .read<AuditionsProvider>()
+            .markAuditionApplied(_auditionId);
+      }
+
       _showMessage(
         'Application submitted successfully.',
         isSuccess: true,
@@ -190,57 +203,6 @@ class _ApplyScreenState
     }
   }
 
-  // =========================================================
-  // UPDATE
-  // =========================================================
-
-  Future<void> _updateApplication() async {
-    if (_applicationId.isEmpty) {
-      _showMessage(
-        'Application ID is missing.',
-      );
-      return;
-    }
-
-    final coverLetter =
-    _coverLetterController.text.trim();
-
-    if (coverLetter.length < 20) {
-      _showMessage(
-        'Cover letter must contain at least 20 characters.',
-      );
-      return;
-    }
-
-    final provider =
-    context.read<ApplyJobProvider>();
-
-    final success =
-    await provider.updateApplicationCoverLetter(
-      applicationId: _applicationId,
-      coverLetter: coverLetter,
-    );
-
-    if (!mounted) {
-      return;
-    }
-
-    if (success) {
-      setState(() {
-        _isEditing = false;
-      });
-
-      _showMessage(
-        'Application updated successfully.',
-        isSuccess: true,
-      );
-    } else {
-      _showMessage(
-        provider.errorMessage ??
-            'Failed to update application.',
-      );
-    }
-  }
 
   // =========================================================
   // WITHDRAW
@@ -330,6 +292,13 @@ class _ApplyScreenState
     }
 
     if (success) {
+      // Immediately reflect withdrawal in the auditions list / details screen.
+      if (mounted) {
+        context
+            .read<AuditionsProvider>()
+            .markAuditionUnapplied(_auditionId);
+      }
+
       _showMessage(
         'Application withdrawn successfully.',
         isSuccess: true,
@@ -350,23 +319,6 @@ class _ApplyScreenState
             'Failed to withdraw application.',
       );
     }
-  }
-
-  // =========================================================
-  // EDIT
-  // =========================================================
-
-  void _startEditing() {
-    if (_applicationId.isEmpty) {
-      _showMessage(
-        'Application ID is missing.',
-      );
-      return;
-    }
-
-    setState(() {
-      _isEditing = true;
-    });
   }
 
   // =========================================================
@@ -436,15 +388,6 @@ class _ApplyScreenState
                         : 'Submit Application',
 
                     /*
-                    EDIT BUTTON
-                    */
-
-                    onEdit:
-                    widget.isEditMode
-                        ? _startEditing
-                        : null,
-
-                    /*
                     WITHDRAW BUTTON
 
                     This withdraws application.
@@ -495,66 +438,60 @@ class _ApplyScreenState
                         // NAME
                         // =========================================
 
-                        _buildReadOnlyField(
-                          title:
-                          'Your Full Name',
-                          value:
-                          widget.application
-                              ?.applicantName
-                              .isNotEmpty ==
-                              true
-                              ? widget
-                              .application!
-                              .applicantName
-                              : 'Lokesh',
-                          icon:
-                          Icons.person_outline,
-                        ),
+                        Consumer<ProfileProvider>(
+                          builder: (context, profileProvider, _) {
+                            final profile = profileProvider.currentProfile;
 
-                        const SizedBox(
-                          height: 25,
-                        ),
+                            // Resolve name: prefer profile, then application, then empty
+                            final displayName = profile?.name.isNotEmpty == true
+                                ? profile!.name
+                                : (widget.application?.applicantName.isNotEmpty == true
+                                    ? widget.application!.applicantName
+                                    : '');
 
-                        // =========================================
-                        // CATEGORY
-                        // =========================================
+                            // Resolve category: prefer profile roles, then application, then audition
+                            final displayCategory = profile?.roles.isNotEmpty == true
+                                ? profile!.roles.join(', ')
+                                : (widget.application?.applicantCategory.isNotEmpty == true
+                                    ? widget.application!.applicantCategory
+                                    : (_audition.category.isNotEmpty
+                                        ? _audition.category
+                                        : ''));
 
-                        _buildReadOnlyField(
-                          title:
-                          'Your Bio Category',
-                          value:
-                          widget.application
-                              ?.applicantCategory
-                              .isNotEmpty ==
-                              true
-                              ? widget
-                              .application!
-                              .applicantCategory
-                              : _audition
-                              .category.isNotEmpty
-                              ? _audition.category
-                              : 'Film',
-                          icon:
-                          Icons.person_outline,
-                        ),
+                            return Column(
+                              children: [
+                                _buildReadOnlyField(
+                                  title: 'Your Full Name',
+                                  value: profileProvider.isLoading && profile == null
+                                      ? 'Loading...'
+                                      : displayName,
+                                  icon: Icons.person_outline,
+                                ),
 
-                        const SizedBox(
-                          height: 28,
+                                const SizedBox(height: 25),
+
+                                // =========================================
+                                // CATEGORY
+                                // =========================================
+
+                                _buildReadOnlyField(
+                                  title: 'Your Bio Category',
+                                  value: profileProvider.isLoading && profile == null
+                                      ? 'Loading...'
+                                      : displayCategory,
+                                  icon: Icons.person_outline,
+                                ),
+                              ],
+                            );
+                          },
                         ),
 
                         // =========================================
                         // COVER LETTER
                         // =========================================
 
-                        AbsorbPointer(
-                          absorbing:
-                          widget.isEditMode &&
-                              !_isEditing,
-                          child:
-                          CoverLetterField(
-                            controller:
-                            _coverLetterController,
-                          ),
+                        CoverLetterField(
+                          controller: _coverLetterController,
                         ),
 
                         const SizedBox(
@@ -575,20 +512,8 @@ class _ApplyScreenState
                             'Submit Application',
                           ),
 
-                        if (widget.isEditMode &&
-                            _isEditing)
-                          SubmitButton(
-                            onPressed:
-                            _updateApplication,
-                            isLoading:
-                            provider.isUpdating,
-                            label:
-                            'Update Application',
-                          ),
-
-                        if (widget.isEditMode &&
-                            !_isEditing)
-                          _buildEditingHint(),
+                        if (widget.isEditMode)
+                          _buildViewOnlyHint(),
                       ],
                     ),
                   ),
@@ -686,19 +611,16 @@ class _ApplyScreenState
   }
 
   // =========================================================
-  // EDITING HINT
+  // VIEW-ONLY HINT
   // =========================================================
 
-  Widget _buildEditingHint() {
+  Widget _buildViewOnlyHint() {
     return Container(
       width: double.infinity,
-      padding:
-      const EdgeInsets.all(16),
-      decoration:
-      BoxDecoration(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
         color: Colors.green.withOpacity(0.08),
-        borderRadius:
-        BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: Colors.green.withOpacity(0.3),
         ),
@@ -712,7 +634,7 @@ class _ApplyScreenState
           SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Your application has been submitted. Tap the edit icon to modify your cover letter.',
+              'Your application has been submitted successfully.',
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: 14,

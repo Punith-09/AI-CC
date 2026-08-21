@@ -4,23 +4,17 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 
 class ApplyAppBar extends StatelessWidget {
-  final VoidCallback? onEdit;
   final VoidCallback? onDelete;
-
   final String title;
 
   const ApplyAppBar({
     super.key,
-    this.onEdit,
     this.onDelete,
     this.title = 'Submit Application',
   });
 
   @override
   Widget build(BuildContext context) {
-    final bool hasActions =
-        onEdit != null || onDelete != null;
-
     return Row(
       children: [
         // =====================================================
@@ -66,32 +60,16 @@ class ApplyAppBar extends StatelessWidget {
         // ACTIONS
         // =====================================================
 
-        if (hasActions) ...[
-          if (onEdit != null)
-            _ActionIconButton(
-              icon: Icons.edit_outlined,
-              gradient: const [
-                Color(0xff20D5FF),
-                Color(0xffCC3EFF),
-              ],
-              onTap: onEdit!,
-            ),
-
-          if (onEdit != null &&
-              onDelete != null)
-            const SizedBox(width: 6),
-
-          if (onDelete != null)
-            _ActionIconButton(
-              icon:
-              Icons.delete_outline_rounded,
-              gradient: const [
-                Color(0xffEB5757),
-                Color(0xffFF8C42),
-              ],
-              onTap: onDelete!,
-            ),
-        ] else
+        if (onDelete != null)
+          _ActionIconButton(
+            icon: Icons.delete_outline_rounded,
+            gradient: const [
+              Color(0xffEB5757),
+              Color(0xffFF8C42),
+            ],
+            onTap: onDelete!,
+          )
+        else
           const SizedBox(width: 44),
       ],
     );

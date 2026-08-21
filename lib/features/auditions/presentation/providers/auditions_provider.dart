@@ -90,4 +90,113 @@ class AuditionsProvider extends ChangeNotifier {
     _detailErrorMessage = null;
     notifyListeners();
   }
+
+  // -------------------------------------------------------
+  // Local state helpers — called after apply / withdraw so
+  // the UI updates instantly without a server re-fetch.
+  // -------------------------------------------------------
+
+  void markAuditionApplied(String auditionId) {
+    _auditions = _auditions.map((a) {
+      if (a.id == auditionId) {
+        return AuditionModel(
+          id: a.id,
+          creatorId: a.creatorId,
+          title: a.title,
+          category: a.category,
+          role: a.role,
+          language: a.language,
+          pay: a.pay,
+          location: a.location,
+          deadline: a.deadline,
+          description: a.description,
+          director: a.director,
+          contactName: a.contactName,
+          createdAt: a.createdAt,
+          applied: true,
+          createdByMe: a.createdByMe,
+          phone: a.phone,
+          email: a.email,
+        );
+      }
+      return a;
+    }).toList();
+
+    if (_selectedAudition?.id == auditionId) {
+      final a = _selectedAudition!;
+      _selectedAudition = AuditionModel(
+        id: a.id,
+        creatorId: a.creatorId,
+        title: a.title,
+        category: a.category,
+        role: a.role,
+        language: a.language,
+        pay: a.pay,
+        location: a.location,
+        deadline: a.deadline,
+        description: a.description,
+        director: a.director,
+        contactName: a.contactName,
+        createdAt: a.createdAt,
+        applied: true,
+        createdByMe: a.createdByMe,
+        phone: a.phone,
+        email: a.email,
+      );
+    }
+
+    notifyListeners();
+  }
+
+  void markAuditionUnapplied(String auditionId) {
+    _auditions = _auditions.map((a) {
+      if (a.id == auditionId) {
+        return AuditionModel(
+          id: a.id,
+          creatorId: a.creatorId,
+          title: a.title,
+          category: a.category,
+          role: a.role,
+          language: a.language,
+          pay: a.pay,
+          location: a.location,
+          deadline: a.deadline,
+          description: a.description,
+          director: a.director,
+          contactName: a.contactName,
+          createdAt: a.createdAt,
+          applied: false,
+          createdByMe: a.createdByMe,
+          phone: a.phone,
+          email: a.email,
+        );
+      }
+      return a;
+    }).toList();
+
+    if (_selectedAudition?.id == auditionId) {
+      final a = _selectedAudition!;
+      _selectedAudition = AuditionModel(
+        id: a.id,
+        creatorId: a.creatorId,
+        title: a.title,
+        category: a.category,
+        role: a.role,
+        language: a.language,
+        pay: a.pay,
+        location: a.location,
+        deadline: a.deadline,
+        description: a.description,
+        director: a.director,
+        contactName: a.contactName,
+        createdAt: a.createdAt,
+        applied: false,
+        createdByMe: a.createdByMe,
+        phone: a.phone,
+        email: a.email,
+      );
+    }
+
+    notifyListeners();
+  }
 }

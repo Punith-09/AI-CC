@@ -37,7 +37,6 @@ class ApiEndpoints {
 
   static const String myApplications = "/applications/me";
   static String withdrawApplication(String id) => "/applications/$id";
-  static String updateApplication(String id) => "/applications/$id";
   static String updateApplicationStatus(String id) => "/applications/$id/status";
 
   static const String photos = "/photos";

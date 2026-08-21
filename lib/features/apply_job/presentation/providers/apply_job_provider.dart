@@ -16,21 +16,13 @@ class ApplyJobProvider extends ChangeNotifier {
   // =========================================================
 
   bool _isLoading = false;
-
   bool get isLoading => _isLoading;
 
   bool _isDeleting = false;
-
   bool get isDeleting => _isDeleting;
 
-  bool _isUpdating = false;
-
-  bool get isUpdating => _isUpdating;
-
   bool _isFetchingApplications = false;
-
-  bool get isFetchingApplications =>
-      _isFetchingApplications;
+  bool get isFetchingApplications => _isFetchingApplications;
 
   String? _errorMessage;
 
@@ -168,88 +160,6 @@ class ApplyJobProvider extends ChangeNotifier {
       );
     } catch (_) {
       return null;
-    }
-  }
-
-  // =========================================================
-  // UPDATE COVER LETTER
-  // =========================================================
-
-  Future<bool> updateApplicationCoverLetter({
-    required String applicationId,
-    required String coverLetter,
-  }) async {
-    if (applicationId.isEmpty) {
-      _errorMessage =
-      'Application ID is missing.';
-
-      notifyListeners();
-
-      return false;
-    }
-
-    _isUpdating = true;
-    _errorMessage = null;
-
-    notifyListeners();
-
-    try {
-      print('');
-      print('========================================');
-      print('✏️ UPDATE APPLICATION');
-      print('========================================');
-      print('APPLICATION ID: $applicationId');
-      print('========================================');
-
-      await _repository
-          .updateApplicationCoverLetter(
-        applicationId,
-        coverLetter,
-      );
-
-      /*
-      Update local application data.
-      */
-
-      final index = _applications.indexWhere(
-            (item) => item.id == applicationId,
-      );
-
-      if (index != -1) {
-        final old = _applications[index];
-
-        _applications[index] = ApplicationModel(
-          id: old.id,
-          auditionId: old.auditionId,
-          auditionTitle: old.auditionTitle,
-          role: old.role,
-          status: old.status,
-          appliedDate: old.appliedDate,
-          deadline: old.deadline,
-          coverLetter: coverLetter,
-          details: old.details,
-          applicantName: old.applicantName,
-          applicantCategory:
-          old.applicantCategory,
-          audition: old.audition,
-        );
-      }
-
-      _isUpdating = false;
-
-      notifyListeners();
-
-      print('✅ UPDATE SUCCESS');
-
-      return true;
-    } catch (e) {
-      _isUpdating = false;
-
-      _errorMessage = _cleanErrorMessage(e);
-
-      notifyListeners();
-
-      return false;
     }
   }
 

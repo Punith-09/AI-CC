@@ -16,10 +16,6 @@ class AuditionCard extends StatelessWidget {
   final VoidCallback onView;
   final VoidCallback onApply;
 
-  /// Called when the user taps the Edit icon.
-  /// Only shown when [audition.applied] is true.
-  final VoidCallback? onEdit;
-
   /// Called when the user taps the Delete icon.
   /// Only shown when [audition.applied] is true.
   final VoidCallback? onDelete;
@@ -36,7 +32,6 @@ class AuditionCard extends StatelessWidget {
     this.description,
     required this.onView,
     required this.onApply,
-    this.onEdit,
     this.onDelete,
   });
 
@@ -203,7 +198,6 @@ class AuditionCard extends StatelessWidget {
           if (_hasApplied) ...[
             const SizedBox(height: 14),
             _AppliedActionRow(
-              onEdit: onEdit,
               onDelete: onDelete,
             ),
           ],
@@ -357,11 +351,9 @@ class AuditionCard extends StatelessWidget {
 // -----------------------------------------------------------
 
 class _AppliedActionRow extends StatelessWidget {
-  final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
   const _AppliedActionRow({
-    this.onEdit,
     this.onDelete,
   });
 
@@ -397,20 +389,10 @@ class _AppliedActionRow extends StatelessWidget {
             ),
           ),
 
-          // Edit icon button
-          _IconBtn(
-            icon: Icons.edit_outlined,
-            tooltip: "Edit application",
-            gradient: const [Color(0xff20D5FF), Color(0xffCC3EFF)],
-            onTap: onEdit,
-          ),
-
-          const SizedBox(width: 8),
-
-          // Delete icon button
+          // Delete (withdraw) icon button
           _IconBtn(
             icon: Icons.delete_outline_rounded,
-            tooltip: "Delete application",
+            tooltip: "Withdraw application",
             gradient: const [Color(0xffEB5757), Color(0xffFF8C42)],
             onTap: onDelete,
           ),

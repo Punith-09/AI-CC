@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import 'package:aicc/core/constants/app_colors.dart';
 
 import '../../../../core/routes/app_routes.dart';
+import '../../../apply_job/presentation/providers/apply_job_provider.dart';
 import '../../data/models/audition_model.dart';
 
 class BottomActionBar extends StatelessWidget {
@@ -18,6 +20,12 @@ class BottomActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Watch ApplyJobProvider so the button reacts immediately after apply/withdraw
+    final applyProvider = context.watch<ApplyJobProvider>();
+    final hasApplied = (audition?.applied ?? false) ||
+        (audition != null &&
+            applyProvider.getApplicationForAudition(audition!.id) != null);
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -28,9 +36,7 @@ class BottomActionBar extends StatelessWidget {
                 height: 48,
                 child: OutlinedButton(
                   onPressed: () {
-
-                      context.go(AppRoutes.auditions);
-
+                    context.go(AppRoutes.auditions);
                   },
                   style: OutlinedButton.styleFrom(
                     backgroundColor: const Color(0xFF06233E),
@@ -68,31 +74,51 @@ class BottomActionBar extends StatelessWidget {
               child: Container(
                 height: 55,
                 decoration: BoxDecoration(
-                  gradient:  LinearGradient(
-                    colors: AppColors.BtnGradient,
+                  gradient: LinearGradient(
+                    colors: hasApplied
+                        ? const [Color(0xFF1B4D3E), Color(0xFF27AE60)]
+                        : AppColors.BtnGradient,
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
                   borderRadius: BorderRadius.circular(30),
                 ),
                 child: ElevatedButton(
-                  onPressed: onApply ??
-                      () {
-                        context.push(AppRoutes.applyJob, extra: audition);
-                      },
+                  // Disabled when already applied
+                  onPressed: hasApplied
+                      ? null
+                      : onApply ??
+                          () {
+                            context.push(AppRoutes.applyJob, extra: audition);
+                          },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
+                    disabledBackgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  child: const Text(
-                    "APPLY NOW",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (hasApplied) ...
+                        const [
+                          Icon(
+                            Icons.check_circle_outline_rounded,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                          SizedBox(width: 6),
+                        ],
+                      Text(
+                        hasApplied ? "APPLIED" : "APPLY NOW",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
