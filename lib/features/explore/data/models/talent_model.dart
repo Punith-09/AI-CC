@@ -24,12 +24,27 @@ class TalentModel {
       parsedRole = (json['roles'] as List).first.toString();
     }
 
+    // Safely parse 'match' — backend may return int, double, or String
+    int parsedMatch = 90;
+    final rawMatch = json['match'];
+    if (rawMatch is int) {
+      parsedMatch = rawMatch;
+    } else if (rawMatch is double) {
+      parsedMatch = rawMatch.toInt();
+    } else if (rawMatch is String) {
+      parsedMatch = int.tryParse(rawMatch) ?? 90;
+    }
+
+    // Use toString() instead of hard 'as String?' casts — the backend
+    // sometimes returns numeric _id values, which would throw a CastError.
+    String _str(dynamic v) => v == null ? '' : v.toString();
+
     return TalentModel(
-      id: (json['_id'] as String?) ?? (json['id'] as String?) ?? '',
-      image: (json['profilePhoto'] as String?) ?? (json['image'] as String?) ?? '',
-      name: (json['fullName'] as String?) ?? (json['name'] as String?) ?? '',
+      id: _str(json['_id'] ?? json['id']),
+      image: _str(json['profilePhoto'] ?? json['image']),
+      name: _str(json['fullName'] ?? json['name']),
       role: parsedRole,
-      match: json['match'] as int? ?? 90, // default match to some value if null
+      match: parsedMatch,
     );
   }
 

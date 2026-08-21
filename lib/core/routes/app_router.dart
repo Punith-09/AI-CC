@@ -24,6 +24,7 @@ import '../../features/notifications/presentation/pages/activity_screen.dart';
 import '../../features/post/presentation/pages/post_screen.dart';
 import '../../features/post/presentation/pages/upload_photo_screen.dart';
 import '../../features/post/presentation/pages/upload_video_screen.dart';
+import '../../features/explore/presentation/pages/explore_profile_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: AppRoutes.welcome,
@@ -179,6 +180,18 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.uploadVideo,
       builder: (_, __) =>
       const UploadVideoScreen(),
+    ),
+
+    // =========================================================
+    // EXPLORE PROFILE (public view from explore tap)
+    // =========================================================
+
+    GoRoute(
+      path: AppRoutes.exploreProfile,
+      builder: (context, state) {
+        final userId = state.extra as String? ?? '';
+        return ExploreProfileScreen(userId: userId);
+      },
     ),
 
     // =========================================================
