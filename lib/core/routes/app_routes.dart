@@ -12,6 +12,7 @@ class AppRoutes {
   static const String role = "/role";
 
   static const String artistProfile = "/artistProfile";
+  static const String editArtistProfile = "/editArtistProfile";
   static const String exploreProfile = "/exploreProfile";
   static const String creatorProfile = "/creatorProfile";
 

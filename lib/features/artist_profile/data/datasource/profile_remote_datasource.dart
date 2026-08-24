@@ -14,6 +14,8 @@ abstract class ProfileRemoteDataSource {
   Future<List<PortfolioModel>> getUserMedia(String userId);
 
   Future<void> followUser(String id);
+
+  Future<ArtistModel> updateProfile(Map<String, dynamic> data);
 }
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
@@ -248,6 +250,44 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     } on DioException catch (e) {
       throw Exception(
         e.response?.data?['message'] ?? e.message ?? 'Failed to follow user',
+      );
+    }
+  }
+
+  // ----------------------------------------------------------
+  // Update my profile
+  // ----------------------------------------------------------
+
+  @override
+  Future<ArtistModel> updateProfile(Map<String, dynamic> data) async {
+    try {
+      final response = await _dioClient.patch(
+        ApiEndpoints.profileMe,
+        data: data,
+        options: _getOptions(),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('==============================');
+        print('UPDATE PROFILE API RESPONSE');
+        print(response.data);
+        print('==============================');
+
+        final responseData = _extractData(response.data);
+        return ArtistModel.fromJson(responseData);
+      }
+
+      throw Exception(
+        'Failed to update profile. '
+            'Status code: ${response.statusCode}',
+      );
+    } on DioException catch (e) {
+      print('UPDATE PROFILE API ERROR: ${e.response?.data ?? e.message}');
+      throw Exception(
+        e.response?.data?['message'] ??
+            e.response?.data?['error'] ??
+            e.message ??
+            'Failed to update profile',
       );
     }
   }

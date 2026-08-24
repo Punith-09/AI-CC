@@ -10,6 +10,8 @@ import 'package:aicc/features/artist_profile/presentation/widgets/role_chips.dar
 import 'package:aicc/features/artist_profile/presentation/widgets/social_links.dart';
 import 'package:aicc/features/artist_profile/presentation/widgets/stats_card.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:aicc/core/routes/app_routes.dart';
 
 import '../../data/datasource/portfolio_data.dart';
 
@@ -87,6 +89,22 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                             state: profile?.state,
                           ),
                         ),
+
+                        // Edit Button for the current user
+                        if (widget.userId == null)
+                          Positioned(
+                            top: 16,
+                            right: 16,
+                            child: IconButton(
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.black.withOpacity(0.5),
+                              ),
+                              icon: const Icon(Icons.mode_edit_outline_rounded, color: Colors.white),
+                              onPressed: () {
+                                context.push(AppRoutes.editArtistProfile);
+                              },
+                            ),
+                          ),
                       ],
                     ),
 
