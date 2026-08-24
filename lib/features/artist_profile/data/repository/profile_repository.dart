@@ -10,6 +10,8 @@ abstract class ProfileRepository {
   Future<List<PortfolioModel>> getUserMedia(String userId);
 
   Future<void> followUser(String id);
+
+  Future<ArtistModel> updateProfile(Map<String, dynamic> data);
 }
 
 class ProfileRepositoryImpl implements ProfileRepository {
@@ -35,5 +37,10 @@ class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Future<void> followUser(String id) {
     return remoteDataSource.followUser(id);
+  }
+
+  @override
+  Future<ArtistModel> updateProfile(Map<String, dynamic> data) {
+    return remoteDataSource.updateProfile(data);
   }
 }

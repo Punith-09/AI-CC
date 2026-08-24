@@ -87,4 +87,20 @@ class ProfileProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> updateProfile(Map<String, dynamic> data) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _currentProfile = await _repository.updateProfile(data);
+    } catch (e) {
+      _error = e.toString();
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

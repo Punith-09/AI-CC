@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/network/dio_client.dart';
 
@@ -61,6 +62,38 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       RegisterRequest request,
       ) async {
     try {
+      // ========================================
+      // PRE-REGISTRATION MOBILE VALIDATION
+      // ========================================
+      try {
+        final usersResponse = await _dioClient.get(ApiEndpoints.exploreUsers);
+        
+        List<dynamic> usersList = [];
+        final rawData = usersResponse.data;
+        if (rawData is List) {
+          usersList = rawData;
+        } else if (rawData is Map) {
+          final inner = rawData['data'] ??
+              rawData['users'] ??
+              rawData['results'] ??
+              rawData['talents'] ??
+              [];
+          usersList = inner is List ? inner : [];
+        }
+
+        final isRegistered = usersList.any(
+          (user) => user is Map && (user['mobile'] == request.mobile || user['phone'] == request.mobile),
+        );
+
+        if (isRegistered) {
+          throw Exception('Mobile number is already registered.');
+        }
+      } catch (e) {
+        if (e.toString().contains('Mobile number is already registered')) {
+          rethrow;
+        }
+      }
+
       final requestData = request.toJson();
 
       // Debug: See exactly what Flutter is sending
@@ -82,14 +115,27 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       print('========================================');
 
       if (response.data is Map) {
-        return LoginResponse.fromJson(
-          Map<String, dynamic>.from(response.data),
-        );
+        final data = Map<String, dynamic>.from(response.data);
+        if (data.containsKey('message') && 
+            (data['token'] == null || data['token'].toString().isEmpty) && 
+            (data['accessToken'] == null) && 
+            (data['access_token'] == null)) {
+          throw Exception(data['message']);
+        }
+        return LoginResponse.fromJson(data);
       }
 
       throw Exception(
         'Invalid registration server response format',
       );
+    } on DioException catch (e) {
+      print('REGISTER API DIO ERROR: ${e.response?.data}');
+      if (e.response?.data is Map && e.response!.data['message'] != null) {
+        throw Exception(e.response!.data['message']);
+      } else if (e.response?.data is Map && e.response!.data['error'] != null) {
+        throw Exception(e.response!.data['error']);
+      }
+      throw Exception('Network error: ${e.message}');
     } catch (e) {
       print('REGISTER API ERROR: $e');
       rethrow;
