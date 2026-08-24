@@ -29,7 +29,7 @@ class HomeAppbar extends StatelessWidget{
                 ],
               ),
               child: Icon( LucideIcons.clapperboard,
-                  size: 24,color: AppColors.black),
+                  size: 26,color: AppColors.black),
             ),
             Row(
               children: [
@@ -37,7 +37,7 @@ class HomeAppbar extends StatelessWidget{
                     onPressed: (){
                       context.push(AppRoutes.messages);
                     },
-                    icon: Icon(LucideIcons.mail,size: 26,)
+                    icon: Icon(LucideIcons.messageCircleMore,size: 26,)
                 )
                 ,
                 SizedBox(width: 25),

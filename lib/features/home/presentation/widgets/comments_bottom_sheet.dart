@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/storage/local_storage.dart';
+import '../../../../common/widgets/user_avatar.dart';
 import '../../../artist_profile/data/models/artist_model.dart';
 import '../../../artist_profile/data/repository/profile_repository.dart';
 import '../../data/models/comment_model.dart';
 import '../../data/models/feed_post_model.dart';
 import '../../data/repository/home_repository.dart';
+import '../providers/home_feed_provider.dart';
 
 class CommentsBottomSheet extends StatefulWidget {
   final FeedPostModel? post;
@@ -89,6 +92,11 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
           _isLoading = false;
         });
 
+        // Push the real count back to the feed card counter
+        if (widget.post != null) {
+          _updateFeedCount(list.length);
+        }
+
         // Resolve missing author names for any comments
         _resolveCommentAuthors();
       }
@@ -151,6 +159,15 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
           });
         }
       }
+    } catch (_) {}
+  }
+
+  /// Pushes the comment count into the feed card via the provider.
+  void _updateFeedCount(int count) {
+    if (widget.post == null || !mounted) return;
+    try {
+      Provider.of<HomeFeedProvider>(context, listen: false)
+          .updateCommentsCount(widget.post!.id, count);
     } catch (_) {}
   }
 
@@ -218,6 +235,8 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
           _comments[0] = finalComment;
           _isPosting = false;
         });
+        // Keep feed card count in sync
+        _updateFeedCount(_comments.length);
       }
     } catch (e) {
       if (mounted) {
@@ -405,25 +424,12 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
 
         return ListTile(
           contentPadding: EdgeInsets.zero,
-          leading: CircleAvatar(
+          leading: UserAvatar(
+            imageUrl: comment.profileImage,
+            name: displayName,
             radius: 18,
+            fontSize: 13,
             backgroundColor: AppColors.primary.withValues(alpha: 0.25),
-            backgroundImage: hasNetworkAvatar
-                ? NetworkImage(comment.profileImage)
-                : null,
-            onBackgroundImageError: hasNetworkAvatar
-                ? (exception, stackTrace) {}
-                : null,
-            child: Text(
-              displayName.isNotEmpty
-                  ? displayName[0].toUpperCase()
-                  : 'A',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-              ),
-            ),
           ),
           title: Row(
             children: [

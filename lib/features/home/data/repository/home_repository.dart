@@ -6,6 +6,7 @@ abstract class HomeRepository {
   Future<List<FeedPostModel>> getFeed();
   Future<Map<String, dynamic>> toggleLike({required String id, required bool isVideo});
   Future<List<CommentModel>> getComments(String videoId);
+  Future<int> getCommentsCount(String videoId);
   Future<CommentModel> postComment({required String videoId, required String text});
   Future<Map<String, dynamic>> toggleCommentLike(String commentId);
   Future<void> incrementVideoView(String videoId);
@@ -32,6 +33,11 @@ class HomeRepositoryImpl implements HomeRepository {
   @override
   Future<List<CommentModel>> getComments(String videoId) async {
     return await _remoteDataSource.getComments(videoId);
+  }
+
+  @override
+  Future<int> getCommentsCount(String videoId) async {
+    return await _remoteDataSource.getCommentsCount(videoId);
   }
 
   @override

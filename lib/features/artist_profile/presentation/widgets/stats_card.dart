@@ -46,7 +46,7 @@ class StatsCard extends StatelessWidget {
             StatItem(
               icon: Icons.groups_2_outlined,
               iconColor: const Color(0xffFF4FA3),
-              value: followers?.isNotEmpty == true ? followers! : "125K",
+              value: followers?.isNotEmpty == true ? followers! : "0",
               title: "Followers",
             ),
             VerticalDivider(

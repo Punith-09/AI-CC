@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/routes/app_routes.dart';
+import '../../data/models/register_request.dart';
+import '../../data/repository/auth_repository.dart';
 import '../widgets/signup_button.dart';
 import '../widgets/signup_dropdown.dart';
 import '../widgets/signup_header.dart';
 import '../widgets/signup_textfield.dart';
-
 
 class AudienceSignUpScreen extends StatefulWidget {
   const AudienceSignUpScreen({super.key});
@@ -20,6 +23,7 @@ class _AudienceSignUpScreenState extends State<AudienceSignUpScreen> {
 
   final TextEditingController _fullName = TextEditingController();
   final TextEditingController _email = TextEditingController();
+  final TextEditingController _password = TextEditingController();
   final TextEditingController _phone = TextEditingController();
 
   String? _gender;
@@ -27,12 +31,116 @@ class _AudienceSignUpScreenState extends State<AudienceSignUpScreen> {
   String? _state;
   String? _city;
 
+  bool _obscurePassword = true;
+  bool _isSubmitting = false;
+
   @override
   void dispose() {
     _fullName.dispose();
     _email.dispose();
+    _password.dispose();
     _phone.dispose();
     super.dispose();
+  }
+
+  Future<void> _createAccount() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      final authRepository = sl<AuthRepository>();
+
+      final request = RegisterRequest(
+        email: _email.text.trim(),
+        password: _password.text,
+        fullName: _fullName.text.trim(),
+        role: 'audience',
+        mobile: _phone.text.trim(),
+        stageName: '',
+        dob: '',
+        gender: _gender ?? '',
+        country: _country ?? '',
+        state: _state ?? '',
+        city: _city ?? '',
+        profilePhoto: '',
+        category: '',
+        experience: '',
+        skills: const [],
+        languages: const [],
+        preferredLanguage: const [],
+        qualification: '',
+        institute: '',
+        occupation: '',
+        availableFor: const [],
+        union: 'No',
+        relocate: 'No',
+        height: 0,
+        weight: 0,
+        bodyType: '',
+        skinTone: '',
+        hairColor: '',
+        eyeColor: '',
+        preferredRole: const [],
+        travelAvailability: '',
+        nightShoots: 'No',
+        headshot: '',
+        fullBody: '',
+        introVideo: '',
+        previousWork: const [],
+        instagram: '',
+        youtube: '',
+        imdb: '',
+        website: '',
+        resume: '',
+        awards: '',
+        bio: '',
+      );
+
+      final response = await authRepository.register(request);
+
+      // If backend didn't return an auth token directly on register,
+      // log the user in immediately with their credentials.
+      if (response.token.isEmpty) {
+        await authRepository.login(_email.text.trim(), _password.text);
+      }
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Audience account created successfully!"),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (!mounted) return;
+
+      context.go(AppRoutes.home);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Registration failed: $e"),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 
   @override
@@ -51,7 +159,6 @@ class _AudienceSignUpScreenState extends State<AudienceSignUpScreen> {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -63,7 +170,6 @@ class _AudienceSignUpScreenState extends State<AudienceSignUpScreen> {
             ),
           ),
         ),
-
         body: SafeArea(
           child: Column(
             children: [
@@ -72,7 +178,6 @@ class _AudienceSignUpScreenState extends State<AudienceSignUpScreen> {
                 subtitle: "Complete your audience profile",
                 icon: Icons.person,
               ),
-
               Expanded(
                 child: Container(
                   margin: const EdgeInsets.all(16),
@@ -95,29 +200,43 @@ class _AudienceSignUpScreenState extends State<AudienceSignUpScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-
                           const SizedBox(height: 25),
-
                           SignupTextField(
                             controller: _fullName,
                             label: "Full Name",
                             requiredField: true,
                           ),
-
                           SignupTextField(
                             controller: _email,
                             label: "Email",
                             keyboardType: TextInputType.emailAddress,
                             requiredField: true,
                           ),
-
+                          SignupTextField(
+                            controller: _password,
+                            label: "Password",
+                            obscureText: _obscurePassword,
+                            requiredField: true,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: Colors.white70,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
+                          ),
                           SignupTextField(
                             controller: _phone,
                             label: "Phone Number",
                             keyboardType: TextInputType.phone,
                             requiredField: true,
                           ),
-
                           SignupDropdown(
                             label: "Gender",
                             items: const [
@@ -133,7 +252,6 @@ class _AudienceSignUpScreenState extends State<AudienceSignUpScreen> {
                               });
                             },
                           ),
-
                           SignupDropdown(
                             label: "Country",
                             items: const [
@@ -149,7 +267,6 @@ class _AudienceSignUpScreenState extends State<AudienceSignUpScreen> {
                               });
                             },
                           ),
-
                           SignupDropdown(
                             label: "State",
                             items: const [
@@ -165,7 +282,6 @@ class _AudienceSignUpScreenState extends State<AudienceSignUpScreen> {
                               });
                             },
                           ),
-
                           SignupDropdown(
                             label: "City",
                             items: const [
@@ -181,23 +297,11 @@ class _AudienceSignUpScreenState extends State<AudienceSignUpScreen> {
                               });
                             },
                           ),
-
                           const SizedBox(height: 30),
-
                           SignupButton(
                             text: "Create Account",
-                            onPressed: () {
-                              if (_formKey.currentState!.validate()) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      "Audience account created successfully!",
-                                    ),
-                                  ),
-                                );
-                                context.go('/home');
-                              }
-                            },
+                            isLoading: _isSubmitting,
+                            onPressed: _createAccount,
                           ),
                         ],
                       ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'app_routes.dart';
+import '../storage/local_storage.dart';
 
 import '../../common/widgets/custom_bottom_navbar.dart';
 
@@ -28,6 +29,28 @@ import '../../features/explore/presentation/pages/explore_profile_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: AppRoutes.welcome,
+
+  // =========================================================
+  // AUTH REDIRECT
+  // Runs on every navigation. If a valid token exists in
+  // LocalStorage the user is already logged in, so we skip
+  // the welcome / login screens and go straight to home.
+  // =========================================================
+  redirect: (context, state) {
+    final isLoggedIn = LocalStorage.instance.hasToken();
+    final location = state.uri.toString();
+
+    final isAuthRoute =
+        location == AppRoutes.welcome ||
+        location == AppRoutes.login ||
+        location == AppRoutes.signup;
+
+    if (isLoggedIn && isAuthRoute) {
+      return AppRoutes.home;
+    }
+
+    return null; // no redirect needed
+  },
 
   routes: [
     // =========================================================

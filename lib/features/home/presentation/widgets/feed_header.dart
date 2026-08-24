@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../common/widgets/user_avatar.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../data/models/feed_post_model.dart';
 
@@ -14,34 +15,16 @@ class FeedHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasValidCreatorPic = post.creatorPic != null &&
-        post.creatorPic!.isNotEmpty &&
-        post.creatorPic!.startsWith('http');
-
     return Container(
       padding: const EdgeInsets.only(left: 16, top: 16, right: 16, bottom: 0),
       child: Row(
         children: [
-          CircleAvatar(
+          UserAvatar(
+            imageUrl: post.creatorPic,
+            name: post.creatorName,
             radius: 22,
+            fontSize: 16,
             backgroundColor: AppColors.primary.withValues(alpha: 0.2),
-            backgroundImage: hasValidCreatorPic
-                ? NetworkImage(post.creatorPic!)
-                : const AssetImage('assets/images/profile4.jpeg') as ImageProvider,
-            onBackgroundImageError: hasValidCreatorPic
-                ? (exception, stackTrace) {
-                    // Gracefully fallback when avatar URL gives 404
-                  }
-                : null,
-            child: post.creatorName.isNotEmpty
-                ? Text(
-                    post.creatorName[0].toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                : null,
           ),
           const SizedBox(width: 12),
           Expanded(

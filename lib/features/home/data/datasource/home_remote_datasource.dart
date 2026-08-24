@@ -11,6 +11,7 @@ abstract class HomeRemoteDataSource {
   Future<List<FeedPostModel>> getFeedPosts();
   Future<Map<String, dynamic>> toggleLike({required String id, required bool isVideo});
   Future<List<CommentModel>> getComments(String videoId);
+  Future<int> getCommentsCount(String videoId);
   Future<CommentModel> postComment({required String videoId, required String text});
   Future<Map<String, dynamic>> toggleCommentLike(String commentId);
   Future<void> incrementVideoView(String videoId);
@@ -178,6 +179,24 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       return [];
     } catch (e) {
       return [];
+    }
+  }
+
+  @override
+  Future<int> getCommentsCount(String videoId) async {
+    try {
+      final response = await _dioClient.get(ApiEndpoints.videoComments(videoId));
+      dynamic listData;
+      if (response.data is List) {
+        listData = response.data;
+      } else if (response.data is Map && (response.data as Map).containsKey('data')) {
+        listData = (response.data as Map)['data'];
+      } else if (response.data is Map && (response.data as Map).containsKey('comments')) {
+        listData = (response.data as Map)['comments'];
+      }
+      return listData is List ? (listData as List).length : 0;
+    } catch (_) {
+      return 0;
     }
   }
 

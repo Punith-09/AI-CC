@@ -19,6 +19,7 @@ class FeedPostModel {
   final String? creatorPic;
   final String? creatorCategory;
   final int likesCount;
+  final int commentsCount;
   final int viewsCount;
   final bool liked;
   final String? createdAt;
@@ -39,6 +40,7 @@ class FeedPostModel {
     this.creatorPic,
     this.creatorCategory,
     this.likesCount = 0,
+    this.commentsCount = 0,
     this.viewsCount = 0,
     this.liked = false,
     this.createdAt,
@@ -63,6 +65,7 @@ class FeedPostModel {
     String? creatorPic,
     String? creatorCategory,
     int? likesCount,
+    int? commentsCount,
     int? viewsCount,
     bool? liked,
     String? createdAt,
@@ -83,6 +86,7 @@ class FeedPostModel {
       creatorPic: creatorPic ?? this.creatorPic,
       creatorCategory: creatorCategory ?? this.creatorCategory,
       likesCount: likesCount ?? this.likesCount,
+      commentsCount: commentsCount ?? this.commentsCount,
       viewsCount: viewsCount ?? this.viewsCount,
       liked: liked ?? this.liked,
       createdAt: createdAt ?? this.createdAt,
@@ -132,6 +136,7 @@ class FeedPostModel {
       creatorPic: photo.creatorPic,
       creatorCategory: photo.creatorCategory ?? 'Artist',
       likesCount: photo.likesCount,
+      commentsCount: 0,
       viewsCount: photo.viewsCount,
       liked: photo.liked,
       createdAt: photo.createdAt,
@@ -155,6 +160,7 @@ class FeedPostModel {
       creatorPic: video.creatorPic,
       creatorCategory: video.creatorCategory ?? 'Actor',
       likesCount: video.likesCount,
+      commentsCount: 0,
       viewsCount: video.viewsCount,
       liked: video.liked,
       createdAt: video.createdAt,
@@ -184,6 +190,7 @@ class FeedPostModel {
       creatorPic: json['creatorPic'] as String?,
       creatorCategory: json['creatorCategory'] as String? ?? 'Artist',
       likesCount: json['likesCount'] as int? ?? 0,
+      commentsCount: json['commentsCount'] as int? ?? 0,
       viewsCount: json['viewsCount'] as int? ?? 0,
       liked: json['liked'] as bool? ?? false,
       createdAt: json['createdAt'] as String?,

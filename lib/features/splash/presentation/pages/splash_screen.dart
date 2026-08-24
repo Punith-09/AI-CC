@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// TODO: Replace this placeholder with a real animated splash screen.
-/// - Check auth state (via SplashProvider) to decide if user is already
-///   logged in, then navigate to '/home' or '/welcome' accordingly.
+import '../../../../core/storage/local_storage.dart';
+import '../../../../core/routes/app_routes.dart';
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -15,9 +15,10 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // TODO: Check auth state and navigate accordingly.
     Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) context.go('/welcome');
+      if (!mounted) return;
+      final isLoggedIn = LocalStorage.instance.hasToken();
+      context.go(isLoggedIn ? AppRoutes.home : AppRoutes.welcome);
     });
   }
 

@@ -2,8 +2,10 @@ import 'package:aicc/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/routes/app_routes.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class ProfileHeader extends StatelessWidget {
   final String? coverImage;
@@ -162,7 +164,15 @@ class ProfileHeader extends StatelessWidget {
                         break;
 
                       case 'logout':
-                      context.go(AppRoutes.login);
+                        // Clear token first, THEN navigate.
+                        // Without this the router redirect sees a valid
+                        // token and immediately bounces back to /home.
+                        await context
+                            .read<AuthProvider>()
+                            .logout();
+                        if (context.mounted) {
+                          context.go(AppRoutes.welcome);
+                        }
                         break;
                     }
                   },

@@ -103,6 +103,29 @@ class AuthRepositoryImpl implements AuthRepository {
       if (request.fullName.isNotEmpty) {
         await _localStorage.saveUserName(request.fullName);
       }
+
+      if (response.user != null) {
+        final userId = response.user!['_id'] ??
+            response.user!['id'] ??
+            response.user!['userId'];
+        if (userId != null && userId.toString().isNotEmpty) {
+          await _localStorage.saveUserId(userId.toString());
+        }
+
+        final name = response.user!['fullName'] ??
+            response.user!['name'] ??
+            response.user!['username'];
+        if (name != null && name.toString().isNotEmpty) {
+          await _localStorage.saveUserName(name.toString());
+        }
+
+        final photo = response.user!['profilePhoto'] ??
+            response.user!['profile_photo'] ??
+            response.user!['avatar'];
+        if (photo != null && photo.toString().isNotEmpty) {
+          await _localStorage.saveUserProfilePhoto(photo.toString());
+        }
+      }
     }
 
     return response;
