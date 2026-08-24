@@ -1,40 +1,59 @@
 import '../models/talent_model.dart';
 
 const talents = [
-
   TalentModel(
-    image: "assets/images/profile1.jpeg",
+    id: "1",
+    pic: "assets/images/profile1.jpeg",
     name: "Rajan Kapoor",
-    role: "Actor",
-    match: 98,
+    category: "Actor",
+    bio: "Passionate actor with experience in theatre and films.",
+    handle: "@rajankapoor",
+    followers: 120,
+    videosCount: 3,
+    following: false,
   ),
-
   TalentModel(
-    image: "assets/images/profile2.jpeg",
+    id: "2",
+    pic: "assets/images/profile2.jpeg",
     name: "Simran Verma",
-    role: "Actor",
-    match: 96,
+    category: "Actor",
+    bio: "Model and actress based in Mumbai.",
+    handle: "@simranverma",
+    followers: 240,
+    videosCount: 5,
+    following: false,
   ),
-
   TalentModel(
-    image: "assets/images/profile3.jpeg",
+    id: "3",
+    pic: "assets/images/profile3.jpeg",
     name: "Harsh Malhotra",
-    role: "Model",
-    match: 95,
+    category: "Model",
+    bio: "Commercial fashion model and fitness enthusiast.",
+    handle: "@harshm",
+    followers: 85,
+    videosCount: 2,
+    following: false,
   ),
-
   TalentModel(
-    image: "assets/images/profile4.jpeg",
+    id: "4",
+    pic: "assets/images/profile4.jpeg",
     name: "Ishita Roy",
-    role: "Actor",
-    match: 89,
+    category: "Actor",
+    bio: "Theatre artist and voice actor.",
+    handle: "@ishitaroy",
+    followers: 310,
+    videosCount: 4,
+    following: false,
   ),
-
   TalentModel(
-    image: "assets/images/profile5.jpeg",
+    id: "5",
+    pic: "assets/images/profile5.jpeg",
     name: "Vivaan Singh",
-    role: "Model",
-    match: 87,
+    category: "Model",
+    bio: "Runway model and influencer.",
+    handle: "@vivaans",
+    followers: 190,
+    videosCount: 1,
+    following: false,
   ),
-
 ];

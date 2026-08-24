@@ -1,26 +1,10 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
-
 class ApiEndpoints {
   ApiEndpoints._();
 
   static String get baseUrl {
-    if (kIsWeb) {
-      return "http://localhost:3000";
-    }
-    try {
-      if (Platform.isAndroid) {
-        // Android emulator connects to host localhost via 10.0.2.2
-        return "http://10.0.2.2:3000";
-      }
-
-      if (Platform.isIOS) {
-        // iOS Simulator
-        return 'http://localhost:3000';
-      }
-    } catch (_) {}
-
-    return 'http://localhost:3000';
+    // Cloudflare tunnel — points to local backend (http://localhost:3000)
+    // Replace this URL each time you restart the cloudflared tunnel.
+    return 'https://eden-gym-tracks-larger.trycloudflare.com';
   }
 
   static const String login = '/auth/login';
@@ -49,25 +33,15 @@ class ApiEndpoints {
   static String videoComments(String id) => "/videos/$id/comments";
   static String likeComment(String commentId) => "/videos/comments/$commentId/like";
 
+  // Rewrites any localhost:3000 URLs returned by the backend to the tunnel URL.
   static String formatMediaUrl(String url) {
     if (url.isEmpty) return url;
-    if (url.startsWith('/')) {
-      return '$baseUrl$url';
-    }
-    if (url.startsWith('http://localhost:3000') && !kIsWeb) {
-      try {
-        if (Platform.isAndroid) {
-          return url.replaceFirst('http://localhost:3000', 'http://10.0.2.2:3000');
-        }
-      } catch (_) {}
+    if (url.startsWith('/')) return '$baseUrl$url';
+    if (url.startsWith('http://localhost:3000')) {
+      return url.replaceFirst('http://localhost:3000', baseUrl);
     }
     return url;
   }
-
-  // static const String login = "/auth/login";
-  // static const String register = "/auth/register";
-
-
 
   static const String chats = "/chats";
   static String startChat(String userId) => "/chats/start/$userId";

@@ -2,7 +2,10 @@ import 'package:aicc/features/explore/data/datasource/explore_remote_datasource.
 import 'package:aicc/features/explore/data/models/talent_model.dart';
 
 abstract class ExploreRepository {
-  Future<List<TalentModel>> getExploreUsers();
+  Future<List<TalentModel>> getExploreUsers({
+    String? query,
+    String? category,
+  });
 }
 
 class ExploreRepositoryImpl implements ExploreRepository {
@@ -11,11 +14,13 @@ class ExploreRepositoryImpl implements ExploreRepository {
   ExploreRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<List<TalentModel>> getExploreUsers() async {
-    try {
-      return await remoteDataSource.fetchExploreUsers();
-    } catch (e) {
-      rethrow;
-    }
+  Future<List<TalentModel>> getExploreUsers({
+    String? query,
+    String? category,
+  }) async {
+    return await remoteDataSource.fetchExploreUsers(
+      query: query,
+      category: category,
+    );
   }
 }

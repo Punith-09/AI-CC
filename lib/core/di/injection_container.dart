@@ -52,7 +52,6 @@ Future<void> initDependencies() async {
     sl.registerLazySingleton<ExploreRemoteDataSource>(
           () => ExploreRemoteDataSourceImpl(
         sl<DioClient>(),
-        sl<LocalStorage>(),
       ),
     );
   }

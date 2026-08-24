@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'portfolio_model.dart';
 
 @immutable
 class ArtistModel {
@@ -17,6 +18,7 @@ class ArtistModel {
 
   final String experience;
   final String languages;
+  final List<PortfolioModel> portfolio;
 
   const ArtistModel({
     this.id = '',
@@ -32,6 +34,7 @@ class ArtistModel {
     required this.awards,
     required this.experience,
     required this.languages,
+    this.portfolio = const [],
   });
 
   factory ArtistModel.fromJson(Map<String, dynamic> json) {
@@ -39,59 +42,61 @@ class ArtistModel {
       id: _stringValue(
         json['_id'] ?? json['id'],
       ),
-
       name: _stringValue(
         json['fullName'] ?? json['name'],
       ),
-
       state: _stringValue(
         json['state'],
       ),
-
       city: _stringValue(
         json['city'],
       ),
-
       profileImage: _imageValue(
         json['profilePhoto'] ??
             json['profile_image'] ??
-            json['profileImage'],
+            json['profileImage'] ??
+            json['pic'],
       ),
-
       coverImage: _imageValue(
         json['cover_image'] ??
             json['coverImage'] ??
             json['coverPhoto'],
       ),
-
       roles: _listValue(
-        json['roles'] ?? json['role'],
+        json['roles'] ?? json['role'] ?? json['category'],
       ),
-
       projects: _intValue(
-        json['projects'],
+        json['projects'] ?? json['videosCount'],
       ),
-
       followers: _stringValue(
         json['followers'],
       ),
-
       rating: _doubleValue(
         json['rating'],
       ),
-
       awards: _intValue(
         json['awards'],
       ),
-
       experience: _stringValue(
         json['experience'],
       ),
-
       languages: _stringValue(
-        json['languages'],
+        json['languages'] ?? json['actingLanguages'],
+      ),
+      portfolio: _portfolioValue(
+        json['portfolio'] ?? json['photos'] ?? json['videos'] ?? json['posts'],
       ),
     );
+  }
+
+  static List<PortfolioModel> _portfolioValue(dynamic value) {
+    if (value is List) {
+      return value
+          .whereType<Map<String, dynamic>>()
+          .map((e) => PortfolioModel.fromJson(e))
+          .toList();
+    }
+    return [];
   }
 
   static String _stringValue(dynamic value) {
@@ -203,6 +208,7 @@ class ArtistModel {
       'awards': awards,
       'experience': experience,
       'languages': languages,
+      'portfolio': portfolio.map((e) => e.toJson()).toList(),
     };
   }
 }

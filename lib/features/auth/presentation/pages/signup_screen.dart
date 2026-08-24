@@ -1,10 +1,16 @@
+
+import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/api/api_endpoints.dart';
+import '../../../../core/network/dio_client.dart';
 import '../../../../core/routes/app_routes.dart';
-import '../../../../core/di/injection_container.dart';
 
 import '../../data/models/register_request.dart';
 
@@ -124,18 +130,29 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
   final Set<String> _previousWork = {};
 
   // ============================================================
-  // UPLOAD URL VALUES
+  // UPLOAD STATE
+  // Key = field identifier
   // ============================================================
 
-  String _profilePhoto = '';
+  // Picked files (local)
+  final Map<String, XFile> _selectedFiles = {};
+  final Map<String, Uint8List> _selectedBytes = {};
 
-  String _headshot = '';
+  // Uploaded URLs returned by backend
+  final Map<String, String> _uploadUrls = {};
 
-  String _fullBody = '';
+  // Per-field uploading flag
+  final Map<String, bool> _uploading = {};
 
-  String _introVideo = '';
+  // Convenience field keys
+  static const _kProfilePhoto = 'profilePhoto';
+  static const _kHeadshot    = 'headshot';
+  static const _kFullBody    = 'fullBody';
+  static const _kIntroVideo  = 'introVideo';
+  static const _kResume      = 'resume';
 
-  String _resume = '';
+  // Image picker (same as post screens)
+  final ImagePicker _imagePicker = ImagePicker();
 
   // ============================================================
   // LOADING
@@ -304,7 +321,7 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
 
         city: _city ?? '',
 
-        profilePhoto: _profilePhoto,
+        profilePhoto: _uploadUrls[_kProfilePhoto] ?? '',
 
         category: _category ?? '',
 
@@ -346,11 +363,11 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
 
         nightShoots: _nightShoots ? 'Yes' : 'No',
 
-        headshot: _headshot,
+        headshot: _uploadUrls[_kHeadshot] ?? '',
 
-        fullBody: _fullBody,
+        fullBody: _uploadUrls[_kFullBody] ?? '',
 
-        introVideo: _introVideo,
+        introVideo: _uploadUrls[_kIntroVideo] ?? '',
 
         previousWork: _previousWork.toList(),
 
@@ -362,7 +379,7 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
 
         website: _website.text.trim(),
 
-        resume: _resume,
+        resume: _uploadUrls[_kResume] ?? '',
 
         awards: _awards.text.trim(),
 
@@ -736,7 +753,12 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
           required: true,
         ),
 
-        _upload('Profile photo (optional)', Icons.person_outline),
+        _upload(
+          'Profile photo (optional)',
+          Icons.person_outline,
+          fieldKey: _kProfilePhoto,
+          fileType: _typeImage,
+        ),
       ],
     );
   }
@@ -1012,13 +1034,25 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
           'Add the material that represents your work.',
         ),
 
-        _upload('Headshot upload', Icons.add_a_photo_outlined),
+        _upload(
+          'Headshot upload',
+          Icons.add_a_photo_outlined,
+          fieldKey: _kHeadshot,
+          fileType: _typeImage,
+        ),
 
-        _upload('Full body photo', Icons.photo_camera_back_outlined),
+        _upload(
+          'Full body photo',
+          Icons.photo_camera_back_outlined,
+          fieldKey: _kFullBody,
+          fileType: _typeImage,
+        ),
 
         _upload(
           'Introduction video (30–60 seconds)',
           Icons.video_camera_back_outlined,
+          fieldKey: _kIntroVideo,
+          fileType: _typeVideo,
         ),
 
         _multi('Previous work', [
@@ -1047,7 +1081,12 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
           keyboard: TextInputType.url,
         ),
 
-        _upload('Resume upload (PDF, optional)', Icons.upload_file_outlined),
+        _upload(
+          'Resume upload (PDF, optional)',
+          Icons.upload_file_outlined,
+          fieldKey: _kResume,
+          fileType: _typeFile,
+        ),
 
         _text(_awards, 'Awards & achievements (optional)', maxLines: 3),
 
@@ -1408,40 +1447,360 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
   }
 
   // ============================================================
-  // UPLOAD PLACEHOLDER
+  // UPLOAD BUTTON
+  // Mirrors the pattern in upload_photo_screen / upload_video_screen:
+  //   1. Pick file locally with image_picker / file_picker
+  //   2. POST multipart/form-data to backend via DioClient
+  //   3. Store returned URL string
   // ============================================================
 
-  Widget _upload(String label, IconData icon) {
+  // Field type enum (image / video / file)
+  static const _typeImage = 'image';
+  static const _typeVideo = 'video';
+  static const _typeFile  = 'file';
+
+  Widget _upload(
+    String label,
+    IconData icon, {
+    required String fieldKey,
+    required String fileType, // _typeImage / _typeVideo / _typeFile
+  }) {
+    final isUploading = _uploading[fieldKey] == true;
+    final selectedFile = _selectedFiles[fieldKey];
+    final uploadedUrl  = _uploadUrls[fieldKey];
+
+    final hasUploaded = uploadedUrl != null && uploadedUrl.isNotEmpty;
+    final hasPicked   = selectedFile != null;
+
+    // Display name: prefer the locally picked filename
+    final displayName = hasPicked
+        ? selectedFile.name
+        : hasUploaded
+            ? Uri.parse(uploadedUrl).pathSegments.lastOrNull ?? 'Uploaded'
+            : null;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
 
-      child: OutlinedButton.icon(
-        onPressed: () {
-          // ====================================================
-          // FILE UPLOAD WILL BE IMPLEMENTED HERE
-          // ====================================================
-          //
-          // Later:
-          // 1. Pick image/video/PDF
-          // 2. Upload to Cloudinary
-          // 3. Save returned URL
-          //
-          // Example:
-          //
-          // _profilePhoto = cloudinaryUrl;
-          //
-        },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
 
-        icon: Icon(icon),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: hasUploaded
+                ? Colors.green.shade400
+                : const Color(0xFF5E6472),
+          ),
 
-        label: Text(label),
+          borderRadius: BorderRadius.circular(8),
+        ),
 
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size.fromHeight(52),
+        child: Material(
+          color: Colors.transparent,
 
-          alignment: Alignment.centerLeft,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(8),
+
+            onTap: isUploading
+                ? null
+                : () => _pickFile(fieldKey, fileType),
+
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+
+              child: isUploading
+                  ? Row(
+                      children: [
+                        const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: _blue,
+                          ),
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        Expanded(
+                          child: Text(
+                            'Uploading...',
+                            style: const TextStyle(color: Color(0xFFB0B6C4)),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        Icon(
+                          hasUploaded ? Icons.check_circle_outline : icon,
+                          color: hasUploaded
+                              ? Colors.green.shade400
+                              : const Color(0xFFB0B6C4),
+                          size: 22,
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        Expanded(
+                          child: Text(
+                            displayName ?? label,
+                            style: TextStyle(
+                              color: hasUploaded
+                                  ? Colors.green.shade300
+                                  : hasPicked
+                                      ? Colors.white
+                                      : const Color(0xFFB0B6C4),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+
+                        // If a file was picked but not yet uploaded show upload icon
+                        if (hasPicked && !hasUploaded && !isUploading)
+                          GestureDetector(
+                            onTap: () => _uploadFile(fieldKey, fileType),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _blue,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                'Upload',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          )
+                        else if (hasUploaded)
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedFiles.remove(fieldKey);
+                                _selectedBytes.remove(fieldKey);
+                                _uploadUrls.remove(fieldKey);
+                              });
+                            },
+                            child: const Icon(
+                              Icons.close,
+                              size: 18,
+                              color: Color(0xFFB0B6C4),
+                            ),
+                          )
+                        else
+                          const Icon(
+                            Icons.upload_rounded,
+                            size: 18,
+                            color: Color(0xFFB0B6C4),
+                          ),
+                      ],
+                    ),
+            ),
+          ),
         ),
       ),
     );
   }
+
+  // ============================================================
+  // STEP 1 — PICK FILE (same as post upload screens)
+  // ============================================================
+
+  Future<void> _pickFile(String fieldKey, String fileType) async {
+    try {
+      XFile? picked;
+      Uint8List? bytes;
+
+      if (fileType == _typeImage) {
+        // Same as upload_photo_screen._pickImage(ImageSource.gallery)
+        picked = await _imagePicker.pickImage(
+          source: ImageSource.gallery,
+          maxWidth: 1920,
+          maxHeight: 1920,
+          imageQuality: 90,
+        );
+
+        if (picked != null) {
+          bytes = await picked.readAsBytes();
+        }
+      } else if (fileType == _typeVideo) {
+        // Same as upload_video_screen._pickVideo(ImageSource.gallery)
+        picked = await _imagePicker.pickVideo(
+          source: ImageSource.gallery,
+          maxDuration: const Duration(minutes: 10),
+        );
+
+        if (picked != null) {
+          bytes = await picked.readAsBytes();
+        }
+      } else {
+        // PDF — same FilePicker fallback used in post screens
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: ['pdf'],
+          allowMultiple: false,
+          withData: true,
+        );
+
+        if (result != null && result.files.isNotEmpty) {
+          final f = result.files.first;
+          picked = XFile(f.path ?? f.name, name: f.name);
+          bytes  = f.bytes;
+        }
+      }
+
+      if (picked == null) return;
+
+      setState(() {
+        _selectedFiles[fieldKey] = picked!;
+        if (bytes != null) _selectedBytes[fieldKey] = bytes;
+        // Clear any previous upload URL so the user can re-upload
+        _uploadUrls.remove(fieldKey);
+      });
+
+      // Auto-trigger upload after picking (UX matches post flow)
+      await _uploadFile(fieldKey, fileType);
+    } catch (e) {
+      // Fallback for channel errors (same guard as post screens)
+      if (fileType == _typeImage) {
+        try {
+          final result = await FilePicker.platform.pickFiles(
+            type: FileType.image,
+            allowMultiple: false,
+            withData: true,
+          );
+
+          if (result != null && result.files.isNotEmpty) {
+            final f = result.files.first;
+            final xFile = XFile(f.path ?? f.name, name: f.name);
+            final bytes = f.bytes;
+
+            setState(() {
+              _selectedFiles[fieldKey] = xFile;
+              if (bytes != null) _selectedBytes[fieldKey] = bytes;
+              _uploadUrls.remove(fieldKey);
+            });
+
+            await _uploadFile(fieldKey, fileType);
+            return;
+          }
+        } catch (_) {}
+      }
+
+      if (!mounted) return;
+
+      final isChannelError = e.toString().contains('channel-error') ||
+          e.toString().contains('MissingPluginException');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isChannelError
+                ? 'Please fully restart the app to enable the file picker.'
+                : 'Could not pick file: $e',
+          ),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
+  // ============================================================
+  // STEP 2 — UPLOAD FILE TO BACKEND (same multipart pattern as
+  // photos_remote_datasource / videos_remote_datasource)
+  // ============================================================
+
+  Future<void> _uploadFile(String fieldKey, String fileType) async {
+    final file  = _selectedFiles[fieldKey];
+    final bytes = _selectedBytes[fieldKey];
+
+    if (file == null) return;
+
+    setState(() {
+      _uploading[fieldKey] = true;
+    });
+
+    try {
+      final dioClient = GetIt.instance<DioClient>();
+
+      MultipartFile multipartFile;
+
+      if (bytes != null) {
+        multipartFile = MultipartFile.fromBytes(bytes, filename: file.name);
+      } else if (!kIsWeb && file.path.isNotEmpty) {
+        multipartFile = await MultipartFile.fromFile(
+          file.path,
+          filename: file.name,
+        );
+      } else {
+        throw Exception('No file data available for upload.');
+      }
+
+      // Use the same /photos endpoint the post feature uses for images/files,
+      // and /videos/upload for videos.
+      final endpoint = fileType == _typeVideo
+          ? ApiEndpoints.uploadVideo
+          : ApiEndpoints.photos;
+
+      final formData = FormData.fromMap({
+        'title': file.name,
+        'description': '',
+        'file': multipartFile,
+      });
+
+      final response = await dioClient.post(endpoint, data: formData);
+
+      if (!mounted) return;
+
+      // Extract URL from response (same handling as post datasources)
+      String? url;
+      if (response.data is Map) {
+        final map = Map<String, dynamic>.from(response.data as Map);
+        // Try nested 'data' first (video response), then flat (photo response)
+        final inner = map['data'] is Map
+            ? Map<String, dynamic>.from(map['data'] as Map)
+            : map;
+        url = inner['url'] as String?;
+      }
+
+      if (url != null && url.isNotEmpty) {
+        setState(() {
+          _uploadUrls[fieldKey] = url!;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Uploaded successfully!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Upload failed: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _uploading[fieldKey] = false;
+        });
+      }
+    }
+  }
 }
+

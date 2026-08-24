@@ -1,9 +1,13 @@
 import 'package:aicc/common/widgets/app_background.dart';
+import 'package:aicc/core/api/api_endpoints.dart';
 import 'package:aicc/core/constants/app_colors.dart';
 import 'package:aicc/core/routes/app_routes.dart';
+import 'package:aicc/features/artist_profile/data/models/portfolio_model.dart';
 import 'package:aicc/features/artist_profile/presentation/providers/profile_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
 class ExploreProfileScreen extends StatefulWidget {
@@ -35,33 +39,36 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
           child: Consumer<ProfileProvider>(
             builder: (context, provider, _) {
               final profile = provider.viewedProfile;
+              final mediaList = provider.viewedMedia;
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // ──────────────────────────────────────
-                  // Back button
+                  // Top App Bar (< Back)
                   // ──────────────────────────────────────
                   Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     child: GestureDetector(
                       onTap: () => context.pop(),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            Icons.arrow_back_ios,
+                          const Icon(
+                            Icons.arrow_back_ios_new_rounded,
                             size: 16,
                             color: AppColors.primary,
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 6),
                           Text(
                             'Back',
-                            style: TextStyle(
+                            style: GoogleFonts.poppins(
                               color: AppColors.primary,
                               fontSize: 15,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
@@ -70,7 +77,7 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
                   ),
 
                   // ──────────────────────────────────────
-                  // Content
+                  // Scrollable Profile Content
                   // ──────────────────────────────────────
                   Expanded(
                     child: provider.isLoading
@@ -81,118 +88,218 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
                           )
                         : provider.error != null
                             ? Center(
-                                child: Text(
-                                  provider.error!,
-                                  style: const TextStyle(
-                                    color: AppColors.danger,
-                                    fontSize: 14,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(24),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        LucideIcons.wifiOff,
+                                        color: Colors.white38,
+                                        size: 40,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        provider.error!,
+                                        style: const TextStyle(
+                                          color: AppColors.danger,
+                                          fontSize: 14,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      TextButton(
+                                        onPressed: () => context
+                                            .read<ProfileProvider>()
+                                            .fetchUserProfile(widget.userId),
+                                        child: const Text(
+                                          'Retry',
+                                          style: TextStyle(
+                                            color: AppColors.primary,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  textAlign: TextAlign.center,
                                 ),
                               )
                             : SingleChildScrollView(
                                 physics: const BouncingScrollPhysics(),
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 20),
+                                  horizontal: 20,
+                                ),
                                 child: Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.center,
                                   children: [
-                                    const SizedBox(height: 24),
+                                    const SizedBox(height: 16),
 
-                                    // ─────────────────────
-                                    // Avatar
-                                    // ─────────────────────
+                                    // ── Avatar with Green Verification Checkmark ──
                                     _ProfileAvatar(
                                       imageUrl: profile?.profileImage,
                                     ),
 
-                                    const SizedBox(height: 14),
+                                    const SizedBox(height: 16),
 
-                                    // ─────────────────────
-                                    // Name
-                                    // ─────────────────────
+                                    // ── Artist Name ──
                                     Text(
                                       profile?.name.isNotEmpty == true
                                           ? profile!.name
                                           : 'Unknown Artist',
-                                      style: const TextStyle(
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.poppins(
                                         fontSize: 22,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.white,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
                                       ),
                                     ),
 
-                                    if (profile?.roles.isNotEmpty == true)
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                            top: 4),
-                                        child: Text(
-                                          profile!.roles.first,
-                                          style: const TextStyle(
-                                            fontSize: 14,
+                                    const SizedBox(height: 4),
+
+                                    // ── Location ──
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(
+                                          LucideIcons.mapPin,
+                                          size: 14,
+                                          color: AppColors.greyText,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          _formatLocation(
+                                            profile?.city,
+                                            profile?.state,
+                                          ),
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 13,
                                             color: AppColors.greyText,
                                           ),
                                         ),
-                                      ),
+                                      ],
+                                    ),
 
-                                    const SizedBox(height: 28),
+                                    const SizedBox(height: 14),
 
-                                    // ─────────────────────
-                                    // Stats row
-                                    // ─────────────────────
+                                    // ── Category / Role Pill Tag ──
                                     Container(
                                       padding: const EdgeInsets.symmetric(
-                                          vertical: 18, horizontal: 20),
+                                        horizontal: 20,
+                                        vertical: 6,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: AppColors.card
-                                            .withOpacity(0.6),
+                                        color: const Color(0xFF8E3CF7),
                                         borderRadius:
                                             BorderRadius.circular(20),
-                                        border: Border.all(
-                                          color: AppColors.border
-                                              .withOpacity(0.5),
-                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFF8E3CF7)
+                                                .withValues(alpha: 0.35),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 3),
+                                          ),
+                                        ],
                                       ),
-                                      child: IntrinsicHeight(
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceEvenly,
-                                          children: [
-                                            _StatColumn(
-                                              value: profile?.followers
-                                                      .isNotEmpty ==
-                                                  true
-                                                  ? profile!.followers
-                                                  : '0',
-                                              label: 'Followers',
-                                            ),
-                                            VerticalDivider(
-                                              color: AppColors.border
-                                                  .withOpacity(0.5),
-                                              thickness: 1,
-                                            ),
-                                            _StatColumn(
-                                              value: profile?.projects !=
-                                                      null
-                                                  ? profile!.projects
-                                                      .toString()
-                                                  : '0',
-                                              label: 'Videos',
-                                            ),
-                                          ],
+                                      child: Text(
+                                        profile?.roles.isNotEmpty == true
+                                            ? profile!.roles.first.toLowerCase()
+                                            : 'artist',
+                                        style: GoogleFonts.poppins(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                     ),
 
                                     const SizedBox(height: 24),
 
-                                    // ─────────────────────
-                                    // Action Buttons
-                                    // ─────────────────────
+                                    // ── Stats Row: Projects | Followers | Awards ──
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 18,
+                                        horizontal: 14,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF0D2533),
+                                        borderRadius:
+                                            BorderRadius.circular(18),
+                                        border: Border.all(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.1),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          _StatItem(
+                                            icon: LucideIcons.briefcase,
+                                            iconColor: const Color(0xFFC084FC),
+                                            value: '${profile?.projects ?? 0}',
+                                            label: 'Projects',
+                                          ),
+                                          _StatDivider(),
+                                          _StatItem(
+                                            icon: LucideIcons.users,
+                                            iconColor: const Color(0xFFF43F5E),
+                                            value: profile?.followers
+                                                        .isNotEmpty ==
+                                                    true
+                                                ? profile!.followers
+                                                : '0',
+                                            label: 'Followers',
+                                          ),
+                                          _StatDivider(),
+                                          _StatItem(
+                                            icon: LucideIcons.trophy,
+                                            iconColor: const Color(0xFF22D3EE),
+                                            value: '${profile?.awards ?? 0}',
+                                            label: 'Awards',
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 16),
+
+                                    // ── Experience & Languages Cards ──
                                     Row(
                                       children: [
-                                        // Follow button
+                                        Expanded(
+                                          child: _InfoTile(
+                                            icon: LucideIcons.award,
+                                            iconColor:
+                                                const Color(0xFFC084FC),
+                                            title: 'Experience',
+                                            value: profile?.experience
+                                                        .isNotEmpty ==
+                                                    true
+                                                ? profile!.experience
+                                                : '5–10 Years',
+                                          ),
+                                        ),
+                                        const SizedBox(width: 14),
+                                        Expanded(
+                                          child: _InfoTile(
+                                            icon: LucideIcons.globe,
+                                            iconColor:
+                                                const Color(0xFF22D3EE),
+                                            title: 'Languages',
+                                            value: profile?.languages
+                                                        .isNotEmpty ==
+                                                    true
+                                                ? profile!.languages
+                                                : 'English',
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+
+                                    const SizedBox(height: 20),
+
+                                    // ── Follow & Message Buttons ──
+                                    Row(
+                                      children: [
                                         Expanded(
                                           child: _ActionButton(
                                             label: _isFollowing
@@ -202,51 +309,62 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
                                             isActive: _isFollowing,
                                             onTap: () async {
                                               setState(() {
-                                                _isFollowing =
-                                                    !_isFollowing;
+                                                _isFollowing = !_isFollowing;
                                               });
-                                              await provider.followUser(
-                                                  widget.userId);
+                                              await provider
+                                                  .followUser(widget.userId);
                                             },
                                           ),
                                         ),
                                         const SizedBox(width: 12),
-
-                                        // Message button
                                         Expanded(
                                           child: _ActionButton(
                                             label: 'Message',
                                             isPrimary: false,
                                             onTap: () {
                                               context.push(
-                                                  AppRoutes.messages);
+                                                AppRoutes.chat,
+                                                extra: widget.userId,
+                                              );
                                             },
                                           ),
                                         ),
                                       ],
                                     ),
 
-                                    const SizedBox(height: 32),
+                                    const SizedBox(height: 28),
 
-                                    // ─────────────────────
-                                    // Portfolio Videos
-                                    // ─────────────────────
-                                    const Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: Text(
-                                        'Portfolio Videos',
-                                        style: TextStyle(
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.white,
+                                    // ── Portfolio Header ──
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Portfolio',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w700,
+                                            color: Colors.white,
+                                          ),
                                         ),
-                                      ),
+                                        if (mediaList.isNotEmpty)
+                                          Text(
+                                            'View All',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.primary,
+                                            ),
+                                          ),
+                                      ],
                                     ),
 
                                     const SizedBox(height: 14),
 
-                                    _PortfolioSection(
-                                      profileImage: profile?.profileImage,
+                                    // ── Photos and Videos Posted by that Artist ──
+                                    _ArtistPortfolioGrid(
+                                      mediaList: mediaList,
+                                      fallbackImage: profile?.profileImage,
                                     ),
 
                                     const SizedBox(height: 40),
@@ -262,12 +380,20 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
       ),
     );
   }
+
+  static String _formatLocation(String? city, String? state) {
+    final c = (city ?? '').trim();
+    final s = (state ?? '').trim();
+    if (c.isNotEmpty && s.isNotEmpty) return '$c, $s';
+    if (c.isNotEmpty) return c;
+    if (s.isNotEmpty) return s;
+    return 'Other, Other';
+  }
 }
 
 // ──────────────────────────────────────────────────────────────
-// Profile Avatar
+// Profile Avatar with Verification Badge
 // ──────────────────────────────────────────────────────────────
-
 class _ProfileAvatar extends StatelessWidget {
   final String? imageUrl;
 
@@ -275,78 +401,108 @@ class _ProfileAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasImage =
-        imageUrl != null && imageUrl!.isNotEmpty && imageUrl!.startsWith('http');
+    final formatted = (imageUrl != null && imageUrl!.isNotEmpty)
+        ? ApiEndpoints.formatMediaUrl(imageUrl!)
+        : '';
+    final hasImage = formatted.startsWith('http');
 
-    return Container(
-      width: 100,
-      height: 100,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: AppColors.primary.withOpacity(0.55),
-          width: 2.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.18),
-            blurRadius: 18,
-            spreadRadius: 2,
+    return Stack(
+      alignment: Alignment.bottomRight,
+      children: [
+        Container(
+          width: 104,
+          height: 104,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.65),
+              width: 2.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.25),
+                blurRadius: 20,
+                spreadRadius: 2,
+              ),
+            ],
           ),
-        ],
-      ),
-      child: ClipOval(
-        child: hasImage
-            ? Image.network(
-                imageUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _placeholder(),
-              )
-            : _placeholder(),
-      ),
+          child: ClipOval(
+            child: hasImage
+                ? Image.network(
+                    formatted,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        _placeholder(),
+                  )
+                : _placeholder(),
+          ),
+        ),
+        // Green Verified Tick Badge
+        Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: const Color(0xFF22C55E),
+            shape: BoxShape.circle,
+            border: Border.all(color: const Color(0xFF0B1F2A), width: 2),
+          ),
+          child: const Icon(
+            Icons.check,
+            color: Colors.white,
+            size: 13,
+          ),
+        ),
+      ],
     );
   }
 
   Widget _placeholder() {
     return Container(
-      color: AppColors.card,
+      color: const Color(0xFF0F2D3A),
       child: const Icon(
         Icons.person,
-        size: 50,
-        color: AppColors.greyText,
+        size: 52,
+        color: Colors.white70,
       ),
     );
   }
 }
 
 // ──────────────────────────────────────────────────────────────
-// Stat Column
+// Stat Item
 // ──────────────────────────────────────────────────────────────
-
-class _StatColumn extends StatelessWidget {
+class _StatItem extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
   final String value;
   final String label;
 
-  const _StatColumn({required this.value, required this.label});
+  const _StatItem({
+    required this.icon,
+    required this.iconColor,
+    required this.value,
+    required this.label,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: Column(
         children: [
+          Icon(icon, color: iconColor, size: 20),
+          const SizedBox(height: 6),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: AppColors.white,
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 13,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
               color: AppColors.greyText,
             ),
           ),
@@ -356,10 +512,83 @@ class _StatColumn extends StatelessWidget {
   }
 }
 
-// ──────────────────────────────────────────────────────────────
-// Action Button
-// ──────────────────────────────────────────────────────────────
+class _StatDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 36,
+      width: 1,
+      color: Colors.white.withValues(alpha: 0.12),
+    );
+  }
+}
 
+// ──────────────────────────────────────────────────────────────
+// Experience / Languages Tile
+// ──────────────────────────────────────────────────────────────
+class _InfoTile extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String value;
+
+  const _InfoTile({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0D2533),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: iconColor, size: 18),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              color: AppColors.greyText,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.poppins(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// Action Button (Follow / Message)
+// ──────────────────────────────────────────────────────────────
 class _ActionButton extends StatelessWidget {
   final String label;
   final bool isPrimary;
@@ -376,11 +605,9 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isPrimary) {
-      // Gradient (Follow) button
       return GestureDetector(
         onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
+        child: Container(
           height: 48,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
@@ -391,18 +618,16 @@ class _ActionButton extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-            color: isActive ? AppColors.card : null,
+            color: isActive ? const Color(0xFF0D2533) : null,
             border: isActive
-                ? Border.all(
-                    color: AppColors.primary.withOpacity(0.5),
-                  )
+                ? Border.all(color: AppColors.primary.withValues(alpha: 0.5))
                 : null,
             boxShadow: isActive
                 ? []
                 : [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.25),
-                      blurRadius: 14,
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
                   ],
@@ -410,10 +635,10 @@ class _ActionButton extends StatelessWidget {
           child: Center(
             child: Text(
               label,
-              style: TextStyle(
+              style: GoogleFonts.poppins(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
-                color: isActive ? AppColors.primary : AppColors.white,
+                color: isActive ? AppColors.primary : Colors.white,
               ),
             ),
           ),
@@ -421,25 +646,24 @@ class _ActionButton extends StatelessWidget {
       );
     }
 
-    // Outlined (Message) button
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 48,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
-          color: AppColors.card.withOpacity(0.7),
+          color: const Color(0xFF0D2533),
           border: Border.all(
-            color: AppColors.border.withOpacity(0.6),
+            color: Colors.white.withValues(alpha: 0.15),
           ),
         ),
-        child: const Center(
+        child: Center(
           child: Text(
-            'Message',
-            style: TextStyle(
+            label,
+            style: GoogleFonts.poppins(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: AppColors.white,
+              color: Colors.white,
             ),
           ),
         ),
@@ -449,72 +673,164 @@ class _ActionButton extends StatelessWidget {
 }
 
 // ──────────────────────────────────────────────────────────────
-// Portfolio Section
+// Photos & Videos Posted by that Artist
 // ──────────────────────────────────────────────────────────────
+class _ArtistPortfolioGrid extends StatelessWidget {
+  final List<PortfolioModel> mediaList;
+  final String? fallbackImage;
 
-class _PortfolioSection extends StatelessWidget {
-  final String? profileImage;
-
-  const _PortfolioSection({this.profileImage});
+  const _ArtistPortfolioGrid({
+    required this.mediaList,
+    this.fallbackImage,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // Show at least one portfolio thumbnail using the profile image as placeholder
-    final hasImage = profileImage != null &&
-        profileImage!.isNotEmpty &&
-        profileImage!.startsWith('http');
-
-    return SizedBox(
-      height: 120,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: hasImage ? 1 : 0,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (_, index) {
-          return Stack(
+    // If no media is found, show friendly empty state
+    if (mediaList.isEmpty) {
+      if (fallbackImage != null && fallbackImage!.isNotEmpty) {
+        // Show the artist's profile picture as portfolio preview if no media posts yet
+        return SizedBox(
+          height: 140,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  profileImage!,
-                  width: 105,
-                  height: 120,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _emptyThumbnail(),
-                ),
-              ),
-              // Play overlay
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    color: AppColors.black.withOpacity(0.3),
-                  ),
-                  child: const Icon(
-                    Icons.play_circle_outline,
-                    color: AppColors.white,
-                    size: 34,
-                  ),
+              _PortfolioItemCard(
+                media: PortfolioModel(
+                  image: fallbackImage!,
+                  isVideo: false,
                 ),
               ),
             ],
-          );
+          ),
+        );
+      }
+
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0D2533),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.08),
+          ),
+        ),
+        child: Center(
+          child: Column(
+            children: [
+              const Icon(
+                LucideIcons.image,
+                color: Colors.white30,
+                size: 32,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'No photos or videos posted yet',
+                style: GoogleFonts.poppins(
+                  color: Colors.white54,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 140,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: mediaList.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          final item = mediaList[index];
+          return _PortfolioItemCard(media: item);
         },
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// Individual Portfolio Thumbnail Card (Photo / Video)
+// ──────────────────────────────────────────────────────────────
+class _PortfolioItemCard extends StatelessWidget {
+  final PortfolioModel media;
+
+  const _PortfolioItemCard({required this.media});
+
+  @override
+  Widget build(BuildContext context) {
+    final formatted = ApiEndpoints.formatMediaUrl(media.image);
+    final hasImage = formatted.startsWith('http');
+
+    return Container(
+      width: 110,
+      height: 140,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.25),
+          width: 1,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          hasImage
+              ? Image.network(
+                  formatted,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      _emptyThumbnail(),
+                )
+              : _emptyThumbnail(),
+
+          // Dark gradient overlay
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: 0.45),
+                ],
+              ),
+            ),
+          ),
+
+          // Video Play Overlay Badge if it's a video
+          if (media.isVideo)
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black.withValues(alpha: 0.55),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.play_arrow_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
 
   Widget _emptyThumbnail() {
     return Container(
-      width: 105,
-      height: 120,
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border.withOpacity(0.4)),
-      ),
-      child: const Icon(
-        Icons.videocam_outlined,
+      color: const Color(0xFF0F2D3A),
+      child: Icon(
+        media.isVideo ? LucideIcons.video : LucideIcons.image,
         color: AppColors.greyText,
         size: 32,
       ),
