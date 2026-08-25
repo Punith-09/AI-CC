@@ -7,7 +7,7 @@ import 'package:aicc/features/artist_profile/presentation/widgets/portfolio_grid
 import 'package:aicc/features/artist_profile/presentation/widgets/portfolio_header.dart';
 import 'package:aicc/features/artist_profile/presentation/widgets/profile_header.dart';
 import 'package:aicc/features/artist_profile/presentation/widgets/role_chips.dart';
-import 'package:aicc/features/artist_profile/presentation/widgets/social_links.dart';
+
 import 'package:aicc/features/artist_profile/presentation/widgets/stats_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -214,21 +214,6 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                           ),
                         ),
 
-                        // Edit Button for the current user
-                        if (widget.userId == null)
-                          Positioned(
-                            top: 16,
-                            right: 16,
-                            child: IconButton(
-                              style: IconButton.styleFrom(
-                                backgroundColor: Colors.black.withOpacity(0.5),
-                              ),
-                              icon: const Icon(Icons.mode_edit_outline_rounded, color: Colors.white),
-                              onPressed: () {
-                                context.push(AppRoutes.editArtistProfile);
-                              },
-                            ),
-                          ),
                       ],
                     ),
 
@@ -278,13 +263,6 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                     ),
 
                     const SizedBox(height: 30),
-
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
-                      child: SocialLinks(),
-                    ),
-
-                    const SizedBox(height: 24),
 
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),

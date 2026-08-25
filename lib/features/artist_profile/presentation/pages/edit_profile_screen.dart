@@ -5,6 +5,7 @@ import 'package:aicc/core/constants/app_colors.dart';
 import 'package:aicc/features/artist_profile/presentation/providers/profile_provider.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:aicc/core/utils/location_data.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({Key? key}) : super(key: key);
@@ -17,19 +18,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
 
   late TextEditingController _nameController;
-  late TextEditingController _cityController;
-  late TextEditingController _stateController;
   late TextEditingController _experienceController;
   late TextEditingController _languagesController;
+  int _awardsCount = 0;
 
-  // Mock social links controllers to match UI visually
-  final _instagramController = TextEditingController(text: 'https://instagram.com/yourprofile');
-  final _youtubeController = TextEditingController(text: 'https://youtube.com/yourchannel');
-  final _facebookController = TextEditingController(text: 'https://facebook.com/yourprofile');
-  final _twitterController = TextEditingController(text: 'https://twitter.com/yourprofile');
+  String? _country;
+  String? _state;
+  String? _city;
 
-  // Languages data
-  List<String> languages = ['Telugu', 'English', 'Hindi'];
+
 
   @override
   void initState() {
@@ -37,43 +34,47 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final profile = context.read<ProfileProvider>().currentProfile;
     
     _nameController = TextEditingController(text: profile?.name ?? 'Lokesh Gapagari');
-    _cityController = TextEditingController(text: profile?.city ?? 'Hyderabad');
-    _stateController = TextEditingController(text: profile?.state ?? 'Telangana');
-    _experienceController = TextEditingController(text: profile?.experience ?? '2 Years');
-    _languagesController = TextEditingController(text: profile?.languages ?? 'Telugu, English, Hindi');
-
-    if (profile?.languages != null && profile!.languages!.isNotEmpty) {
-      languages = profile.languages!.split(',').map((e) => e.trim()).toList();
+    _state = profile?.state;
+    _city = profile?.city;
+    
+    // Attempt to infer country based on state
+    if (_state != null) {
+      for (var entry in LocationData.statesByCountry.entries) {
+        if (entry.value.contains(_state)) {
+          _country = entry.key;
+          break;
+        }
+      }
     }
+
+    _experienceController = TextEditingController(text: profile?.experience ?? '2 Years');
+    _languagesController = TextEditingController(text: profile?.languages ?? '');
+    _awardsCount = profile?.awards ?? 0;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _cityController.dispose();
-    _stateController.dispose();
     _experienceController.dispose();
     _languagesController.dispose();
-    _instagramController.dispose();
-    _youtubeController.dispose();
-    _facebookController.dispose();
-    _twitterController.dispose();
     super.dispose();
   }
+
+
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
     
     final provider = context.read<ProfileProvider>();
-    
-    _languagesController.text = languages.join(', ');
 
     final data = {
       'fullName': _nameController.text.trim(),
-      'city': _cityController.text.trim(),
-      'state': _stateController.text.trim(),
+      'country': _country ?? '',
+      'city': _country != null && _state != null ? (_city ?? '') : '',
+      'state': _country != null ? (_state ?? '') : '',
       'experience': _experienceController.text.trim(),
       'languages': _languagesController.text.trim(),
+      'awards': _awardsCount,
     };
     
     try {
@@ -134,7 +135,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, {Widget? prefixIcon, Widget? suffixIcon}) {
+  Widget _buildTextField(TextEditingController controller, {Widget? prefixIcon, Widget? suffixIcon, TextInputType? keyboardType}) {
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(colors: AppColors.BtnGradient),
@@ -148,6 +149,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
         child: TextFormField(
           controller: controller,
+          keyboardType: keyboardType,
           style: const TextStyle(color: AppColors.white, fontSize: 14),
           decoration: InputDecoration(
             prefixIcon: prefixIcon,
@@ -161,52 +163,59 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildSocialPrefix(IconData icon, List<Color> gradientColors) {
-    return Container(
-      margin: const EdgeInsets.all(8),
-      width: 32,
-      height: 32,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: gradientColors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Center(child: Icon(icon, color: AppColors.white, size: 16)),
-    );
-  }
-
-  Widget _buildLanguageChip(String lang) {
+  Widget _buildDropdown({
+    required String? value,
+    required List<String> items,
+    required String hint,
+    required ValueChanged<String?>? onChanged,
+  }) {
+    List<String> effectiveItems = List.from(items);
+    if (value != null && value.isNotEmpty && !effectiveItems.contains(value)) {
+      effectiveItems.insert(0, value);
+    }
+    
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(colors: AppColors.BtnGradient),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(1.5),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: AppColors.background,
-          borderRadius: BorderRadius.circular(18.5),
+          borderRadius: BorderRadius.circular(10.5),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(lang, style: const TextStyle(color: AppColors.white, fontSize: 13)),
-            const SizedBox(width: 6),
-            GestureDetector(
-              onTap: () {
-                setState(() => languages.remove(lang));
-              },
-              child: const Icon(Icons.close, color: AppColors.white, size: 14),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: value,
+            isExpanded: true,
+            hint: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(hint, style: TextStyle(color: AppColors.white.withOpacity(0.5), fontSize: 14)),
             ),
-          ],
+            dropdownColor: AppColors.background,
+            icon: const Padding(
+              padding: EdgeInsets.only(right: 16),
+              child: Icon(Icons.keyboard_arrow_down, color: AppColors.white, size: 20),
+            ),
+            items: effectiveItems.isEmpty
+                ? [const DropdownMenuItem(value: null, child: Text(''))]
+                : effectiveItems.map((item) {
+                    return DropdownMenuItem(
+                      value: item,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(item, style: const TextStyle(color: AppColors.white, fontSize: 14)),
+                      ),
+                    );
+                  }).toList(),
+            onChanged: onChanged,
+          ),
         ),
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -294,51 +303,52 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         _buildSectionLabel(Icons.person_outline, 'Full Name'),
                         _buildTextField(_nameController),
 
-                        _buildSectionLabel(Icons.domain, 'City'),
-                        _buildTextField(_cityController),
+                        _buildSectionLabel(Icons.domain, 'Country'),
+                        _buildDropdown(
+                          value: _country,
+                          items: LocationData.statesByCountry.keys.toList(),
+                          hint: 'Select Country',
+                          onChanged: (v) {
+                            setState(() {
+                              _country = v;
+                              _state = null;
+                              _city = null;
+                            });
+                          },
+                        ),
 
                         _buildSectionLabel(Icons.location_on_outlined, 'State'),
-                        _buildTextField(
-                          _stateController,
-                          suffixIcon: const Icon(Icons.keyboard_arrow_down, color: AppColors.white, size: 20),
+                        _buildDropdown(
+                          value: _state,
+                          items: _country != null ? (LocationData.statesByCountry[_country] ?? ['Other']) : [],
+                          hint: _country != null ? 'Select State' : '',
+                          onChanged: _country != null ? (v) {
+                            setState(() {
+                              _state = v;
+                              _city = null;
+                            });
+                          } : null,
+                        ),
+
+                        _buildSectionLabel(Icons.location_city, 'City'),
+                        _buildDropdown(
+                          value: _city,
+                          items: _state != null ? (LocationData.citiesByState[_state] ?? ['Other']) : [],
+                          hint: _state != null ? 'Select City' : '',
+                          onChanged: _state != null ? (v) {
+                            setState(() {
+                              _city = v;
+                            });
+                          } : null,
                         ),
 
                         _buildSectionLabel(Icons.work_outline, 'Experience'),
                         _buildTextField(_experienceController),
 
                         _buildSectionLabel(Icons.language, 'Languages Known'),
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
-                          children: [
-                            ...languages.map((lang) => _buildLanguageChip(lang)),
-                            DottedBorder(
-                              color: AppColors.purple,
-                              strokeWidth: 1.5,
-                              dashPattern: const [6, 4],
-                              borderType: BorderType.RRect,
-                              radius: const Radius.circular(20),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.add, color: AppColors.purple, size: 16),
-                                    const SizedBox(width: 4),
-                                    ShaderMask(
-                                      shaderCallback: (bounds) => const LinearGradient(
-                                        colors: AppColors.BtnGradient,
-                                      ).createShader(bounds),
-                                      child: const Text('Add Language', style: TextStyle(color: AppColors.white, fontSize: 13, fontWeight: FontWeight.w500)),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                        _buildTextField(_languagesController),
 
-                        _buildSectionLabel(Icons.emoji_events_outlined, 'Awards & Achievements'),
+                        _buildSectionLabel(Icons.emoji_events_outlined, 'Awards Count'),
                         Container(
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(colors: AppColors.BtnGradient),
@@ -350,41 +360,42 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               color: AppColors.background,
                               borderRadius: BorderRadius.circular(10.5),
                             ),
-                            padding: const EdgeInsets.all(16),
-                            child: const Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('Best Performer Award - 2024', style: TextStyle(color: AppColors.white, fontSize: 13, height: 2.2)),
-                                Text('Best Supporting Artist - 2023', style: TextStyle(color: AppColors.white, fontSize: 13, height: 2.2)),
-                                Text('State Level Drama Competition Winner - 2022', style: TextStyle(color: AppColors.white, fontSize: 13, height: 2.2)),
-                                Text('Youth Cultural Excellence Award - 2021', style: TextStyle(color: AppColors.white, fontSize: 13, height: 2.2)),
+                                const Text('Awards', style: TextStyle(color: AppColors.white, fontSize: 14)),
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.remove, color: AppColors.white),
+                                      onPressed: () {
+                                        if (_awardsCount > 0) setState(() => _awardsCount--);
+                                      },
+                                    ),
+                                    SizedBox(
+                                      width: 30,
+                                      child: Text(
+                                        '$_awardsCount',
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(color: AppColors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.add, color: AppColors.white),
+                                      onPressed: () {
+                                        setState(() => _awardsCount++);
+                                      },
+                                    ),
+                                  ],
+                                ),
                               ],
                             ),
                           ),
                         ),
-
-                        _buildSectionLabel(Icons.link, 'Social Links', isOptional: true),
-                        _buildTextField(
-                          _instagramController,
-                          prefixIcon: _buildSocialPrefix(FontAwesomeIcons.instagram, [AppColors.warning, AppColors.pink, AppColors.purple]),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          _youtubeController,
-                          prefixIcon: _buildSocialPrefix(FontAwesomeIcons.youtube, [AppColors.danger, AppColors.danger]),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          _facebookController,
-                          prefixIcon: _buildSocialPrefix(FontAwesomeIcons.facebookF, [AppColors.primary, AppColors.primary]),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          _twitterController,
-                          prefixIcon: _buildSocialPrefix(FontAwesomeIcons.twitter, [AppColors.primary, AppColors.primary]),
-                        ),
-
+                        
                         const SizedBox(height: 32),
+
                         Container(
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(colors: AppColors.BtnGradient),
