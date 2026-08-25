@@ -9,6 +9,7 @@ import '../../common/widgets/custom_bottom_navbar.dart';
 
 import '../../features/apply_job/data/models/application_model.dart';
 import '../../features/apply_job/presentation/pages/apply_screen.dart';
+import '../../features/apply_job/presentation/pages/applied_auditions_screen.dart';
 import '../../features/artist_profile/presentation/pages/artist_profile_screen.dart';
 import '../../features/artist_profile/presentation/pages/edit_profile_screen.dart';
 import '../../features/auditions/data/models/audition_model.dart';
@@ -204,6 +205,16 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.uploadVideo,
       builder: (_, __) =>
       const UploadVideoScreen(),
+    ),
+
+    // =========================================================
+    // APPLIED AUDITIONS
+    // =========================================================
+
+    GoRoute(
+      path: AppRoutes.appliedAuditions,
+      builder: (_, __) =>
+      const AppliedAuditionsScreen(),
     ),
 
     // =========================================================

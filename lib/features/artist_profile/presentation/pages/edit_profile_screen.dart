@@ -64,6 +64,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (_country == null || _country!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a Country', style: TextStyle(color: Colors.white)), backgroundColor: AppColors.danger),
+      );
+      return;
+    }
+    if (_state == null || _state!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a State', style: TextStyle(color: Colors.white)), backgroundColor: AppColors.danger),
+      );
+      return;
+    }
+    if (_city == null || _city!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a City', style: TextStyle(color: Colors.white)), backgroundColor: AppColors.danger),
+      );
+      return;
+    }
     
     final provider = context.read<ProfileProvider>();
 
@@ -135,7 +154,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, {Widget? prefixIcon, Widget? suffixIcon, TextInputType? keyboardType}) {
+  Widget _buildTextField(TextEditingController controller, {Widget? prefixIcon, Widget? suffixIcon, TextInputType? keyboardType, String? Function(String?)? validator}) {
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(colors: AppColors.BtnGradient),
@@ -151,6 +170,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           controller: controller,
           keyboardType: keyboardType,
           style: const TextStyle(color: AppColors.white, fontSize: 14),
+          validator: validator,
           decoration: InputDecoration(
             prefixIcon: prefixIcon,
             prefixIconConstraints: const BoxConstraints(minWidth: 48, minHeight: 48),
@@ -301,7 +321,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                         
                         _buildSectionLabel(Icons.person_outline, 'Full Name'),
-                        _buildTextField(_nameController),
+                        _buildTextField(
+                          _nameController,
+                          validator: (val) => val == null || val.trim().isEmpty ? 'Please enter your full name' : null,
+                        ),
 
                         _buildSectionLabel(Icons.domain, 'Country'),
                         _buildDropdown(
@@ -343,10 +366,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
 
                         _buildSectionLabel(Icons.work_outline, 'Experience'),
-                        _buildTextField(_experienceController),
+                        _buildTextField(
+                          _experienceController,
+                          validator: (val) => val == null || val.trim().isEmpty ? 'Please enter your experience' : null,
+                        ),
 
                         _buildSectionLabel(Icons.language, 'Languages Known'),
-                        _buildTextField(_languagesController),
+                        _buildTextField(
+                          _languagesController,
+                          validator: (val) => val == null || val.trim().isEmpty ? 'Please enter languages known' : null,
+                        ),
 
                         _buildSectionLabel(Icons.emoji_events_outlined, 'Awards Count'),
                         Container(
