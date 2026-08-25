@@ -103,7 +103,7 @@ class ProfileHeader extends StatelessWidget {
 
           Positioned(
             top: 18,
-            right:50,
+            right: 16,
             child: Builder(
               builder: (context) {
                 return _CircleButton(

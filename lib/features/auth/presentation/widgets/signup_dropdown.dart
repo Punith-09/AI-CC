@@ -4,7 +4,7 @@ class SignupDropdown extends StatelessWidget {
   final String label;
   final List<String> items;
   final String? value;
-  final ValueChanged<String?> onChanged;
+  final ValueChanged<String?>? onChanged;
   final bool requiredField;
 
   const SignupDropdown({
@@ -76,17 +76,24 @@ class SignupDropdown extends StatelessWidget {
           Icons.keyboard_arrow_down,
           color: Colors.white,
         ),
-        items: items
-            .map(
-              (item) => DropdownMenuItem<String>(
-            value: item,
-            child: Text(
-              item,
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-        )
-            .toList(),
+        items: items.isEmpty
+            ? [
+                const DropdownMenuItem<String>(
+                  value: null,
+                  child: Text(''),
+                )
+              ]
+            : items
+                .map(
+                  (item) => DropdownMenuItem<String>(
+                    value: item,
+                    child: Text(
+                      item,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                )
+                .toList(),
         onChanged: onChanged,
       ),
     );

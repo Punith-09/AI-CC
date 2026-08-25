@@ -16,6 +16,7 @@ import '../../data/models/register_request.dart';
 
 import '../../data/repository/auth_repository.dart';
 import '../widgets/signup_step_header.dart';
+import '../../../../core/utils/location_data.dart';
 
 class SignUpWizardPage extends StatefulWidget {
   const SignUpWizardPage({super.key});
@@ -83,6 +84,7 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
 
   DateTime? _dob;
 
+  // ============================================================
   // ============================================================
   // PROFESSIONAL PROFILE
   // ============================================================
@@ -718,11 +720,14 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
 
         _dropdown(
           'Country',
-          ['India', 'United States', 'United Kingdom', 'Other'],
+          LocationData.statesByCountry.keys.toList(),
           _country,
           (v) {
             setState(() {
               _country = v;
+              // Reset state and city when country changes
+              _state = null;
+              _city = null;
             });
           },
           required: true,
@@ -730,32 +735,27 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
 
         _dropdown(
           'State',
-          [
-            'Andhra Pradesh',
-            'Karnataka',
-            'Maharashtra',
-            'Tamil Nadu',
-            'Telangana',
-            'Other',
-          ],
+          _country != null ? (LocationData.statesByCountry[_country] ?? ['Other']) : [],
           _state,
-          (v) {
+          _country != null ? (v) {
             setState(() {
               _state = v;
+              // Reset city when state changes
+              _city = null;
             });
-          },
+          } : null,
           required: true,
         ),
 
         _dropdown(
           'City',
-          ['Bengaluru', 'Chennai', 'Hyderabad', 'Mumbai', 'New Delhi', 'Other'],
+          _state != null ? (LocationData.citiesByState[_state] ?? ['Other']) : [],
           _city,
-          (v) {
+          _state != null ? (v) {
             setState(() {
               _city = v;
             });
-          },
+          } : null,
           required: true,
         ),
 
@@ -1212,7 +1212,7 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
     String label,
     List<String> items,
     String? value,
-    ValueChanged<String?> onChanged, {
+    ValueChanged<String?>? onChanged, {
     bool required = false,
   }) {
     return Padding(
@@ -1231,9 +1231,11 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
           border: const OutlineInputBorder(),
         ),
 
-        items: items.map((item) {
-          return DropdownMenuItem(value: item, child: Text(item));
-        }).toList(),
+        items: items.isEmpty
+            ? [DropdownMenuItem(value: null, child: const Text(''))]
+            : items.map((item) {
+                return DropdownMenuItem(value: item, child: Text(item));
+              }).toList(),
 
         onChanged: onChanged,
       ),
