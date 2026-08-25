@@ -5,6 +5,9 @@ class PhotoModel {
   final String? creatorName;
   final String? creatorPic;
   final String? creatorCategory;
+  final String? location;
+  final String? city;
+  final String? state;
   final String title;
   final String? desc;
   final String url;
@@ -21,6 +24,9 @@ class PhotoModel {
     this.creatorName,
     this.creatorPic,
     this.creatorCategory,
+    this.location,
+    this.city,
+    this.state,
     required this.title,
     this.desc,
     required this.url,
@@ -32,13 +38,20 @@ class PhotoModel {
   });
 
   factory PhotoModel.fromJson(Map<String, dynamic> json) {
+    final creatorMap = json['creator'] is Map
+        ? json['creator'] as Map<String, dynamic>
+        : (json['user'] is Map ? json['user'] as Map<String, dynamic> : null);
+
     return PhotoModel(
-      id: json['id'] as String? ?? '',
+      id: json['id'] as String? ?? json['_id'] as String? ?? '',
       category: json['category'] as String?,
-      creatorId: json['creatorId'] as String?,
-      creatorName: json['creatorName'] as String?,
-      creatorPic: json['creatorPic'] as String?,
-      creatorCategory: json['creatorCategory'] as String?,
+      creatorId: json['creatorId'] as String? ?? json['userId'] as String?,
+      creatorName: json['creatorName'] as String? ?? creatorMap?['fullName'] as String? ?? creatorMap?['name'] as String?,
+      creatorPic: json['creatorPic'] as String? ?? creatorMap?['profilePhoto'] as String? ?? creatorMap?['avatar'] as String?,
+      creatorCategory: json['creatorCategory'] as String? ?? creatorMap?['role'] as String? ?? creatorMap?['category'] as String?,
+      location: json['location'] as String? ?? creatorMap?['location'] as String?,
+      city: json['city'] as String? ?? json['creatorCity'] as String? ?? creatorMap?['city'] as String?,
+      state: json['state'] as String? ?? json['creatorState'] as String? ?? creatorMap?['state'] as String?,
       title: json['title'] as String? ?? '',
       desc: (json['desc'] ?? json['description']) as String?,
       url: json['url'] as String? ?? '',

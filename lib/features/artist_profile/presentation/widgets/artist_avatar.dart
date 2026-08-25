@@ -1,12 +1,36 @@
+import 'package:aicc/core/api/api_endpoints.dart';
 import 'package:aicc/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class ArtistAvatar extends StatelessWidget {
   final String? profileImage;
-  const ArtistAvatar({super.key, this.profileImage});
+  final String? name;
+  const ArtistAvatar({super.key, this.profileImage, this.name});
 
   @override
   Widget build(BuildContext context) {
+    final cleanUrl = profileImage != null ? ApiEndpoints.formatMediaUrl(profileImage!) : '';
+    final isNetwork = cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://');
+    final isAsset = cleanUrl.startsWith('assets/');
+
+    final cleanName = name?.trim() ?? '';
+    final initial = cleanName.isNotEmpty ? cleanName[0].toUpperCase() : 'A';
+
+    Widget buildFallback() {
+      return Container(
+        color: const Color(0xFF103E48),
+        alignment: Alignment.center,
+        child: Text(
+          initial,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 42,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+    }
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -21,26 +45,26 @@ class ArtistAvatar extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withOpacity(.35),
+                color: AppColors.primary.withValues(alpha: .35),
                 blurRadius: 20,
                 spreadRadius: 2,
               ),
             ],
           ),
           child: ClipOval(
-            child: (profileImage != null && profileImage!.isNotEmpty && profileImage!.startsWith('http'))
+            child: isNetwork
                 ? Image.network(
-                    profileImage!,
+                    cleanUrl,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Image.asset(
-                      "assets/images/profile2.jpeg",
-                      fit: BoxFit.cover,
-                    ),
+                    errorBuilder: (_, __, ___) => buildFallback(),
                   )
-                : Image.asset(
-                    profileImage != null && profileImage!.isNotEmpty ? profileImage! : "assets/images/profile2.jpeg",
-                    fit: BoxFit.cover,
-                  ),
+                : (isAsset
+                    ? Image.asset(
+                        cleanUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => buildFallback(),
+                      )
+                    : buildFallback()),
           ),
         ),
 

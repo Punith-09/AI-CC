@@ -15,14 +15,14 @@ class InfoSection extends StatelessWidget {
           icon: Icons.workspace_premium_outlined,
           iconColor: const Color(0xff9B51E0),
           title: "Experience",
-          value: experience?.isNotEmpty == true ? experience! : "6+ Years",
+          value: experience?.isNotEmpty == true ? experience! : "Not specified",
         ),
         const SizedBox(width: 16),
         InfoCard(
           icon: Icons.language,
           iconColor: const Color(0xff2D9CDB),
           title: "Languages",
-          value: languages?.isNotEmpty == true ? languages! : "Hindi   English\nTelugu",
+          value: languages?.isNotEmpty == true ? languages! : "Not specified",
         ),
       ],
     );

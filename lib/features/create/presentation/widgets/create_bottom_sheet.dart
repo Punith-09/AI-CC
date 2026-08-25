@@ -1,6 +1,5 @@
 import 'package:aicc/core/routes/app_routes.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -61,14 +60,7 @@ class CreateBottomSheet extends StatelessWidget {
                 icon: Icons.assignment_outlined,
                 title: 'Post Audition',
                 subtitle: 'Create a casting call',
-                onTap: () async {
-                  Navigator.pop(context);
-                  await Future.delayed(const Duration(milliseconds: 250));
-
-                  if (context.mounted) {
-                    context.push(AppRoutes.post);
-                  }
-                },
+                onTap: () => Navigator.pop(context, AppRoutes.post),
               ),
 
               const SizedBox(height: 10),
@@ -78,13 +70,7 @@ class CreateBottomSheet extends StatelessWidget {
                 icon: Icons.video_library_outlined,
                 title: 'Upload Video',
                 subtitle: 'Share your portfolio reel',
-                onTap: () async {
-                  Navigator.pop(context);
-                  await Future.delayed(const Duration(milliseconds: 200));
-                  if (context.mounted) {
-                    context.push(AppRoutes.uploadVideo);
-                  }
-                },
+                onTap: () => Navigator.pop(context, AppRoutes.uploadVideo),
               ),
 
               const SizedBox(height: 10),
@@ -94,13 +80,7 @@ class CreateBottomSheet extends StatelessWidget {
                 icon: Icons.photo_camera_outlined,
                 title: 'Upload Photo',
                 subtitle: 'Add to your portfolio',
-                onTap: () async {
-                  Navigator.pop(context);
-                  await Future.delayed(const Duration(milliseconds: 200));
-                  if (context.mounted) {
-                    context.push(AppRoutes.uploadPhoto);
-                  }
-                },
+                onTap: () => Navigator.pop(context, AppRoutes.uploadPhoto),
               ),
 
               const SizedBox(height: 18),

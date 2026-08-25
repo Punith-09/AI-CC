@@ -45,7 +45,7 @@ class FeedPostModel {
     this.liked = false,
     this.createdAt,
     this.hashtags,
-    this.location = 'Mumbai, MH',
+    this.location = '',
     this.isVerified = true,
   });
 
@@ -121,6 +121,19 @@ class FeedPostModel {
         rawUrl.endsWith('.mov') ||
         rawUrl.contains('/video/upload/');
 
+    String photoLocation = '';
+    if (photo.location != null && photo.location!.trim().isNotEmpty) {
+      photoLocation = photo.location!.trim();
+    } else if (photo.city != null && photo.city!.trim().isNotEmpty) {
+      if (photo.state != null && photo.state!.trim().isNotEmpty) {
+        photoLocation = '${photo.city!.trim()}, ${photo.state!.trim()}';
+      } else {
+        photoLocation = photo.city!.trim();
+      }
+    } else if (photo.state != null && photo.state!.trim().isNotEmpty) {
+      photoLocation = photo.state!.trim();
+    }
+
     return FeedPostModel(
       id: photo.id,
       type: isVideo ? FeedMediaType.video : FeedMediaType.photo,
@@ -141,10 +154,24 @@ class FeedPostModel {
       liked: photo.liked,
       createdAt: photo.createdAt,
       hashtags: photo.category != null ? '#${photo.category} #Portfolio' : '#Portfolio',
+      location: photoLocation,
     );
   }
 
   factory FeedPostModel.fromVideoModel(VideoModel video) {
+    String videoLocation = '';
+    if (video.location != null && video.location!.trim().isNotEmpty) {
+      videoLocation = video.location!.trim();
+    } else if (video.city != null && video.city!.trim().isNotEmpty) {
+      if (video.state != null && video.state!.trim().isNotEmpty) {
+        videoLocation = '${video.city!.trim()}, ${video.state!.trim()}';
+      } else {
+        videoLocation = video.city!.trim();
+      }
+    } else if (video.state != null && video.state!.trim().isNotEmpty) {
+      videoLocation = video.state!.trim();
+    }
+
     return FeedPostModel(
       id: video.id,
       type: FeedMediaType.video,
@@ -165,6 +192,7 @@ class FeedPostModel {
       liked: video.liked,
       createdAt: video.createdAt,
       hashtags: video.category != null ? '#${video.category} #Reel' : '#Reel #Acting',
+      location: videoLocation,
     );
   }
 
@@ -177,6 +205,27 @@ class FeedPostModel {
     final mediaType = defaultType ??
         (isVideoUrl ? FeedMediaType.video : FeedMediaType.photo);
 
+    final creatorMap = json['creator'] is Map
+        ? json['creator'] as Map<String, dynamic>
+        : (json['user'] is Map ? json['user'] as Map<String, dynamic> : null);
+
+    final rawLocation = json['location'] ?? json['creatorLocation'] ?? creatorMap?['location'];
+    final rawCity = json['city'] ?? json['creatorCity'] ?? creatorMap?['city'];
+    final rawState = json['state'] ?? json['creatorState'] ?? creatorMap?['state'];
+
+    String resolvedLocation = '';
+    if (rawLocation != null && rawLocation.toString().trim().isNotEmpty) {
+      resolvedLocation = rawLocation.toString().trim();
+    } else if (rawCity != null && rawCity.toString().trim().isNotEmpty) {
+      if (rawState != null && rawState.toString().trim().isNotEmpty) {
+        resolvedLocation = '${rawCity.toString().trim()}, ${rawState.toString().trim()}';
+      } else {
+        resolvedLocation = rawCity.toString().trim();
+      }
+    } else if (rawState != null && rawState.toString().trim().isNotEmpty) {
+      resolvedLocation = rawState.toString().trim();
+    }
+
     return FeedPostModel(
       id: json['id'] as String? ?? '',
       type: mediaType,
@@ -186,15 +235,16 @@ class FeedPostModel {
       thumbnailUrl: json['thumb'] as String? ?? (isVideoUrl ? null : rawUrl),
       category: json['category'] as String?,
       creatorId: json['creatorId'] as String?,
-      creatorName: json['creatorName'] as String? ?? 'Creator',
-      creatorPic: json['creatorPic'] as String?,
-      creatorCategory: json['creatorCategory'] as String? ?? 'Artist',
+      creatorName: json['creatorName'] as String? ?? creatorMap?['fullName'] as String? ?? creatorMap?['name'] as String? ?? 'Creator',
+      creatorPic: json['creatorPic'] as String? ?? creatorMap?['profilePhoto'] as String? ?? creatorMap?['avatar'] as String?,
+      creatorCategory: json['creatorCategory'] as String? ?? creatorMap?['role'] as String? ?? creatorMap?['category'] as String? ?? 'Artist',
       likesCount: json['likesCount'] as int? ?? 0,
       commentsCount: json['commentsCount'] as int? ?? 0,
       viewsCount: json['viewsCount'] as int? ?? 0,
       liked: json['liked'] as bool? ?? false,
       createdAt: json['createdAt'] as String?,
       hashtags: json['category'] != null ? '#${json['category']}' : '#AICC',
+      location: resolvedLocation,
     );
   }
 }

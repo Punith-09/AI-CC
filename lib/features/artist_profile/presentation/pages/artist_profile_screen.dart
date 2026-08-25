@@ -12,9 +12,6 @@ import 'package:aicc/features/artist_profile/presentation/widgets/stats_card.dar
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aicc/core/routes/app_routes.dart';
-
-import '../../data/datasource/portfolio_data.dart';
-
 import 'package:provider/provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../presentation/providers/profile_provider.dart';
@@ -188,10 +185,8 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
               
               // Depending on whether it's 'me' or someone else:
               final profile = widget.userId != null ? provider.viewedProfile : provider.currentProfile;
-              
-              // We just let the widgets use dummy data for now or fallback, 
-              // but we integrated the API layer properly.
-              
+              final mediaList = widget.userId != null ? provider.viewedMedia : provider.myMedia;
+
               return SingleChildScrollView(
                 child: Column(
                   children: [
@@ -203,7 +198,10 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                         Positioned(
                           left: 24,
                           bottom: -45,
-                          child: ArtistAvatar(profileImage: profile?.profileImage),
+                          child: ArtistAvatar(
+                            profileImage: profile?.profileImage,
+                            name: profile?.name,
+                          ),
                         ),
 
                         Positioned(
@@ -272,10 +270,10 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
 
                     const SizedBox(height: 18),
 
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: PortfolioGrid(
-                        items: portfolioList,
+                        items: mediaList,
                       ),
                     ),
 

@@ -11,6 +11,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/storage/local_storage.dart';
 
 import '../../data/models/register_request.dart';
 
@@ -410,14 +411,69 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
       }
 
       // ========================================================
-      // SUCCESS
+      // POST-AUTH FILE UPLOADS (Profile photo & portfolio)
       // ========================================================
 
-      debugPrint('REGISTER SUCCESS');
+      if (_selectedFiles[_kProfilePhoto] != null) {
+        try {
+          final file = _selectedFiles[_kProfilePhoto]!;
+          final bytes = _selectedBytes[_kProfilePhoto];
+          final dioClient = GetIt.instance<DioClient>();
+          MultipartFile multipartFile;
+          if (bytes != null) {
+            multipartFile = MultipartFile.fromBytes(bytes, filename: file.name);
+          } else if (!kIsWeb && file.path.isNotEmpty) {
+            multipartFile = await MultipartFile.fromFile(file.path, filename: file.name);
+          } else {
+            multipartFile = MultipartFile.fromBytes(await file.readAsBytes(), filename: file.name);
+          }
+          final formData = FormData.fromMap({
+            'title': 'Profile Photo',
+            'description': '',
+            'file': multipartFile,
+          });
+          final photoRes = await dioClient.post(ApiEndpoints.photos, data: formData);
+          String? photoUrl;
+          if (photoRes.data is Map) {
+            final map = Map<String, dynamic>.from(photoRes.data as Map);
+            final inner = map['data'] is Map ? Map<String, dynamic>.from(map['data'] as Map) : map;
+            photoUrl = inner['url'] as String?;
+          }
+          if (photoUrl != null && photoUrl.isNotEmpty) {
+            await LocalStorage.instance.saveUserProfilePhoto(photoUrl);
+            try {
+              await dioClient.patch(ApiEndpoints.profileMe, data: {'profilePhoto': photoUrl});
+            } catch (_) {}
+          }
+        } catch (uploadErr) {
+          debugPrint('Profile photo post-auth upload error: $uploadErr');
+        }
+      }
 
-      debugPrint('TOKEN: ${response.token}');
-
-      debugPrint('USER: ${response.user}');
+      for (final key in [_kHeadshot, _kFullBody, _kIntroVideo]) {
+        if (_selectedFiles[key] != null) {
+          try {
+            final file = _selectedFiles[key]!;
+            final bytes = _selectedBytes[key];
+            final dioClient = GetIt.instance<DioClient>();
+            final isVideo = key == _kIntroVideo;
+            MultipartFile multipartFile;
+            if (bytes != null) {
+              multipartFile = MultipartFile.fromBytes(bytes, filename: file.name);
+            } else if (!kIsWeb && file.path.isNotEmpty) {
+              multipartFile = await MultipartFile.fromFile(file.path, filename: file.name);
+            } else {
+              multipartFile = MultipartFile.fromBytes(await file.readAsBytes(), filename: file.name);
+            }
+            final formData = FormData.fromMap({
+              'title': file.name,
+              'description': key,
+              'file': multipartFile,
+            });
+            await dioClient.post(isVideo ? ApiEndpoints.uploadVideo : ApiEndpoints.photos, data: formData);
+          } catch (_) {}
+        }
+      }
 
       if (!mounted) {
         return;
@@ -1493,7 +1549,7 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
 
         decoration: BoxDecoration(
           border: Border.all(
-            color: hasUploaded
+            color: (hasUploaded || hasPicked)
                 ? Colors.green.shade400
                 : const Color(0xFF5E6472),
           ),
@@ -1528,10 +1584,10 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
 
                         const SizedBox(width: 12),
 
-                        Expanded(
+                        const Expanded(
                           child: Text(
-                            'Uploading...',
-                            style: const TextStyle(color: Color(0xFFB0B6C4)),
+                            'Processing...',
+                            style: TextStyle(color: Color(0xFFB0B6C4)),
                           ),
                         ),
                       ],
@@ -1539,8 +1595,10 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
                   : Row(
                       children: [
                         Icon(
-                          hasUploaded ? Icons.check_circle_outline : icon,
-                          color: hasUploaded
+                          (hasUploaded || hasPicked)
+                              ? Icons.check_circle_outline
+                              : icon,
+                          color: (hasUploaded || hasPicked)
                               ? Colors.green.shade400
                               : const Color(0xFFB0B6C4),
                           size: 22,
@@ -1552,40 +1610,15 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
                           child: Text(
                             displayName ?? label,
                             style: TextStyle(
-                              color: hasUploaded
+                              color: (hasUploaded || hasPicked)
                                   ? Colors.green.shade300
-                                  : hasPicked
-                                      ? Colors.white
-                                      : const Color(0xFFB0B6C4),
+                                  : const Color(0xFFB0B6C4),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ),
 
-                        // If a file was picked but not yet uploaded show upload icon
-                        if (hasPicked && !hasUploaded && !isUploading)
-                          GestureDetector(
-                            onTap: () => _uploadFile(fieldKey, fileType),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _blue,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Text(
-                                'Upload',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          )
-                        else if (hasUploaded)
+                        if (hasPicked || hasUploaded)
                           GestureDetector(
                             onTap: () {
                               setState(() {
@@ -1616,7 +1649,7 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
   }
 
   // ============================================================
-  // STEP 1 — PICK FILE (same as post upload screens)
+  // STEP 1 — PICK FILE LOCALLY
   // ============================================================
 
   Future<void> _pickFile(String fieldKey, String fileType) async {
@@ -1625,19 +1658,15 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
       Uint8List? bytes;
 
       if (fileType == _typeImage) {
-        // Same as upload_photo_screen._pickImage(ImageSource.gallery)
         picked = await _imagePicker.pickImage(
           source: ImageSource.gallery,
-          maxWidth: 1920,
-          maxHeight: 1920,
-          imageQuality: 90,
+          imageQuality: 85,
         );
 
         if (picked != null) {
           bytes = await picked.readAsBytes();
         }
       } else if (fileType == _typeVideo) {
-        // Same as upload_video_screen._pickVideo(ImageSource.gallery)
         picked = await _imagePicker.pickVideo(
           source: ImageSource.gallery,
           maxDuration: const Duration(minutes: 10),
@@ -1647,7 +1676,6 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
           bytes = await picked.readAsBytes();
         }
       } else {
-        // PDF — same FilePicker fallback used in post screens
         final result = await FilePicker.platform.pickFiles(
           type: FileType.custom,
           allowedExtensions: ['pdf'],
@@ -1667,14 +1695,9 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
       setState(() {
         _selectedFiles[fieldKey] = picked!;
         if (bytes != null) _selectedBytes[fieldKey] = bytes;
-        // Clear any previous upload URL so the user can re-upload
         _uploadUrls.remove(fieldKey);
       });
-
-      // Auto-trigger upload after picking (UX matches post flow)
-      await _uploadFile(fieldKey, fileType);
     } catch (e) {
-      // Fallback for channel errors (same guard as post screens)
       if (fileType == _typeImage) {
         try {
           final result = await FilePicker.platform.pickFiles(
@@ -1693,14 +1716,10 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
               if (bytes != null) _selectedBytes[fieldKey] = bytes;
               _uploadUrls.remove(fieldKey);
             });
-
-            await _uploadFile(fieldKey, fileType);
             return;
           }
         } catch (_) {}
-      }
-
-      if (!mounted) return;
+       if (!mounted) return;
 
       final isChannelError = e.toString().contains('channel-error') ||
           e.toString().contains('MissingPluginException');
@@ -1718,95 +1737,5 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
       );
     }
   }
-
-  // ============================================================
-  // STEP 2 — UPLOAD FILE TO BACKEND (same multipart pattern as
-  // photos_remote_datasource / videos_remote_datasource)
-  // ============================================================
-
-  Future<void> _uploadFile(String fieldKey, String fileType) async {
-    final file  = _selectedFiles[fieldKey];
-    final bytes = _selectedBytes[fieldKey];
-
-    if (file == null) return;
-
-    setState(() {
-      _uploading[fieldKey] = true;
-    });
-
-    try {
-      final dioClient = GetIt.instance<DioClient>();
-
-      MultipartFile multipartFile;
-
-      if (bytes != null) {
-        multipartFile = MultipartFile.fromBytes(bytes, filename: file.name);
-      } else if (!kIsWeb && file.path.isNotEmpty) {
-        multipartFile = await MultipartFile.fromFile(
-          file.path,
-          filename: file.name,
-        );
-      } else {
-        throw Exception('No file data available for upload.');
-      }
-
-      // Use the same /photos endpoint the post feature uses for images/files,
-      // and /videos/upload for videos.
-      final endpoint = fileType == _typeVideo
-          ? ApiEndpoints.uploadVideo
-          : ApiEndpoints.photos;
-
-      final formData = FormData.fromMap({
-        'title': file.name,
-        'description': '',
-        'file': multipartFile,
-      });
-
-      final response = await dioClient.post(endpoint, data: formData);
-
-      if (!mounted) return;
-
-      // Extract URL from response (same handling as post datasources)
-      String? url;
-      if (response.data is Map) {
-        final map = Map<String, dynamic>.from(response.data as Map);
-        // Try nested 'data' first (video response), then flat (photo response)
-        final inner = map['data'] is Map
-            ? Map<String, dynamic>.from(map['data'] as Map)
-            : map;
-        url = inner['url'] as String?;
-      }
-
-      if (url != null && url.isNotEmpty) {
-        setState(() {
-          _uploadUrls[fieldKey] = url!;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Uploaded successfully!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Upload failed: $e'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _uploading[fieldKey] = false;
-        });
-      }
-    }
-  }
 }
-
+}

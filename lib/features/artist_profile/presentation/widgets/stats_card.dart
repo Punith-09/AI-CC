@@ -36,7 +36,7 @@ class StatsCard extends StatelessWidget {
             StatItem(
               icon: Icons.work_outline,
               iconColor: const Color(0xff8A2BE2),
-              value: projects != null ? projects.toString() : "120+",
+              value: projects != null ? projects.toString() : "0",
               title: "Projects",
             ),
             VerticalDivider(
@@ -56,7 +56,7 @@ class StatsCard extends StatelessWidget {
             StatItem(
               icon: Icons.emoji_events_outlined,
               iconColor: const Color(0xff00E5FF),
-              value: awards != null ? awards.toString() : "8",
+              value: awards != null ? awards.toString() : "0",
               title: "Awards",
             ),
           ],

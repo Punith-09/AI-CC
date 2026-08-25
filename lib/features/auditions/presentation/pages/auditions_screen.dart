@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../providers/auditions_provider.dart';
 import '../widgets/analytics_card.dart';
 import '../widgets/audition_cards.dart';
@@ -271,7 +273,11 @@ class _AuditionScreenState extends State<AuditionScreen> {
 
                       const SizedBox(height: 16),
 
-                      NewAuditionCard(onPressed: () {}),
+                      NewAuditionCard(
+                        onPressed: () {
+                          context.push(AppRoutes.post);
+                        },
+                      ),
 
                       const SizedBox(height: 100),
                     ],

@@ -54,36 +54,54 @@ class FeedHeader extends StatelessWidget {
                     ],
                   ],
                 ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    const Icon(
-                      LucideIcons.mapPin,
-                      size: 12,
-                      color: Colors.white70,
+                if (post.location.isNotEmpty ||
+                    (post.creatorCategory != null &&
+                        post.creatorCategory!.isNotEmpty))
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Row(
+                      children: [
+                        if (post.location.isNotEmpty) ...[
+                          const Icon(
+                            LucideIcons.mapPin,
+                            size: 12,
+                            color: Colors.white70,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            post.location,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                        if (post.location.isNotEmpty &&
+                            post.creatorCategory != null &&
+                            post.creatorCategory!.isNotEmpty) ...[
+                          const SizedBox(width: 6),
+                          Text(
+                            '•  ${post.creatorCategory}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ] else if (post.creatorCategory != null &&
+                            post.creatorCategory!.isNotEmpty) ...[
+                          Text(
+                            post.creatorCategory!,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      post.location,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.white70,
-                      ),
-                    ),
-                    if (post.creatorCategory != null &&
-                        post.creatorCategory!.isNotEmpty) ...[
-                      const SizedBox(width: 6),
-                      Text(
-                        '•  ${post.creatorCategory}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+                  ),
               ],
             ),
           ),

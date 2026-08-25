@@ -1,3 +1,4 @@
+import 'package:aicc/core/api/api_endpoints.dart';
 import 'package:aicc/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +14,10 @@ class ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cleanCover = coverImage != null ? ApiEndpoints.formatMediaUrl(coverImage!) : '';
+    final isNetwork = cleanCover.startsWith('http://') || cleanCover.startsWith('https://');
+    final isAsset = cleanCover.startsWith('assets/');
+
     return SizedBox(
       height: 300,
 
@@ -20,9 +25,9 @@ class ProfileHeader extends StatelessWidget {
       Stack(
         children: [
           Positioned.fill(
-            child: (coverImage != null && coverImage!.isNotEmpty && coverImage!.startsWith('http'))
+            child: isNetwork
                 ? Image.network(
-                    coverImage!,
+                    cleanCover,
                     fit: BoxFit.cover,
                     alignment: Alignment.centerRight,
                     errorBuilder: (_, __, ___) => Image.asset(
@@ -32,7 +37,7 @@ class ProfileHeader extends StatelessWidget {
                     ),
                   )
                 : Image.asset(
-                    coverImage != null && coverImage!.isNotEmpty ? coverImage! : "assets/images/coverPic.png",
+                    isAsset ? cleanCover : "assets/images/coverPic.png",
                     fit: BoxFit.cover,
                     alignment: Alignment.centerRight,
                   ),

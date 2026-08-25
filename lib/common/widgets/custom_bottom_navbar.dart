@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/routes/app_routes.dart';
@@ -93,21 +94,23 @@ class CustomBottomNavbar extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(
+            Positioned(
             top: -8,
             child: GestureDetector(
-              onTap: () async => onItemSelected(
-                  // AppRoutes.post
-                  await showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    barrierColor: Colors.black.withOpacity(0.65),
-                    builder: (context) {
-                      return const CreateBottomSheet();
-                    },
-                  )
-              ),
+              onTap: () async {
+                final route = await showModalBottomSheet<String>(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  barrierColor: Colors.black.withOpacity(0.65),
+                  builder: (context) {
+                    return const CreateBottomSheet();
+                  },
+                );
+                if (route != null && context.mounted) {
+                  context.push(route);
+                }
+              },
               child: Container(
                 width: 58,
                 height: 58,

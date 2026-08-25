@@ -76,15 +76,67 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     }
   }
 
+  Future<Map<String, String>> _fetchUserLocations() async {
+    final Map<String, String> map = {};
+    try {
+      final response = await _dioClient.get(ApiEndpoints.exploreUsers);
+      dynamic listData;
+      if (response.data is List) {
+        listData = response.data;
+      } else if (response.data is Map && (response.data as Map).containsKey('data')) {
+        listData = (response.data as Map)['data'];
+      } else if (response.data is Map && (response.data as Map).containsKey('users')) {
+        listData = (response.data as Map)['users'];
+      } else if (response.data is Map && (response.data as Map).containsKey('talents')) {
+        listData = (response.data as Map)['talents'];
+      }
+
+      if (listData is List) {
+        for (final item in listData) {
+          if (item is Map) {
+            final id = item['_id']?.toString() ?? item['id']?.toString();
+            final name = item['fullName']?.toString() ?? item['name']?.toString() ?? item['username']?.toString();
+            final city = item['city']?.toString().trim() ?? '';
+            final state = item['state']?.toString().trim() ?? '';
+            final loc = item['location']?.toString().trim() ?? '';
+
+            String formatted = loc;
+            if (formatted.isEmpty) {
+              if (city.isNotEmpty && state.isNotEmpty) {
+                formatted = '$city, $state';
+              } else if (city.isNotEmpty) {
+                formatted = city;
+              } else if (state.isNotEmpty) {
+                formatted = state;
+              }
+            }
+
+            if (formatted.isNotEmpty) {
+              if (id != null && id.isNotEmpty) {
+                map[id] = formatted;
+              }
+              if (name != null && name.trim().isNotEmpty) {
+                map[name.trim().toLowerCase()] = formatted;
+              }
+            }
+          }
+        }
+      }
+    } catch (_) {}
+    return map;
+  }
+
   @override
   Future<List<FeedPostModel>> getFeedPosts() async {
     final results = await Future.wait([
       getPhotos(),
       getVideos(),
+      _fetchUserLocations(),
     ]);
 
     final photos = results[0] as List<PhotoModel>;
     final videos = results[1] as List<VideoModel>;
+    final userLocations = results[2] as Map<String, String>;
 
     final List<FeedPostModel> rawFeed = [
       ...photos.map(FeedPostModel.fromPhotoModel),
@@ -96,7 +148,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     final Set<String> seenUrls = {};
     final List<FeedPostModel> uniqueFeed = [];
 
-    for (final post in rawFeed) {
+    for (var post in rawFeed) {
       final hasId = post.id.isNotEmpty;
       final hasUrl = post.mediaUrl.isNotEmpty;
 
@@ -105,6 +157,20 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       }
       if (hasUrl && seenUrls.contains(post.mediaUrl)) {
         continue; // Skip duplicate URL
+      }
+
+      // Enrich location dynamically from creator profile if not on post object
+      if (post.location.isEmpty) {
+        String? loc;
+        if (post.creatorId != null && post.creatorId!.isNotEmpty) {
+          loc = userLocations[post.creatorId!];
+        }
+        if (loc == null || loc.isEmpty) {
+          loc = userLocations[post.creatorName.toLowerCase().trim()];
+        }
+        if (loc != null && loc.isNotEmpty) {
+          post = post.copyWith(location: loc);
+        }
       }
 
       if (hasId) seenIds.add(post.id);
@@ -194,7 +260,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       } else if (response.data is Map && (response.data as Map).containsKey('comments')) {
         listData = (response.data as Map)['comments'];
       }
-      return listData is List ? (listData as List).length : 0;
+      return listData is List ? listData.length : 0;
     } catch (_) {
       return 0;
     }

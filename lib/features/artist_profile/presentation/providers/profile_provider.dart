@@ -34,7 +34,19 @@ class ProfileProvider with ChangeNotifier {
     try {
       _currentProfile = await _repository.getProfileMe();
       if (_currentProfile?.id != null && _currentProfile!.id.isNotEmpty) {
-        _myMedia = await _repository.getUserMedia(_currentProfile!.id);
+        final fetchedMedia = await _repository.getUserMedia(_currentProfile!.id);
+        final combined = <PortfolioModel>[];
+        if (_currentProfile?.portfolio.isNotEmpty == true) {
+          combined.addAll(_currentProfile!.portfolio);
+        }
+        for (final m in fetchedMedia) {
+          if (!combined.any((item) => item.image == m.image || (item.id.isNotEmpty && item.id == m.id))) {
+            combined.add(m);
+          }
+        }
+        _myMedia = combined;
+      } else {
+        _myMedia = _currentProfile?.portfolio ?? [];
       }
     } catch (e) {
       _error = e.toString();
