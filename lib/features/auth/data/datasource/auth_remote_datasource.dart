@@ -62,38 +62,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       RegisterRequest request,
       ) async {
     try {
-      // ========================================
-      // PRE-REGISTRATION MOBILE VALIDATION
-      // ========================================
-      try {
-        final usersResponse = await _dioClient.get(ApiEndpoints.exploreUsers);
-        
-        List<dynamic> usersList = [];
-        final rawData = usersResponse.data;
-        if (rawData is List) {
-          usersList = rawData;
-        } else if (rawData is Map) {
-          final inner = rawData['data'] ??
-              rawData['users'] ??
-              rawData['results'] ??
-              rawData['talents'] ??
-              [];
-          usersList = inner is List ? inner : [];
-        }
-
-        final isRegistered = usersList.any(
-          (user) => user is Map && (user['mobile'] == request.mobile || user['phone'] == request.mobile),
-        );
-
-        if (isRegistered) {
-          throw Exception('Mobile number is already registered.');
-        }
-      } catch (e) {
-        if (e.toString().contains('Mobile number is already registered')) {
-          rethrow;
-        }
-      }
-
       final requestData = request.toJson();
 
       // Debug: See exactly what Flutter is sending
@@ -116,12 +84,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       if (response.data is Map) {
         final data = Map<String, dynamic>.from(response.data);
-        if (data.containsKey('message') && 
-            (data['token'] == null || data['token'].toString().isEmpty) && 
-            (data['accessToken'] == null) && 
-            (data['access_token'] == null)) {
-          throw Exception(data['message']);
-        }
         return LoginResponse.fromJson(data);
       }
 

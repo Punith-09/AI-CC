@@ -4,7 +4,7 @@ class ApiEndpoints {
   static String get baseUrl {
     // Cloudflare tunnel — points to local backend (http://localhost:3000)
     // Replace this URL each time you restart the cloudflared tunnel.
-    return 'https://spies-magnificent-very-lay.trycloudflare.com';
+    return 'https://articles-essays-ceramic-rarely.trycloudflare.com';
   }
 
   static const String login = '/auth/login';

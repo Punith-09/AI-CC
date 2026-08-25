@@ -403,6 +403,12 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
 
       final response = await _authRepository.register(request);
 
+      // If backend didn't return an auth token directly on register,
+      // log the user in immediately with their credentials.
+      if (response.token.isEmpty) {
+        await _authRepository.login(_email.text.trim(), _password.text);
+      }
+
       // ========================================================
       // SUCCESS
       // ========================================================

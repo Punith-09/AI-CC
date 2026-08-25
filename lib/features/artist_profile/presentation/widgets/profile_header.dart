@@ -103,7 +103,7 @@ class ProfileHeader extends StatelessWidget {
 
           Positioned(
             top: 18,
-            right: 16,
+            right:50,
             child: Builder(
               builder: (context) {
                 return _CircleButton(
@@ -159,8 +159,7 @@ class ProfileHeader extends StatelessWidget {
 
                     switch (value) {
                       case 'edit':
-
-                        context.push('/edit-profile');
+                        context.push(AppRoutes.editArtistProfile);
                         break;
 
                       case 'logout':
