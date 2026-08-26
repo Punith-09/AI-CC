@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:aicc/common/widgets/app_background.dart';
 import 'package:aicc/core/constants/app_colors.dart';
@@ -81,10 +82,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       try {
         final dioClient = GetIt.instance<DioClient>();
-        final multipartFile = await MultipartFile.fromFile(
-          pickedFile.path, 
-          filename: pickedFile.name
-        );
+        MultipartFile multipartFile;
+        if (kIsWeb) {
+          final bytes = await pickedFile.readAsBytes();
+          multipartFile = MultipartFile.fromBytes(bytes, filename: pickedFile.name);
+        } else {
+          multipartFile = await MultipartFile.fromFile(
+            pickedFile.path, 
+            filename: pickedFile.name
+          );
+        }
         final formData = FormData.fromMap({
           'title': 'Profile Photo',
           'description': '',
@@ -353,7 +360,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                               radius: 54,
                                               backgroundColor: AppColors.textField,
                                               backgroundImage: _selectedImage != null
-                                                  ? FileImage(File(_selectedImage!.path)) as ImageProvider
+                                                  ? (kIsWeb 
+                                                      ? NetworkImage(_selectedImage!.path) 
+                                                      : FileImage(File(_selectedImage!.path))) as ImageProvider
                                                   : (_currentPhotoUrl != null && _currentPhotoUrl!.isNotEmpty)
                                                       ? NetworkImage(ApiEndpoints.formatMediaUrl(_currentPhotoUrl!))
                                                       : const NetworkImage('https://i.pravatar.cc/150?img=11'), 
