@@ -4,6 +4,13 @@ import 'package:aicc/common/widgets/app_background.dart';
 import 'package:aicc/core/constants/app_colors.dart';
 import 'package:aicc/features/artist_profile/presentation/providers/profile_provider.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:dio/dio.dart';
+import 'package:get_it/get_it.dart';
+import 'package:aicc/core/network/dio_client.dart';
+import 'package:aicc/core/api/api_endpoints.dart';
+
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:aicc/core/utils/location_data.dart';
 
@@ -26,7 +33,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String? _state;
   String? _city;
 
-
+  String? _currentPhotoUrl;
+  XFile? _selectedImage;
+  bool _isUploadingPhoto = false;
 
   @override
   void initState() {
@@ -50,6 +59,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _experienceController = TextEditingController(text: profile?.experience ?? '2 Years');
     _languagesController = TextEditingController(text: profile?.languages ?? '');
     _awardsCount = profile?.awards ?? 0;
+    _currentPhotoUrl = profile?.profileImage;
   }
 
   @override
@@ -60,7 +70,55 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
+  Future<void> _pickProfilePhoto() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImage = pickedFile;
+        _isUploadingPhoto = true;
+      });
 
+      try {
+        final dioClient = GetIt.instance<DioClient>();
+        final multipartFile = await MultipartFile.fromFile(
+          pickedFile.path, 
+          filename: pickedFile.name
+        );
+        final formData = FormData.fromMap({
+          'title': 'Profile Photo',
+          'description': '',
+          'file': multipartFile,
+        });
+
+        final photoRes = await dioClient.post(ApiEndpoints.photos, data: formData);
+        
+        String? photoUrl;
+        if (photoRes.data is Map) {
+          final map = Map<String, dynamic>.from(photoRes.data as Map);
+          final inner = map['data'] is Map ? Map<String, dynamic>.from(map['data'] as Map) : map;
+          photoUrl = inner['url'] as String?;
+        }
+
+        if (photoUrl != null && photoUrl.isNotEmpty) {
+          setState(() {
+            _currentPhotoUrl = photoUrl;
+          });
+        }
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to upload photo: $e'), backgroundColor: AppColors.danger),
+        );
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isUploadingPhoto = false;
+          });
+        }
+      }
+    }
+  }
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
@@ -94,6 +152,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       'experience': _experienceController.text.trim(),
       'languages': _languagesController.text.trim(),
       'awards': _awardsCount,
+      if (_currentPhotoUrl != null && _currentPhotoUrl!.isNotEmpty)
+        'profilePhoto': _currentPhotoUrl,
     };
     
     try {
@@ -263,60 +323,72 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       children: [
                         // Avatar Section
                         Center(
-                          child: Column(
-                            children: [
-                              Stack(
-                                alignment: Alignment.bottomRight,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(3),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      gradient: const LinearGradient(colors: AppColors.BtnGradient),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: AppColors.primary.withOpacity(0.2),
-                                          blurRadius: 20,
-                                          spreadRadius: 2,
-                                        ),
-                                      ],
-                                    ),
-                                    child: const CircleAvatar(
-                                      radius: 54,
-                                      backgroundColor: AppColors.textField,
-                                      // Defaulting to network mock image for visual consistency with screenshot
-                                      backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=11'), 
-                                    ),
-                                  ),
-                                  Positioned(
-                                    bottom: 0,
-                                    right: 4,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: const BoxDecoration(
-                                        color: AppColors.purple,
+                          child: GestureDetector(
+                            onTap: _isUploadingPhoto ? null : _pickProfilePhoto,
+                            child: Column(
+                              children: [
+                                Stack(
+                                  alignment: Alignment.bottomRight,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(3),
+                                      decoration: BoxDecoration(
                                         shape: BoxShape.circle,
+                                        gradient: const LinearGradient(colors: AppColors.BtnGradient),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppColors.primary.withOpacity(0.2),
+                                            blurRadius: 20,
+                                            spreadRadius: 2,
+                                          ),
+                                        ],
                                       ),
-                                      child: const Icon(Icons.camera_alt, color: AppColors.white, size: 16),
+                                      child: _isUploadingPhoto
+                                          ? const CircleAvatar(
+                                              radius: 54,
+                                              backgroundColor: AppColors.textField,
+                                              child: CircularProgressIndicator(color: AppColors.primary),
+                                            )
+                                          : CircleAvatar(
+                                              radius: 54,
+                                              backgroundColor: AppColors.textField,
+                                              backgroundImage: _selectedImage != null
+                                                  ? FileImage(File(_selectedImage!.path)) as ImageProvider
+                                                  : (_currentPhotoUrl != null && _currentPhotoUrl!.isNotEmpty)
+                                                      ? NetworkImage(ApiEndpoints.formatMediaUrl(_currentPhotoUrl!))
+                                                      : const NetworkImage('https://i.pravatar.cc/150?img=11'), 
+                                            ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              ShaderMask(
-                                shaderCallback: (bounds) => const LinearGradient(
-                                  colors: AppColors.BtnGradient,
-                                ).createShader(bounds),
-                                child: const Text(
-                                  'Change Photo',
-                                  style: TextStyle(
-                                    color: AppColors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
+                                    Positioned(
+                                      bottom: 0,
+                                      right: 4,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: const BoxDecoration(
+                                          color: AppColors.purple,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(Icons.camera_alt, color: AppColors.white, size: 16),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                ShaderMask(
+                                  shaderCallback: (bounds) => const LinearGradient(
+                                    colors: AppColors.BtnGradient,
+                                  ).createShader(bounds),
+                                  child: Text(
+                                    _isUploadingPhoto ? 'Uploading...' : 'Change Photo',
+                                    style: const TextStyle(
+                                      color: AppColors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                         
