@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/network/dio_client.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/storage/local_storage.dart';
 import '../../data/models/register_request.dart';
 import '../../data/repository/auth_repository.dart';
 import '../widgets/signup_button.dart';
@@ -48,6 +52,46 @@ class _AudienceSignUpScreenState extends State<AudienceSignUpScreen> {
     super.dispose();
   }
 
+  Future<bool> _checkPhoneUnique(String phone) async {
+    final cleanPhone = phone.replaceAll(RegExp(r'[^0-9]'), '').trim();
+    if (cleanPhone.isEmpty) return true;
+
+    // 1. Check local persistent registry
+    if (LocalStorage.instance.isPhoneLocallyRegistered(cleanPhone)) {
+      return false;
+    }
+
+    try {
+      final dioClient = sl<DioClient>();
+      final response = await dioClient.get(ApiEndpoints.exploreUsers);
+      dynamic listData;
+      if (response.data is List) {
+        listData = response.data;
+      } else if (response.data is Map && (response.data as Map).containsKey('data')) {
+        listData = (response.data as Map)['data'];
+      } else if (response.data is Map && (response.data as Map).containsKey('users')) {
+        listData = (response.data as Map)['users'];
+      } else if (response.data is Map && (response.data as Map).containsKey('talents')) {
+        listData = (response.data as Map)['talents'];
+      }
+
+      if (listData is List) {
+        for (final item in listData) {
+          if (item is Map) {
+            final userPhone = item['mobile']?.toString().replaceAll(RegExp(r'[^0-9]'), '') ??
+                item['phone']?.toString().replaceAll(RegExp(r'[^0-9]'), '') ??
+                item['phoneNumber']?.toString().replaceAll(RegExp(r'[^0-9]'), '') ??
+                '';
+            if (userPhone.isNotEmpty && userPhone == cleanPhone) {
+              return false;
+            }
+          }
+        }
+      }
+    } catch (_) {}
+    return true;
+  }
+
   Future<void> _createAccount() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -60,6 +104,22 @@ class _AudienceSignUpScreenState extends State<AudienceSignUpScreen> {
     });
 
     try {
+      final isPhoneUnique = await _checkPhoneUnique(_phone.text.trim());
+      if (!isPhoneUnique) {
+        if (!mounted) return;
+        setState(() {
+          _isSubmitting = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("This phone number is already registered. Please use another number."),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 4),
+          ),
+        );
+        return;
+      }
+
       final authRepository = sl<AuthRepository>();
 
       final request = RegisterRequest(
@@ -109,6 +169,8 @@ class _AudienceSignUpScreenState extends State<AudienceSignUpScreen> {
       );
 
       final response = await authRepository.register(request);
+
+      await LocalStorage.instance.recordRegisteredPhone(_phone.text.trim());
 
       // If backend didn't return an auth token directly on register,
       // log the user in immediately with their credentials.
@@ -216,6 +278,17 @@ class _AudienceSignUpScreenState extends State<AudienceSignUpScreen> {
                             label: "Email",
                             keyboardType: TextInputType.emailAddress,
                             requiredField: true,
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return "Email is required";
+                              }
+                              final clean = value.trim().toLowerCase();
+                              final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@gmail\.com$');
+                              if (!emailRegex.hasMatch(clean)) {
+                                return "Email must be a valid @gmail.com address";
+                              }
+                              return null;
+                            },
                           ),
                           SignupTextField(
                             controller: _password,
@@ -235,12 +308,36 @@ class _AudienceSignUpScreenState extends State<AudienceSignUpScreen> {
                                 });
                               },
                             ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return "Password is required";
+                              }
+                              if (value.length < 8) {
+                                return "Password must be at least 8 characters";
+                              }
+                              return null;
+                            },
                           ),
                           SignupTextField(
                             controller: _phone,
                             label: "Phone Number",
                             keyboardType: TextInputType.phone,
+                            maxLength: 10,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(10),
+                            ],
                             requiredField: true,
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return "Phone number is required";
+                              }
+                              final clean = value.replaceAll(RegExp(r'[^0-9]'), '').trim();
+                              if (clean.length != 10) {
+                                return "Phone number must be exactly 10 digits";
+                              }
+                              return null;
+                            },
                           ),
                           SignupDropdown(
                             label: "Gender",

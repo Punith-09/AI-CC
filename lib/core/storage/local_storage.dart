@@ -151,6 +151,25 @@ class LocalStorage {
     await _prefs!.remove(_keyUserProfilePhoto);
   }
 
+  static const String _keyRegisteredPhones = 'registered_phone_numbers';
+
+  Future<void> recordRegisteredPhone(String phone) async {
+    final clean = phone.replaceAll(RegExp(r'[^0-9]'), '').trim();
+    if (clean.isEmpty) return;
+    final list = _prefs!.getStringList(_keyRegisteredPhones) ?? [];
+    if (!list.contains(clean)) {
+      list.add(clean);
+      await _prefs!.setStringList(_keyRegisteredPhones, list);
+    }
+  }
+
+  bool isPhoneLocallyRegistered(String phone) {
+    final clean = phone.replaceAll(RegExp(r'[^0-9]'), '').trim();
+    if (clean.isEmpty) return false;
+    final list = _prefs!.getStringList(_keyRegisteredPhones) ?? [];
+    return list.contains(clean);
+  }
+
   bool hasToken() {
     return getToken() != null;
   }

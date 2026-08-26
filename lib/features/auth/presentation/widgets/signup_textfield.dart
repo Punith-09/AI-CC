@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class SignupTextField extends StatelessWidget {
   final TextEditingController controller;
@@ -8,6 +9,8 @@ class SignupTextField extends StatelessWidget {
   final int maxLines;
   final bool obscureText;
   final Widget? suffixIcon;
+  final List<TextInputFormatter>? inputFormatters;
+  final int? maxLength;
   final String? Function(String?)? validator;
 
   const SignupTextField({
@@ -19,6 +22,8 @@ class SignupTextField extends StatelessWidget {
     this.maxLines = 1,
     this.obscureText = false,
     this.suffixIcon,
+    this.inputFormatters,
+    this.maxLength,
     this.validator,
   });
 
@@ -30,7 +35,9 @@ class SignupTextField extends StatelessWidget {
         controller: controller,
         keyboardType: keyboardType,
         maxLines: maxLines,
+        maxLength: maxLength,
         obscureText: obscureText,
+        inputFormatters: inputFormatters,
         style: const TextStyle(color: Colors.white),
         validator: validator ??
             (requiredField
@@ -45,6 +52,7 @@ class SignupTextField extends StatelessWidget {
           labelText: requiredField ? "$label *" : label,
           labelStyle: const TextStyle(color: Colors.white70),
           suffixIcon: suffixIcon,
+          counterText: '',
           filled: true,
           fillColor: const Color(0xFF0B1F2A),
           border: OutlineInputBorder(

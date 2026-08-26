@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -27,6 +28,7 @@ class SignUpWizardPage extends StatefulWidget {
 }
 
 class _SignUpWizardPageState extends State<SignUpWizardPage> {
+  bool _obscurePassword = true;
   // ============================================================
   // DEPENDENCY
   // ============================================================
@@ -204,15 +206,72 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
     super.dispose();
   }
 
+  Future<bool> _checkPhoneUnique(String phone) async {
+    final cleanPhone = phone.replaceAll(RegExp(r'[^0-9]'), '').trim();
+    if (cleanPhone.isEmpty) return true;
+
+    // 1. Check local persistent registry
+    if (LocalStorage.instance.isPhoneLocallyRegistered(cleanPhone)) {
+      return false;
+    }
+
+    try {
+      final dioClient = GetIt.instance<DioClient>();
+      final response = await dioClient.get(ApiEndpoints.exploreUsers);
+      dynamic listData;
+      if (response.data is List) {
+        listData = response.data;
+      } else if (response.data is Map && (response.data as Map).containsKey('data')) {
+        listData = (response.data as Map)['data'];
+      } else if (response.data is Map && (response.data as Map).containsKey('users')) {
+        listData = (response.data as Map)['users'];
+      } else if (response.data is Map && (response.data as Map).containsKey('talents')) {
+        listData = (response.data as Map)['talents'];
+      }
+
+      if (listData is List) {
+        for (final item in listData) {
+          if (item is Map) {
+            final userPhone = item['mobile']?.toString().replaceAll(RegExp(r'[^0-9]'), '') ??
+                item['phone']?.toString().replaceAll(RegExp(r'[^0-9]'), '') ??
+                item['phoneNumber']?.toString().replaceAll(RegExp(r'[^0-9]'), '') ??
+                '';
+            if (userPhone.isNotEmpty && userPhone == cleanPhone) {
+              return false;
+            }
+          }
+        }
+      }
+    } catch (_) {}
+    return true;
+  }
+
   // ============================================================
   // NEXT
   // ============================================================
 
-  void _next() {
+  Future<void> _next() async {
     final isValid = _formKeys[_currentStep].currentState?.validate() ?? false;
 
     if (!isValid) {
       return;
+    }
+
+    if (_currentStep == 0) {
+      setState(() => _isSubmitting = true);
+      final isUnique = await _checkPhoneUnique(_phone.text.trim());
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+      if (!isUnique) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('This mobile number is already registered. Please use another number.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 4),
+          ),
+        );
+        return;
+      }
     }
 
     if (_currentStep == _steps.length - 1) {
@@ -281,6 +340,20 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
     });
 
     try {
+      final isUnique = await _checkPhoneUnique(_phone.text.trim());
+      if (!isUnique) {
+        if (!mounted) return;
+        setState(() => _isSubmitting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('This mobile number is already registered. Please use another number.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 4),
+          ),
+        );
+        return;
+      }
+
       // ========================================================
       // HEIGHT
       // Example: "172 cm" -> 172
@@ -405,6 +478,8 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
       // ========================================================
 
       final response = await _authRepository.register(request);
+
+      await LocalStorage.instance.recordRegisteredPhone(_phone.text.trim());
 
       // If backend didn't return an auth token directly on register,
       // log the user in immediately with their credentials.
@@ -701,6 +776,11 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
           'Mobile number',
           required: true,
           keyboard: TextInputType.phone,
+          maxLength: 10,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(10),
+          ],
           validator: (v) {
             final requiredError = _required(v, 'Mobile number');
 
@@ -708,10 +788,10 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
               return requiredError;
             }
 
-            final digits = v!.replaceAll(RegExp(r'[^0-9]'), '');
+            final digits = v!.replaceAll(RegExp(r'[^0-9]'), '').trim();
 
-            if (digits.length < 10) {
-              return 'Enter a valid mobile number';
+            if (digits.length != 10) {
+              return 'Phone number must be exactly 10 digits';
             }
 
             return null;
@@ -730,10 +810,11 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
               return requiredError;
             }
 
-            final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+            final clean = v!.trim().toLowerCase();
+            final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@gmail\.com$');
 
-            if (!emailRegex.hasMatch(v!.trim())) {
-              return 'Enter a valid email address';
+            if (!emailRegex.hasMatch(clean)) {
+              return 'Email must be a valid @gmail.com address';
             }
 
             return null;
@@ -744,7 +825,18 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
           _password,
           'Password',
           required: true,
-          obscureText: true,
+          obscureText: _obscurePassword,
+          suffixIcon: IconButton(
+            icon: Icon(
+              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+              color: Colors.white70,
+            ),
+            onPressed: () {
+              setState(() {
+                _obscurePassword = !_obscurePassword;
+              });
+            },
+          ),
           validator: (v) {
             final requiredError = _required(v, 'Password');
 
@@ -1233,6 +1325,8 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
     int maxLines = 1,
     int? maxLength,
     bool obscureText = false,
+    Widget? suffixIcon,
+    List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
   }) {
     return Padding(
@@ -1249,10 +1343,18 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
 
         obscureText: obscureText,
 
+        inputFormatters: inputFormatters,
+
+        style: const TextStyle(color: Colors.white),
+
         validator: validator ?? (required ? (v) => _required(v, label) : null),
 
         decoration: InputDecoration(
           labelText: '$label${required ? ' *' : ''}',
+
+          suffixIcon: suffixIcon,
+
+          counterText: '',
 
           border: const OutlineInputBorder(),
         ),
