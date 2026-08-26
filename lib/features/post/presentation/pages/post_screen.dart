@@ -1,5 +1,6 @@
 import 'package:aicc/common/widgets/app_background.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
@@ -300,25 +301,33 @@ class _PostScreenState extends State<PostScreen> {
                 const SizedBox(height: 8),
                 _buildInputField(
                   controller: _payController,
-                  hint: '₹50,000 - ₹2,00,000',
+                  hint: '50000',
                   icon: Icons.currency_rupee,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 ),
                 const SizedBox(height: 20),
 
                 // Application Deadline
                 _buildLabel('Application Deadline'),
                 const SizedBox(height: 8),
-                _buildInputField(
-                  controller: _deadlineController,
-                  hint: '2026-12-15',
-                  icon: Icons.calendar_today_outlined,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      Icons.edit_calendar_outlined,
-                      color: Colors.grey.shade500,
-                      size: 18,
+                GestureDetector(
+                  onTap: _selectDate,
+                  child: AbsorbPointer(
+                    child: _buildInputField(
+                      controller: _deadlineController,
+                      hint: 'Select date',
+                      icon: Icons.calendar_today_outlined,
+                      readOnly: true,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          Icons.edit_calendar_outlined,
+                          color: Colors.grey.shade500,
+                          size: 18,
+                        ),
+                        onPressed: _selectDate,
+                      ),
                     ),
-                    onPressed: _selectDate,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -432,10 +441,16 @@ class _PostScreenState extends State<PostScreen> {
     IconData? icon,
     Widget? suffixIcon,
     int maxLines = 1,
+    bool readOnly = false,
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return TextField(
       controller: controller,
       maxLines: maxLines,
+      readOnly: readOnly,
+      keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         hintText: hint,
