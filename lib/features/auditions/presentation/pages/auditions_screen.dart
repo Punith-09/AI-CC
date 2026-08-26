@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
+import '../../../apply_job/presentation/providers/apply_job_provider.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../providers/auditions_provider.dart';
 import '../widgets/analytics_card.dart';
@@ -86,6 +87,8 @@ class _AuditionScreenState extends State<AuditionScreen> {
   @override
   Widget build(BuildContext context) {
     final auditionsProvider = context.watch<AuditionsProvider>();
+    final applyJobProvider = context.watch<ApplyJobProvider>();
+    final appliedCount = applyJobProvider.applications.length;
     final displayedAuditions = _filterAuditions(auditionsProvider.auditions);
 
     return Scaffold(
@@ -164,7 +167,7 @@ class _AuditionScreenState extends State<AuditionScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
                     children: [
-                      const AnalyticsCard(),
+                      AnalyticsCard(appliedCount: appliedCount),
 
                       const SizedBox(height: 24),
 

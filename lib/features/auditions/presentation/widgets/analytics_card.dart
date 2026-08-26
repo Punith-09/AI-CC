@@ -1,8 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/routes/app_routes.dart';
 
 class AnalyticsCard extends StatelessWidget {
-  const AnalyticsCard({super.key});
+  final int appliedCount;
+
+  const AnalyticsCard({
+    super.key,
+    required this.appliedCount,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -66,11 +73,16 @@ class AnalyticsCard extends StatelessWidget {
                 children: [
 
                   Expanded(
-                    child: analyticsItem(
-                      icon: Icons.people_alt_outlined,
-                      value: "142",
-                      title: "Applied",
-                      iconColor: Colors.amber,
+                    child: GestureDetector(
+                      onTap: () {
+                        context.push(AppRoutes.appliedAuditions);
+                      },
+                      child: analyticsItem(
+                        icon: Icons.people_alt_outlined,
+                        value: appliedCount.toString(),
+                        title: "Applied",
+                        iconColor: Colors.amber,
+                      ),
                     ),
                   ),
 

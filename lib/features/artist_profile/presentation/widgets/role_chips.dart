@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'role_chip.dart';
 
 class RoleChips extends StatelessWidget {
