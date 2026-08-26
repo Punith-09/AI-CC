@@ -256,7 +256,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     required String hint,
     required ValueChanged<String?>? onChanged,
   }) {
-    List<String> effectiveItems = List.from(items);
+    List<String> effectiveItems = items.toSet().toList();
     if (value != null && value.isNotEmpty && !effectiveItems.contains(value)) {
       effectiveItems.insert(0, value);
     }
