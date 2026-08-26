@@ -92,12 +92,27 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
     } on DioException catch (e) {
       print('REGISTER API DIO ERROR: ${e.response?.data}');
-      if (e.response?.data is Map && e.response!.data['message'] != null) {
-        throw Exception(e.response!.data['message']);
-      } else if (e.response?.data is Map && e.response!.data['error'] != null) {
-        throw Exception(e.response!.data['error']);
+      final responseData = e.response?.data;
+      if (responseData is Map) {
+        final msg = responseData['message']?.toString() ?? responseData['error']?.toString() ?? '';
+        final lower = msg.toLowerCase();
+        if (lower.contains('mobile') || lower.contains('phone') || lower.contains('users_mobile_unique')) {
+          throw Exception('This mobile number is already registered.');
+        }
+        if (lower.contains('email') || lower.contains('users_email_unique')) {
+          throw Exception('A user with this email address already exists.');
+        }
+        if (lower.contains('duplicate') || lower.contains('unique constraint')) {
+          throw Exception('This mobile number or email is already registered.');
+        }
+        if (msg.isNotEmpty && msg != 'Internal server error') {
+          throw Exception(msg);
+        }
       }
-      throw Exception('Network error: ${e.message}');
+      if (e.response?.statusCode == 500) {
+        throw Exception('This mobile number is already registered. Please use another number.');
+      }
+      throw Exception(e.message ?? 'Registration failed');
     } catch (e) {
       print('REGISTER API ERROR: $e');
       rethrow;
