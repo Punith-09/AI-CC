@@ -84,6 +84,7 @@ class SignupDropdown extends StatelessWidget {
                 )
               ]
             : items
+                .toSet()
                 .map(
                   (item) => DropdownMenuItem<String>(
                     value: item,
