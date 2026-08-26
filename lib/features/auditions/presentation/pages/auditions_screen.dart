@@ -37,6 +37,7 @@ class _AuditionScreenState extends State<AuditionScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AuditionsProvider>().fetchAuditions();
+      context.read<ApplyJobProvider>().fetchMyApplications();
     });
   }
 
