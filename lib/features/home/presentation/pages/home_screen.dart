@@ -182,7 +182,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../providers/home_feed_provider.dart';
 import '../widgets/feed_card.dart';
 import '../widgets/home_appbar.dart';
-import '../widgets/recommendation_card.dart';
 // import '../widgets/stories_list.dart'; // Temporarily disabled
 
 class HomeScreen extends StatefulWidget {
@@ -338,24 +337,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                     fontSize: 13,
                                   ),
                                 ),
-
-                                const SizedBox(height: 24),
-
-                                const RecommendationCard(),
                               ],
                             ),
                           );
                         }
 
                         // 4. Post Items
-                        if (index < posts.length) {
-                          return FeedCard(
-                            post: posts[index],
-                          );
-                        }
-
-                        // 5. Recommendation Card
-                        return const RecommendationCard();
+                        return FeedCard(
+                          post: posts[index],
+                        );
                       },
                     ),
                   ),
@@ -385,6 +375,6 @@ class _HomeScreenState extends State<HomeScreen> {
       return 1; // Empty state
     }
 
-    return postsLength + 1; // Posts + Recommendation
+    return postsLength; // Posts
   }
 }
