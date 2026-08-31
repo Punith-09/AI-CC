@@ -14,42 +14,18 @@ class ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cleanCover = coverImage != null ? ApiEndpoints.formatMediaUrl(coverImage!) : '';
-    final isNetwork = cleanCover.startsWith('http://') || cleanCover.startsWith('https://');
+    final cleanCover = coverImage != null
+        ? ApiEndpoints.formatMediaUrl(coverImage!)
+        : '';
+    final isNetwork =
+        cleanCover.startsWith('http://') || cleanCover.startsWith('https://');
     final isAsset = cleanCover.startsWith('assets/');
 
     return SizedBox(
       height: 300,
 
-      child:
-      Stack(
+      child: Stack(
         children: [
-          Positioned.fill(
-            child: isNetwork
-                ? Image.network(
-                    cleanCover,
-                    fit: BoxFit.cover,
-                    alignment: Alignment.centerRight,
-                    errorBuilder: (_, __, ___) => Image.asset(
-                      "assets/images/coverPic.png",
-                      fit: BoxFit.cover,
-                      alignment: Alignment.centerRight,
-                    ),
-                  )
-                : Image.asset(
-                    isAsset ? cleanCover : "assets/images/coverPic.png",
-                    fit: BoxFit.cover,
-                    alignment: Alignment.centerRight,
-                  ),
-          ),
-
-
-          Positioned.fill(
-            child: Container(
-              color: AppColors.black.withOpacity(0.18),
-            ),
-          ),
-
           // Bottom fade into app background
           Positioned.fill(
             child: DecoratedBox(
@@ -64,16 +40,8 @@ class ProfileHeader extends StatelessWidget {
                     Color(0xff1c5362).withOpacity(.25),
                     Color(0xff143c49).withOpacity(.55),
                     Color(0xff11343e),
-
                   ],
-                  stops: const [
-                    0.0,
-                    0.35,
-                    0.55,
-                    0.72,
-                    0.88,
-                    1.0,
-                  ],
+                  stops: const [0.0, 0.35, 0.55, 0.72, 0.88, 1.0],
                 ),
               ),
             ),
@@ -114,8 +82,11 @@ class ProfileHeader extends StatelessWidget {
                 return _CircleButton(
                   icon: LucideIcons.ellipsisVertical,
                   onTap: () async {
-                    final RenderBox button = context.findRenderObject() as RenderBox;
-                    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+                    final RenderBox button =
+                        context.findRenderObject() as RenderBox;
+                    final RenderBox overlay =
+                        Overlay.of(context).context.findRenderObject()
+                            as RenderBox;
 
                     final position = RelativeRect.fromRect(
                       Rect.fromPoints(
@@ -171,9 +142,7 @@ class ProfileHeader extends StatelessWidget {
                         // Clear token first, THEN navigate.
                         // Without this the router redirect sees a valid
                         // token and immediately bounces back to /home.
-                        await context
-                            .read<AuthProvider>()
-                            .logout();
+                        await context.read<AuthProvider>().logout();
                         if (context.mounted) {
                           context.go(AppRoutes.welcome);
                         }
@@ -185,7 +154,7 @@ class ProfileHeader extends StatelessWidget {
             ),
           ),
         ],
-      )
+      ),
     );
   }
 }
@@ -194,10 +163,7 @@ class _CircleButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
 
-  const _CircleButton({
-    required this.icon,
-    required this.onTap,
-  });
+  const _CircleButton({required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -210,15 +176,9 @@ class _CircleButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.black.withOpacity(.35),
           shape: BoxShape.circle,
-          border: Border.all(
-            color: AppColors.white.withOpacity(.08),
-          ),
+          border: Border.all(color: AppColors.white.withOpacity(.08)),
         ),
-        child: Icon(
-          icon,
-          color: AppColors.white,
-          size: 24,
-        ),
+        child: Icon(icon, color: AppColors.white, size: 24),
       ),
     );
   }

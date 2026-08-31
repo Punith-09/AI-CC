@@ -347,7 +347,8 @@ class WelcomeScreen extends StatelessWidget {
                       children: [
 
                         SizedBox(
-                              width: double.infinity,
+                              height: 60,
+                              width: width * 0.65,
                               child: ActionButton(
                                 title: 'Login',
                                 icon: LucideIcons.userRound,
@@ -375,7 +376,8 @@ class WelcomeScreen extends StatelessWidget {
 
 
                         SizedBox(
-                              width: double.infinity,
+                              height: 60,
+                              width: width * 0.65,
                               child: ActionButton(
                                 title: 'Create Account',
                                 icon: LucideIcons.userRoundPlus,

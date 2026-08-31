@@ -6,6 +6,7 @@ abstract class ExploreRemoteDataSource {
   Future<List<TalentModel>> fetchExploreUsers({
     String? query,
     String? category,
+    String? location,
   });
 }
 
@@ -18,12 +19,14 @@ class ExploreRemoteDataSourceImpl implements ExploreRemoteDataSource {
   Future<List<TalentModel>> fetchExploreUsers({
     String? query,
     String? category,
+    String? location,
   }) async {
     // Build query parameters matching the Swagger spec:
-    // GET /users/explore?query=...&category=...
+    // GET /users/explore?query=...&category=...&location=...
     final Map<String, dynamic> params = {};
     if (query != null && query.isNotEmpty) params['query'] = query;
     if (category != null && category.isNotEmpty) params['category'] = category;
+    if (location != null && location.isNotEmpty) params['location'] = location;
 
     final response = await _dioClient.get(
       ApiEndpoints.exploreUsers,

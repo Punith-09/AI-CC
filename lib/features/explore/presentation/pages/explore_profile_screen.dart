@@ -387,7 +387,7 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
     if (c.isNotEmpty && s.isNotEmpty) return '$c, $s';
     if (c.isNotEmpty) return c;
     if (s.isNotEmpty) return s;
-    return 'Other, Other';
+    return 'Location not available';
   }
 }
 

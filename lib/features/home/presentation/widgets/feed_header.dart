@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import '../../../../core/routes/app_routes.dart';
 
 import '../../../../common/widgets/user_avatar.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -15,22 +18,33 @@ class FeedHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    void navigateToProfile() {
+      if (post.creatorId != null && post.creatorId!.isNotEmpty) {
+        context.push(AppRoutes.exploreProfile, extra: post.creatorId);
+      }
+    }
+
     return Container(
       padding: const EdgeInsets.only(left: 16, top: 16, right: 16, bottom: 0),
       child: Row(
         children: [
-          UserAvatar(
-            imageUrl: post.creatorPic,
-            name: post.creatorName,
-            radius: 22,
-            fontSize: 16,
-            backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+          GestureDetector(
+            onTap: navigateToProfile,
+            child: UserAvatar(
+              imageUrl: post.creatorPic,
+              name: post.creatorName,
+              radius: 22,
+              fontSize: 16,
+              backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+            child: GestureDetector(
+              onTap: navigateToProfile,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                 Row(
                   children: [
                     Flexible(
@@ -105,7 +119,8 @@ class FeedHeader extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(
+        ),
+        const Icon(
             Icons.more_horiz,
             color: Colors.white70,
           ),

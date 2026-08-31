@@ -5,6 +5,7 @@ abstract class ExploreRepository {
   Future<List<TalentModel>> getExploreUsers({
     String? query,
     String? category,
+    String? location,
   });
 }
 
@@ -17,10 +18,12 @@ class ExploreRepositoryImpl implements ExploreRepository {
   Future<List<TalentModel>> getExploreUsers({
     String? query,
     String? category,
+    String? location,
   }) async {
     return await remoteDataSource.fetchExploreUsers(
       query: query,
       category: category,
+      location: location,
     );
   }
 }

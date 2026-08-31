@@ -5,17 +5,20 @@ class ArtistInfo extends StatelessWidget {
   final String? name;
   final String? state;
   final String? city;
-  
-  const ArtistInfo({super.key, this.name, this.state,this.city});
+
+  const ArtistInfo({super.key, this.name, this.state, this.city});
 
   @override
   Widget build(BuildContext context) {
     String location = "";
-    if(city!=null && city!.isNotEmpty&& state!=null && state!.isNotEmpty){
+    if (city != null &&
+        city!.isNotEmpty &&
+        state != null &&
+        state!.isNotEmpty) {
       location = '$city, $state';
-    }else if (city != null && city!.isNotEmpty){
+    } else if (city != null && city!.isNotEmpty) {
       location = city!;
-    }else if (state != null && state!.isNotEmpty) {
+    } else if (state != null && state!.isNotEmpty) {
       location = state!;
     } else {
       location = 'Location not available';
@@ -33,12 +36,6 @@ class ArtistInfo extends StatelessWidget {
                 color: Colors.white,
               ),
             ),
-            const SizedBox(width: 8),
-            const Icon(
-              Icons.verified,
-              color: AppColors.primary,
-              size: 28,
-            )
           ],
         ),
         const SizedBox(height: 8),
@@ -52,11 +49,8 @@ class ArtistInfo extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               location,
-              style: const TextStyle(
-                color: AppColors.greyText,
-                fontSize: 18,
-              ),
-            )
+              style: const TextStyle(color: AppColors.greyText, fontSize: 18),
+            ),
           ],
         ),
       ],
