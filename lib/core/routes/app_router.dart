@@ -21,7 +21,9 @@ import '../../features/auth/presentation/pages/signup_screen.dart';
 import '../../features/auth/presentation/pages/welcome_screen.dart';
 import '../../features/creator_profile/presentation/pages/creator_profile_screen.dart';
 import '../../features/explore/presentation/pages/explore_screen.dart';
+import '../../features/home/data/models/feed_post_model.dart';
 import '../../features/home/presentation/pages/home_screen.dart';
+import '../../features/home/presentation/pages/watch_media_screen.dart';
 import '../../features/messages/presentation/pages/chat_screen.dart';
 import '../../features/messages/presentation/pages/messages_screen.dart';
 import '../../features/notifications/presentation/pages/activity_screen.dart';
@@ -230,6 +232,23 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final userId = state.extra as String? ?? '';
         return ExploreProfileScreen(userId: userId);
+      },
+    ),
+
+    // =========================================================
+    // WATCH MEDIA / VIDEO SCREEN
+    // =========================================================
+
+    GoRoute(
+      path: AppRoutes.watchVideo,
+      builder: (context, state) {
+        final extra = state.extra;
+        if (extra is FeedPostModel) {
+          return WatchMediaScreen(post: extra);
+        }
+        return const Scaffold(
+          body: Center(child: Text('Media not found')),
+        );
       },
     ),
 

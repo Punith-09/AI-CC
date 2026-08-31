@@ -11,10 +11,12 @@ import '../../data/repository/home_repository.dart';
 
 class FeedVideoPlayer extends StatefulWidget {
   final FeedPostModel post;
+  final VoidCallback? onTapMedia;
 
   const FeedVideoPlayer({
     super.key,
     required this.post,
+    this.onTapMedia,
   });
 
   @override
@@ -32,6 +34,10 @@ class _FeedVideoPlayerState extends State<FeedVideoPlayer> {
   bool _hasIncrementedView = false;
   Timer? _hideControlsTimer;
 
+  // For visibility-based auto-play
+  final GlobalKey _widgetKey = GlobalKey();
+  ScrollPosition? _scrollPosition;
+
   String get effectiveVideoUrl =>
       ApiEndpoints.formatMediaUrl(widget.post.mediaUrl);
 
@@ -39,7 +45,78 @@ class _FeedVideoPlayerState extends State<FeedVideoPlayer> {
       ApiEndpoints.formatMediaUrl(widget.post.thumbnailUrl ?? widget.post.mediaUrl);
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _attachScrollListener();
+      _checkVisibilityAndPlay();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Re-attach if scroll context changes (e.g. after navigation)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _attachScrollListener();
+    });
+  }
+
+  void _attachScrollListener() {
+    if (!mounted) return;
+    try {
+      final scrollable = Scrollable.maybeOf(context);
+      if (scrollable == null) return;
+      final newPos = scrollable.position;
+      if (_scrollPosition != newPos) {
+        _scrollPosition?.removeListener(_onScroll);
+        _scrollPosition = newPos;
+        _scrollPosition!.addListener(_onScroll);
+      }
+    } catch (_) {}
+  }
+
+  void _onScroll() {
+    _checkVisibilityAndPlay();
+  }
+
+  void _checkVisibilityAndPlay() {
+    if (!mounted) return;
+    final context = _widgetKey.currentContext;
+    if (context == null) return;
+
+    final renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null || !renderBox.attached) return;
+
+    final viewportSize = MediaQuery.of(this.context).size;
+    final position = renderBox.localToGlobal(Offset.zero);
+    final widgetHeight = renderBox.size.height;
+
+    // Consider "visible" if at least 50% of the widget is in the viewport
+    final visibleTop = position.dy.clamp(0.0, viewportSize.height);
+    final visibleBottom = (position.dy + widgetHeight).clamp(0.0, viewportSize.height);
+    final visibleFraction = (visibleBottom - visibleTop) / widgetHeight;
+
+    if (visibleFraction >= 0.5) {
+      // Widget is sufficiently visible — start playback if not already
+      if (!_isInitialized && !_isLoading && !_hasError) {
+        _startPlayback();
+      } else if (_isInitialized && !_isPlaying && _controller != null) {
+        _controller!.play();
+        setState(() => _isPlaying = true);
+      }
+    } else {
+      // Widget scrolled out — pause to save resources
+      if (_isInitialized && _isPlaying && _controller != null) {
+        _controller!.pause();
+        setState(() => _isPlaying = false);
+      }
+    }
+  }
+
+  @override
   void dispose() {
+    _scrollPosition?.removeListener(_onScroll);
     _hideControlsTimer?.cancel();
     _controller?.dispose();
     super.dispose();
@@ -156,6 +233,7 @@ class _FeedVideoPlayerState extends State<FeedVideoPlayer> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      key: _widgetKey,
       width: double.infinity,
       height: 280,
       color: const Color(0xFF0F1722),
@@ -165,25 +243,30 @@ class _FeedVideoPlayerState extends State<FeedVideoPlayer> {
           // 1. Video Layer or Thumbnail Layer
           if (_isInitialized && _controller != null)
             GestureDetector(
-              onTap: () {
+              onTap: widget.onTapMedia ?? () {
                 setState(() {
                   _showControls = !_showControls;
                 });
-                if (_showControls) {
-                  _scheduleHideControls();
-                }
+                if (_showControls) _scheduleHideControls();
               },
-              child: Center(
-                child: AspectRatio(
-                  aspectRatio: _controller!.value.aspectRatio > 0
-                      ? _controller!.value.aspectRatio
-                      : (16 / 9),
-                  child: VideoPlayer(_controller!),
+              behavior: HitTestBehavior.opaque,
+              child: SizedBox.expand(
+                child: FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: _controller!.value.size.width,
+                    height: _controller!.value.size.height,
+                    child: VideoPlayer(_controller!),
+                  ),
                 ),
               ),
             )
           else
-            _buildThumbnail(),
+            GestureDetector(
+              onTap: widget.onTapMedia ?? _startPlayback,
+              behavior: HitTestBehavior.opaque,
+              child: _buildThumbnail(),
+            ),
 
           // 2. Loading / Buffering Indicator
           if (_isLoading || (_isInitialized && _controller?.value.isBuffering == true))
@@ -221,23 +304,6 @@ class _FeedVideoPlayerState extends State<FeedVideoPlayer> {
                       style: TextStyle(color: Colors.white, fontSize: 13),
                     ),
                     const SizedBox(height: 10),
-                    // ElevatedButton.icon(
-                    //   onPressed: _startPlayback,
-                    //   style: ElevatedButton.styleFrom(
-                    //
-                    //     backgroundColor: AppColors.primary,
-                    //     foregroundColor: Colors.white,
-                    //     shape: RoundedRectangleBorder(
-                    //       borderRadius: BorderRadius.circular(20),
-                    //     ),
-                    //     padding: const EdgeInsets.symmetric(
-                    //       horizontal: 16,
-                    //       vertical: 8,
-                    //     ),
-                    //   ),
-                    //   icon: const Icon(Icons.refresh_rounded, size: 16),
-                    //   label: const Text('Retry', style: TextStyle(fontSize: 12)),
-                    // ),
                     Container(
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
@@ -280,10 +346,10 @@ class _FeedVideoPlayerState extends State<FeedVideoPlayer> {
               ),
             ),
 
-          // 4. Initial Play Button Overlay (when not yet playing)
-          if (!_isInitialized && !_isLoading && !_hasError)
+          // 4. Initial Play Button Overlay (shown only on error / before auto-play kicks in)
+          if (!_isInitialized && !_isLoading && _hasError)
             GestureDetector(
-              onTap: _startPlayback,
+              onTap: widget.onTapMedia ?? _startPlayback,
               child: Container(
                 width: 60,
                 height: 60,
@@ -417,36 +483,33 @@ class _FeedVideoPlayerState extends State<FeedVideoPlayer> {
     final thumb = effectiveThumbUrl;
     final isNetwork = thumb.startsWith('http');
 
-    return GestureDetector(
-      onTap: _startPlayback,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (isNetwork)
-            Image.network(
-              thumb,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => _buildFallbackThumbnail(),
-              loadingBuilder: (context, child, progress) {
-                if (progress == null) return child;
-                return _buildFallbackThumbnail();
-              },
-            )
-          else if (thumb.isNotEmpty)
-            Image.asset(
-              thumb,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => _buildFallbackThumbnail(),
-            )
-          else
-            _buildFallbackThumbnail(),
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (isNetwork)
+          Image.network(
+            thumb,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => _buildFallbackThumbnail(),
+            loadingBuilder: (context, child, progress) {
+              if (progress == null) return child;
+              return _buildFallbackThumbnail();
+            },
+          )
+        else if (thumb.isNotEmpty)
+          Image.asset(
+            thumb,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => _buildFallbackThumbnail(),
+          )
+        else
+          _buildFallbackThumbnail(),
 
-          // Dark vignette overlay for contrast
-          Container(
-            color: Colors.black.withValues(alpha: 0.28),
-          ),
-        ],
-      ),
+        // Dark vignette overlay for contrast
+        Container(
+          color: Colors.black.withValues(alpha: 0.28),
+        ),
+      ],
     );
   }
 

@@ -39,9 +39,7 @@ class _AudienceSignUpScreenState extends State<AudienceSignUpScreen> {
   bool _obscurePassword = true;
   bool _isSubmitting = false;
 
-  // ============================================================
-  // DISPOSE
-  // ============================================================
+
 
   @override
   void dispose() {
@@ -172,8 +170,7 @@ class _AudienceSignUpScreenState extends State<AudienceSignUpScreen> {
 
       await LocalStorage.instance.recordRegisteredPhone(_phone.text.trim());
 
-      // If backend didn't return an auth token directly on register,
-      // log the user in immediately with their credentials.
+
       if (response.token.isEmpty) {
         await authRepository.login(_email.text.trim(), _password.text);
       }

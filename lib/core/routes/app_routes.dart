@@ -24,4 +24,5 @@ class AppRoutes {
   static const String uploadPhoto = "/uploadPhoto";
   static const String uploadVideo = "/uploadVideo";
   static const String appliedAuditions = "/appliedAuditions";
+  static const String watchVideo = "/watchVideo";
 }
