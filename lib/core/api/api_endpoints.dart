@@ -2,7 +2,7 @@ class ApiEndpoints {
   ApiEndpoints._();
 
   static String get baseUrl {
-    return 'https://folder-distance-enquiries-dim.trycloudflare.com';
+    return 'http://localhost:3000';
   }
 
   static const String login = '/auth/login';

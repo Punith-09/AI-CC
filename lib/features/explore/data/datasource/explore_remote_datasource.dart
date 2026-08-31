@@ -8,6 +8,8 @@ abstract class ExploreRemoteDataSource {
     String? category,
     String? location,
   });
+
+  Future<TalentModel> fetchUserPublicProfile(String id);
 }
 
 class ExploreRemoteDataSourceImpl implements ExploreRemoteDataSource {
@@ -35,7 +37,7 @@ class ExploreRemoteDataSourceImpl implements ExploreRemoteDataSource {
 
     final rawData = response.data;
 
-    // API returns a direct list: [ { id, name, category, pic, ... }, ... ]
+    // GET /users/explore may return a list or a wrapped { data/users/results }.
     List<dynamic> list;
     if (rawData is List) {
       list = rawData;
@@ -50,9 +52,50 @@ class ExploreRemoteDataSourceImpl implements ExploreRemoteDataSource {
       list = [];
     }
 
-    return list
-        .whereType<Map<String, dynamic>>()
-        .map((json) => TalentModel.fromJson(json))
-        .toList();
+    return list.whereType<Map>().map((item) {
+      final source = Map<String, dynamic>.from(item);
+      final merged = <String, dynamic>{};
+      final nested = source['user'] ?? source['artist'] ?? source['details'];
+      if (nested is Map) {
+        merged.addAll(Map<String, dynamic>.from(nested));
+      }
+      source.forEach((key, value) {
+        if (key == 'user' || key == 'artist' || key == 'details') return;
+        if (value == null) return;
+        if (value is String && value.trim().isEmpty) return;
+        merged[key] = value;
+      });
+      return TalentModel.fromJson(merged);
+    }).toList();
+  }
+
+  @override
+  Future<TalentModel> fetchUserPublicProfile(String id) async {
+    final response = await _dioClient.get(ApiEndpoints.userProfile(id));
+    final rawData = response.data;
+
+    Map<String, dynamic> source;
+    if (rawData is Map) {
+      final wrapped = rawData['data'] ?? rawData['user'] ?? rawData['profile'];
+      source = Map<String, dynamic>.from(
+        wrapped is Map ? wrapped : rawData,
+      );
+    } else {
+      source = {};
+    }
+
+    final merged = <String, dynamic>{};
+    final details = source['details'];
+    if (details is Map) {
+      merged.addAll(Map<String, dynamic>.from(details));
+    }
+    source.forEach((key, value) {
+      if (key == 'details') return;
+      if (value == null) return;
+      if (value is String && value.trim().isEmpty) return;
+      merged[key] = value;
+    });
+
+    return TalentModel.fromJson(merged);
   }
 }

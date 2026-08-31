@@ -122,8 +122,18 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           ),
                           itemBuilder: (BuildContext context) {
                             return <String>[
-                              'Anywhere', 'Mumbai', 'Delhi', 'Bangalore',
-                              'Hyderabad', 'Chennai', 'Pune', 'Kolkata', 'Ahmedabad', 'Surat', 'Jaipur'
+                              'Anywhere',
+                              'Mumbai',
+                              'Delhi',
+                              'Bangalore',
+                              'Hyderabad',
+                              'Chennai',
+                              'Pune',
+                              'Kolkata',
+                              'Ahmedabad',
+                              'Surat',
+                              'Jaipur',
+                              'Ranchi',
                             ].map<PopupMenuItem<String>>((String value) {
                               return PopupMenuItem<String>(
                                 value: value,

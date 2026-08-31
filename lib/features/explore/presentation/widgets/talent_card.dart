@@ -44,42 +44,42 @@ class TalentCard extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: Stack(
           children: [
-            // ── Match Badge (Top-Left) ──────────────────────────
-            Positioned(
-              top: 12,
-              left: 12,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.45),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.12),
-                    width: 0.8,
+            if (talent.matchPercent > 0)
+              Positioned(
+                top: 12,
+                left: 12,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.12),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.star_rounded,
+                        color: Color(0xFFFFD54F),
+                        size: 14,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        '${talent.matchPercent}%',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.star_rounded,
-                      color: Color(0xFFFFD54F),
-                      size: 14,
-                    ),
-                    const SizedBox(width: 3),
-                    Text(
-                      '90%',
-                      style: GoogleFonts.poppins(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
               ),
-            ),
 
             // ── Center Avatar / Silhouette ─────────────────────
             Center(

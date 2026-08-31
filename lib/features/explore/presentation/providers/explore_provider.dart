@@ -18,13 +18,15 @@ class ExploreProvider with ChangeNotifier {
   List<TalentModel> _talents = [];
   List<TalentModel> get talents => _talents;
 
+  final Map<String, TalentModel> _locationByUserId = {};
+
   String _searchQuery = '';
   String get searchQuery => _searchQuery;
 
   String _selectedCategory = ''; // '' = All
   String get selectedCategory => _selectedCategory;
 
-  String _selectedLocation = 'Mumbai'; // Defaulting to Mumbai or empty
+  String _selectedLocation = 'Anywhere';
   String get selectedLocation => _selectedLocation;
 
   // Debounce timer for search
@@ -58,17 +60,65 @@ class ExploreProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      _talents = await _repository.getExploreUsers(
+      final results = await _repository.getExploreUsers(
         query: _searchQuery.isEmpty ? null : _searchQuery,
         category: _selectedCategory.isEmpty ? null : _selectedCategory,
-        location: _selectedLocation.isEmpty || _selectedLocation == 'Anywhere' ? null : _selectedLocation,
       );
+
+      final needsLocation =
+          _selectedLocation.isNotEmpty && _selectedLocation != 'Anywhere';
+      final withLocation =
+          needsLocation ? await _attachLocations(results) : results;
+      _talents = _applyLocationFilter(withLocation);
     } catch (e) {
       _error = e.toString().replaceAll('Exception:', '').trim();
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<List<TalentModel>> _attachLocations(List<TalentModel> talents) async {
+    final futures = talents.map((talent) async {
+      final cached = _locationByUserId[talent.id];
+      if (cached != null && cached.hasCity) {
+        return talent.copyWith(
+          city: cached.city,
+          state: cached.state,
+          country: cached.country,
+        );
+      }
+
+      if (talent.id.isEmpty) return talent;
+
+      try {
+        final profile = await _repository.getUserPublicProfile(talent.id);
+        final city = profile.city.isNotEmpty ? profile.city : talent.city;
+        final state = profile.state.isNotEmpty ? profile.state : talent.state;
+        final country =
+            profile.country.isNotEmpty ? profile.country : talent.country;
+        final enriched = talent.copyWith(
+          city: city,
+          state: state,
+          country: country,
+        );
+        _locationByUserId[talent.id] = enriched;
+        return enriched;
+      } catch (_) {
+        return talent;
+      }
+    });
+
+    return Future.wait(futures);
+  }
+
+  List<TalentModel> _applyLocationFilter(List<TalentModel> talents) {
+    if (_selectedLocation.isEmpty || _selectedLocation == 'Anywhere') {
+      return talents;
+    }
+    return talents
+        .where((talent) => talent.matchesLocation(_selectedLocation))
+        .toList();
   }
 
   @override
