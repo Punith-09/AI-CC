@@ -51,10 +51,14 @@ class ArtistModel {
         json['country'],
       ),
       state: _stringValue(
-        json['state'],
+        json['state'] ?? (json['location'] != null && json['location'].toString().contains(',') 
+            ? json['location'].toString().split(',').sublist(1).join(',').trim() 
+            : null),
       ),
       city: _stringValue(
-        json['city'],
+        json['city'] ?? (json['location'] != null && json['location'].toString().contains(',') 
+            ? json['location'].toString().split(',')[0].trim() 
+            : json['location']),
       ),
       profileImage: _imageValue(
         json['profilePhoto'] ??

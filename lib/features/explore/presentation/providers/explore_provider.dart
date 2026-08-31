@@ -24,6 +24,9 @@ class ExploreProvider with ChangeNotifier {
   String _selectedCategory = ''; // '' = All
   String get selectedCategory => _selectedCategory;
 
+  String _selectedLocation = 'Mumbai'; // Defaulting to Mumbai or empty
+  String get selectedLocation => _selectedLocation;
+
   // Debounce timer for search
   Timer? _debounce;
 
@@ -43,6 +46,12 @@ class ExploreProvider with ChangeNotifier {
     fetchExploreUsers();
   }
 
+  /// Called when the user selects a new location.
+  void onLocationChanged(String location) {
+    _selectedLocation = location;
+    fetchExploreUsers();
+  }
+
   Future<void> fetchExploreUsers() async {
     _isLoading = true;
     _error = null;
@@ -52,6 +61,7 @@ class ExploreProvider with ChangeNotifier {
       _talents = await _repository.getExploreUsers(
         query: _searchQuery.isEmpty ? null : _searchQuery,
         category: _selectedCategory.isEmpty ? null : _selectedCategory,
+        location: _selectedLocation.isEmpty || _selectedLocation == 'Anywhere' ? null : _selectedLocation,
       );
     } catch (e) {
       _error = e.toString().replaceAll('Exception:', '').trim();

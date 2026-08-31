@@ -109,23 +109,60 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         letterSpacing: 0.6,
                       ),
                     ),
-                    Row(
-                      children: [
-                        const Icon(
-                          LucideIcons.mapPin,
-                          color: AppColors.primary,
-                          size: 15,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Mumbai',
-                          style: GoogleFonts.poppins(
-                            color: AppColors.primary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                    Consumer<ExploreProvider>(
+                      builder: (context, provider, _) {
+                        return PopupMenuButton<String>(
+                          color: const Color(0xFF1A1A2E), // Dark background for the popup menu
+                          initialValue: provider.selectedLocation,
+                          onSelected: (String newValue) {
+                            provider.onLocationChanged(newValue);
+                          },
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        ),
-                      ],
+                          itemBuilder: (BuildContext context) {
+                            return <String>[
+                              'Anywhere', 'Mumbai', 'Delhi', 'Bangalore',
+                              'Hyderabad', 'Chennai', 'Pune', 'Kolkata', 'Ahmedabad', 'Surat', 'Jaipur'
+                            ].map<PopupMenuItem<String>>((String value) {
+                              return PopupMenuItem<String>(
+                                value: value,
+                                child: Text(
+                                  value,
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              );
+                            }).toList();
+                          },
+                          child: Row(
+                            children: [
+                              const Icon(
+                                LucideIcons.mapPin,
+                                color: AppColors.primary,
+                                size: 15,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                provider.selectedLocation.isEmpty ? 'Anywhere' : provider.selectedLocation,
+                                style: GoogleFonts.poppins(
+                                  color: AppColors.primary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 2),
+                              const Icon(
+                                Icons.arrow_drop_down,
+                                color: AppColors.primary,
+                                size: 16,
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
