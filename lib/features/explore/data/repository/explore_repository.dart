@@ -7,6 +7,8 @@ abstract class ExploreRepository {
     String? category,
     String? location,
   });
+
+  Future<TalentModel> getUserPublicProfile(String id);
 }
 
 class ExploreRepositoryImpl implements ExploreRepository {
@@ -25,5 +27,10 @@ class ExploreRepositoryImpl implements ExploreRepository {
       category: category,
       location: location,
     );
+  }
+
+  @override
+  Future<TalentModel> getUserPublicProfile(String id) {
+    return remoteDataSource.fetchUserPublicProfile(id);
   }
 }

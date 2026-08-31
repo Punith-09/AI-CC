@@ -60,7 +60,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     final Map<String, dynamic> response =
         Map<String, dynamic>.from(responseData);
 
-    final dynamic data = response['data'];
+    final dynamic data = response['data'] ?? response['user'] ?? response['profile'];
 
     if (data is Map) {
       return Map<String, dynamic>.from(data);

@@ -63,25 +63,21 @@ class ProfileProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final results = await Future.wait([
-        _repository.getUserProfile(id),
-        _repository.getUserMedia(id),
-      ]);
-
-      _viewedProfile = results[0] as ArtistModel;
-      final fetchedMedia = results[1] as List<PortfolioModel>;
-
-      // Combine profile portfolio items and fetched media
+      _viewedProfile = await _repository.getUserProfile(id);
       final combined = <PortfolioModel>[];
       if (_viewedProfile?.portfolio.isNotEmpty == true) {
         combined.addAll(_viewedProfile!.portfolio);
       }
-      for (final m in fetchedMedia) {
-        if (!combined.any((item) => item.image == m.image)) {
-          combined.add(m);
+      try {
+        final fetchedMedia = await _repository.getUserMedia(id);
+        for (final m in fetchedMedia) {
+          if (!combined.any((item) => item.image == m.image || (item.id.isNotEmpty && item.id == m.id))) {
+            combined.add(m);
+          }
         }
+      } catch (_) {
+        // Profile still renders if photos/videos endpoints fail.
       }
-
       _viewedMedia = combined;
     } catch (e) {
       _error = e.toString();
@@ -92,9 +88,18 @@ class ProfileProvider with ChangeNotifier {
   }
 
   Future<void> followUser(String id) async {
+    final previous = _viewedProfile;
+    if (_viewedProfile != null) {
+      _viewedProfile = _viewedProfile!.copyWith(
+        following: !_viewedProfile!.following,
+      );
+      notifyListeners();
+    }
+
     try {
       await _repository.followUser(id);
     } catch (e) {
+      _viewedProfile = previous;
       _error = e.toString();
       notifyListeners();
     }

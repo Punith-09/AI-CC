@@ -9,7 +9,13 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 
 class ProfileHeader extends StatelessWidget {
   final String? coverImage;
-  const ProfileHeader({super.key, this.coverImage});
+  final bool isOtherUser;
+  
+  const ProfileHeader({
+    super.key, 
+    this.coverImage,
+    this.isOtherUser = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,8 +32,9 @@ class ProfileHeader extends StatelessWidget {
               }
             },
           ),
-          Builder(
-            builder: (context) {
+          if (!isOtherUser)
+            Builder(
+              builder: (context) {
               return _CircleButton(
                 icon: LucideIcons.ellipsisVertical,
                 onTap: () async {

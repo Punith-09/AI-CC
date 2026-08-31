@@ -21,8 +21,6 @@ class ExploreProfileScreen extends StatefulWidget {
 }
 
 class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
-  bool _isFollowing = false;
-
   @override
   void initState() {
     super.initState();
@@ -276,7 +274,7 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
                                                         .isNotEmpty ==
                                                     true
                                                 ? profile!.experience
-                                                : '5–10 Years',
+                                                : 'Not specified',
                                           ),
                                         ),
                                         const SizedBox(width: 14),
@@ -290,7 +288,7 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
                                                         .isNotEmpty ==
                                                     true
                                                 ? profile!.languages
-                                                : 'English',
+                                                : 'Not specified',
                                           ),
                                         ),
                                       ],
@@ -303,15 +301,12 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
                                       children: [
                                         Expanded(
                                           child: _ActionButton(
-                                            label: _isFollowing
+                                            label: (profile?.following ?? false)
                                                 ? 'Following'
                                                 : 'Follow',
                                             isPrimary: true,
-                                            isActive: _isFollowing,
+                                            isActive: profile?.following ?? false,
                                             onTap: () async {
-                                              setState(() {
-                                                _isFollowing = !_isFollowing;
-                                              });
                                               await provider
                                                   .followUser(widget.userId);
                                             },
@@ -393,7 +388,6 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
                                     // ── Photos and Videos Posted by that Artist ──
                                     _ArtistPortfolioGrid(
                                       mediaList: mediaList,
-                                      fallbackImage: profile?.profileImage,
                                     ),
 
                                     const SizedBox(height: 40),
@@ -706,35 +700,15 @@ class _ActionButton extends StatelessWidget {
 // ──────────────────────────────────────────────────────────────
 class _ArtistPortfolioGrid extends StatelessWidget {
   final List<PortfolioModel> mediaList;
-  final String? fallbackImage;
 
   const _ArtistPortfolioGrid({
     required this.mediaList,
-    this.fallbackImage,
   });
 
   @override
   Widget build(BuildContext context) {
     // If no media is found, show friendly empty state
     if (mediaList.isEmpty) {
-      if (fallbackImage != null && fallbackImage!.isNotEmpty) {
-        // Show the artist's profile picture as portfolio preview if no media posts yet
-        return SizedBox(
-          height: 140,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            children: [
-              _PortfolioItemCard(
-                media: PortfolioModel(
-                  image: fallbackImage!,
-                  isVideo: false,
-                ),
-              ),
-            ],
-          ),
-        );
-      }
-
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
         decoration: BoxDecoration(
