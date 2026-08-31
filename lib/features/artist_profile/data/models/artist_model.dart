@@ -5,6 +5,7 @@ import 'portfolio_model.dart';
 class ArtistModel {
   final String id;
   final String name;
+  final String country;
   final String state;
   final String city;
   final String profileImage;
@@ -23,6 +24,7 @@ class ArtistModel {
   const ArtistModel({
     this.id = '',
     required this.name,
+    this.country = '',
     required this.state,
     required this.city,
     required this.profileImage,
@@ -44,6 +46,9 @@ class ArtistModel {
       ),
       name: _stringValue(
         json['fullName'] ?? json['name'],
+      ),
+      country: _stringValue(
+        json['country'],
       ),
       state: _stringValue(
         json['state'],
@@ -197,6 +202,7 @@ class ArtistModel {
     return {
       'id': id,
       'name': name,
+      'country': country,
       'state': state,
       'city': city,
       'profile_image': profileImage,

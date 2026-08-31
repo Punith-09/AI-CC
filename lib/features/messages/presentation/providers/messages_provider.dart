@@ -20,6 +20,10 @@ class MessagesProvider extends ChangeNotifier {
   bool _isLoadingMessages = false;
   bool get isLoadingMessages => _isLoadingMessages;
 
+  // ignore: prefer_final_fields
+  bool _isSending = false;
+  bool get isSending => _isSending;
+
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
@@ -42,28 +46,15 @@ class MessagesProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      print('');
-      print('========================================');
-      print('💬 FETCH CHATS');
-      print('========================================');
-
       final result = await _repository.getChats();
       _chats = result;
-
       _isLoadingChats = false;
       notifyListeners();
-
-      print('========================================');
-      print('✅ CHATS LOADED: ${_chats.length}');
-      print('========================================');
-
       return true;
     } catch (e) {
       _isLoadingChats = false;
       _errorMessage = _cleanError(e);
       notifyListeners();
-
-      print('❌ FETCH CHATS FAILED: $_errorMessage');
       return false;
     }
   }
@@ -78,26 +69,86 @@ class MessagesProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      print('');
-      print('========================================');
-      print('📨 FETCH MESSAGES FOR CHAT: $chatId');
-      print('========================================');
-
       final result = await _repository.getChatMessages(chatId);
       _messages[chatId] = result;
-
       _isLoadingMessages = false;
       notifyListeners();
-
-      print('✅ MESSAGES LOADED: ${result.length}');
-
       return true;
     } catch (e) {
       _isLoadingMessages = false;
       _errorMessage = _cleanError(e);
       notifyListeners();
+      return false;
+    }
+  }
 
-      print('❌ FETCH MESSAGES FAILED: $_errorMessage');
+  // =========================================================
+  // SEND MESSAGE
+  // =========================================================
+
+  Future<bool> sendMessage(String chatId, String text) async {
+    if (text.trim().isEmpty) return false;
+
+    // Optimistic update — add a temp message immediately
+    final tempId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
+    final tempMsg = MessageModel(
+      id: tempId,
+      chatId: chatId,
+      senderId: '',
+      content: text.trim(),
+      createdAt: DateTime.now().toIso8601String(),
+      isMe: true,
+    );
+    _messages[chatId] = [...(_messages[chatId] ?? []), tempMsg];
+    notifyListeners();
+
+    try {
+      final result = await _repository.sendMessage(chatId, text.trim());
+
+      // Replace temp message with real one
+      final msgs = List<MessageModel>.from(_messages[chatId] ?? []);
+      final tempIdx = msgs.indexWhere((m) => m.id == tempId);
+      if (tempIdx != -1) {
+        msgs[tempIdx] = result.isMe ? result : MessageModel(
+          id: result.id,
+          chatId: result.chatId,
+          senderId: result.senderId,
+          content: result.content,
+          createdAt: result.createdAt,
+          isMe: true, // we sent it
+          isRead: result.isRead,
+        );
+      } else {
+        msgs.add(result);
+      }
+      _messages[chatId] = msgs;
+
+      // Update last message in chats list
+      final chatIdx = _chats.indexWhere((c) => c.id == chatId);
+      if (chatIdx != -1) {
+        final old = _chats[chatIdx];
+        _chats[chatIdx] = ChatModel(
+          id: old.id,
+          participantId: old.participantId,
+          participantName: old.participantName,
+          participantAvatar: old.participantAvatar,
+          participantRole: old.participantRole,
+          lastMessage: text.trim(),
+          lastMessageAt: DateTime.now().toIso8601String(),
+          unreadCount: old.unreadCount,
+          isOnline: old.isOnline,
+        );
+      }
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      // Remove temp message on failure
+      final msgs = List<MessageModel>.from(_messages[chatId] ?? []);
+      msgs.removeWhere((m) => m.id == tempId);
+      _messages[chatId] = msgs;
+      _errorMessage = _cleanError(e);
+      notifyListeners();
       return false;
     }
   }

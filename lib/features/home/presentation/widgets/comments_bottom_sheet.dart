@@ -420,7 +420,6 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
       itemBuilder: (context, index) {
         final comment = _comments[index];
         final displayName = comment.username.isNotEmpty ? comment.username : 'Artist';
-        final hasNetworkAvatar = comment.profileImage.startsWith('http');
 
         return ListTile(
           contentPadding: EdgeInsets.zero,

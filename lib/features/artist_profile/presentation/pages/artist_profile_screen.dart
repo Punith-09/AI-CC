@@ -190,39 +190,34 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
               return SingleChildScrollView(
                 child: Column(
                   children: [
-                    Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        ProfileHeader(coverImage: profile?.coverImage),
+                    const ProfileHeader(),
 
-                        Positioned(
-                          left: 24,
-                          bottom: -45,
-                          child: ArtistAvatar(
-                            profileImage: profile?.profileImage,
-                            name: profile?.name,
-                          ),
-                        ),
+                    const SizedBox(height: 12),
 
-                        Positioned(
-                          left: 150, 
-                          bottom: -30,
-                          child: ArtistInfo(
-                            name: profile?.name,
-                            city: profile?.city,
-                            state: profile?.state,
-                          ),
-                        ),
-
-                      ],
+                    Center(
+                      child: ArtistAvatar(
+                        profileImage: profile?.profileImage,
+                        name: profile?.name,
+                      ),
                     ),
 
-                    const SizedBox(height: 40),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 18),
+
+                    Center(
+                      child: ArtistInfo(
+                        name: profile?.name,
+                        city: profile?.city,
+                        state: profile?.state,
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
 
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: RoleChips(roles: profile?.roles),
+                      child: Center(
+                        child: RoleChips(roles: profile?.roles),
+                      ),
                     ),
 
                     const SizedBox(height: 28),
@@ -236,7 +231,7 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -246,7 +241,7 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 28),
 
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20),
@@ -262,20 +257,18 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 30),
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      // Mocking the follow button integration over Audition Button
-                      child: GestureDetector(
-                        onTap: () {
-                          if (widget.userId != null) {
-                             provider.followUser(widget.userId!);
-                          }
-                        },
-                        child: const AuditionButton(),
+                    if (widget.userId != null) ...[
+                      const SizedBox(height: 30),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: GestureDetector(
+                          onTap: () {
+                            provider.followUser(widget.userId!);
+                          },
+                          child: const AuditionButton(),
+                        ),
                       ),
-                    ),
+                    ],
 
                     const SizedBox(height: 40),
                   ],

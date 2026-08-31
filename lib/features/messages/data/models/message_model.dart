@@ -7,6 +7,7 @@ class MessageModel {
   final String senderId;
   final String content;
   final String createdAt;
+  final bool isMe;
   final bool isRead;
 
   const MessageModel({
@@ -15,19 +16,27 @@ class MessageModel {
     required this.senderId,
     required this.content,
     required this.createdAt,
+    this.isMe = false,
     this.isRead = false,
   });
 
-  factory MessageModel.fromJson(Map<String, dynamic> json) {
+  factory MessageModel.fromJson(Map<String, dynamic> json, {String? currentUserId}) {
+    final senderRaw = json['sender'];
+    final senderId = _s(
+      json['senderId'] ??
+          (senderRaw is Map ? senderRaw['id'] ?? senderRaw['_id'] : (senderRaw != 'me' ? senderRaw : '')),
+    );
+    final isMeFlag = json['isMe'] == true ||
+        senderRaw == 'me' ||
+        (currentUserId != null && currentUserId.isNotEmpty && senderId == currentUserId);
+
     return MessageModel(
       id: _s(json['id'] ?? json['_id']),
       chatId: _s(json['chatId'] ?? json['conversationId']),
-      senderId: _s(
-        json['senderId'] ??
-            (json['sender'] is Map ? json['sender']['id'] ?? json['sender']['_id'] : json['sender']),
-      ),
+      senderId: senderId,
       content: _s(json['content'] ?? json['text'] ?? json['message']),
-      createdAt: _s(json['createdAt'] ?? json['timestamp']),
+      createdAt: _s(json['createdAt'] ?? json['timestamp'] ?? json['created_at']),
+      isMe: isMeFlag,
       isRead: _bool(json['isRead'] ?? json['read']),
     );
   }
@@ -38,6 +47,7 @@ class MessageModel {
         'senderId': senderId,
         'content': content,
         'createdAt': createdAt,
+        'isMe': isMe,
         'isRead': isRead,
       };
 

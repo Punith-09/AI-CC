@@ -14,6 +14,7 @@ import '../../features/artist_profile/presentation/pages/artist_profile_screen.d
 import '../../features/artist_profile/presentation/pages/edit_profile_screen.dart';
 import '../../features/auditions/data/models/audition_model.dart';
 import '../../features/auditions/presentation/pages/audition_details.dart';
+import '../../features/messages/data/models/chat_model.dart';
 import '../../features/auditions/presentation/pages/auditions_screen.dart';
 import '../../features/auth/presentation/pages/login_screen.dart';
 import '../../features/auth/presentation/pages/signup_screen.dart';
@@ -100,8 +101,11 @@ final GoRouter appRouter = GoRouter(
 
     GoRoute(
       path: AppRoutes.chat,
-      builder: (_, __) =>
-      const ChatScreen(),
+      builder: (context, state) {
+        final extra = state.extra;
+        final chat = extra is ChatModel ? extra : null;
+        return ChatScreen(chat: chat);
+      },
     ),
 
     // =========================================================

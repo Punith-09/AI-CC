@@ -1,5 +1,8 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/routes/app_routes.dart';
 import '../../data/models/feed_post_model.dart';
 
 class FeedCaption extends StatelessWidget {
@@ -45,6 +48,12 @@ class FeedCaption extends StatelessWidget {
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
                   ),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () {
+                      if (post.creatorId != null && post.creatorId!.isNotEmpty) {
+                        context.push(AppRoutes.exploreProfile, extra: post.creatorId);
+                      }
+                    },
                 ),
                 TextSpan(
                   text: captionText,

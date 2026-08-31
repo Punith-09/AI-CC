@@ -6,57 +6,62 @@ class ArtistInfo extends StatelessWidget {
   final String? state;
   final String? city;
   
-  const ArtistInfo({super.key, this.name, this.state,this.city});
+  const ArtistInfo({super.key, this.name, this.state, this.city});
 
   @override
   Widget build(BuildContext context) {
     String location = "";
-    if(city!=null && city!.isNotEmpty&& state!=null && state!.isNotEmpty){
+    if (city != null && city!.isNotEmpty && state != null && state!.isNotEmpty) {
       location = '$city, $state';
-    }else if (city != null && city!.isNotEmpty){
+    } else if (city != null && city!.isNotEmpty) {
       location = city!;
-    }else if (state != null && state!.isNotEmpty) {
+    } else if (state != null && state!.isNotEmpty) {
       location = state!;
     } else {
       location = 'Location not available';
     }
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              name?.isNotEmpty == true ? name! : "",
+              name?.isNotEmpty == true ? name! : "Unknown",
               style: const TextStyle(
-                fontSize: 34,
+                fontSize: 26,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(
-              Icons.verified,
-              color: AppColors.primary,
-              size: 28,
-            )
+            // const Icon(
+            //   Icons.verified,
+            //   color: AppColors.primary,
+            //   size: 24,
+            // ),
           ],
         ),
         const SizedBox(height: 8),
         Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(
               Icons.location_on_outlined,
-              size: 20,
+              size: 18,
               color: AppColors.greyText,
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 4),
             Text(
               location,
               style: const TextStyle(
                 color: AppColors.greyText,
-                fontSize: 18,
+                fontSize: 16,
               ),
-            )
+            ),
           ],
         ),
       ],

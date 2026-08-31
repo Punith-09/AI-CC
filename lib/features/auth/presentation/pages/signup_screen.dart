@@ -488,7 +488,7 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
       }
 
       // ========================================================
-      // POST-AUTH FILE UPLOADS (Profile photo & portfolio)
+      // POST-AUTH FILE UPLOADS (Profile photo & attributes)
       // ========================================================
 
       if (_selectedFiles[_kProfilePhoto] != null) {
@@ -505,16 +505,13 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
             multipartFile = MultipartFile.fromBytes(await file.readAsBytes(), filename: file.name);
           }
           final formData = FormData.fromMap({
-            'title': 'Profile Photo',
-            'description': '',
             'file': multipartFile,
           });
-          final photoRes = await dioClient.post(ApiEndpoints.photos, data: formData);
+          final photoRes = await dioClient.post(ApiEndpoints.mediaUpload, data: formData);
           String? photoUrl;
           if (photoRes.data is Map) {
             final map = Map<String, dynamic>.from(photoRes.data as Map);
-            final inner = map['data'] is Map ? Map<String, dynamic>.from(map['data'] as Map) : map;
-            photoUrl = inner['url'] as String?;
+            photoUrl = map['url'] as String? ?? (map['data'] is Map ? map['data']['url'] as String? : null);
           }
           if (photoUrl != null && photoUrl.isNotEmpty) {
             await LocalStorage.instance.saveUserProfilePhoto(photoUrl);
@@ -527,13 +524,13 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
         }
       }
 
-      for (final key in [_kHeadshot, _kFullBody, _kIntroVideo]) {
+      final Map<String, dynamic> mediaPatchData = {};
+      for (final key in [_kHeadshot, _kFullBody, _kIntroVideo, _kResume]) {
         if (_selectedFiles[key] != null) {
           try {
             final file = _selectedFiles[key]!;
             final bytes = _selectedBytes[key];
             final dioClient = GetIt.instance<DioClient>();
-            final isVideo = key == _kIntroVideo;
             MultipartFile multipartFile;
             if (bytes != null) {
               multipartFile = MultipartFile.fromBytes(bytes, filename: file.name);
@@ -543,13 +540,28 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
               multipartFile = MultipartFile.fromBytes(await file.readAsBytes(), filename: file.name);
             }
             final formData = FormData.fromMap({
-              'title': file.name,
-              'description': key,
               'file': multipartFile,
             });
-            await dioClient.post(isVideo ? ApiEndpoints.uploadVideo : ApiEndpoints.photos, data: formData);
-          } catch (_) {}
+            final uploadRes = await dioClient.post(ApiEndpoints.mediaUpload, data: formData);
+            String? mediaUrl;
+            if (uploadRes.data is Map) {
+              final map = Map<String, dynamic>.from(uploadRes.data as Map);
+              mediaUrl = map['url'] as String? ?? (map['data'] is Map ? map['data']['url'] as String? : null);
+            }
+            if (mediaUrl != null && mediaUrl.isNotEmpty) {
+              mediaPatchData[key] = mediaUrl;
+            }
+          } catch (uploadErr) {
+            debugPrint('Signup media post-auth upload error for $key: $uploadErr');
+          }
         }
+      }
+
+      if (mediaPatchData.isNotEmpty) {
+        try {
+          final dioClient = GetIt.instance<DioClient>();
+          await dioClient.patch(ApiEndpoints.profileMe, data: mediaPatchData);
+        } catch (_) {}
       }
 
       if (!mounted) {

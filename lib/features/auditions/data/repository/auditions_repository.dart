@@ -4,6 +4,7 @@ import '../models/create_audition_request.dart';
 
 abstract class AuditionsRepository {
   Future<List<AuditionModel>> getAuditions({String? category});
+  Future<List<AuditionModel>> getMyPostedAuditions();
   Future<AuditionModel> getAuditionById(String id);
   Future<AuditionModel> createAudition(CreateAuditionRequest request);
 }
@@ -16,6 +17,11 @@ class AuditionsRepositoryImpl implements AuditionsRepository {
   @override
   Future<List<AuditionModel>> getAuditions({String? category}) async {
     return await _remoteDataSource.getAuditions(category: category);
+  }
+
+  @override
+  Future<List<AuditionModel>> getMyPostedAuditions() async {
+    return await _remoteDataSource.getMyPostedAuditions();
   }
 
   @override

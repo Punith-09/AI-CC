@@ -12,6 +12,10 @@ class AuditionsProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
+  List<AuditionModel> _myPostedAuditions = [];
+  bool _isMyPostedLoading = false;
+  String? _myPostedErrorMessage;
+
   AuditionModel? _selectedAudition;
   bool _isDetailLoading = false;
   String? _detailErrorMessage;
@@ -22,6 +26,10 @@ class AuditionsProvider extends ChangeNotifier {
   List<AuditionModel> get auditions => _auditions;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+
+  List<AuditionModel> get myPostedAuditions => _myPostedAuditions;
+  bool get isMyPostedLoading => _isMyPostedLoading;
+  String? get myPostedErrorMessage => _myPostedErrorMessage;
 
   AuditionModel? get selectedAudition => _selectedAudition;
   bool get isDetailLoading => _isDetailLoading;
@@ -42,6 +50,22 @@ class AuditionsProvider extends ChangeNotifier {
     } catch (e) {
       _isLoading = false;
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchMyPostedAuditions() async {
+    _isMyPostedLoading = true;
+    _myPostedErrorMessage = null;
+    notifyListeners();
+
+    try {
+      _myPostedAuditions = await _auditionsRepository.getMyPostedAuditions();
+      _isMyPostedLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isMyPostedLoading = false;
+      _myPostedErrorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
     }
   }
@@ -74,6 +98,7 @@ class AuditionsProvider extends ChangeNotifier {
     try {
       final newAudition = await _auditionsRepository.createAudition(request);
       _auditions.insert(0, newAudition);
+      _myPostedAuditions.insert(0, newAudition);
       _isCreateLoading = false;
       notifyListeners();
       return true;

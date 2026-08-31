@@ -10,7 +10,7 @@ class RoleChips extends StatelessWidget {
   Widget build(BuildContext context) {
     final displayRoles = (roles != null && roles!.isNotEmpty)
         ? roles!
-        : ["Artist"];
+        : ["audience"];
 
     final colors = [
       const Color(0xff8A2BE2),
@@ -22,6 +22,7 @@ class RoleChips extends StatelessWidget {
     ];
 
     return Wrap(
+      alignment: WrapAlignment.center,
       spacing: 10,
       runSpacing: 10,
       children: List.generate(displayRoles.length, (index) {

@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 
 class ChatInput extends StatefulWidget {
   final TextEditingController controller;
+  final VoidCallback? onSend;
+  final bool isSending;
 
   const ChatInput({
     super.key,
     required this.controller,
+    this.onSend,
+    this.isSending = false,
   });
 
   @override
@@ -78,6 +82,8 @@ class _ChatInputState extends State<ChatInput> {
                     child: TextField(
                       controller: widget.controller,
                       style: const TextStyle(color: Colors.white),
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => widget.onSend?.call(),
                       decoration: InputDecoration(
                         hintText: "Type a message...",
                         hintStyle: TextStyle(color: Colors.grey.shade500),
@@ -100,16 +106,26 @@ class _ChatInputState extends State<ChatInput> {
 
                 const SizedBox(width: 10),
 
-                Container(
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [Color(0xFF123B4A), Color(0xFF0B1F2A)],
+                GestureDetector(
+                  onTap: widget.isSending ? null : widget.onSend,
+                  child: Container(
+                    width: 46,
+                    height: 46,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF123B4A), Color(0xFF0B1F2A)],
+                      ),
                     ),
-                  ),
-                  child: IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.send, color: Colors.white),
+                    child: widget.isSending
+                        ? const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(Colors.white),
+                            ),
+                          )
+                        : const Icon(Icons.send, color: Colors.white),
                   ),
                 ),
 

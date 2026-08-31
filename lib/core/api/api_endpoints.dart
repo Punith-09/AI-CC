@@ -2,7 +2,7 @@ class ApiEndpoints {
   ApiEndpoints._();
 
   static String get baseUrl {
-    return 'https://adopted-midi-shades-microphone.trycloudflare.com';
+    return 'https://folder-distance-enquiries-dim.trycloudflare.com';
   }
 
   static const String login = '/auth/login';
@@ -14,6 +14,7 @@ class ApiEndpoints {
   static String userProfile(String id) => '/users/$id';
   static String followUser(String id) => '/users/$id/follow';
   static const String auditions = "/auditions";
+  static const String myPostedAuditions = "/auditions/my-posted";
   static String auditionDetail(String id) => "/auditions/$id";
   static String applyAudition(String id) => "/auditions/$id/apply";
 
@@ -21,6 +22,7 @@ class ApiEndpoints {
   static String withdrawApplication(String id) => "/applications/$id";
   static String updateApplicationStatus(String id) => "/applications/$id/status";
 
+  static const String mediaUpload = "/media/upload";
   static const String photos = "/photos";
   static const String videos = "/videos";
   static const String uploadVideo = "/videos/upload";

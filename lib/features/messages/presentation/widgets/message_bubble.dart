@@ -1,15 +1,19 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/api/api_endpoints.dart';
 
 class MessageBubble extends StatelessWidget {
   final bool isSender;
   final String message;
   final String time;
+  final String participantAvatar;
 
   const MessageBubble({
     super.key,
     required this.isSender,
     required this.message,
     required this.time,
+    this.participantAvatar = '',
   });
 
   @override
@@ -22,9 +26,24 @@ class MessageBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isSender) ...[
-            const CircleAvatar(
+            CircleAvatar(
               radius: 15,
-              backgroundImage: NetworkImage("https://i.pravatar.cc/150?img=12"),
+              backgroundColor: const Color(0xFF123B4A),
+              child: participantAvatar.isNotEmpty
+                  ? ClipOval(
+                      child: CachedNetworkImage(
+                        imageUrl: ApiEndpoints.formatMediaUrl(participantAvatar),
+                        width: 30,
+                        height: 30,
+                        fit: BoxFit.cover,
+                        errorWidget: (ctx, url, err) => const Icon(
+                          Icons.person,
+                          size: 15,
+                          color: Colors.white54,
+                        ),
+                      ),
+                    )
+                  : const Icon(Icons.person, size: 15, color: Colors.white54),
             ),
             const SizedBox(width: 8),
           ],
@@ -68,7 +87,7 @@ class MessageBubble extends StatelessWidget {
                       Text(
                         time,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           fontSize: 11,
                         ),
                       ),

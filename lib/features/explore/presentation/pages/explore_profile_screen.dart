@@ -4,6 +4,7 @@ import 'package:aicc/core/constants/app_colors.dart';
 import 'package:aicc/core/routes/app_routes.dart';
 import 'package:aicc/features/artist_profile/data/models/portfolio_model.dart';
 import 'package:aicc/features/artist_profile/presentation/providers/profile_provider.dart';
+import 'package:aicc/features/messages/presentation/providers/messages_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -321,11 +322,39 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
                                           child: _ActionButton(
                                             label: 'Message',
                                             isPrimary: false,
-                                            onTap: () {
-                                              context.push(
-                                                AppRoutes.chat,
-                                                extra: widget.userId,
-                                              );
+                                            onTap: () async {
+                                              final messenger = ScaffoldMessenger.of(context);
+                                              final router = GoRouter.of(context);
+                                              final chat = await context
+                                                  .read<MessagesProvider>()
+                                                  .startChat(widget.userId);
+                                              if (chat != null) {
+                                                final enrichedChat = chat.copyWith(
+                                                  participantId: widget.userId,
+                                                  participantName: (chat.participantName.isNotEmpty)
+                                                      ? chat.participantName
+                                                      : (profile?.name ?? ''),
+                                                  participantAvatar: (chat.participantAvatar.isNotEmpty)
+                                                      ? chat.participantAvatar
+                                                      : (profile?.profileImage ?? ''),
+                                                  participantRole: (chat.participantRole.isNotEmpty)
+                                                      ? chat.participantRole
+                                                      : (profile?.roles.isNotEmpty == true
+                                                          ? profile!.roles.first
+                                                          : 'Artist'),
+                                                );
+                                                router.push(
+                                                  AppRoutes.chat,
+                                                  extra: enrichedChat,
+                                                );
+                                              } else {
+                                                messenger.showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text('Could not start chat. Please try again.'),
+                                                    backgroundColor: Colors.redAccent,
+                                                  ),
+                                                );
+                                              }
                                             },
                                           ),
                                         ),

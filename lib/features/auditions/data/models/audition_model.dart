@@ -1,6 +1,53 @@
 import 'package:flutter/foundation.dart';
 
 @immutable
+class ApplicantModel {
+  final String id;
+  final String applicantId;
+  final String name;
+  final String category;
+  final String status;
+  final String appliedDate;
+  final String coverLetter;
+  final String details;
+
+  const ApplicantModel({
+    this.id = '',
+    this.applicantId = '',
+    this.name = '',
+    this.category = '',
+    this.status = 'PENDING',
+    this.appliedDate = '',
+    this.coverLetter = '',
+    this.details = '',
+  });
+
+  factory ApplicantModel.fromJson(Map<String, dynamic> json) {
+    return ApplicantModel(
+      id: json['id'] as String? ?? '',
+      applicantId: json['applicantId'] as String? ?? '',
+      name: json['name'] as String? ?? json['applicantName'] as String? ?? 'Applicant',
+      category: json['category'] as String? ?? '',
+      status: json['status'] as String? ?? 'PENDING',
+      appliedDate: json['appliedDate'] as String? ?? '',
+      coverLetter: json['coverLetter'] as String? ?? '',
+      details: json['details'] as String? ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'applicantId': applicantId,
+        'name': name,
+        'category': category,
+        'status': status,
+        'appliedDate': appliedDate,
+        'coverLetter': coverLetter,
+        'details': details,
+      };
+}
+
+@immutable
 class AuditionModel {
   final String id;
   final String creatorId;
@@ -19,6 +66,7 @@ class AuditionModel {
   final bool createdByMe;
   final String phone;
   final String email;
+  final List<ApplicantModel> applicants;
 
   const AuditionModel({
     this.id = '',
@@ -38,13 +86,27 @@ class AuditionModel {
     this.createdByMe = false,
     this.phone = '',
     this.email = '',
+    this.applicants = const [],
   });
+
+  int get applicantsCount => applicants.length;
 
   String get effectiveContact => director.isNotEmpty
       ? director
       : (contactName.isNotEmpty ? contactName : 'N/A');
 
   factory AuditionModel.fromJson(Map<String, dynamic> json) {
+    List<ApplicantModel> parsedApplicants = [];
+    if (json['applicants'] is List) {
+      for (final item in json['applicants'] as List) {
+        if (item is Map<String, dynamic>) {
+          parsedApplicants.add(ApplicantModel.fromJson(item));
+        } else if (item is Map) {
+          parsedApplicants.add(ApplicantModel.fromJson(Map<String, dynamic>.from(item)));
+        }
+      }
+    }
+
     return AuditionModel(
       id: json['id'] as String? ?? '',
       creatorId: json['creatorId'] as String? ?? '',
@@ -63,6 +125,7 @@ class AuditionModel {
       createdByMe: json['createdByMe'] as bool? ?? false,
       phone: json['phone'] as String? ?? '',
       email: json['email'] as String? ?? '',
+      applicants: parsedApplicants,
     );
   }
 
@@ -84,5 +147,6 @@ class AuditionModel {
         'createdByMe': createdByMe,
         'phone': phone,
         'email': email,
+        'applicants': applicants.map((e) => e.toJson()).toList(),
       };
 }

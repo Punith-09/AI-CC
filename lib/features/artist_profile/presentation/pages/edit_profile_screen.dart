@@ -4,19 +4,16 @@ import 'package:provider/provider.dart';
 import 'package:aicc/common/widgets/app_background.dart';
 import 'package:aicc/core/constants/app_colors.dart';
 import 'package:aicc/features/artist_profile/presentation/providers/profile_provider.dart';
-import 'package:dotted_border/dotted_border.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:aicc/core/network/dio_client.dart';
 import 'package:aicc/core/api/api_endpoints.dart';
-
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:aicc/core/utils/location_data.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  const EditProfileScreen({Key? key}) : super(key: key);
+  const EditProfileScreen({super.key});
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -43,21 +40,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.initState();
     final profile = context.read<ProfileProvider>().currentProfile;
     
-    _nameController = TextEditingController(text: profile?.name ?? 'Lokesh Gapagari');
-    _state = profile?.state;
-    _city = profile?.city;
+    _nameController = TextEditingController(text: profile?.name ?? '');
     
-    // Attempt to infer country based on state
-    if (_state != null) {
-      for (var entry in LocationData.statesByCountry.entries) {
-        if (entry.value.contains(_state)) {
-          _country = entry.key;
-          break;
+    final rawCountry = profile?.country.trim();
+    if (rawCountry != null && rawCountry.isNotEmpty && LocationData.statesByCountry.containsKey(rawCountry)) {
+      _country = rawCountry;
+    }
+    
+    final rawState = profile?.state.trim();
+    if (rawState != null && rawState.isNotEmpty) {
+      _state = rawState;
+      if (_country == null) {
+        for (var entry in LocationData.statesByCountry.entries) {
+          if (entry.value.contains(_state)) {
+            _country = entry.key;
+            break;
+          }
         }
       }
     }
+    
+    final rawCity = profile?.city.trim();
+    if (rawCity != null && rawCity.isNotEmpty) {
+      _city = rawCity;
+    }
 
-    _experienceController = TextEditingController(text: profile?.experience ?? '2 Years');
+    _experienceController = TextEditingController(text: profile?.experience ?? '');
     _languagesController = TextEditingController(text: profile?.languages ?? '');
     _awardsCount = profile?.awards ?? 0;
     _currentPhotoUrl = profile?.profileImage;
@@ -93,18 +101,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           );
         }
         final formData = FormData.fromMap({
-          'title': 'Profile Photo',
-          'description': '',
           'file': multipartFile,
         });
 
-        final photoRes = await dioClient.post(ApiEndpoints.photos, data: formData);
+        final photoRes = await dioClient.post(ApiEndpoints.mediaUpload, data: formData);
         
         String? photoUrl;
         if (photoRes.data is Map) {
           final map = Map<String, dynamic>.from(photoRes.data as Map);
-          final inner = map['data'] is Map ? Map<String, dynamic>.from(map['data'] as Map) : map;
-          photoUrl = inner['url'] as String?;
+          photoUrl = map['url'] as String? ?? (map['data'] is Map ? map['data']['url'] as String? : null);
         }
 
         if (photoUrl != null && photoUrl.isNotEmpty) {
@@ -256,11 +261,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     required String hint,
     required ValueChanged<String?>? onChanged,
   }) {
-    List<String> effectiveItems = items.toSet().toList();
-    if (value != null && value.isNotEmpty && !effectiveItems.contains(value)) {
-      effectiveItems.insert(0, value);
+    final cleanValue = (value != null && value.trim().isNotEmpty) ? value.trim() : null;
+    List<String> effectiveItems = items
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toSet()
+        .toList();
+    if (cleanValue != null && !effectiveItems.contains(cleanValue)) {
+      effectiveItems.insert(0, cleanValue);
     }
-    
+
+    final selectedValue = (cleanValue != null && effectiveItems.contains(cleanValue)) ? cleanValue : null;
+
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(colors: AppColors.BtnGradient),
@@ -274,7 +286,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<String>(
-            value: value,
+            value: selectedValue,
             isExpanded: true,
             hint: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -286,9 +298,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               child: Icon(Icons.keyboard_arrow_down, color: AppColors.white, size: 20),
             ),
             items: effectiveItems.isEmpty
-                ? [const DropdownMenuItem(value: null, child: Text(''))]
+                ? null
                 : effectiveItems.map((item) {
-                    return DropdownMenuItem(
+                    return DropdownMenuItem<String>(
                       value: item,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -296,7 +308,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ),
                     );
                   }).toList(),
-            onChanged: onChanged,
+            onChanged: effectiveItems.isEmpty ? null : onChanged,
           ),
         ),
       ),
@@ -424,8 +436,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         _buildSectionLabel(Icons.location_on_outlined, 'State'),
                         _buildDropdown(
                           value: _state,
-                          items: _country != null ? (LocationData.statesByCountry[_country] ?? ['Other']) : [],
-                          hint: _country != null ? 'Select State' : '',
+                          items: _country != null ? (LocationData.statesByCountry[_country] ?? []) : [],
+                          hint: _country != null ? 'Select State' : 'Select Country first',
                           onChanged: _country != null ? (v) {
                             setState(() {
                               _state = v;
@@ -437,8 +449,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         _buildSectionLabel(Icons.location_city, 'City'),
                         _buildDropdown(
                           value: _city,
-                          items: _state != null ? (LocationData.citiesByState[_state] ?? ['Other']) : [],
-                          hint: _state != null ? 'Select City' : '',
+                          items: _state != null ? (LocationData.citiesByState[_state] ?? []) : [],
+                          hint: _state != null ? 'Select City' : 'Select State first',
                           onChanged: _state != null ? (v) {
                             setState(() {
                               _city = v;

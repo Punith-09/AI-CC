@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../data/models/chat_model.dart';
@@ -262,11 +264,14 @@ class _MessagesScreenState extends State<MessagesScreen> {
             itemBuilder: (context, index) {
               return _ChatTile(
                 chat: chats[index],
-                onTap: () {
-                  context.push(
+                onTap: () async {
+                  await context.push(
                     AppRoutes.chat,
                     extra: chats[index],
                   );
+                  if (context.mounted) {
+                    context.read<MessagesProvider>().fetchChats();
+                  }
                 },
               );
             },
@@ -415,10 +420,10 @@ class _ChatTile extends StatelessWidget {
                   ),
                   child: chat.participantAvatar.isNotEmpty
                       ? ClipOval(
-                          child: Image.network(
-                            chat.participantAvatar,
+                          child: CachedNetworkImage(
+                            imageUrl: ApiEndpoints.formatMediaUrl(chat.participantAvatar),
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
+                            errorWidget: (ctx, url, err) =>
                                 _AvatarFallback(name: chat.participantName),
                           ),
                         )
@@ -571,20 +576,36 @@ class _ChatTile extends StatelessWidget {
     );
   }
 
+  DateTime _parseDate(String isoString) {
+    if (isoString.isEmpty) return DateTime.now();
+    try {
+      String cleaned = isoString.trim();
+      if (cleaned.endsWith('Z') || cleaned.endsWith('z')) {
+        cleaned = cleaned.substring(0, cleaned.length - 1);
+      }
+      if (cleaned.contains('+')) {
+        cleaned = cleaned.split('+').first;
+      }
+      return DateTime.parse(cleaned);
+    } catch (_) {
+      return DateTime.tryParse(isoString) ?? DateTime.now();
+    }
+  }
+
   String _formatTime(String isoString) {
     if (isoString.isEmpty) return '';
     try {
-      final dt = DateTime.parse(isoString).toLocal();
+      final dt = _parseDate(isoString);
       final now = DateTime.now();
       final diff = now.difference(dt);
 
-      if (diff.inDays == 0) {
+      if (dt.year == now.year && dt.month == now.month && dt.day == now.day) {
         final hour = dt.hour;
         final minute = dt.minute.toString().padLeft(2, '0');
         final period = hour >= 12 ? 'PM' : 'AM';
         final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
         return '$displayHour:$minute $period';
-      } else if (diff.inDays == 1) {
+      } else if (diff.inDays == 1 || (dt.day == now.day - 1 && dt.month == now.month && dt.year == now.year)) {
         return 'Yesterday';
       } else if (diff.inDays < 7) {
         const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

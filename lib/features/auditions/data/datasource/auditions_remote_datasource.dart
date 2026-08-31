@@ -5,6 +5,7 @@ import '../models/create_audition_request.dart';
 
 abstract class AuditionsRemoteDataSource {
   Future<List<AuditionModel>> getAuditions({String? category});
+  Future<List<AuditionModel>> getMyPostedAuditions();
   Future<AuditionModel> getAuditionById(String id);
   Future<AuditionModel> createAudition(CreateAuditionRequest request);
 }
@@ -31,6 +32,20 @@ class AuditionsRemoteDataSourceImpl implements AuditionsRemoteDataSource {
       return list.map((item) => AuditionModel.fromJson(item as Map<String, dynamic>)).toList();
     } else {
       throw Exception('Invalid server response format for auditions');
+    }
+  }
+
+  @override
+  Future<List<AuditionModel>> getMyPostedAuditions() async {
+    final response = await _dioClient.get(
+      ApiEndpoints.myPostedAuditions,
+    );
+
+    if (response.data is List) {
+      final list = response.data as List;
+      return list.map((item) => AuditionModel.fromJson(item as Map<String, dynamic>)).toList();
+    } else {
+      throw Exception('Invalid server response format for my posted auditions');
     }
   }
 

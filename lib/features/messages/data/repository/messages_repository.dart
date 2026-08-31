@@ -6,6 +6,7 @@ abstract class MessagesRepository {
   Future<List<ChatModel>> getChats();
   Future<List<MessageModel>> getChatMessages(String chatId);
   Future<ChatModel> startChat(String userId);
+  Future<MessageModel> sendMessage(String chatId, String text);
 }
 
 class MessagesRepositoryImpl implements MessagesRepository {
@@ -26,5 +27,10 @@ class MessagesRepositoryImpl implements MessagesRepository {
   @override
   Future<ChatModel> startChat(String userId) {
     return _remoteDataSource.startChat(userId);
+  }
+
+  @override
+  Future<MessageModel> sendMessage(String chatId, String text) {
+    return _remoteDataSource.sendMessage(chatId, text);
   }
 }

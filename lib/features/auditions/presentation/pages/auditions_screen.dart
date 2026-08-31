@@ -37,6 +37,7 @@ class _AuditionScreenState extends State<AuditionScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AuditionsProvider>().fetchAuditions();
+      context.read<AuditionsProvider>().fetchMyPostedAuditions();
       context.read<ApplyJobProvider>().fetchMyApplications();
     });
   }
@@ -120,23 +121,39 @@ class _AuditionScreenState extends State<AuditionScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          "AI Recommendations",
+                          "Auditions",
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 26,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                            color: Colors.white12,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.notifications_none,
-                            color: Colors.white,
-                            size: 20,
+                        InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: () {
+                            context.push(AppRoutes.post);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.white24),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.add, color: Colors.white, size: 18),
+                                SizedBox(width: 4),
+                                Text(
+                                  "Post",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -172,6 +189,91 @@ class _AuditionScreenState extends State<AuditionScreen> {
                       AnalyticsCard(appliedCount: appliedCount),
 
                       const SizedBox(height: 24),
+
+                      // =======================================================
+                      // MY POSTED AUDITIONS
+                      // =======================================================
+                      if (auditionsProvider.isMyPostedLoading)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Center(
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          ),
+                        )
+                      else if (auditionsProvider.myPostedAuditions.isNotEmpty) ...[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              "My Posted Auditions",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              "${auditionsProvider.myPostedAuditions.length}",
+                              style: const TextStyle(
+                                color: Color(0xFF4AD0FB),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        ...auditionsProvider.myPostedAuditions.map((audition) {
+                          final applicantsCount = audition.applicantsCount;
+                          final loc = audition.location.isNotEmpty ? audition.location : 'Location N/A';
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(16),
+                              onTap: () {
+                                context.push(
+                                  AppRoutes.auditionDetails,
+                                  extra: audition,
+                                );
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF143E4D).withValues(alpha: 0.8),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.15),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      audition.title,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      "$applicantsCount applicant(s) · $loc",
+                                      style: const TextStyle(
+                                        color: Color(0xFFB0B6C4),
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                        const SizedBox(height: 20),
+                      ],
 
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,

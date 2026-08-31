@@ -44,8 +44,14 @@ class PhotoModel {
 
     return PhotoModel(
       id: json['id'] as String? ?? json['_id'] as String? ?? '',
-      category: json['category'] as String?,
-      creatorId: json['creatorId'] as String? ?? json['userId'] as String?,
+      creatorId: json['creatorId'] as String? ??
+          json['userId'] as String? ??
+          json['user_id'] as String? ??
+          json['creator_id'] as String? ??
+          (json['creator'] is String ? json['creator'] as String : null) ??
+          (json['user'] is String ? json['user'] as String : null) ??
+          creatorMap?['_id']?.toString() ??
+          creatorMap?['id']?.toString(),
       creatorName: json['creatorName'] as String? ?? creatorMap?['fullName'] as String? ?? creatorMap?['name'] as String?,
       creatorPic: json['creatorPic'] as String? ?? creatorMap?['profilePhoto'] as String? ?? creatorMap?['avatar'] as String?,
       creatorCategory: json['creatorCategory'] as String? ?? creatorMap?['role'] as String? ?? creatorMap?['category'] as String?,

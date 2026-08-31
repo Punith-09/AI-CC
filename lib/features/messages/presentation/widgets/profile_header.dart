@@ -1,10 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../../../core/api/api_endpoints.dart';
+import '../../data/models/chat_model.dart';
 
 class ProfileHeader extends StatelessWidget {
-  const ProfileHeader({super.key});
+  final ChatModel? chat;
+  final VoidCallback? onViewProfile;
+
+  const ProfileHeader({super.key, this.chat, this.onViewProfile});
 
   @override
   Widget build(BuildContext context) {
+    final name = (chat?.participantName.isNotEmpty == true)
+        ? chat!.participantName
+        : 'Creator';
+    final role = (chat?.participantRole.isNotEmpty == true)
+        ? chat!.participantRole
+        : 'Artist';
+    final avatar = chat?.participantAvatar ?? '';
+    final isOnline = chat?.isOnline ?? false;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       decoration: BoxDecoration(
@@ -14,7 +29,7 @@ class ProfileHeader extends StatelessWidget {
           end: Alignment.bottomCenter,
         ),
         border: Border(
-          bottom: BorderSide(color: Colors.white.withOpacity(.08)),
+          bottom: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
         ),
       ),
       child: Row(
@@ -26,10 +41,16 @@ class ProfileHeader extends StatelessWidget {
                 height: 72,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(18),
-                  image: const DecorationImage(
-                    image: NetworkImage("https://i.pravatar.cc/300?img=12"),
-                    fit: BoxFit.cover,
-                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: avatar.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: ApiEndpoints.formatMediaUrl(avatar),
+                          fit: BoxFit.cover,
+                          errorWidget: (ctx, url, err) => _fallback(name),
+                        )
+                      : _fallback(name),
                 ),
               ),
               Positioned(
@@ -39,7 +60,7 @@ class ProfileHeader extends StatelessWidget {
                   width: 18,
                   height: 18,
                   decoration: BoxDecoration(
-                    color: Colors.greenAccent,
+                    color: isOnline ? Colors.greenAccent : Colors.grey,
                     shape: BoxShape.circle,
                     border: Border.all(color: const Color(0xff1F1F28), width: 3),
                   ),
@@ -54,35 +75,37 @@ class ProfileHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Rahul Sharma",
-                  style: TextStyle(
+                Text(
+                  name,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 22,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  "Casting Director",
-                  style: TextStyle(color: Colors.grey.shade400, fontSize: 15),
-                ),
+                if (role.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    role,
+                    style: TextStyle(color: Colors.grey.shade400, fontSize: 15),
+                  ),
+                ],
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     Container(
                       width: 8,
                       height: 8,
-                      decoration: const BoxDecoration(
-                        color: Colors.greenAccent,
+                      decoration: BoxDecoration(
+                        color: isOnline ? Colors.greenAccent : Colors.grey,
                         shape: BoxShape.circle,
                       ),
                     ),
                     const SizedBox(width: 6),
-                    const Text(
-                      "Online",
+                    Text(
+                      isOnline ? 'Online' : 'Offline',
                       style: TextStyle(
-                        color: Colors.greenAccent,
+                        color: isOnline ? Colors.greenAccent : Colors.grey,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -104,14 +127,29 @@ class ProfileHeader extends StatelessWidget {
                   borderRadius: BorderRadius.circular(25),
                 ),
               ),
-              onPressed: () {},
+              onPressed: onViewProfile,
               child: const Text(
-                "View Profile",
+                'View Profile',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _fallback(String name) {
+    final initials = name.trim().isEmpty
+        ? '?'
+        : name.trim().split(' ').take(2).map((w) => w[0]).join().toUpperCase();
+    return Container(
+      color: const Color(0xFF1F5A6A),
+      child: Center(
+        child: Text(
+          initials,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22),
+        ),
       ),
     );
   }

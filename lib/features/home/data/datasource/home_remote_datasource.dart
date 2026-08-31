@@ -76,8 +76,11 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     }
   }
 
-  Future<Map<String, String>> _fetchUserLocations() async {
-    final Map<String, String> map = {};
+  Future<Map<String, dynamic>> _fetchUserLocations() async {
+    final Map<String, String> locationMap = {};
+    final Map<String, String> nameToIdMap = {};
+    // id -> {name, pic, role}
+    final Map<String, Map<String, String>> idToUser = {};
     try {
       final response = await _dioClient.get(ApiEndpoints.exploreUsers);
       dynamic listData;
@@ -96,6 +99,13 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
           if (item is Map) {
             final id = item['_id']?.toString() ?? item['id']?.toString();
             final name = item['fullName']?.toString() ?? item['name']?.toString() ?? item['username']?.toString();
+            final pic = item['profileImage']?.toString() ??
+                item['profilePhoto']?.toString() ??
+                item['avatar']?.toString() ??
+                item['pic']?.toString() ??
+                item['photo']?.toString() ??
+                '';
+            final role = item['role']?.toString() ?? item['type']?.toString() ?? item['category']?.toString() ?? '';
             final city = item['city']?.toString().trim() ?? '';
             final state = item['state']?.toString().trim() ?? '';
             final loc = item['location']?.toString().trim() ?? '';
@@ -113,17 +123,32 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
 
             if (formatted.isNotEmpty) {
               if (id != null && id.isNotEmpty) {
-                map[id] = formatted;
+                locationMap[id] = formatted;
               }
               if (name != null && name.trim().isNotEmpty) {
-                map[name.trim().toLowerCase()] = formatted;
+                locationMap[name.trim().toLowerCase()] = formatted;
               }
+            }
+
+            if (id != null && id.isNotEmpty) {
+              if (name != null && name.trim().isNotEmpty) {
+                nameToIdMap[name.trim().toLowerCase()] = id;
+              }
+              idToUser[id] = {
+                'name': name ?? '',
+                'pic': pic,
+                'role': role,
+              };
             }
           }
         }
       }
     } catch (_) {}
-    return map;
+    return {
+      'locations': locationMap,
+      'nameToId': nameToIdMap,
+      'idToUser': idToUser,
+    };
   }
 
   @override
@@ -136,7 +161,10 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
 
     final photos = results[0] as List<PhotoModel>;
     final videos = results[1] as List<VideoModel>;
-    final userLocations = results[2] as Map<String, String>;
+    final userMeta = results[2] as Map<String, dynamic>;
+    final userLocations = (userMeta['locations'] as Map<String, String>?) ?? {};
+    final nameToId = (userMeta['nameToId'] as Map<String, String>?) ?? {};
+    final idToUser = (userMeta['idToUser'] as Map<String, Map<String, String>>?) ?? {};
 
     final List<FeedPostModel> rawFeed = [
       ...photos.map(FeedPostModel.fromPhotoModel),
@@ -157,6 +185,45 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       }
       if (hasUrl && seenUrls.contains(post.mediaUrl)) {
         continue; // Skip duplicate URL
+      }
+
+      // If creatorId is missing, resolve it from nameToId
+      if (post.creatorId == null || post.creatorId!.isEmpty) {
+        final id = nameToId[post.creatorName.toLowerCase().trim()];
+        if (id != null && id.isNotEmpty) {
+          post = post.copyWith(creatorId: id);
+        }
+      }
+
+      // Enrich creatorName / creatorPic / creatorCategory from user directory
+      final cId = post.creatorId;
+      if (cId != null && cId.isNotEmpty) {
+        final userInfo = idToUser[cId];
+        if (userInfo != null) {
+          final resolvedName = userInfo['name'] ?? '';
+          final resolvedPic = userInfo['pic'] ?? '';
+          final resolvedRole = userInfo['role'] ?? '';
+          // Only overwrite if currently empty / generic fallback
+          final needsName = post.creatorName.isEmpty ||
+              post.creatorName == 'Creator' ||
+              post.creatorName == 'Actor';
+          final needsPic = post.creatorPic == null || post.creatorPic!.isEmpty;
+          final needsRole = post.creatorCategory == null ||
+              post.creatorCategory!.isEmpty ||
+              post.creatorCategory == 'Artist' ||
+              post.creatorCategory == 'Actor';
+          if ((needsName && resolvedName.isNotEmpty) ||
+              (needsPic && resolvedPic.isNotEmpty) ||
+              (needsRole && resolvedRole.isNotEmpty)) {
+            post = post.copyWith(
+              creatorName: needsName && resolvedName.isNotEmpty
+                  ? resolvedName
+                  : null,
+              creatorPic: needsPic && resolvedPic.isNotEmpty ? resolvedPic : null,
+              creatorCategory: needsRole && resolvedRole.isNotEmpty ? resolvedRole : null,
+            );
+          }
+        }
       }
 
       // Enrich location dynamically from creator profile if not on post object

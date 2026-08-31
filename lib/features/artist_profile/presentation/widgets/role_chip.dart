@@ -14,26 +14,18 @@ class RoleChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: 18,
-        vertical: 10,
+        horizontal: 22,
+        vertical: 8,
       ),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        gradient: LinearGradient(
-          colors: [
-            color.withOpacity(.9),
-            color.withOpacity(.55),
-          ],
-        ),
-        border: Border.all(
-          color: color,
-          width: 1.2,
-        ),
+        color: color.withOpacity(0.85),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(.25),
+            color: color.withOpacity(.35),
             blurRadius: 12,
             spreadRadius: 1,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -41,7 +33,7 @@ class RoleChip extends StatelessWidget {
         title,
         style: const TextStyle(
           color: Colors.white,
-          fontSize: 15,
+          fontSize: 14,
           fontWeight: FontWeight.w600,
         ),
       ),
