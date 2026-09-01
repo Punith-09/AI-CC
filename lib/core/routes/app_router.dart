@@ -1,11 +1,14 @@
+import 'dart:async';
 import 'package:aicc/features/roles/presentation/pages/roles_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import 'app_routes.dart';
 import '../storage/local_storage.dart';
 
 import '../../common/widgets/custom_bottom_navbar.dart';
+import '../../features/messages/presentation/providers/messages_provider.dart';
 
 import '../../features/apply_job/data/models/application_model.dart';
 import '../../features/apply_job/presentation/pages/apply_screen.dart';
@@ -356,13 +359,45 @@ final GoRouter appRouter = GoRouter(
 // MAIN SCREEN
 // ===========================================================
 
-class MainScreen extends StatelessWidget {
+class MainScreen extends StatefulWidget {
   final Widget child;
 
   const MainScreen({
     super.key,
     required this.child,
   });
+
+  @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  Timer? _messagePollTimer;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Fetch initial chat unread status on app startup
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<MessagesProvider>().fetchChats(silent: true);
+      }
+    });
+
+    // Background poll every 4 seconds so message badge reflects live incoming messages across all tabs
+    _messagePollTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (mounted) {
+        context.read<MessagesProvider>().fetchChats(silent: true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _messagePollTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -374,7 +409,7 @@ class MainScreen extends StatelessWidget {
     return Scaffold(
       extendBody: true,
 
-      body: child,
+      body: widget.child,
 
       bottomNavigationBar:
       CustomBottomNavbar(

@@ -97,21 +97,130 @@ class FeedPostModel {
   }
 
   String get timeAgo {
-    if (createdAt == null || createdAt!.isEmpty) {
-      return 'RECENT';
-    }
-    try {
-      final created = DateTime.parse(createdAt!);
-      final diff = DateTime.now().difference(created);
+    DateTime? parsedDate;
 
-      if (diff.inMinutes < 1) return 'JUST NOW';
-      if (diff.inMinutes < 60) return '${diff.inMinutes}M AGO';
-      if (diff.inHours < 24) return '${diff.inHours} HOURS AGO';
-      if (diff.inDays == 1) return 'YESTERDAY';
-      if (diff.inDays < 7) return '${diff.inDays} DAYS AGO';
-      return '${created.day}/${created.month}/${created.year}';
+    // 1. Try parsing createdAt field if present
+    if (createdAt != null && createdAt!.trim().isNotEmpty) {
+      final clean = createdAt!.trim();
+      final numVal = int.tryParse(clean);
+      if (numVal != null) {
+        if (numVal > 1000000000000) {
+          parsedDate = DateTime.fromMillisecondsSinceEpoch(numVal);
+        } else if (numVal > 1000000000) {
+          parsedDate = DateTime.fromMillisecondsSinceEpoch(numVal * 1000);
+        }
+      } else {
+        parsedDate = DateTime.tryParse(clean);
+      }
+    }
+
+    // 2. Fallback: Check if title, id, or mediaUrl has an embedded timestamp (e.g. 202507212152 or unix epoch)
+    if (parsedDate == null) {
+      final combined = '$title $description $mediaUrl ${thumbnailUrl ?? ''} $id';
+
+      // Match YYYYMMDDHHMM or YYYYMMDD (e.g. 202507212152 or 202608311200)
+      final dateMatch = RegExp(r'\b(202[0-9])(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])([01][0-9]|2[0-3])?([0-5][0-9])?').firstMatch(combined);
+      if (dateMatch != null) {
+        final year = int.parse(dateMatch.group(1)!);
+        final month = int.parse(dateMatch.group(2)!);
+        final day = int.parse(dateMatch.group(3)!);
+        final hour = dateMatch.group(4) != null ? int.parse(dateMatch.group(4)!) : 12;
+        final minute = dateMatch.group(5) != null ? int.parse(dateMatch.group(5)!) : 0;
+        parsedDate = DateTime(year, month, day, hour, minute);
+      } else {
+        // Match 10-digit unix timestamp (e.g. 1756637000)
+        final epochMatch = RegExp(r'\b(1[6-9][0-9]{8})\b').firstMatch(combined);
+        if (epochMatch != null) {
+          final epochVal = int.tryParse(epochMatch.group(1)!);
+          if (epochVal != null && epochVal > 900000000) {
+            parsedDate = DateTime.fromMillisecondsSinceEpoch(epochVal * 1000);
+          }
+        }
+      }
+    }
+
+    if (parsedDate == null) {
+      return 'just now';
+    }
+
+    try {
+      final now = DateTime.now();
+
+      // UTC diff
+      final diffUtc = now.toUtc().difference(parsedDate.toUtc());
+
+      // Local timeline diff (ignoring false Z timezone offsets)
+      final localDateTime = DateTime(
+        parsedDate.year,
+        parsedDate.month,
+        parsedDate.day,
+        parsedDate.hour,
+        parsedDate.minute,
+        parsedDate.second,
+      );
+      final diffLocal = now.difference(localDateTime);
+
+      Duration diff;
+      if (!diffLocal.isNegative && !diffUtc.isNegative) {
+        // Pick the smaller non-negative difference (closest true elapsed time)
+        diff = diffLocal < diffUtc ? diffLocal : diffUtc;
+      } else if (!diffLocal.isNegative) {
+        diff = diffLocal;
+      } else if (!diffUtc.isNegative) {
+        diff = diffUtc;
+      } else {
+        diff = Duration.zero;
+      }
+
+      final int minutes = diff.inMinutes;
+      final int hours = diff.inHours;
+      final int days = diff.inDays;
+
+      if (diff.inSeconds < 45) {
+        return 'just now';
+      }
+      if (minutes < 1) {
+        return '1 min ago';
+      }
+      if (minutes == 1) {
+        return '1 min ago';
+      }
+      if (minutes < 60) {
+        return '$minutes mins ago';
+      }
+      if (hours == 1) {
+        return '1 hr ago';
+      }
+      if (hours < 24) {
+        return '$hours hrs ago';
+      }
+      if (days == 1) {
+        return '1 day ago';
+      }
+      if (days < 7) {
+        return '$days days ago';
+      }
+      final int weeks = (days / 7).floor();
+      if (weeks == 1) {
+        return '1 week ago';
+      }
+      if (days < 30) {
+        return '$weeks weeks ago';
+      }
+      final int months = (days / 30).floor();
+      if (months == 1) {
+        return '1 month ago';
+      }
+      if (days < 365) {
+        return '$months months ago';
+      }
+      final int years = (days / 365).floor();
+      if (years == 1) {
+        return '1 year ago';
+      }
+      return '$years years ago';
     } catch (_) {
-      return createdAt!;
+      return createdAt ?? 'just now';
     }
   }
 
@@ -247,8 +356,19 @@ class FeedPostModel {
       likesCount: json['likesCount'] as int? ?? 0,
       commentsCount: json['commentsCount'] as int? ?? 0,
       viewsCount: json['viewsCount'] as int? ?? 0,
-      liked: json['liked'] as bool? ?? false,
-      createdAt: json['createdAt'] as String?,
+      createdAt: (json['createdAt'] ??
+              json['created_at'] ??
+              json['createdAtUtc'] ??
+              json['creationDate'] ??
+              json['creation_date'] ??
+              json['timestamp'] ??
+              json['time'] ??
+              json['uploadedAt'] ??
+              json['uploaded_at'] ??
+              json['uploadDate'] ??
+              json['upload_date'] ??
+              json['date'])
+          ?.toString(),
       hashtags: json['category'] != null ? '#${json['category']}' : '#AICC',
       location: resolvedLocation,
     );

@@ -12,7 +12,9 @@ import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/storage/local_storage.dart';
 import '../../../artist_profile/data/repository/profile_repository.dart';
+import '../../../artist_profile/presentation/providers/profile_provider.dart';
 import '../../../messages/presentation/providers/messages_provider.dart';
 import '../../data/models/comment_model.dart';
 import '../../data/models/feed_post_model.dart';
@@ -288,7 +290,58 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
     }
   }
 
+  bool get _isCurrentUser {
+    String? currentUserId;
+    String? currentUserName;
+
+    try {
+      currentUserId = LocalStorage.instance.getUserId();
+      currentUserName = LocalStorage.instance.getUserName();
+    } catch (_) {}
+
+    // Check by creator ID
+    if (_post.creatorId != null &&
+        _post.creatorId!.isNotEmpty &&
+        currentUserId != null &&
+        currentUserId.isNotEmpty) {
+      if (_post.creatorId == currentUserId) return true;
+    }
+
+    // Check by creator name
+    if (_post.creatorName.isNotEmpty &&
+        currentUserName != null &&
+        currentUserName.isNotEmpty) {
+      if (_post.creatorName.trim().toLowerCase() ==
+          currentUserName.trim().toLowerCase()) {
+        return true;
+      }
+    }
+
+    // Check by ProfileProvider currentProfile
+    try {
+      final currentProfile = context.read<ProfileProvider>().currentProfile;
+      if (currentProfile != null) {
+        if (currentProfile.id.isNotEmpty &&
+            _post.creatorId != null &&
+            _post.creatorId == currentProfile.id) {
+          return true;
+        }
+        if (currentProfile.name.isNotEmpty &&
+            _post.creatorName.trim().toLowerCase() ==
+                currentProfile.name.trim().toLowerCase()) {
+          return true;
+        }
+      }
+    } catch (_) {}
+
+    return false;
+  }
+
   void _navigateToCreatorProfile() {
+    if (_isCurrentUser) {
+      context.push(AppRoutes.artistProfile);
+      return;
+    }
     final targetId = _post.creatorId;
     if (targetId != null && targetId.isNotEmpty) {
       context.push(AppRoutes.exploreProfile, extra: targetId);
@@ -672,65 +725,68 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
             ),
           ),
 
-          // Follow Button
-          GestureDetector(
-            onTap: _toggleFollow,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF7C4DFF), Color(0xFF9066FF)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(22),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF7C4DFF).withValues(alpha: 0.35),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
+          // Follow & Message Buttons (hidden for logged-in user)
+          if (!_isCurrentUser) ...[
+            // Follow Button
+            GestureDetector(
+              onTap: _toggleFollow,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF7C4DFF), Color(0xFF9066FF)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                ],
-              ),
-              child: _isFollowLoading
-                  ? const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                    )
-                  : Text(
-                      _isFollowing ? 'Following' : 'Follow',
-                      style: GoogleFonts.poppins(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF7C4DFF).withValues(alpha: 0.35),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
                     ),
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          // Message Button
-          GestureDetector(
-            onTap: _messageCreator,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.09),
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                  ],
+                ),
+                child: _isFollowLoading
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      )
+                    : Text(
+                        _isFollowing ? 'Following' : 'Follow',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
-              child: Text(
-                'Message',
-                style: GoogleFonts.poppins(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+            ),
+
+            const SizedBox(width: 8),
+
+            // Message Button
+            GestureDetector(
+              onTap: _messageCreator,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.09),
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                ),
+                child: Text(
+                  'Message',
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );

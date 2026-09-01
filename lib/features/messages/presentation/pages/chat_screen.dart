@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
@@ -28,6 +29,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
   String? _currentUserId;
   ChatModel? _chat;
+  Timer? _pollingTimer;
 
   @override
   void initState() {
@@ -36,13 +38,22 @@ class _ChatScreenState extends State<ChatScreen> {
     _currentUserId = LocalStorage.instance.getUserId();
     if (_chat != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<MessagesProvider>().markChatAsRead(_chat!.id);
         _loadMessages();
+      });
+
+      // Poll messages every 3 seconds while in chat
+      _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+        if (mounted && _chat != null) {
+          context.read<MessagesProvider>().fetchMessages(_chat!.id, silent: true);
+        }
       });
     }
   }
 
   @override
   void dispose() {
+    _pollingTimer?.cancel();
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();

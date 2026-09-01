@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:aicc/core/storage/local_storage.dart';
 import 'package:aicc/features/explore/data/models/talent_model.dart';
 import 'package:aicc/features/explore/data/repository/explore_repository.dart';
 
@@ -65,10 +66,48 @@ class ExploreProvider with ChangeNotifier {
         category: _selectedCategory.isEmpty ? null : _selectedCategory,
       );
 
+      // Filter out logged in user
+      String? currentUserId;
+      String? currentUserName;
+      String? currentUserEmail;
+
+      try {
+        currentUserId = LocalStorage.instance.getUserId();
+        currentUserName = LocalStorage.instance.getUserName();
+        currentUserEmail = LocalStorage.instance.getUserEmail();
+      } catch (_) {}
+
+      final filteredResults = results.where((talent) {
+        if (currentUserId != null &&
+            currentUserId.isNotEmpty &&
+            talent.id == currentUserId) {
+          return false;
+        }
+        if (currentUserName != null &&
+            currentUserName.isNotEmpty &&
+            talent.name.trim().toLowerCase() ==
+                currentUserName.trim().toLowerCase()) {
+          return false;
+        }
+        if (currentUserEmail != null && currentUserEmail.isNotEmpty) {
+          final emailPrefix =
+              currentUserEmail.split('@').first.trim().toLowerCase();
+          if (talent.name.trim().toLowerCase() == emailPrefix ||
+              talent.handle
+                  .replaceAll('@', '')
+                  .trim()
+                  .toLowerCase() ==
+                  emailPrefix) {
+            return false;
+          }
+        }
+        return true;
+      }).toList();
+
       final needsLocation =
           _selectedLocation.isNotEmpty && _selectedLocation != 'Anywhere';
       final withLocation =
-          needsLocation ? await _attachLocations(results) : results;
+          needsLocation ? await _attachLocations(filteredResults) : filteredResults;
       _talents = _applyLocationFilter(withLocation);
     } catch (e) {
       _error = e.toString().replaceAll('Exception:', '').trim();

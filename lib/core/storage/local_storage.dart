@@ -173,4 +173,44 @@ class LocalStorage {
   bool hasToken() {
     return getToken() != null;
   }
+
+  // =========================================================
+  // CHAT READ / UNREAD PERSISTENCE
+  // =========================================================
+
+  static const String _keyReadChatIds = 'chat_read_ids';
+  static const String _keyUnreadChatIds = 'chat_unread_ids';
+  static const String _keyLastReadMessages = 'chat_last_read_messages';
+
+  Set<String> getReadChatIds() {
+    return (_prefs?.getStringList(_keyReadChatIds) ?? []).toSet();
+  }
+
+  Future<void> saveReadChatIds(Set<String> ids) async {
+    await _prefs?.setStringList(_keyReadChatIds, ids.toList());
+  }
+
+  Set<String> getUnreadChatIds() {
+    return (_prefs?.getStringList(_keyUnreadChatIds) ?? []).toSet();
+  }
+
+  Future<void> saveUnreadChatIds(Set<String> ids) async {
+    await _prefs?.setStringList(_keyUnreadChatIds, ids.toList());
+  }
+
+  Map<String, String> getLastReadMessages() {
+    final raw = _prefs?.getString(_keyLastReadMessages);
+    if (raw == null || raw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map) {
+        return decoded.map((k, v) => MapEntry(k.toString(), v.toString()));
+      }
+    } catch (_) {}
+    return {};
+  }
+
+  Future<void> saveLastReadMessages(Map<String, String> map) async {
+    await _prefs?.setString(_keyLastReadMessages, jsonEncode(map));
+  }
 }

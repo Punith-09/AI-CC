@@ -90,8 +90,15 @@ class ProfileProvider with ChangeNotifier {
   Future<void> followUser(String id) async {
     final previous = _viewedProfile;
     if (_viewedProfile != null) {
+      final currentFollowing = _viewedProfile!.following;
+      final currentCount = int.tryParse(_viewedProfile!.followers) ?? 0;
+      final updatedCount = currentFollowing
+          ? (currentCount > 0 ? currentCount - 1 : 0)
+          : currentCount + 1;
+
       _viewedProfile = _viewedProfile!.copyWith(
-        following: !_viewedProfile!.following,
+        following: !currentFollowing,
+        followers: updatedCount.toString(),
       );
       notifyListeners();
     }

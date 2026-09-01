@@ -6,10 +6,12 @@ import '../../data/models/portfolio_model.dart';
 
 class PortfolioCard extends StatelessWidget {
   final PortfolioModel item;
+  final VoidCallback? onTap;
 
   const PortfolioCard({
     super.key,
     required this.item,
+    this.onTap,
   });
 
   @override
@@ -30,53 +32,56 @@ class PortfolioCard extends StatelessWidget {
       );
     }
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (isNetwork)
-            Image.network(
-              cleanUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => buildPlaceholder(),
-            )
-          else if (isAsset)
-            Image.asset(
-              cleanUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => buildPlaceholder(),
-            )
-          else
-            buildPlaceholder(),
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (isNetwork)
+              Image.network(
+                cleanUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => buildPlaceholder(),
+              )
+            else if (isAsset)
+              Image.asset(
+                cleanUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => buildPlaceholder(),
+              )
+            else
+              buildPlaceholder(),
 
-          if (item.isVideo)
-            Center(
-              child: Container(
-                padding: const EdgeInsets.all(8),
+            if (item.isVideo)
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.45),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow_rounded,
+                    color: Colors.white,
+                    size: 36,
+                  ),
+                ),
+              ),
+
+            Positioned.fill(
+              child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.45),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.play_arrow_rounded,
-                  color: Colors.white,
-                  size: 36,
+                  border: Border.all(
+                    color: AppColors.border,
+                  ),
+                  borderRadius: BorderRadius.circular(18),
                 ),
               ),
             ),
-
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: AppColors.border,
-                ),
-                borderRadius: BorderRadius.circular(18),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

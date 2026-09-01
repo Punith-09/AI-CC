@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../common/widgets/user_avatar.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/storage/local_storage.dart';
 import '../../data/models/feed_post_model.dart';
 
 class FeedHeader extends StatelessWidget {
@@ -17,6 +18,28 @@ class FeedHeader extends StatelessWidget {
 
   void _navigateToProfile(BuildContext context) {
     final targetUserId = post.creatorId;
+    String? currentUserId;
+    String? currentUserName;
+
+    try {
+      currentUserId = LocalStorage.instance.getUserId();
+      currentUserName = LocalStorage.instance.getUserName();
+    } catch (_) {}
+
+    final isMe = (targetUserId != null &&
+            targetUserId.isNotEmpty &&
+            currentUserId != null &&
+            targetUserId == currentUserId) ||
+        (post.creatorName.isNotEmpty &&
+            currentUserName != null &&
+            post.creatorName.trim().toLowerCase() ==
+                currentUserName.trim().toLowerCase());
+
+    if (isMe) {
+      context.push(AppRoutes.artistProfile);
+      return;
+    }
+
     if (targetUserId != null && targetUserId.isNotEmpty) {
       context.push(AppRoutes.exploreProfile, extra: targetUserId);
     }
@@ -60,14 +83,14 @@ class FeedHeader extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (post.isVerified) ...[
-                        const SizedBox(width: 5),
-                        const Icon(
-                          Icons.verified,
-                          size: 16,
-                          color: AppColors.primary,
-                        ),
-                      ],
+                      // if (post.isVerified) ...[
+                      //   const SizedBox(width: 5),
+                      //   const Icon(
+                      //     Icons.verified,
+                      //     size: 16,
+                      //     color: AppColors.primary,
+                      //   ),
+                      // ],
                     ],
                   ),
                   if (post.location.isNotEmpty ||

@@ -65,7 +65,19 @@ class VideoModel {
       likesCount: json['likesCount'] as int? ?? 0,
       viewsCount: json['viewsCount'] as int? ?? 0,
       liked: json['liked'] as bool? ?? false,
-      createdAt: json['createdAt'] as String?,
+      createdAt: (json['createdAt'] ??
+              json['created_at'] ??
+              json['createdAtUtc'] ??
+              json['creationDate'] ??
+              json['creation_date'] ??
+              json['timestamp'] ??
+              json['time'] ??
+              json['uploadedAt'] ??
+              json['uploaded_at'] ??
+              json['uploadDate'] ??
+              json['upload_date'] ??
+              json['date'])
+          ?.toString(),
     );
   }
 

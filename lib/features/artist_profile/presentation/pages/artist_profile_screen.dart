@@ -254,6 +254,7 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: PortfolioGrid(
                         items: mediaList,
+                        profile: profile,
                       ),
                     ),
 

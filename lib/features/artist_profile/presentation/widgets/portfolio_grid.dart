@@ -1,14 +1,19 @@
+import 'package:aicc/core/routes/app_routes.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../data/models/artist_model.dart';
 import '../../data/models/portfolio_model.dart';
 import 'portfolio_card.dart';
 
 class PortfolioGrid extends StatelessWidget {
   final List<PortfolioModel> items;
+  final ArtistModel? profile;
 
   const PortfolioGrid({
     super.key,
     required this.items,
+    this.profile,
   });
 
   @override
@@ -64,9 +69,14 @@ class PortfolioGrid extends StatelessWidget {
         mainAxisSpacing: 16,
         childAspectRatio: .82,
       ),
-      itemBuilder: (_, index) {
+      itemBuilder: (context, index) {
+        final item = items[index];
         return PortfolioCard(
-          item: items[index],
+          item: item,
+          onTap: () {
+            final post = item.toFeedPostModel(artist: profile);
+            context.push(AppRoutes.watchVideo, extra: post);
+          },
         );
       },
     );

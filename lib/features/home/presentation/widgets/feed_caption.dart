@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/storage/local_storage.dart';
 import '../../data/models/feed_post_model.dart';
 
 class FeedCaption extends StatelessWidget {
@@ -50,7 +51,25 @@ class FeedCaption extends StatelessWidget {
                   ),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () {
-                      if (post.creatorId != null && post.creatorId!.isNotEmpty) {
+                      String? currentUserId;
+                      String? currentUserName;
+                      try {
+                        currentUserId = LocalStorage.instance.getUserId();
+                        currentUserName = LocalStorage.instance.getUserName();
+                      } catch (_) {}
+
+                      final isMe = (post.creatorId != null &&
+                              post.creatorId!.isNotEmpty &&
+                              currentUserId != null &&
+                              post.creatorId == currentUserId) ||
+                          (post.creatorName.isNotEmpty &&
+                              currentUserName != null &&
+                              post.creatorName.trim().toLowerCase() ==
+                                  currentUserName.trim().toLowerCase());
+
+                      if (isMe) {
+                        context.push(AppRoutes.artistProfile);
+                      } else if (post.creatorId != null && post.creatorId!.isNotEmpty) {
                         context.push(AppRoutes.exploreProfile, extra: post.creatorId);
                       }
                     },

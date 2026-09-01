@@ -22,16 +22,16 @@ class ProfileHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          _CircleButton(
-            icon: LucideIcons.chevronLeft,
-            onTap: () {
-              if (Navigator.canPop(context)) {
-                context.pop();
-              }
-            },
-          ),
+          // _CircleButton(
+          //   icon: LucideIcons.chevronLeft,
+          //   onTap: () {
+          //     if (Navigator.canPop(context)) {
+          //       context.pop();
+          //     }
+          //   },
+          // ),
           if (!isOtherUser)
             Builder(
               builder: (context) {

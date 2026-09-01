@@ -83,7 +83,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
       if (response.statusCode == 200) {
         final data = _extractData(response.data);
-        final artist = ArtistModel.fromJson(data);
+        var artist = ArtistModel.fromJson(data);
         if (artist.id.isNotEmpty) {
           _localStorage.saveUserId(artist.id);
         }
@@ -93,6 +93,15 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         if (artist.profileImage.isNotEmpty) {
           _localStorage.saveUserProfilePhoto(artist.profileImage);
         }
+
+        // If followers is 0 or empty, try discovering from API endpoints
+        if (artist.followers == '0' || artist.followers.isEmpty) {
+          final resolved = await _fetchFollowersCount(artist.id, userName: artist.name);
+          if (resolved != null && resolved != '0') {
+            artist = artist.copyWith(followers: resolved);
+          }
+        }
+
         return artist;
       }
 
@@ -122,7 +131,17 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
       if (response.statusCode == 200) {
         final data = _extractData(response.data);
-        return ArtistModel.fromJson(data);
+        var artist = ArtistModel.fromJson(data);
+
+        // If followers is 0 or empty, try discovering from API endpoints
+        if (artist.followers == '0' || artist.followers.isEmpty) {
+          final resolved = await _fetchFollowersCount(id, userName: artist.name);
+          if (resolved != null && resolved != '0') {
+            artist = artist.copyWith(followers: resolved);
+          }
+        }
+
+        return artist;
       }
 
       throw Exception(
@@ -137,6 +156,80 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     } catch (e) {
       rethrow;
     }
+  }
+
+  // ----------------------------------------------------------
+  // Fetch followers helper
+  // ----------------------------------------------------------
+
+  Future<String?> _fetchFollowersCount(String userId, {String? userName}) async {
+    if (userId.isEmpty) return null;
+
+    // 1. Try /users/$userId/followers
+    try {
+      final fResp = await _dioClient.get(
+        '/users/$userId/followers',
+        options: _getOptions(),
+      );
+      if (fResp.statusCode == 200 && fResp.data != null) {
+        final dynamic raw = fResp.data;
+        if (raw is List) {
+          return raw.length.toString();
+        } else if (raw is Map) {
+          final list = raw['followers'] ?? raw['data'] ?? raw['users'];
+          if (list is List) return list.length.toString();
+          final count = raw['count'] ?? raw['total'] ?? raw['followersCount'] ?? raw['followers_count'];
+          if (count != null) return count.toString();
+        }
+      }
+    } catch (_) {}
+
+    // 2. Try /users/$userId
+    try {
+      final uResp = await _dioClient.get(
+        ApiEndpoints.userProfile(userId),
+        options: _getOptions(),
+      );
+      if (uResp.statusCode == 200 && uResp.data != null) {
+        final uData = _extractData(uResp.data);
+        final fVal = ArtistModel.followersValueFromMap(uData);
+        if (fVal != '0' && fVal.isNotEmpty) {
+          return fVal;
+        }
+      }
+    } catch (_) {}
+
+    // 3. Try /users/explore
+    try {
+      final exResp = await _dioClient.get(
+        ApiEndpoints.exploreUsers,
+        options: _getOptions(),
+      );
+      final dynamic exData = exResp.data;
+      List<dynamic> list = [];
+      if (exData is List) {
+        list = exData;
+      } else if (exData is Map && exData['data'] is List) {
+        list = exData['data'];
+      } else if (exData is Map && exData['users'] is List) {
+        list = exData['users'];
+      }
+      for (final item in list) {
+        if (item is Map) {
+          final itemId = (item['id'] ?? item['_id'])?.toString();
+          final itemName = (item['fullName'] ?? item['name'] ?? item['stageName'])?.toString();
+          if ((itemId != null && itemId == userId) ||
+              (userName != null && userName.isNotEmpty && itemName != null && itemName.toLowerCase() == userName.toLowerCase())) {
+            final fVal = ArtistModel.followersValueFromMap(Map<String, dynamic>.from(item));
+            if (fVal != '0' && fVal.isNotEmpty) {
+              return fVal;
+            }
+          }
+        }
+      }
+    } catch (_) {}
+
+    return null;
   }
 
   // ----------------------------------------------------------

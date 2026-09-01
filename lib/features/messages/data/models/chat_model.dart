@@ -24,6 +24,8 @@ class ChatModel {
     this.isOnline = false,
   });
 
+  bool get isUnread => unreadCount > 0;
+
   factory ChatModel.fromJson(Map<String, dynamic> json, {String? currentUserId}) {
     String participantId = '';
     String participantName = '';
@@ -208,7 +210,11 @@ class ChatModel {
     }
 
     // Unread
-    final dynamic unreadRaw = json['unread'] ?? json['unreadCount'];
+    final dynamic unreadRaw = json['unread'] ??
+        json['unreadCount'] ??
+        json['unread_count'] ??
+        json['isUnread'] ??
+        json['unRead'];
     int unreadCount = 0;
     if (unreadRaw is bool) {
       unreadCount = unreadRaw ? 1 : 0;

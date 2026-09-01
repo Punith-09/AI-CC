@@ -2,6 +2,7 @@ import 'package:aicc/common/widgets/app_background.dart';
 import 'package:aicc/core/api/api_endpoints.dart';
 import 'package:aicc/core/constants/app_colors.dart';
 import 'package:aicc/core/routes/app_routes.dart';
+import 'package:aicc/core/storage/local_storage.dart';
 import 'package:aicc/features/artist_profile/data/models/portfolio_model.dart';
 import 'package:aicc/features/artist_profile/presentation/providers/profile_provider.dart';
 import 'package:aicc/features/messages/presentation/providers/messages_provider.dart';
@@ -10,6 +11,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
+
+import '../../../artist_profile/data/models/artist_model.dart';
 
 class ExploreProfileScreen extends StatefulWidget {
   final String userId;
@@ -27,6 +30,52 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProfileProvider>().fetchUserProfile(widget.userId);
     });
+  }
+
+  bool _isCurrentUser(ArtistModel? profile) {
+    String? currentUserId;
+    String? currentUserName;
+    String? currentUserEmail;
+
+    try {
+      currentUserId = LocalStorage.instance.getUserId();
+      currentUserName = LocalStorage.instance.getUserName();
+      currentUserEmail = LocalStorage.instance.getUserEmail();
+    } catch (_) {}
+
+    // Check by user ID (widget.userId or profile?.id)
+    if (widget.userId.isNotEmpty && currentUserId != null && currentUserId.isNotEmpty) {
+      if (widget.userId == currentUserId) return true;
+    }
+    if (profile != null && profile.id.isNotEmpty && currentUserId != null && currentUserId.isNotEmpty) {
+      if (profile.id == currentUserId) return true;
+    }
+
+    // Check by profile name vs current user name
+    if (profile != null && profile.name.isNotEmpty && currentUserName != null && currentUserName.isNotEmpty) {
+      if (profile.name.trim().toLowerCase() == currentUserName.trim().toLowerCase()) return true;
+    }
+
+    // Check by profile name vs email prefix
+    if (profile != null && profile.name.isNotEmpty && currentUserEmail != null && currentUserEmail.isNotEmpty) {
+      final emailPrefix = currentUserEmail.split('@').first.trim().toLowerCase();
+      if (profile.name.trim().toLowerCase() == emailPrefix) return true;
+    }
+
+    // Check by ProfileProvider currentProfile
+    try {
+      final myProfile = context.read<ProfileProvider>().currentProfile;
+      if (myProfile != null) {
+        if (widget.userId.isNotEmpty && myProfile.id.isNotEmpty && widget.userId == myProfile.id) return true;
+        if (profile != null && profile.id.isNotEmpty && myProfile.id.isNotEmpty && profile.id == myProfile.id) return true;
+        if (profile != null && profile.name.isNotEmpty && myProfile.name.isNotEmpty &&
+            profile.name.trim().toLowerCase() == myProfile.name.trim().toLowerCase()) {
+          return true;
+        }
+      }
+    } catch (_) {}
+
+    return false;
   }
 
   @override
@@ -294,69 +343,70 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
                                       ],
                                     ),
 
-                                    const SizedBox(height: 20),
+                                     // ── Follow & Message Buttons (hidden for logged-in user) ──
+                                     if (!_isCurrentUser(profile)) ...[
+                                       const SizedBox(height: 20),
+                                       Row(
+                                         children: [
+                                           Expanded(
+                                             child: _ActionButton(
+                                               label: (profile?.following ?? false)
+                                                   ? 'Following'
+                                                   : 'Follow',
+                                               isPrimary: true,
+                                               isActive: profile?.following ?? false,
+                                               onTap: () async {
+                                                 await provider
+                                                     .followUser(widget.userId);
+                                               },
+                                             ),
+                                           ),
+                                           const SizedBox(width: 12),
+                                           Expanded(
+                                             child: _ActionButton(
+                                               label: 'Message',
+                                               isPrimary: false,
+                                               onTap: () async {
+                                                 final messenger = ScaffoldMessenger.of(context);
+                                                 final router = GoRouter.of(context);
+                                                 final chat = await context
+                                                     .read<MessagesProvider>()
+                                                     .startChat(widget.userId);
+                                                 if (chat != null) {
+                                                   final enrichedChat = chat.copyWith(
+                                                     participantId: widget.userId,
+                                                     participantName: (chat.participantName.isNotEmpty)
+                                                         ? chat.participantName
+                                                         : (profile?.name ?? ''),
+                                                     participantAvatar: (chat.participantAvatar.isNotEmpty)
+                                                         ? chat.participantAvatar
+                                                         : (profile?.profileImage ?? ''),
+                                                     participantRole: (chat.participantRole.isNotEmpty)
+                                                         ? chat.participantRole
+                                                         : (profile?.roles.isNotEmpty == true
+                                                             ? profile!.roles.first
+                                                             : 'Artist'),
+                                                   );
+                                                   router.push(
+                                                     AppRoutes.chat,
+                                                     extra: enrichedChat,
+                                                   );
+                                                 } else {
+                                                   messenger.showSnackBar(
+                                                     const SnackBar(
+                                                       content: Text('Could not start chat. Please try again.'),
+                                                       backgroundColor: Colors.redAccent,
+                                                     ),
+                                                   );
+                                                 }
+                                               },
+                                             ),
+                                           ),
+                                         ],
+                                       ),
+                                     ],
 
-                                    // ── Follow & Message Buttons ──
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: _ActionButton(
-                                            label: (profile?.following ?? false)
-                                                ? 'Following'
-                                                : 'Follow',
-                                            isPrimary: true,
-                                            isActive: profile?.following ?? false,
-                                            onTap: () async {
-                                              await provider
-                                                  .followUser(widget.userId);
-                                            },
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: _ActionButton(
-                                            label: 'Message',
-                                            isPrimary: false,
-                                            onTap: () async {
-                                              final messenger = ScaffoldMessenger.of(context);
-                                              final router = GoRouter.of(context);
-                                              final chat = await context
-                                                  .read<MessagesProvider>()
-                                                  .startChat(widget.userId);
-                                              if (chat != null) {
-                                                final enrichedChat = chat.copyWith(
-                                                  participantId: widget.userId,
-                                                  participantName: (chat.participantName.isNotEmpty)
-                                                      ? chat.participantName
-                                                      : (profile?.name ?? ''),
-                                                  participantAvatar: (chat.participantAvatar.isNotEmpty)
-                                                      ? chat.participantAvatar
-                                                      : (profile?.profileImage ?? ''),
-                                                  participantRole: (chat.participantRole.isNotEmpty)
-                                                      ? chat.participantRole
-                                                      : (profile?.roles.isNotEmpty == true
-                                                          ? profile!.roles.first
-                                                          : 'Artist'),
-                                                );
-                                                router.push(
-                                                  AppRoutes.chat,
-                                                  extra: enrichedChat,
-                                                );
-                                              } else {
-                                                messenger.showSnackBar(
-                                                  const SnackBar(
-                                                    content: Text('Could not start chat. Please try again.'),
-                                                    backgroundColor: Colors.redAccent,
-                                                  ),
-                                                );
-                                              }
-                                            },
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-
-                                    const SizedBox(height: 28),
+                                     const SizedBox(height: 28),
 
                                     // ── Portfolio Header ──
                                     Row(
@@ -388,6 +438,7 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
                                     // ── Photos and Videos Posted by that Artist ──
                                     _ArtistPortfolioGrid(
                                       mediaList: mediaList,
+                                      profile: profile,
                                     ),
 
                                     const SizedBox(height: 40),
@@ -461,19 +512,19 @@ class _ProfileAvatar extends StatelessWidget {
           ),
         ),
         // Green Verified Tick Badge
-        Container(
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: const Color(0xFF22C55E),
-            shape: BoxShape.circle,
-            border: Border.all(color: const Color(0xFF0B1F2A), width: 2),
-          ),
-          child: const Icon(
-            Icons.check,
-            color: Colors.white,
-            size: 13,
-          ),
-        ),
+        // Container(
+        //   padding: const EdgeInsets.all(4),
+        //   decoration: BoxDecoration(
+        //     color: const Color(0xFF22C55E),
+        //     shape: BoxShape.circle,
+        //     border: Border.all(color: const Color(0xFF0B1F2A), width: 2),
+        //   ),
+        //   child: const Icon(
+        //     Icons.check,
+        //     color: Colors.white,
+        //     size: 13,
+        //   ),
+        // ),
       ],
     );
   }
@@ -700,9 +751,11 @@ class _ActionButton extends StatelessWidget {
 // ──────────────────────────────────────────────────────────────
 class _ArtistPortfolioGrid extends StatelessWidget {
   final List<PortfolioModel> mediaList;
+  final ArtistModel? profile;
 
   const _ArtistPortfolioGrid({
     required this.mediaList,
+    this.profile,
   });
 
   @override
@@ -748,7 +801,13 @@ class _ArtistPortfolioGrid extends StatelessWidget {
         separatorBuilder: (context, index) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
           final item = mediaList[index];
-          return _PortfolioItemCard(media: item);
+          return _PortfolioItemCard(
+            media: item,
+            onTap: () {
+              final post = item.toFeedPostModel(artist: profile);
+              context.push(AppRoutes.watchVideo, extra: post);
+            },
+          );
         },
       ),
     );
@@ -760,71 +819,78 @@ class _ArtistPortfolioGrid extends StatelessWidget {
 // ──────────────────────────────────────────────────────────────
 class _PortfolioItemCard extends StatelessWidget {
   final PortfolioModel media;
+  final VoidCallback? onTap;
 
-  const _PortfolioItemCard({required this.media});
+  const _PortfolioItemCard({
+    required this.media,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final formatted = ApiEndpoints.formatMediaUrl(media.image);
     final hasImage = formatted.startsWith('http');
 
-    return Container(
-      width: 110,
-      height: 140,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.25),
-          width: 1,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 110,
+        height: 140,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: AppColors.primary.withValues(alpha: 0.25),
+            width: 1,
+          ),
         ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          hasImage
-              ? Image.network(
-                  formatted,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      _emptyThumbnail(),
-                )
-              : _emptyThumbnail(),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            hasImage
+                ? Image.network(
+                    formatted,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        _emptyThumbnail(),
+                  )
+                : _emptyThumbnail(),
 
-          // Dark gradient overlay
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  Colors.black.withValues(alpha: 0.45),
-                ],
+            // Dark gradient overlay
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.45),
+                  ],
+                ),
               ),
             ),
-          ),
 
-          // Video Play Overlay Badge if it's a video
-          if (media.isVideo)
-            Center(
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.black.withValues(alpha: 0.55),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.3),
+            // Video Play Overlay Badge if it's a video
+            if (media.isVideo)
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.black.withValues(alpha: 0.55),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow_rounded,
+                    color: Colors.white,
+                    size: 22,
                   ),
                 ),
-                child: const Icon(
-                  Icons.play_arrow_rounded,
-                  color: Colors.white,
-                  size: 22,
-                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

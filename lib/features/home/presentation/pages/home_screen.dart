@@ -179,6 +179,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../common/widgets/app_background.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../messages/presentation/providers/messages_provider.dart';
 import '../providers/home_feed_provider.dart';
 import '../widgets/feed_card.dart';
 import '../widgets/home_appbar.dart';
@@ -198,6 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<HomeFeedProvider>().fetchFeed();
+      context.read<MessagesProvider>().fetchChats(silent: true);
     });
   }
 

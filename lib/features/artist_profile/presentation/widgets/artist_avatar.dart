@@ -68,27 +68,27 @@ class ArtistAvatar extends StatelessWidget {
           ),
         ),
 
-        Positioned(
-          bottom: 6,
-          right: 4,
-          child: Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: Colors.green,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.background,
-                width: 3,
-              ),
-            ),
-            child: const Icon(
-              Icons.check,
-              size: 16,
-              color: Colors.white,
-            ),
-          ),
-        ),
+        // Positioned(
+        //   bottom: 6,
+        //   right: 4,
+        //   child: Container(
+        //     width: 28,
+        //     height: 28,
+        //     decoration: BoxDecoration(
+        //       color: Colors.green,
+        //       shape: BoxShape.circle,
+        //       border: Border.all(
+        //         color: AppColors.background,
+        //         width: 3,
+        //       ),
+        //     ),
+        //     child: const Icon(
+        //       Icons.check,
+        //       size: 16,
+        //       color: Colors.white,
+        //     ),
+        //   ),
+        // ),
       ],
     );
   }

@@ -65,7 +65,7 @@ class ArtistModel {
 
     return ArtistModel(
       id: _stringValue(
-        data['_id'] ?? data['id'],
+        data['_id'] ?? data['id'] ?? json['_id'] ?? json['id'],
       ),
       name: _stringValue(
         data['fullName'] ?? data['name'] ?? data['stageName'],
@@ -87,7 +87,8 @@ class ArtistModel {
         data['pic'] ??
             data['profilePhoto'] ??
             data['profile_image'] ??
-            data['profileImage'],
+            data['profileImage'] ??
+            data['avatar'],
       ),
       coverImage: _imageValue(
         data['cover_image'] ??
@@ -98,16 +99,24 @@ class ArtistModel {
         data['role'] ?? data['roles'] ?? data['category'],
       ),
       projects: _intValue(
-        data['projects'] ?? data['videosCount'],
+        data['projects'] ??
+            data['projectsCount'] ??
+            data['projects_count'] ??
+            data['videosCount'] ??
+            data['videos_count'] ??
+            data['photosCount'] ??
+            data['postsCount'] ??
+            (data['portfolio'] is List ? (data['portfolio'] as List).length : null) ??
+            (data['previousWork'] is List ? (data['previousWork'] as List).length : null),
       ),
-      followers: _stringValue(
-        data['followers'],
-      ),
+      followers: _followersValue(data, rawJson: json),
       rating: _doubleValue(
         data['rating'],
       ),
-      awards: _awardsValue(data['awards']),
-      following: data['following'] == true,
+      awards: _awardsValue(
+        data['awards'] ?? data['awardsCount'] ?? data['awards_count'] ?? data['achievements'],
+      ),
+      following: data['following'] == true || json['following'] == true || data['isFollowing'] == true,
       experience: _stringValue(
         data['experience'],
       ),
@@ -119,27 +128,85 @@ class ArtistModel {
   }
 
   ArtistModel copyWith({
-    bool? following,
+    String? id,
+    String? name,
+    String? country,
+    String? state,
+    String? city,
+    String? profileImage,
+    String? coverImage,
+    List<String>? roles,
+    int? projects,
     String? followers,
+    double? rating,
+    int? awards,
+    bool? following,
+    String? experience,
+    String? languages,
+    List<PortfolioModel>? portfolio,
   }) {
     return ArtistModel(
-      id: id,
-      name: name,
-      country: country,
-      state: state,
-      city: city,
-      profileImage: profileImage,
-      coverImage: coverImage,
-      roles: roles,
-      projects: projects,
+      id: id ?? this.id,
+      name: name ?? this.name,
+      country: country ?? this.country,
+      state: state ?? this.state,
+      city: city ?? this.city,
+      profileImage: profileImage ?? this.profileImage,
+      coverImage: coverImage ?? this.coverImage,
+      roles: roles ?? this.roles,
+      projects: projects ?? this.projects,
       followers: followers ?? this.followers,
-      rating: rating,
-      awards: awards,
+      rating: rating ?? this.rating,
+      awards: awards ?? this.awards,
       following: following ?? this.following,
-      experience: experience,
-      languages: languages,
-      portfolio: portfolio,
+      experience: experience ?? this.experience,
+      languages: languages ?? this.languages,
+      portfolio: portfolio ?? this.portfolio,
     );
+  }
+
+  static String followersValueFromMap(Map<String, dynamic> data, {Map<String, dynamic>? rawJson}) {
+    return _followersValue(data, rawJson: rawJson);
+  }
+
+  static String _followersValue(Map<String, dynamic> data, {Map<String, dynamic>? rawJson}) {
+    dynamic val = data['followers'] ??
+        data['followersCount'] ??
+        data['followers_count'] ??
+        data['followerCount'] ??
+        data['totalFollowers'] ??
+        data['numFollowers'] ??
+        data['followersTotal'] ??
+        data['stats']?['followers'] ??
+        data['counts']?['followers'] ??
+        rawJson?['followers'] ??
+        rawJson?['followersCount'] ??
+        rawJson?['followers_count'] ??
+        rawJson?['followerCount'] ??
+        rawJson?['details']?['followers'] ??
+        rawJson?['details']?['followersCount'];
+
+    if (val == null) return '0';
+
+    if (val is int) return val.toString();
+    if (val is num) return val.toInt().toString();
+
+    if (val is List) {
+      return val.length.toString();
+    }
+
+    if (val is String) {
+      final trimmed = val.trim();
+      if (trimmed.isEmpty) return '0';
+      final parsedInt = int.tryParse(trimmed);
+      if (parsedInt != null) return parsedInt.toString();
+      if (trimmed.contains(',')) {
+        return trimmed.split(',').where((s) => s.trim().isNotEmpty).length.toString();
+      }
+      return trimmed;
+    }
+
+    return val.toString();
   }
 
   static List<PortfolioModel> _portfolioFromProfile(Map<String, dynamic> data) {
@@ -150,6 +217,7 @@ class ArtistModel {
       required String url,
       required bool isVideo,
       String? title,
+      String? id,
     }) {
       final trimmed = url.trim();
       if (trimmed.isEmpty || !trimmed.startsWith('http') || seen.contains(trimmed)) {
@@ -157,6 +225,7 @@ class ArtistModel {
       }
       seen.add(trimmed);
       items.add(PortfolioModel(
+        id: id ?? '',
         image: trimmed,
         videoUrl: isVideo ? trimmed : null,
         title: title,
