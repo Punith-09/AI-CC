@@ -191,9 +191,10 @@ class _AudienceSignUpScreenState extends State<AudienceSignUpScreen> {
       context.go(AppRoutes.home);
     } catch (e) {
       if (!mounted) return;
+      final errorMsg = e.toString().replaceFirst('Exception: ', '').trim();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Registration failed: $e"),
+          content: Text(errorMsg.isNotEmpty ? errorMsg : "Registration failed. Please try again."),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 4),
         ),

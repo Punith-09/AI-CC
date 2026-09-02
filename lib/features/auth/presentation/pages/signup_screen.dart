@@ -602,9 +602,10 @@ class _SignUpWizardPageState extends State<SignUpWizardPage> {
         return;
       }
 
+      final errorMsg = e.toString().replaceFirst('Exception: ', '').trim();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Registration failed: $e'),
+          content: Text(errorMsg.isNotEmpty ? errorMsg : 'Registration failed. Please try again.'),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 5),
         ),

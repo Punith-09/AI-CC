@@ -237,12 +237,20 @@ class _LoginScreenState extends State<LoginScreen> {
                                 onTap: authProvider.isLoading
                                     ? null
                                     : () async {
-                                        final email = _emailController.text;
+                                        final email = _emailController.text.trim();
                                         final password = _passwordController.text;
                                         if (email.isEmpty || password.isEmpty) {
                                           ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(
-                                              content: Text('Please enter email and password.'),
+                                            SnackBar(
+                                              content: const Text(
+                                                'Please enter both email/HCC ID and password.',
+                                                style: TextStyle(color: Colors.white),
+                                              ),
+                                              backgroundColor: AppColors.danger,
+                                              behavior: SnackBarBehavior.floating,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(10),
+                                              ),
                                             ),
                                           );
                                           return;
@@ -254,9 +262,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                           }
                                         } else {
                                           if (context.mounted) {
+                                            final errorMsg = context.read<AuthProvider>().errorMessage;
                                             ScaffoldMessenger.of(context).showSnackBar(
                                               SnackBar(
-                                                content: Text(context.read<AuthProvider>().errorMessage ?? 'Login failed'),
+                                                content: Text(
+                                                  errorMsg ?? 'Invalid email/HCC ID or password.',
+                                                  style: const TextStyle(color: Colors.white),
+                                                ),
+                                                backgroundColor: AppColors.danger,
+                                                behavior: SnackBarBehavior.floating,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(10),
+                                                ),
                                               ),
                                             );
                                           }

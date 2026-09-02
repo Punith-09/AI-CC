@@ -2,7 +2,7 @@ class ApiEndpoints {
   ApiEndpoints._();
 
   static String get baseUrl {
-    return 'https://appreciation-negotiation-norm-cable.trycloudflare.com';
+    return 'https://casting-be.onrender.com';
   }
 
   static const String login = '/auth/login';

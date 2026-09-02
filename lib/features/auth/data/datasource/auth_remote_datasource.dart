@@ -48,7 +48,36 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw Exception(
         'Invalid login server response format',
       );
+    } on DioException catch (e) {
+      print('LOGIN API DIO ERROR: ${e.response?.data}');
+      final responseData = e.response?.data;
+      if (responseData is Map) {
+        final msg = responseData['message']?.toString() ??
+            responseData['error']?.toString() ??
+            responseData['detail']?.toString() ??
+            responseData['msg']?.toString() ??
+            '';
+        if (msg.isNotEmpty && !msg.toLowerCase().contains('internal server error')) {
+          throw Exception(msg);
+        }
+      }
+      final statusCode = e.response?.statusCode;
+      if (statusCode == 401 || statusCode == 400) {
+        throw Exception('Invalid email/HCC ID or password. Please try again.');
+      } else if (statusCode == 404) {
+        throw Exception('Account not found. Please check your credentials or sign up.');
+      } else if (statusCode == 500) {
+        throw Exception('Server error. Please try again later.');
+      }
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.connectionError) {
+        throw Exception('Network connection error. Please check your internet connection.');
+      }
+      throw Exception('Invalid email/HCC ID or password. Please try again.');
     } catch (e) {
+      print('LOGIN API ERROR: $e');
       rethrow;
     }
   }
