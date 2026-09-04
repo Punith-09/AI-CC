@@ -89,7 +89,7 @@ class ProfileProvider with ChangeNotifier {
 
   Future<void> followUser(String id) async {
     final previous = _viewedProfile;
-    if (_viewedProfile != null) {
+    if (_viewedProfile != null && _viewedProfile!.id == id) {
       final currentFollowing = _viewedProfile!.following;
       final currentCount = int.tryParse(_viewedProfile!.followers) ?? 0;
       final updatedCount = currentFollowing
@@ -106,9 +106,28 @@ class ProfileProvider with ChangeNotifier {
     try {
       await _repository.followUser(id);
     } catch (e) {
-      _viewedProfile = previous;
-      _error = e.toString();
-      notifyListeners();
+      if (_viewedProfile != null && _viewedProfile!.id == id) {
+        _viewedProfile = previous;
+        _error = e.toString();
+        notifyListeners();
+      }
+      rethrow;
+    }
+  }
+
+  void syncFollowStatus(String id, {required bool following}) {
+    if (_viewedProfile != null && _viewedProfile!.id == id) {
+      if (_viewedProfile!.following != following) {
+        final currentCount = int.tryParse(_viewedProfile!.followers) ?? 0;
+        final updatedCount = following
+            ? currentCount + 1
+            : (currentCount > 0 ? currentCount - 1 : 0);
+        _viewedProfile = _viewedProfile!.copyWith(
+          following: following,
+          followers: updatedCount.toString(),
+        );
+        notifyListeners();
+      }
     }
   }
 

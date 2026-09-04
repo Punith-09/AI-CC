@@ -335,8 +335,35 @@ class FeedPostModel {
       resolvedLocation = rawState.toString().trim();
     }
 
+    final rawLikes = json['likes'];
+    final rawLikesCount = json['likesCount'] ?? json['likes_count'] ?? json['likeCount'];
+    int parsedLikesCount = 0;
+    if (rawLikesCount is int) {
+      parsedLikesCount = rawLikesCount;
+    } else if (rawLikesCount is num) {
+      parsedLikesCount = rawLikesCount.toInt();
+    } else if (rawLikes is List) {
+      parsedLikesCount = rawLikes.length;
+    } else if (rawLikesCount is String) {
+      parsedLikesCount = int.tryParse(rawLikesCount) ?? 0;
+    }
+
+    final rawViews = json['viewsCount'] ?? json['views_count'] ?? json['viewCount'] ?? json['views'];
+    int parsedViewsCount = 0;
+    if (rawViews is int) {
+      parsedViewsCount = rawViews;
+    } else if (rawViews is num) {
+      parsedViewsCount = rawViews.toInt();
+    } else if (rawViews is List) {
+      parsedViewsCount = rawViews.length;
+    } else if (rawViews is String) {
+      parsedViewsCount = int.tryParse(rawViews) ?? 0;
+    }
+
+    final isLiked = json['liked'] == true || json['isLiked'] == true || json['is_liked'] == true;
+
     return FeedPostModel(
-      id: json['id'] as String? ?? '',
+      id: json['id'] as String? ?? json['_id'] as String? ?? '',
       type: mediaType,
       title: json['title'] as String? ?? '',
       description: (json['desc'] ?? json['description']) as String? ?? '',
@@ -353,9 +380,10 @@ class FeedPostModel {
       creatorName: json['creatorName'] as String? ?? creatorMap?['fullName'] as String? ?? creatorMap?['name'] as String? ?? 'Creator',
       creatorPic: json['creatorPic'] as String? ?? creatorMap?['profilePhoto'] as String? ?? creatorMap?['avatar'] as String?,
       creatorCategory: json['creatorCategory'] as String? ?? creatorMap?['role'] as String? ?? creatorMap?['category'] as String? ?? 'Artist',
-      likesCount: json['likesCount'] as int? ?? 0,
-      commentsCount: json['commentsCount'] as int? ?? 0,
-      viewsCount: json['viewsCount'] as int? ?? 0,
+      likesCount: parsedLikesCount,
+      commentsCount: json['commentsCount'] as int? ?? (json['comments'] is List ? (json['comments'] as List).length : 0),
+      viewsCount: parsedViewsCount,
+      liked: isLiked,
       createdAt: (json['createdAt'] ??
               json['created_at'] ??
               json['createdAtUtc'] ??

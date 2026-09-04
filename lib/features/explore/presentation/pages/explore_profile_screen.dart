@@ -439,6 +439,7 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
                                     _ArtistPortfolioGrid(
                                       mediaList: mediaList,
                                       profile: profile,
+                                      userId: widget.userId,
                                     ),
 
                                     const SizedBox(height: 40),
@@ -752,10 +753,12 @@ class _ActionButton extends StatelessWidget {
 class _ArtistPortfolioGrid extends StatelessWidget {
   final List<PortfolioModel> mediaList;
   final ArtistModel? profile;
+  final String userId;
 
   const _ArtistPortfolioGrid({
     required this.mediaList,
     this.profile,
+    this.userId = '',
   });
 
   @override
@@ -805,7 +808,21 @@ class _ArtistPortfolioGrid extends StatelessWidget {
             media: item,
             onTap: () {
               final post = item.toFeedPostModel(artist: profile);
-              context.push(AppRoutes.watchVideo, extra: post);
+              final enrichedPost = post.copyWith(
+                creatorId: (post.creatorId != null && post.creatorId!.isNotEmpty)
+                    ? post.creatorId
+                    : (profile?.id.isNotEmpty == true
+                        ? profile!.id
+                        : (userId.isNotEmpty ? userId : null)),
+                creatorName: post.creatorName.isNotEmpty && post.creatorName != 'Creator'
+                    ? post.creatorName
+                    : (profile?.name.isNotEmpty == true ? profile!.name : 'Creator'),
+                creatorPic: (post.creatorPic != null && post.creatorPic!.isNotEmpty)
+                    ? post.creatorPic
+                    : profile?.profileImage,
+                creatorCategory: post.creatorCategory ?? (profile?.roles.isNotEmpty == true ? profile!.roles.first : 'Artist'),
+              );
+              context.push(AppRoutes.watchVideo, extra: enrichedPost);
             },
           );
         },

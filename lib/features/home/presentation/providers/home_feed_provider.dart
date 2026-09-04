@@ -92,8 +92,16 @@ class HomeFeedProvider extends ChangeNotifier {
         isVideo: originalPost.isVideo,
       );
 
-      final serverLiked = res['liked'] as bool? ?? newLiked;
-      final serverLikesCount = res['likesCount'] as int? ?? newLikesCount;
+      final serverLiked = res['liked'] as bool? ?? (res['data'] is Map ? res['data']['liked'] as bool? : null) ?? newLiked;
+      final dynamic rawLikesCount = res['likesCount'] ?? res['data']?['likesCount'] ?? (res['likes'] is List ? (res['likes'] as List).length : null);
+      int serverLikesCount = newLikesCount;
+      if (rawLikesCount is int) {
+        serverLikesCount = rawLikesCount;
+      } else if (rawLikesCount is num) {
+        serverLikesCount = rawLikesCount.toInt();
+      } else if (rawLikesCount is String) {
+        serverLikesCount = int.tryParse(rawLikesCount) ?? newLikesCount;
+      }
 
       _posts[index] = _posts[index].copyWith(
         liked: serverLiked,
@@ -105,6 +113,17 @@ class HomeFeedProvider extends ChangeNotifier {
       _posts[index] = originalPost;
       notifyListeners();
     }
+  }
+
+  /// Syncs like state for a post across screens
+  void syncPostLike(String postId, {required bool liked, required int likesCount}) {
+    final index = _posts.indexWhere((p) => p.id == postId);
+    if (index == -1) return;
+    _posts[index] = _posts[index].copyWith(
+      liked: liked,
+      likesCount: likesCount,
+    );
+    notifyListeners();
   }
 
   /// Called by CommentsBottomSheet after loading comments so the

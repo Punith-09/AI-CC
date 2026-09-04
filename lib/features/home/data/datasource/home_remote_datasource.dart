@@ -276,14 +276,14 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       }
       return {};
     } catch (e) {
-      if (!isVideo) {
-        try {
-          final response = await _dioClient.post(ApiEndpoints.likeVideo(id));
-          if (response.data is Map) {
-            return Map<String, dynamic>.from(response.data as Map);
-          }
-        } catch (_) {}
-      }
+      try {
+        final fallbackEndpoint = isVideo ? ApiEndpoints.likePhoto(id) : ApiEndpoints.likeVideo(id);
+        final response = await _dioClient.post(fallbackEndpoint);
+        if (response.data is Map) {
+          return Map<String, dynamic>.from(response.data as Map);
+        }
+        return {};
+      } catch (_) {}
       rethrow;
     }
   }

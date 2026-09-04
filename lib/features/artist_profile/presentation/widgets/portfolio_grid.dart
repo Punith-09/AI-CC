@@ -75,7 +75,19 @@ class PortfolioGrid extends StatelessWidget {
           item: item,
           onTap: () {
             final post = item.toFeedPostModel(artist: profile);
-            context.push(AppRoutes.watchVideo, extra: post);
+            final enrichedPost = post.copyWith(
+              creatorId: (post.creatorId != null && post.creatorId!.isNotEmpty)
+                  ? post.creatorId
+                  : profile?.id,
+              creatorName: post.creatorName.isNotEmpty && post.creatorName != 'Creator'
+                  ? post.creatorName
+                  : (profile?.name.isNotEmpty == true ? profile!.name : 'Creator'),
+              creatorPic: (post.creatorPic != null && post.creatorPic!.isNotEmpty)
+                  ? post.creatorPic
+                  : profile?.profileImage,
+              creatorCategory: post.creatorCategory ?? (profile?.roles.isNotEmpty == true ? profile!.roles.first : 'Artist'),
+            );
+            context.push(AppRoutes.watchVideo, extra: enrichedPost);
           },
         );
       },

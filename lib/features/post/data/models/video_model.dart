@@ -42,6 +42,33 @@ class VideoModel {
         ? json['creator'] as Map<String, dynamic>
         : (json['user'] is Map ? json['user'] as Map<String, dynamic> : null);
 
+    final rawLikes = json['likes'];
+    final rawLikesCount = json['likesCount'] ?? json['likes_count'] ?? json['likeCount'];
+    int parsedLikesCount = 0;
+    if (rawLikesCount is int) {
+      parsedLikesCount = rawLikesCount;
+    } else if (rawLikesCount is num) {
+      parsedLikesCount = rawLikesCount.toInt();
+    } else if (rawLikes is List) {
+      parsedLikesCount = rawLikes.length;
+    } else if (rawLikesCount is String) {
+      parsedLikesCount = int.tryParse(rawLikesCount) ?? 0;
+    }
+
+    final rawViews = json['viewsCount'] ?? json['views_count'] ?? json['viewCount'] ?? json['views'];
+    int parsedViewsCount = 0;
+    if (rawViews is int) {
+      parsedViewsCount = rawViews;
+    } else if (rawViews is num) {
+      parsedViewsCount = rawViews.toInt();
+    } else if (rawViews is List) {
+      parsedViewsCount = rawViews.length;
+    } else if (rawViews is String) {
+      parsedViewsCount = int.tryParse(rawViews) ?? 0;
+    }
+
+    final isLiked = json['liked'] == true || json['isLiked'] == true || json['is_liked'] == true;
+
     return VideoModel(
       id: json['id'] as String? ?? json['_id'] as String? ?? '',
       creatorId: json['creatorId'] as String? ??
@@ -62,9 +89,9 @@ class VideoModel {
       desc: (json['desc'] ?? json['description']) as String?,
       url: json['url'] as String? ?? '',
       thumb: json['thumb'] as String?,
-      likesCount: json['likesCount'] as int? ?? 0,
-      viewsCount: json['viewsCount'] as int? ?? 0,
-      liked: json['liked'] as bool? ?? false,
+      likesCount: parsedLikesCount,
+      viewsCount: parsedViewsCount,
+      liked: isLiked,
       createdAt: (json['createdAt'] ??
               json['created_at'] ??
               json['createdAtUtc'] ??

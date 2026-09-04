@@ -261,7 +261,10 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         if (item is Map) {
           final cId = item['creatorId']?.toString() ??
               item['userId']?.toString() ??
+              item['user_id']?.toString() ??
               item['creator_id']?.toString() ??
+              (item['creator'] is Map ? (item['creator']['_id'] ?? item['creator']['id'])?.toString() : null) ??
+              (item['creator'] is String ? item['creator'] as String : null) ??
               '';
           final url = item['url']?.toString() ??
               item['image']?.toString() ??
@@ -270,10 +273,10 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
           // Filter by artist userId or include if match
           if (url.isNotEmpty && (userId.isEmpty || cId == userId || cId.isEmpty)) {
-            media.add(PortfolioModel(
-              id: item['id']?.toString() ?? '',
+            final model = PortfolioModel.fromJson(Map<String, dynamic>.from(item));
+            media.add(model.copyWith(
+              id: (item['id'] ?? item['_id'])?.toString() ?? model.id,
               image: url,
-              title: item['title']?.toString(),
               isVideo: false,
             ));
           }
@@ -295,7 +298,10 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         if (item is Map) {
           final cId = item['creatorId']?.toString() ??
               item['userId']?.toString() ??
+              item['user_id']?.toString() ??
               item['creator_id']?.toString() ??
+              (item['creator'] is Map ? (item['creator']['_id'] ?? item['creator']['id'])?.toString() : null) ??
+              (item['creator'] is String ? item['creator'] as String : null) ??
               '';
           final url = item['url']?.toString() ??
               item['video']?.toString() ??
@@ -306,11 +312,11 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
               url;
 
           if (url.isNotEmpty && (userId.isEmpty || cId == userId || cId.isEmpty)) {
-            media.add(PortfolioModel(
-              id: item['id']?.toString() ?? '',
+            final model = PortfolioModel.fromJson(Map<String, dynamic>.from(item));
+            media.add(model.copyWith(
+              id: (item['id'] ?? item['_id'])?.toString() ?? model.id,
               image: thumb,
               videoUrl: url,
-              title: item['title']?.toString(),
               isVideo: true,
             ));
           }

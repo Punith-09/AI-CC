@@ -28,6 +28,32 @@ class PortfolioModel {
     this.isVideo = false,
   });
 
+  PortfolioModel copyWith({
+    String? id,
+    String? image,
+    String? videoUrl,
+    String? title,
+    String? description,
+    int? likesCount,
+    int? viewsCount,
+    bool? liked,
+    String? createdAt,
+    bool? isVideo,
+  }) {
+    return PortfolioModel(
+      id: id ?? this.id,
+      image: image ?? this.image,
+      videoUrl: videoUrl ?? this.videoUrl,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      likesCount: likesCount ?? this.likesCount,
+      viewsCount: viewsCount ?? this.viewsCount,
+      liked: liked ?? this.liked,
+      createdAt: createdAt ?? this.createdAt,
+      isVideo: isVideo ?? this.isVideo,
+    );
+  }
+
   FeedPostModel toFeedPostModel({ArtistModel? artist}) {
     final media = (videoUrl != null && videoUrl!.isNotEmpty) ? videoUrl! : image;
     return FeedPostModel(
@@ -71,19 +97,42 @@ class PortfolioModel {
         (json['videoUrl'] != null && json['videoUrl'].toString().isNotEmpty) ||
         (json['video'] != null && json['video'].toString().isNotEmpty);
 
+    final rawLikes = json['likes'];
+    final rawLikesCount = json['likesCount'] ?? json['likes_count'] ?? json['likeCount'];
+    int parsedLikesCount = 0;
+    if (rawLikesCount is int) {
+      parsedLikesCount = rawLikesCount;
+    } else if (rawLikesCount is num) {
+      parsedLikesCount = rawLikesCount.toInt();
+    } else if (rawLikes is List) {
+      parsedLikesCount = rawLikes.length;
+    } else if (rawLikesCount is String) {
+      parsedLikesCount = int.tryParse(rawLikesCount) ?? 0;
+    }
+
+    final rawViews = json['viewsCount'] ?? json['views_count'] ?? json['viewCount'] ?? json['views'];
+    int parsedViewsCount = 0;
+    if (rawViews is int) {
+      parsedViewsCount = rawViews;
+    } else if (rawViews is num) {
+      parsedViewsCount = rawViews.toInt();
+    } else if (rawViews is List) {
+      parsedViewsCount = rawViews.length;
+    } else if (rawViews is String) {
+      parsedViewsCount = int.tryParse(rawViews) ?? 0;
+    }
+
+    final isLiked = json['liked'] == true || json['isLiked'] == true || json['is_liked'] == true;
+
     return PortfolioModel(
       id: (json['id'] ?? json['_id'])?.toString() ?? '',
       image: image,
       videoUrl: json['videoUrl']?.toString() ?? json['video']?.toString() ?? (isVid ? image : null),
       title: json['title']?.toString(),
       description: (json['desc'] ?? json['description'])?.toString(),
-      likesCount: json['likesCount'] is int
-          ? json['likesCount']
-          : (int.tryParse(json['likesCount']?.toString() ?? '') ?? 0),
-      viewsCount: json['viewsCount'] is int
-          ? json['viewsCount']
-          : (int.tryParse(json['viewsCount']?.toString() ?? '') ?? 0),
-      liked: json['liked'] == true,
+      likesCount: parsedLikesCount,
+      viewsCount: parsedViewsCount,
+      liked: isLiked,
       createdAt: (json['createdAt'] ?? json['created_at'])?.toString(),
       isVideo: isVid,
     );

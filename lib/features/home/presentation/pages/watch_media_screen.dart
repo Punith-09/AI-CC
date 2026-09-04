@@ -62,12 +62,43 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
     super.initState();
     _post = widget.post;
 
+    _initFollowStatus();
+
     if (_post.isVideo) {
       _initializeVideo();
     }
 
     _fetchComments();
     _incrementView();
+  }
+
+  void _initFollowStatus() {
+    final creatorId = _post.creatorId;
+    if (creatorId != null && creatorId.isNotEmpty) {
+      try {
+        final viewed = context.read<ProfileProvider>().viewedProfile;
+        if (viewed != null && viewed.id == creatorId) {
+          _isFollowing = viewed.following;
+        }
+      } catch (_) {}
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _checkFollowStatus();
+      });
+    }
+  }
+
+  Future<void> _checkFollowStatus() async {
+    final creatorId = _post.creatorId;
+    if (creatorId == null || creatorId.isEmpty) return;
+
+    try {
+      final profile = await sl<ProfileRepository>().getUserProfile(creatorId);
+      if (mounted) {
+        setState(() {
+          _isFollowing = profile.following;
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -224,6 +255,9 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   // =========================================================
 
   Future<void> _toggleLike() async {
+    if (_post.id.isEmpty) return;
+
+    final originalPost = _post;
     final isLiked = !_post.liked;
     final likesCount = isLiked
         ? _post.likesCount + 1
@@ -234,21 +268,83 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
     });
 
     try {
-      context.read<HomeFeedProvider>().toggleLike(_post.id);
-    } catch (_) {}
+      // Sync to HomeFeedProvider if post exists in feed
+      try {
+        context.read<HomeFeedProvider>().syncPostLike(
+          _post.id,
+          liked: isLiked,
+          likesCount: likesCount,
+        );
+      } catch (_) {}
+
+      final res = await sl<HomeRepository>().toggleLike(
+        id: _post.id,
+        isVideo: _post.isVideo,
+      );
+
+      if (mounted && res.isNotEmpty) {
+        final serverLiked = res['liked'] as bool? ?? (res['data'] is Map ? res['data']['liked'] as bool? : null);
+        final dynamic rawServerLikes = res['likesCount'] ?? res['data']?['likesCount'] ?? (res['likes'] is List ? (res['likes'] as List).length : null);
+        int? serverLikesCount;
+        if (rawServerLikes is int) {
+          serverLikesCount = rawServerLikes;
+        } else if (rawServerLikes is num) {
+          serverLikesCount = rawServerLikes.toInt();
+        } else if (rawServerLikes is String) {
+          serverLikesCount = int.tryParse(rawServerLikes);
+        }
+
+        if (serverLiked != null || serverLikesCount != null) {
+          final finalLiked = serverLiked ?? isLiked;
+          final finalCount = serverLikesCount ?? likesCount;
+          setState(() {
+            _post = _post.copyWith(
+              liked: finalLiked,
+              likesCount: finalCount,
+            );
+          });
+          try {
+            context.read<HomeFeedProvider>().syncPostLike(
+              _post.id,
+              liked: finalLiked,
+              likesCount: finalCount,
+            );
+          } catch (_) {}
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _post = originalPost;
+        });
+        try {
+          context.read<HomeFeedProvider>().syncPostLike(
+            _post.id,
+            liked: originalPost.liked,
+            likesCount: originalPost.likesCount,
+          );
+        } catch (_) {}
+      }
+    }
   }
 
   Future<void> _toggleFollow() async {
     if (_post.creatorId == null || _post.creatorId!.isEmpty || _isFollowLoading) return;
     setState(() => _isFollowLoading = true);
 
+    final creatorId = _post.creatorId!;
     try {
-      await sl<ProfileRepository>().followUser(_post.creatorId!);
+      await sl<ProfileRepository>().followUser(creatorId);
+      final newFollowing = !_isFollowing;
       if (mounted) {
         setState(() {
-          _isFollowing = !_isFollowing;
+          _isFollowing = newFollowing;
           _isFollowLoading = false;
         });
+        try {
+          context.read<ProfileProvider>().syncFollowStatus(creatorId, following: newFollowing);
+        } catch (_) {}
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(_isFollowing ? 'Following ${_post.creatorName}' : 'Unfollowed ${_post.creatorName}'),
@@ -260,6 +356,13 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isFollowLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to update follow status. Please try again.'),
+            duration: Duration(seconds: 2),
+            backgroundColor: AppColors.danger,
+          ),
+        );
       }
     }
   }
@@ -730,22 +833,31 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
             // Follow Button
             GestureDetector(
               onTap: _toggleFollow,
-              child: Container(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF7C4DFF), Color(0xFF9066FF)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  gradient: _isFollowing
+                      ? null
+                      : const LinearGradient(
+                          colors: [Color(0xFF7C4DFF), Color(0xFF9066FF)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                  color: _isFollowing ? const Color(0xFF0D2533) : null,
                   borderRadius: BorderRadius.circular(22),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF7C4DFF).withValues(alpha: 0.35),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
+                  border: _isFollowing
+                      ? Border.all(color: AppColors.primary.withValues(alpha: 0.6), width: 1.2)
+                      : null,
+                  boxShadow: _isFollowing
+                      ? []
+                      : [
+                          BoxShadow(
+                            color: const Color(0xFF7C4DFF).withValues(alpha: 0.35),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                 ),
                 child: _isFollowLoading
                     ? const SizedBox(
@@ -756,7 +868,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                     : Text(
                         _isFollowing ? 'Following' : 'Follow',
                         style: GoogleFonts.poppins(
-                          color: Colors.white,
+                          color: _isFollowing ? AppColors.primary : Colors.white,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),
@@ -867,18 +979,22 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
               // Likes count
               Row(
                 children: [
-                  const Icon(
-                    Icons.favorite,
+                  Icon(
+                    _post.liked ? Icons.favorite : Icons.favorite_border,
                     size: 16,
-                    color: Color(0xFFE940B7),
+                    color: const Color(0xFFE940B7),
                   ),
                   const SizedBox(width: 6),
-                  Text(
-                    '${_post.likesCount} likes',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white70,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: Text(
+                      '${_post.likesCount} likes',
+                      key: ValueKey(_post.likesCount),
+                      style: GoogleFonts.poppins(
+                        color: Colors.white70,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -911,10 +1027,15 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    isLiked ? Icons.favorite : Icons.favorite_border,
-                    color: isLiked ? const Color(0xFFE940B7) : Colors.white70,
-                    size: 22,
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+                    child: Icon(
+                      isLiked ? Icons.favorite : Icons.favorite_border,
+                      key: ValueKey(isLiked),
+                      color: isLiked ? const Color(0xFFE940B7) : Colors.white70,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
