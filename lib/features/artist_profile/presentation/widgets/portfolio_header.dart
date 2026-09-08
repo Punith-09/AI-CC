@@ -20,17 +20,17 @@ class PortfolioHeader extends StatelessWidget {
 
         const Spacer(),
 
-        TextButton(
-          onPressed: () {},
-
-          child: const Text(
-            "View All",
-            style: TextStyle(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
+        // TextButton(
+        //   onPressed: () {},
+        //
+        //   child: const Text(
+        //     "View All",
+        //     style: TextStyle(
+        //       color: AppColors.primary,
+        //       fontWeight: FontWeight.w600,
+        //     ),
+        //   ),
+        // ),
       ],
     );
   }

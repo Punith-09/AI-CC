@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:aicc/features/auth/presentation/pages/splash_screen.dart';
 import 'package:aicc/features/roles/presentation/pages/roles_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -36,14 +37,7 @@ import '../../features/post/presentation/pages/upload_video_screen.dart';
 import '../../features/explore/presentation/pages/explore_profile_screen.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: AppRoutes.welcome,
-
-  // =========================================================
-  // AUTH REDIRECT
-  // Runs on every navigation. If a valid token exists in
-  // LocalStorage the user is already logged in, so we skip
-  // the welcome / login screens and go straight to home.
-  // =========================================================
+  initialLocation: AppRoutes.splash,
   redirect: (context, state) {
     final isLoggedIn = LocalStorage.instance.hasToken();
     final location = state.uri.toString();
@@ -61,48 +55,21 @@ final GoRouter appRouter = GoRouter(
   },
 
   routes: [
-    // =========================================================
-    // WELCOME
-    // =========================================================
 
-    GoRoute(
-      path: AppRoutes.welcome,
-      builder: (_, __) =>
-      const WelcomeScreen(),
-    ),
+    GoRoute(path: AppRoutes.welcome, builder: (_, __) => const WelcomeScreen()),
+    GoRoute(path: AppRoutes.splash, builder: (_, __) => const SplashScreen()),
 
-    // =========================================================
-    // LOGIN
-    // =========================================================
-
-    GoRoute(
-      path: AppRoutes.login,
-      builder: (_, __) =>
-      const LoginScreen(),
-    ),
-
-    // =========================================================
-    // SIGN UP
-    // =========================================================
+    GoRoute(path: AppRoutes.login, builder: (_, __) => const LoginScreen()),
 
     GoRoute(
       path: AppRoutes.signup,
-      builder: (_, __) =>
-      const SignUpWizardPage(),
+      builder: (_, __) => const SignUpWizardPage(),
     ),
-
-    // =========================================================
-    // MESSAGES INBOX
-    // =========================================================
 
     GoRoute(
       path: AppRoutes.messages,
       builder: (_, __) => const MessagesScreen(),
     ),
-
-    // =========================================================
-    // CHAT
-    // =========================================================
 
     GoRoute(
       path: AppRoutes.chat,
@@ -112,10 +79,6 @@ final GoRouter appRouter = GoRouter(
         return ChatScreen(chat: chat);
       },
     ),
-
-    // =========================================================
-    // APPLY / EDIT APPLICATION
-    // =========================================================
 
     GoRoute(
       path: AppRoutes.applyJob,
@@ -136,9 +99,7 @@ final GoRouter appRouter = GoRouter(
         // -----------------------------------------------------
 
         if (extra is AuditionModel) {
-          return ApplyScreen(
-            audition: extra,
-          );
+          return ApplyScreen(audition: extra);
         }
 
         // -----------------------------------------------------
@@ -146,9 +107,7 @@ final GoRouter appRouter = GoRouter(
         // -----------------------------------------------------
 
         if (extra is ApplicationModel) {
-          return ApplyScreen(
-            application: extra,
-          );
+          return ApplyScreen(application: extra);
         }
 
         // -----------------------------------------------------
@@ -162,7 +121,6 @@ final GoRouter appRouter = GoRouter(
     // =========================================================
     // AUDITION DETAILS
     // =========================================================
-
     GoRoute(
       path: AppRoutes.auditionDetails,
 
@@ -170,16 +128,11 @@ final GoRouter appRouter = GoRouter(
         final extra = state.extra;
 
         if (extra is AuditionModel) {
-          return AuditionDetails(
-            audition: extra,
-            auditionId: extra.id,
-          );
+          return AuditionDetails(audition: extra, auditionId: extra.id);
         }
 
         if (extra is String) {
-          return AuditionDetails(
-            auditionId: extra,
-          );
+          return AuditionDetails(auditionId: extra);
         }
 
         return const AuditionDetails();
@@ -189,47 +142,35 @@ final GoRouter appRouter = GoRouter(
     // =========================================================
     // ROLES
     // =========================================================
-
-    GoRoute(
-      path: AppRoutes.role,
-      builder: (_, __) =>
-          RolesScreen(),
-    ),
+    GoRoute(path: AppRoutes.role, builder: (_, __) => RolesScreen()),
 
     // =========================================================
     // UPLOAD PHOTO
     // =========================================================
-
     GoRoute(
       path: AppRoutes.uploadPhoto,
-      builder: (_, __) =>
-      const UploadPhotoScreen(),
+      builder: (_, __) => const UploadPhotoScreen(),
     ),
 
     // =========================================================
     // UPLOAD VIDEO
     // =========================================================
-
     GoRoute(
       path: AppRoutes.uploadVideo,
-      builder: (_, __) =>
-      const UploadVideoScreen(),
+      builder: (_, __) => const UploadVideoScreen(),
     ),
 
     // =========================================================
     // APPLIED AUDITIONS
     // =========================================================
-
     GoRoute(
       path: AppRoutes.appliedAuditions,
-      builder: (_, __) =>
-      const AppliedAuditionsScreen(),
+      builder: (_, __) => const AppliedAuditionsScreen(),
     ),
 
     // =========================================================
     // EXPLORE PROFILE (public view from explore tap)
     // =========================================================
-
     GoRoute(
       path: AppRoutes.exploreProfile,
       builder: (context, state) {
@@ -241,7 +182,6 @@ final GoRouter appRouter = GoRouter(
     // =========================================================
     // WATCH MEDIA / VIDEO SCREEN
     // =========================================================
-
     GoRoute(
       path: AppRoutes.watchVideo,
       builder: (context, state) {
@@ -249,106 +189,75 @@ final GoRouter appRouter = GoRouter(
         if (extra is FeedPostModel) {
           return WatchMediaScreen(post: extra);
         }
-        return const Scaffold(
-          body: Center(child: Text('Media not found')),
-        );
+        return const Scaffold(body: Center(child: Text('Media not found')));
       },
     ),
 
     // =========================================================
     // MAIN SHELL
     // =========================================================
-
     ShellRoute(
-      builder: (
-          context,
-          state,
-          child,
-          ) {
-        return MainScreen(
-          child: child,
-        );
+      builder: (context, state, child) {
+        return MainScreen(child: child);
       },
 
       routes: [
         // -----------------------------------------------------
         // HOME
         // -----------------------------------------------------
-
-        GoRoute(
-          path: AppRoutes.home,
-          builder: (_, __) =>
-          const HomeScreen(),
-        ),
+        GoRoute(path: AppRoutes.home, builder: (_, __) => const HomeScreen()),
 
         // -----------------------------------------------------
         // EXPLORE
         // -----------------------------------------------------
-
         GoRoute(
           path: AppRoutes.explore,
-          builder: (_, __) =>
-          const ExploreScreen(),
+          builder: (_, __) => const ExploreScreen(),
         ),
 
         // -----------------------------------------------------
         // POST
         // -----------------------------------------------------
-
-        GoRoute(
-          path: AppRoutes.post,
-          builder: (_, __) =>
-          const PostScreen(),
-        ),
+        GoRoute(path: AppRoutes.post, builder: (_, __) => const PostScreen()),
 
         // -----------------------------------------------------
         // AUDITIONS
         // -----------------------------------------------------
-
         GoRoute(
           path: AppRoutes.auditions,
-          builder: (_, __) =>
-          const AuditionScreen(),
+          builder: (_, __) => const AuditionScreen(),
         ),
 
         // -----------------------------------------------------
         // ACTIVITY
         // -----------------------------------------------------
-
         GoRoute(
           path: AppRoutes.activity,
-          builder: (_, __) =>
-          const ActivityScreen(),
+          builder: (_, __) => const ActivityScreen(),
         ),
 
         // -----------------------------------------------------
         // EDIT ARTIST PROFILE
         // -----------------------------------------------------
-
         GoRoute(
           path: AppRoutes.editArtistProfile,
-          builder: (_, __) =>
-          const EditProfileScreen(),
+          builder: (_, __) => const EditProfileScreen(),
         ),
 
         // -----------------------------------------------------
         // ARTIST PROFILE
         // -----------------------------------------------------
-
         GoRoute(
           path: AppRoutes.artistProfile,
-          builder: (_, __) =>
-          const ArtistProfileScreen(),
+          builder: (_, __) => const ArtistProfileScreen(),
         ),
 
         // -----------------------------------------------------
         // CREATOR PROFILE
         // -----------------------------------------------------
-
         GoRoute(
           path: AppRoutes.creatorProfile,
-          builder: (_, __) =>
-          const CreatorProfileScreen(),
+          builder: (_, __) => const CreatorProfileScreen(),
         ),
       ],
     ),
@@ -362,10 +271,7 @@ final GoRouter appRouter = GoRouter(
 class MainScreen extends StatefulWidget {
   final Widget child;
 
-  const MainScreen({
-    super.key,
-    required this.child,
-  });
+  const MainScreen({super.key, required this.child});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -401,20 +307,15 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentLocation =
-    GoRouterState.of(context)
-        .uri
-        .toString();
+    final currentLocation = GoRouterState.of(context).uri.toString();
 
     return Scaffold(
       extendBody: true,
 
       body: widget.child,
 
-      bottomNavigationBar:
-      CustomBottomNavbar(
-        currentLocation:
-        currentLocation,
+      bottomNavigationBar: CustomBottomNavbar(
+        currentLocation: currentLocation,
 
         onItemSelected: (route) {
           // IMPORTANT:

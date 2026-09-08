@@ -421,15 +421,15 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
                                             color: Colors.white,
                                           ),
                                         ),
-                                        if (mediaList.isNotEmpty)
-                                          Text(
-                                            'View All',
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppColors.primary,
-                                            ),
-                                          ),
+                                        // if (mediaList.isNotEmpty)
+                                        //   Text(
+                                        //     'View All',
+                                        //     style: GoogleFonts.poppins(
+                                        //       fontSize: 13,
+                                        //       fontWeight: FontWeight.w600,
+                                        //       color: AppColors.primary,
+                                        //     ),
+                                        //   ),
                                       ],
                                     ),
 

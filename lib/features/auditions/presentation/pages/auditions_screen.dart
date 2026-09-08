@@ -286,13 +286,13 @@ class _AuditionScreenState extends State<AuditionScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          Text(
-                            "View All",
-                            style: TextStyle(
-                              color: Colors.white54,
-                              fontSize: 14,
-                            ),
-                          ),
+                          // Text(
+                          //   "View All",
+                          //   style: TextStyle(
+                          //     color: Colors.white54,
+                          //     fontSize: 14,
+                          //   ),
+                          // ),
                         ],
                       ),
 
@@ -368,13 +368,13 @@ class _AuditionScreenState extends State<AuditionScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          Text(
-                            "View All",
-                            style: TextStyle(
-                              color: Colors.white54,
-                              fontSize: 14,
-                            ),
-                          ),
+                          // Text(
+                          //   "View All",
+                          //   style: TextStyle(
+                          //     color: Colors.white54,
+                          //     fontSize: 14,
+                          //   ),
+                          // ),
                         ],
                       ),
 
