@@ -14,6 +14,8 @@ abstract class AuthRemoteDataSource {
   Future<LoginResponse> register(
       RegisterRequest request,
       );
+
+  Future<LoginResponse> loginWithGoogle(String idToken);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -145,6 +147,46 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     } catch (e) {
       print('REGISTER API ERROR: $e');
       rethrow;
+  }}
+
+  // ============================
+  // GOOGLE LOGIN
+  // ============================
+
+  @override
+  Future<LoginResponse> loginWithGoogle(String idToken) async {
+    try {
+      final response = await _dioClient.post(
+        ApiEndpoints.googleLogin,
+        data: {
+          'idToken': idToken,
+        },
+      );
+
+      if (response.data is Map) {
+        return LoginResponse.fromJson(
+          Map<String, dynamic>.from(response.data),
+        );
+      }
+
+      throw Exception(
+        'Invalid google login server response format',
+      );
+    } on DioException catch (e) {
+      print('GOOGLE LOGIN API DIO ERROR: ${e.response?.data}');
+      final responseData = e.response?.data;
+      if (responseData is Map) {
+        final msg = responseData['message']?.toString() ??
+            responseData['error']?.toString() ??
+            '';
+        if (msg.isNotEmpty) {
+          throw Exception(msg);
+        }
+      }
+      throw Exception('Google Sign-In failed on backend.');
+    } catch (e) {
+       print('GOOGLE LOGIN API ERROR: $e');
+       rethrow;
     }
   }
 }

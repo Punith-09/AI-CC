@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -28,9 +29,13 @@ import 'features/apply_job/data/repository/apply_job_repository.dart';
 import 'features/apply_job/presentation/providers/apply_job_provider.dart';
 import 'features/messages/data/repository/messages_repository.dart';
 import 'features/messages/presentation/providers/messages_provider.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   await LocalStorage.init();
   await initDependencies();
 

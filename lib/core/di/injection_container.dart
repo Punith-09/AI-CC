@@ -4,6 +4,7 @@ import '../../features/auth/data/repository/auth_repository.dart';
 import '../network/dio_client.dart';
 import '../storage/local_storage.dart';
 import '../../features/auth/data/datasource/auth_remote_datasource.dart';
+import '../../features/auth/data/datasource/google_auth_datasource.dart';
 // import '../../features/auth/domain/repositories/auth_repository.dart'; 
 import '../../features/explore/data/datasource/explore_remote_datasource.dart';
 import '../../features/explore/data/repository/explore_repository.dart';
@@ -38,10 +39,16 @@ Future<void> initDependencies() async {
       ),
     );
   }
+  if (!sl.isRegistered<GoogleAuthDataSource>()) {
+    sl.registerLazySingleton<GoogleAuthDataSource>(
+          () => GoogleAuthDataSource(),
+    );
+  }
   if (!sl.isRegistered<AuthRepository>()) {
     sl.registerLazySingleton<AuthRepository>(
           () => AuthRepositoryImpl(
         sl<AuthRemoteDataSource>(),
+        sl<GoogleAuthDataSource>(),
         sl<LocalStorage>(),
       ),
     );
