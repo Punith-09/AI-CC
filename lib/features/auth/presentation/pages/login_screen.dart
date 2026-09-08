@@ -341,8 +341,30 @@ class _LoginScreenState extends State<LoginScreen> {
                         /// SOCIAL BUTTONS
 
                         SocialButtons(
-                          onGoogleTap: () {
-                            // Google login
+                          onGoogleTap: () async {
+                            final success = await context.read<AuthProvider>().loginWithGoogle();
+                            if (success) {
+                              if (context.mounted) {
+                                context.go(AppRoutes.home);
+                              }
+                            } else {
+                              if (context.mounted) {
+                                final errorMsg = context.read<AuthProvider>().errorMessage;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      errorMsg ?? 'Google Sign-In failed.',
+                                      style: const TextStyle(color: Colors.white),
+                                    ),
+                                    backgroundColor: AppColors.danger,
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
                           },
                           onAppleTap: () {
                             // Apple login

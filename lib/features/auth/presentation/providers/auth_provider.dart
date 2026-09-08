@@ -37,6 +37,24 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> loginWithGoogle() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _authRepository.loginWithGoogle();
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = _cleanErrorMessage(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
   String _cleanErrorMessage(dynamic error) {
     if (error is DioException) {
       final responseData = error.response?.data;
