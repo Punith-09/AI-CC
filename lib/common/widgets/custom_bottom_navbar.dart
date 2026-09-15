@@ -26,6 +26,7 @@ class CustomBottomNavbar extends StatelessWidget {
       case AppRoutes.auditions:
         return 3;
       case AppRoutes.artistProfile:
+      case AppRoutes.subscription:
         return 4;
       default:
         return 0;

@@ -9,6 +9,7 @@ import 'package:aicc/features/artist_profile/presentation/widgets/profile_header
 import 'package:aicc/features/artist_profile/presentation/widgets/role_chips.dart';
 
 import 'package:aicc/features/artist_profile/presentation/widgets/stats_card.dart';
+import 'package:aicc/features/artist_profile/presentation/widgets/subscription_button.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:aicc/core/routes/app_routes.dart';
@@ -76,9 +77,17 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                             icon: const Icon(Icons.logout, color: Colors.redAccent),
                             tooltip: "Logout",
                             onPressed: () async {
-                              await context.read<AuthProvider>().logout();
-                              if (context.mounted) {
-                                context.go(AppRoutes.welcome);
+                              try {
+                                final authProvider = context.read<AuthProvider>();
+                                final profileProvider = context.read<ProfileProvider>();
+                                await authProvider.logout();
+                                profileProvider.clear();
+                              } catch (e) {
+                                debugPrint('Logout error: $e');
+                              } finally {
+                                if (context.mounted) {
+                                  context.go(AppRoutes.welcome);
+                                }
                               }
                             },
                           ),
@@ -141,9 +150,17 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                                       ),
                                     ),
                                     onPressed: () async {
-                                      await context.read<AuthProvider>().logout();
-                                      if (context.mounted) {
-                                        context.go(AppRoutes.welcome);
+                                      try {
+                                        final authProvider = context.read<AuthProvider>();
+                                        final profileProvider = context.read<ProfileProvider>();
+                                        await authProvider.logout();
+                                        profileProvider.clear();
+                                      } catch (e) {
+                                        debugPrint('Logout error: $e');
+                                      } finally {
+                                        if (context.mounted) {
+                                          context.go(AppRoutes.welcome);
+                                        }
                                       }
                                     },
                                     icon: const Icon(Icons.logout, size: 18),
@@ -186,6 +203,9 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
               // Depending on whether it's 'me' or someone else:
               final profile = widget.userId != null ? provider.viewedProfile : provider.currentProfile;
               final mediaList = widget.userId != null ? provider.viewedMedia : provider.myMedia;
+              final effectivePlan = widget.userId != null
+                  ? profile?.plan
+                  : (provider.myActivePlan ?? profile?.plan);
 
               return SingleChildScrollView(
                 child: Column(
@@ -208,6 +228,9 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                         name: profile?.name,
                         city: profile?.city,
                         state: profile?.state,
+                        plan: effectivePlan,
+                        isVerified: profile?.isVerified ??
+                            (effectivePlan != null && effectivePlan.isNotEmpty),
                       ),
                     ),
 
@@ -220,7 +243,23 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 18),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: SubscriptionButton(
+                        activePlan: effectivePlan,
+                        onTap: () {
+                          context.push(AppRoutes.subscription).then((_) {
+                            if (context.mounted && widget.userId == null) {
+                              context.read<ProfileProvider>().fetchMyProfile();
+                            }
+                          });
+                        },
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
 
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),

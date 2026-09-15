@@ -46,7 +46,7 @@ class AuthProvider extends ChangeNotifier {
       await _authRepository.loginWithGoogle();
       _isLoading = false;
       notifyListeners();
-      return true;
+      return _authRepository.isUserLoggedIn();
     } catch (e) {
       _isLoading = false;
       _errorMessage = _cleanErrorMessage(e);

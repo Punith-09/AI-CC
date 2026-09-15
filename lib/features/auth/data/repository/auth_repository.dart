@@ -146,6 +146,10 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> loginWithGoogle() async {
     // 1. Get Firebase User Credential
     final userCredential = await _googleAuthDataSource.signInWithGoogle();
+    if (userCredential == null) {
+      // User cancelled sign-in
+      return;
+    }
     
     // 2. Get the ID token from Firebase
     final idToken = await userCredential.user?.getIdToken();
@@ -199,8 +203,16 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> logout() async {
-    await _googleAuthDataSource.signOut();
-    await _localStorage.clearAll();
+    try {
+      await _localStorage.clearAll();
+    } catch (e) {
+      // Ignore local storage clear error
+    }
+    try {
+      await _googleAuthDataSource.signOut();
+    } catch (e) {
+      // Ignore Google/Firebase sign-out error
+    }
   }
 
   // ============================

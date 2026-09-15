@@ -45,6 +45,13 @@
             {
               "client_id": "352475496558-10fvhb6f5gm6ilddplc7g3bstfnm0l68.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "352475496558-4i2inrr0lepc3tvnej1r7rir833k7jns.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.aicc"
+              }
             }
           ]
         }
@@ -58,6 +65,30 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "352475496558-24kfta9agoeb6a2kuk7mtu1uqbok167t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "talentcasting.com",
+            "certificate_hash": "dbff97360b10d83c52018808f05b6a8a15fcc715"
+          }
+        },
+        {
+          "client_id": "352475496558-ipsnmlfe0pvom1l4fjc63nnhooqsju4m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "talentcasting.com",
+            "certificate_hash": "d47e01ac31ea232a7d7ab3efb488c44d8981c254"
+          }
+        },
+        {
+          "client_id": "352475496558-p2s8ahh8pi2as8s73usti8gd9eootq9e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "talentcasting.com",
+            "certificate_hash": "96c727d23a97b7d4629331b907b830f51a136a06"
+          }
+        },
         {
           "client_id": "352475496558-10fvhb6f5gm6ilddplc7g3bstfnm0l68.apps.googleusercontent.com",
           "client_type": 3
@@ -74,6 +105,13 @@
             {
               "client_id": "352475496558-10fvhb6f5gm6ilddplc7g3bstfnm0l68.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "352475496558-4i2inrr0lepc3tvnej1r7rir833k7jns.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.aicc"
+              }
             }
           ]
         }

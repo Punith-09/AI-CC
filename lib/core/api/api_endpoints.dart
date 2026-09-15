@@ -2,7 +2,9 @@ class ApiEndpoints {
   ApiEndpoints._();
 
   static String get baseUrl {
-    return 'https://casting-be.onrender.com';
+    // return 'http://localhost:3000';
+    return 'http://10.0.2.2:3000';
+    // return 'https://casting-be.onrender.com';
   }
 
   static const String login = '/auth/login';
@@ -47,4 +49,9 @@ class ApiEndpoints {
   static const String chats = "/chats";
   static String startChat(String userId) => "/chats/start/$userId";
   static String chatMessages(String chatId) => "/chats/$chatId/messages";
+
+  static const String paymentPlans = "/payments/plans";
+  static const String paymentCheckout = "/payments/checkout";
+  static const String paymentVerify = "/payments/verify";
+  static const String subscriptionsMe = "/subscriptions/me";
 }

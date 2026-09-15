@@ -6,13 +6,14 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/routes/app_routes.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../providers/profile_provider.dart';
 
 class ProfileHeader extends StatelessWidget {
   final String? coverImage;
   final bool isOtherUser;
-  
+
   const ProfileHeader({
-    super.key, 
+    super.key,
     this.coverImage,
     this.isOtherUser = false,
   });
@@ -24,122 +25,88 @@ class ProfileHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          // _CircleButton(
-          //   icon: LucideIcons.chevronLeft,
-          //   onTap: () {
-          //     if (Navigator.canPop(context)) {
-          //       context.pop();
-          //     }
-          //   },
-          // ),
           if (!isOtherUser)
-            Builder(
-              builder: (context) {
-              return _CircleButton(
-                icon: LucideIcons.ellipsisVertical,
-                onTap: () async {
-                  final RenderBox button = context.findRenderObject() as RenderBox;
-                  final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-
-                  final position = RelativeRect.fromRect(
-                    Rect.fromPoints(
-                      button.localToGlobal(Offset.zero, ancestor: overlay),
-                      button.localToGlobal(
-                        button.size.bottomRight(Offset.zero),
-                        ancestor: overlay,
-                      ),
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.black.withValues(alpha: .35),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.white.withValues(alpha: .08),
+                ),
+              ),
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  splashColor: Colors.transparent,
+                  highlightColor: Colors.transparent,
+                  hoverColor: Colors.transparent,
+                ),
+                child: PopupMenuButton<String>(
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(
+                    LucideIcons.ellipsisVertical,
+                    color: AppColors.white,
+                    size: 22,
+                  ),
+                  color: const Color(0xFF1E2A38),
+                  elevation: 8,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.1),
                     ),
-                    Offset.zero & overlay.size,
-                  );
-
-                  final value = await showMenu<String>(
-                    context: context,
-                    position: position,
-                    color: const Color(0xFF1E2A38),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    items: const [
-                      PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit_outlined, size: 20),
-                            SizedBox(width: 10),
-                            Text('Edit'),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'logout',
-                        child: Row(
-                          children: [
-                            Icon(Icons.logout, size: 20, color: Colors.red),
-                            SizedBox(width: 10),
-                            Text(
-                              'Logout',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  );
-
-                  if (!context.mounted) return;
-
-                  switch (value) {
-                    case 'edit':
+                  ),
+                  onSelected: (value) async {
+                    if (value == 'edit') {
                       context.push(AppRoutes.editArtistProfile);
-                      break;
-
-                    case 'logout':
-                      final authProvider = context.read<AuthProvider>();
-                      await authProvider.logout();
-                      if (context.mounted) {
-                        context.go(AppRoutes.welcome);
+                    } else if (value == 'logout') {
+                      try {
+                        final authProvider = context.read<AuthProvider>();
+                        final profileProvider = context.read<ProfileProvider>();
+                        await authProvider.logout();
+                        profileProvider.clear();
+                      } catch (e) {
+                        debugPrint('Logout error: $e');
+                      } finally {
+                        if (context.mounted) {
+                          context.go(AppRoutes.welcome);
+                        }
                       }
-                      break;
-                  }
-                },
-              );
-            },
-          ),
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem<String>(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit_outlined, size: 20, color: Colors.white),
+                          SizedBox(width: 10),
+                          Text('Edit', style: TextStyle(color: Colors.white)),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem<String>(
+                      value: 'logout',
+                      child: Row(
+                        children: [
+                          Icon(Icons.logout, size: 20, color: Colors.redAccent),
+                          SizedBox(width: 10),
+                          Text(
+                            'Logout',
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ],
-      ),
-    );
-  }
-}
-
-class _CircleButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _CircleButton({
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(40),
-      onTap: onTap,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: AppColors.black.withOpacity(.35),
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: AppColors.white.withOpacity(.08),
-          ),
-        ),
-        child: Icon(
-          icon,
-          color: AppColors.white,
-          size: 22,
-        ),
       ),
     );
   }

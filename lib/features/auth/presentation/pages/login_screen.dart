@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routes/app_routes.dart';
-import '../widgets/social_buttons.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -338,40 +337,60 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         const SizedBox(height: 20),
 
-                        /// SOCIAL BUTTONS
-
-                        SocialButtons(
-                          onGoogleTap: () async {
-                            final success = await context.read<AuthProvider>().loginWithGoogle();
-                            if (success) {
-                              if (context.mounted) {
-                                context.go(AppRoutes.home);
-                              }
-                            } else {
-                              if (context.mounted) {
-                                final errorMsg = context.read<AuthProvider>().errorMessage;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      errorMsg ?? 'Google Sign-In failed.',
-                                      style: const TextStyle(color: Colors.white),
-                                    ),
-                                    backgroundColor: AppColors.danger,
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                  ),
-                                );
-                              }
-                            }
-                          },
-                          onAppleTap: () {
-                            // Apple login
-                          },
-                          onFacebookTap: () {
-                            // Facebook login
-                          },
+                        /// GOOGLE SIGN IN BUTTON
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: authProvider.isLoading
+                                ? null
+                                : () async {
+                                    final success = await context
+                                        .read<AuthProvider>()
+                                        .loginWithGoogle();
+                                    if (success) {
+                                      if (context.mounted) {
+                                        context.go(AppRoutes.home);
+                                      }
+                                    } else {
+                                      if (context.mounted) {
+                                        final errorMsg = context
+                                            .read<AuthProvider>()
+                                            .errorMessage;
+                                        if (errorMsg != null &&
+                                            errorMsg.isNotEmpty) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                errorMsg,
+                                                style: const TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                              backgroundColor:
+                                                  AppColors.danger,
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    }
+                                  },
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.asset(
+                                'assets/images/google.png',
+                                width: double.infinity,
+                                height: 50,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),

@@ -21,6 +21,8 @@ class ArtistModel {
   final String experience;
   final String languages;
   final List<PortfolioModel> portfolio;
+  final String? plan;
+  final bool isVerified;
 
   const ArtistModel({
     this.id = '',
@@ -39,6 +41,8 @@ class ArtistModel {
     required this.experience,
     required this.languages,
     this.portfolio = const [],
+    this.plan,
+    this.isVerified = false,
   });
 
   /// GET /users/{id} nests city, experience, languages, etc. under `details`.
@@ -124,7 +128,38 @@ class ArtistModel {
         data['languages'] ?? data['actingLanguages'] ?? data['preferredLanguage'],
       ),
       portfolio: _portfolioFromProfile(data),
+      plan: _planValue(
+        data['plan'] ??
+            data['subscription'] ??
+            data['subscriptionPlan'] ??
+            json['plan'] ??
+            json['subscription'],
+      ),
+      isVerified: data['isVerified'] == true ||
+          data['verified'] == true ||
+          json['isVerified'] == true ||
+          (data['plan'] != null &&
+              data['plan'].toString().trim().toLowerCase() != 'free' &&
+              data['plan'].toString().trim().toLowerCase() != 'none'),
     );
+  }
+
+  static String? _planValue(dynamic value) {
+    if (value == null) return null;
+    if (value is String &&
+        value.trim().isNotEmpty &&
+        value.trim().toLowerCase() != 'free' &&
+        value.trim().toLowerCase() != 'none') {
+      return value.trim().toLowerCase();
+    }
+    if (value is Map) {
+      final p = value['plan'] ?? value['name'] ?? value['type'];
+      if (p != null && p.toString().trim().isNotEmpty) {
+        final s = p.toString().trim().toLowerCase();
+        if (s != 'free' && s != 'none') return s;
+      }
+    }
+    return null;
   }
 
   ArtistModel copyWith({
@@ -144,6 +179,8 @@ class ArtistModel {
     String? experience,
     String? languages,
     List<PortfolioModel>? portfolio,
+    String? plan,
+    bool? isVerified,
   }) {
     return ArtistModel(
       id: id ?? this.id,
@@ -162,6 +199,8 @@ class ArtistModel {
       experience: experience ?? this.experience,
       languages: languages ?? this.languages,
       portfolio: portfolio ?? this.portfolio,
+      plan: plan ?? this.plan,
+      isVerified: isVerified ?? this.isVerified,
     );
   }
 

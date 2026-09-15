@@ -35,6 +35,7 @@ import '../../features/post/presentation/pages/post_screen.dart';
 import '../../features/post/presentation/pages/upload_photo_screen.dart';
 import '../../features/post/presentation/pages/upload_video_screen.dart';
 import '../../features/explore/presentation/pages/explore_profile_screen.dart';
+import '../../features/subscription/presentation/pages/subscription_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: AppRoutes.splash,
@@ -250,6 +251,14 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: AppRoutes.artistProfile,
           builder: (_, __) => const ArtistProfileScreen(),
+        ),
+
+        // -----------------------------------------------------
+        // SUBSCRIPTION
+        // -----------------------------------------------------
+        GoRoute(
+          path: AppRoutes.subscription,
+          builder: (context, state) => const SubscriptionScreen(),
         ),
 
         // -----------------------------------------------------
