@@ -56,10 +56,11 @@ class PortfolioModel {
 
   FeedPostModel toFeedPostModel({ArtistModel? artist}) {
     final media = (videoUrl != null && videoUrl!.isNotEmpty) ? videoUrl! : image;
+    final isVid = isVideo && FeedPostModel.isVideoMediaUrl(media);
     return FeedPostModel(
       id: id.isNotEmpty ? id : 'portfolio_${image.hashCode}',
-      type: isVideo ? FeedMediaType.video : FeedMediaType.photo,
-      title: title ?? (isVideo ? 'Video' : 'Photo'),
+      type: isVid ? FeedMediaType.video : FeedMediaType.photo,
+      title: title ?? (isVid ? 'Video' : 'Photo'),
       description: description ?? '',
       mediaUrl: media,
       thumbnailUrl: image,
@@ -90,12 +91,14 @@ class PortfolioModel {
         json['pic']?.toString() ??
         '';
 
-    final isVid = json['is_video'] == true ||
-        json['isVideo'] == true ||
-        (json['url']?.toString().toLowerCase().endsWith('.mp4') ?? false) ||
-        (json['url']?.toString().toLowerCase().endsWith('.mov') ?? false) ||
-        (json['videoUrl'] != null && json['videoUrl'].toString().isNotEmpty) ||
-        (json['video'] != null && json['video'].toString().isNotEmpty);
+    final isExplicitVideo = json['is_video'] == true || json['isVideo'] == true;
+    final candidateMedia = (json['videoUrl'] != null && json['videoUrl'].toString().isNotEmpty)
+        ? json['videoUrl'].toString()
+        : (json['video'] != null && json['video'].toString().isNotEmpty
+            ? json['video'].toString()
+            : (json['url']?.toString() ?? image));
+
+    final isVid = isExplicitVideo || FeedPostModel.isVideoMediaUrl(candidateMedia);
 
     final rawLikes = json['likes'];
     final rawLikesCount = json['likesCount'] ?? json['likes_count'] ?? json['likeCount'];

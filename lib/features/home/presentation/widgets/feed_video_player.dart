@@ -81,7 +81,7 @@ class _FeedVideoPlayerState extends State<FeedVideoPlayer> {
   }
 
   void _checkVisibilityAndPlay() {
-    if (!mounted) return;
+    if (!mounted || !widget.post.isVideo) return;
     final context = _widgetKey.currentContext;
     if (context == null) return;
 
@@ -123,6 +123,7 @@ class _FeedVideoPlayerState extends State<FeedVideoPlayer> {
   }
 
   Future<void> _startPlayback() async {
+    if (!widget.post.isVideo) return;
     if (_controller != null && _isInitialized) {
       _togglePlayPause();
       return;
@@ -232,6 +233,18 @@ class _FeedVideoPlayerState extends State<FeedVideoPlayer> {
 
   @override
   Widget build(BuildContext context) {
+    if (!widget.post.isVideo) {
+      return GestureDetector(
+        onTap: widget.onTapMedia,
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox(
+          width: double.infinity,
+          height: 280,
+          child: _buildThumbnail(),
+        ),
+      );
+    }
+
     return Container(
       key: _widgetKey,
       width: double.infinity,

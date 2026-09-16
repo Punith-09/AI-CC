@@ -49,8 +49,66 @@ class FeedPostModel {
     this.isVerified = true,
   });
 
-  bool get isVideo => type == FeedMediaType.video;
-  bool get isPhoto => type == FeedMediaType.photo;
+  /// Helper method to accurately detect if a media URL or category belongs to a video.
+  static bool isVideoMediaUrl(String? url, {String? category}) {
+    if (url == null || url.trim().isEmpty) return false;
+    final cleanUrl = url.split('?').first.split('#').first.trim().toLowerCase();
+
+    // 1. Explicit video file extensions
+    const videoExtensions = [
+      '.mp4',
+      '.mov',
+      '.mkv',
+      '.webm',
+      '.avi',
+      '.m4v',
+      '.3gp',
+      '.flv',
+      '.ts',
+      '.wmv',
+    ];
+    for (final ext in videoExtensions) {
+      if (cleanUrl.endsWith(ext)) return true;
+    }
+
+    // 2. Explicit image file extensions -> Definitely not video
+    const imageExtensions = [
+      '.jpg',
+      '.jpeg',
+      '.png',
+      '.webp',
+      '.gif',
+      '.bmp',
+      '.heic',
+      '.svg',
+      '.tiff',
+    ];
+    for (final ext in imageExtensions) {
+      if (cleanUrl.endsWith(ext)) return false;
+    }
+
+    // 3. Category hints
+    final cat = (category ?? '').trim().toLowerCase();
+    if (cat == 'photo' || cat == 'photos') return false;
+    if (cat == 'video' || cat == 'videos' || cat == 'reel' || cat == 'reels') return true;
+
+    // 4. Cloudinary / path checks
+    if (cleanUrl.contains('/video/upload/') || cleanUrl.contains('/videos/')) {
+      return true;
+    }
+    if (cleanUrl.contains('/image/upload/') || cleanUrl.contains('/photos/')) {
+      return false;
+    }
+
+    return false;
+  }
+
+  static bool isPhotoMediaUrl(String? url, {String? category}) {
+    return !isVideoMediaUrl(url, category: category);
+  }
+
+  bool get isVideo => type == FeedMediaType.video && !isPhotoMediaUrl(mediaUrl, category: category);
+  bool get isPhoto => !isVideo;
 
   FeedPostModel copyWith({
     String? id,
@@ -225,10 +283,8 @@ class FeedPostModel {
   }
 
   factory FeedPostModel.fromPhotoModel(PhotoModel photo) {
-    final rawUrl = photo.url.toLowerCase();
-    final isVideo = rawUrl.endsWith('.mp4') ||
-        rawUrl.endsWith('.mov') ||
-        rawUrl.contains('/video/upload/');
+    final isVid = isVideoMediaUrl(photo.url, category: photo.category);
+    final mediaType = isVid ? FeedMediaType.video : FeedMediaType.photo;
 
     String photoLocation = '';
     if (photo.location != null && photo.location!.trim().isNotEmpty) {
@@ -243,31 +299,38 @@ class FeedPostModel {
       photoLocation = photo.state!.trim();
     }
 
+    final categoryHashtags = photo.category != null
+        ? '#${photo.category} ${isVid ? "#Reel" : "#Portfolio"}'
+        : (isVid ? '#Reel #Acting' : '#Portfolio');
+
     return FeedPostModel(
       id: photo.id,
-      type: isVideo ? FeedMediaType.video : FeedMediaType.photo,
+      type: mediaType,
       title: photo.title,
       description: photo.desc ?? '',
       mediaUrl: photo.url,
-      thumbnailUrl: photo.thumb ?? (isVideo ? null : photo.url),
+      thumbnailUrl: photo.thumb ?? (isVid ? null : photo.url),
       category: photo.category,
       creatorId: photo.creatorId,
       creatorName: (photo.creatorName != null && photo.creatorName!.isNotEmpty)
           ? photo.creatorName!
           : 'Creator',
       creatorPic: photo.creatorPic,
-      creatorCategory: photo.creatorCategory ?? 'Artist',
+      creatorCategory: photo.creatorCategory ?? (isVid ? 'Actor' : 'Artist'),
       likesCount: photo.likesCount,
       commentsCount: 0,
       viewsCount: photo.viewsCount,
       liked: photo.liked,
       createdAt: photo.createdAt,
-      hashtags: photo.category != null ? '#${photo.category} #Portfolio' : '#Portfolio',
+      hashtags: categoryHashtags,
       location: photoLocation,
     );
   }
 
   factory FeedPostModel.fromVideoModel(VideoModel video) {
+    final isVid = isVideoMediaUrl(video.url, category: video.category);
+    final mediaType = isVid ? FeedMediaType.video : FeedMediaType.photo;
+
     String videoLocation = '';
     if (video.location != null && video.location!.trim().isNotEmpty) {
       videoLocation = video.location!.trim();
@@ -281,38 +344,41 @@ class FeedPostModel {
       videoLocation = video.state!.trim();
     }
 
+    final categoryHashtags = video.category != null
+        ? '#${video.category} ${isVid ? "#Reel" : "#Portfolio"}'
+        : (isVid ? '#Reel #Acting' : '#Portfolio');
+
     return FeedPostModel(
       id: video.id,
-      type: FeedMediaType.video,
+      type: mediaType,
       title: video.title,
       description: video.desc ?? '',
       mediaUrl: video.url,
-      thumbnailUrl: video.thumb ?? video.url,
+      thumbnailUrl: video.thumb ?? (isVid ? null : video.url),
       category: video.category,
       creatorId: video.creatorId,
       creatorName: (video.creatorName != null && video.creatorName!.isNotEmpty)
           ? video.creatorName!
           : 'Creator',
       creatorPic: video.creatorPic,
-      creatorCategory: video.creatorCategory ?? 'Actor',
+      creatorCategory: video.creatorCategory ?? (isVid ? 'Actor' : 'Artist'),
       likesCount: video.likesCount,
       commentsCount: 0,
       viewsCount: video.viewsCount,
       liked: video.liked,
       createdAt: video.createdAt,
-      hashtags: video.category != null ? '#${video.category} #Reel' : '#Reel #Acting',
+      hashtags: categoryHashtags,
       location: videoLocation,
     );
   }
 
   factory FeedPostModel.fromJson(Map<String, dynamic> json, {FeedMediaType? defaultType}) {
     final rawUrl = json['url'] as String? ?? '';
-    final isVideoUrl = rawUrl.toLowerCase().endsWith('.mp4') ||
-        rawUrl.toLowerCase().endsWith('.mov') ||
-        rawUrl.toLowerCase().contains('/video/');
+    final category = json['category'] as String?;
+    final isVid = isVideoMediaUrl(rawUrl, category: category);
 
     final mediaType = defaultType ??
-        (isVideoUrl ? FeedMediaType.video : FeedMediaType.photo);
+        (isVid ? FeedMediaType.video : FeedMediaType.photo);
 
     final creatorMap = json['creator'] is Map
         ? json['creator'] as Map<String, dynamic>
@@ -368,7 +434,7 @@ class FeedPostModel {
       title: json['title'] as String? ?? '',
       description: (json['desc'] ?? json['description']) as String? ?? '',
       mediaUrl: rawUrl,
-      thumbnailUrl: json['thumb'] as String? ?? (isVideoUrl ? null : rawUrl),
+      thumbnailUrl: json['thumb'] as String? ?? (isVid ? null : rawUrl),
       creatorId: json['creatorId'] as String? ??
           json['userId'] as String? ??
           json['user_id'] as String? ??
