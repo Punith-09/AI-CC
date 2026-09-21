@@ -86,7 +86,7 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                                 debugPrint('Logout error: $e');
                               } finally {
                                 if (context.mounted) {
-                                  context.go(AppRoutes.welcome);
+                                  context.go(AppRoutes.splash);
                                 }
                               }
                             },
@@ -309,7 +309,6 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                         ),
                       ),
                     ],
-
                     const SizedBox(height: 40),
                   ],
                 ),
