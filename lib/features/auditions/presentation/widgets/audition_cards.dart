@@ -6,6 +6,8 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../apply_job/presentation/providers/apply_job_provider.dart';
 import '../../data/models/audition_model.dart';
 import '../../presentation/providers/auditions_provider.dart';
+import '../../../subscription/presentation/providers/subscription_provider.dart';
+import '../../../subscription/presentation/widgets/limit_upgrade_dialog.dart';
 import 'audition_card.dart';
 
 class AuditionCards extends StatelessWidget {
@@ -53,10 +55,20 @@ class AuditionCards extends StatelessWidget {
           // -----------------------------------------------
           // Apply Now (disabled when already applied)
           // -----------------------------------------------
-          onApply: () => context.push(
-            AppRoutes.applyJob,
-            extra: audition,
-          ),
+          onApply: () {
+            final subProvider = context.read<SubscriptionProvider>();
+            if (!subProvider.canApplyAudition) {
+              LimitUpgradeDialog.show(
+                context,
+                type: LimitType.auditionApplication,
+              );
+              return;
+            }
+            context.push(
+              AppRoutes.applyJob,
+              extra: audition,
+            );
+          },
 
           // -----------------------------------------------
           // Delete application — calls DELETE /applications
@@ -176,6 +188,9 @@ class AuditionCards extends StatelessWidget {
       context
           .read<AuditionsProvider>()
           .markAuditionUnapplied(audition.id);
+      try {
+        context.read<SubscriptionProvider>().revertAuditionApplied();
+      } catch (_) {}
     }
 
     ScaffoldMessenger.of(context).showSnackBar(

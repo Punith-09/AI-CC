@@ -311,9 +311,8 @@ class ApplyJobProvider extends ChangeNotifier {
       print('RESPONSE: $responseData');
       print('========================================');
 
-      if (responseData is Map<String, dynamic>) {
-        final message =
-        responseData['message'];
+      if (responseData is Map) {
+        final message = responseData['message'] ?? responseData['detail'];
 
         if (message is String &&
             message.isNotEmpty) {
@@ -326,7 +325,7 @@ class ApplyJobProvider extends ChangeNotifier {
         }
 
         final errorMessage =
-        responseData['error'];
+        responseData['error'] ?? responseData['msg'];
 
         if (errorMessage is String &&
             errorMessage.isNotEmpty) {
@@ -342,7 +341,10 @@ class ApplyJobProvider extends ChangeNotifier {
           return 'Your session has expired. Please login again.';
 
         case 403:
-          return 'You are not allowed to perform this action.';
+          return 'You are not allowed to perform this action. You may have reached your plan limit.';
+
+        case 429:
+          return 'Daily audition application limit reached. Please upgrade your plan.';
 
         case 404:
           return 'Application not found.';

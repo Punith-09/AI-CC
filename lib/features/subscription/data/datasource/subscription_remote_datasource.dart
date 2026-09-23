@@ -1,6 +1,7 @@
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/subscription_plan_model.dart';
+import '../models/user_subscription_model.dart';
 
 class SubscriptionRemoteDataSource {
   final DioClient _dioClient;
@@ -76,6 +77,18 @@ class SubscriptionRemoteDataSource {
         return response.data is Map<String, dynamic>
             ? response.data as Map<String, dynamic>
             : Map<String, dynamic>.from(response.data as Map);
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<UserSubscriptionModel?> getUserSubscription() async {
+    try {
+      final data = await getMySubscription();
+      if (data != null) {
+        return UserSubscriptionModel.fromJson(data);
       }
       return null;
     } catch (_) {

@@ -29,6 +29,7 @@ import 'features/apply_job/data/repository/apply_job_repository.dart';
 import 'features/apply_job/presentation/providers/apply_job_provider.dart';
 import 'features/messages/data/repository/messages_repository.dart';
 import 'features/messages/presentation/providers/messages_provider.dart';
+import 'features/subscription/presentation/providers/subscription_provider.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -80,6 +81,16 @@ void main() async {
         ),
         ChangeNotifierProvider(
           create: (_) => MessagesProvider(sl<MessagesRepository>()),
+        ),
+        ChangeNotifierProvider(
+          create: (_) {
+            final provider = sl<SubscriptionProvider>();
+            if (LocalStorage.instance.getToken() != null &&
+                LocalStorage.instance.getToken()!.isNotEmpty) {
+              provider.fetchSubscription(silent: true);
+            }
+            return provider;
+          },
         ),
       ],
       child: const MyApp(),

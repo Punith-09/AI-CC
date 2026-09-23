@@ -120,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
 
                         const Text(
-                          "EMAIL OR HCC ID",
+                          "EMAIL OR TMA ID",
                           style: TextStyle(
                             color: AppColors.whiteShade,
                             fontSize: 15,
@@ -133,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: _emailController,
                           style: const TextStyle(color: AppColors.white),
                           decoration: InputDecoration(
-                            hintText: "name@example.com",
+                            hintText: "name@gmail.com",
                             hintStyle: const TextStyle(color: AppColors.whiteShade),
                             prefixIcon:
                             const Icon(Icons.email, color: AppColors.whiteShade),

@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../../data/models/feed_post_model.dart';
 import '../providers/home_feed_provider.dart';
 import 'comments_bottom_sheet.dart';
+import '../../../subscription/presentation/providers/subscription_provider.dart';
+import '../../../subscription/presentation/widgets/limit_upgrade_dialog.dart';
 
 class FeedActions extends StatefulWidget {
   final FeedPostModel post;
@@ -49,8 +51,17 @@ class _FeedActionsState extends State<FeedActions> {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                onPressed: () =>
-                    context.read<HomeFeedProvider>().toggleLike(widget.post.id),
+                onPressed: () {
+                  final subProvider = context.read<SubscriptionProvider>();
+                  if (!isLiked && !subProvider.canLike) {
+                    LimitUpgradeDialog.show(context, type: LimitType.like);
+                    return;
+                  }
+                  context.read<HomeFeedProvider>().toggleLike(
+                    widget.post.id,
+                    context: context,
+                  );
+                },
                 icon: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 200),
                   transitionBuilder: (child, anim) =>

@@ -13,6 +13,8 @@ import '../../../../core/storage/local_storage.dart';
 import '../../../artist_profile/presentation/providers/profile_provider.dart';
 import '../../data/datasource/subscription_remote_datasource.dart';
 import '../../data/models/subscription_plan_model.dart';
+import '../../data/models/user_subscription_model.dart';
+import '../providers/subscription_provider.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({super.key});
@@ -459,6 +461,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         final response = results[0] as PaymentPlansResponse;
         final mySub = results[1] as Map<String, dynamic>?;
 
+        if (mySub != null) {
+          try {
+            context.read<SubscriptionProvider>().setSubscription(
+              UserSubscriptionModel.fromJson(mySub),
+            );
+          } catch (_) {}
+        }
         setState(() {
           _plansResponse = response;
           _mySubscription = mySub;
@@ -622,6 +631,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         // Immediately update the plan badge so it shows when navigating back
         if (plan != null) {
           context.read<ProfileProvider>().setActivePlan(plan.plan);
+          try {
+            context.read<SubscriptionProvider>().setActivePlan(plan.plan);
+            context.read<SubscriptionProvider>().fetchSubscription(silent: true);
+          } catch (_) {}
           setState(() {
             _mySubscription = {
               'plan': plan.plan,
@@ -632,6 +645,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
         // Refresh user profile & subscriptions in the background
         context.read<ProfileProvider>().fetchMyProfile();
+        try {
+          context.read<SubscriptionProvider>().fetchSubscription(silent: true);
+        } catch (_) {}
         _fetchPlans();
 
         // Show celebration success modal
@@ -1103,6 +1119,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       children: [
                         const SizedBox(height: 12),
                         _buildHeroSection(),
+                        _buildActivePlanUsageCard(),
                         const SizedBox(height: 26),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1270,6 +1287,161 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildActivePlanUsageCard() {
+    return Consumer<SubscriptionProvider>(
+      builder: (context, subProvider, _) {
+        final planLabel = subProvider.planLabel;
+        final isPaid = subProvider.isPaid;
+        final limits = subProvider.limits;
+        final remaining = subProvider.remainingToday;
+
+        return Container(
+          margin: const EdgeInsets.only(top: 18),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0C1F2B),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isPaid
+                  ? const Color(0xFF1CC8FF).withValues(alpha: 0.3)
+                  : Colors.white.withValues(alpha: 0.08),
+              width: 1.2,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        isPaid ? Icons.verified_rounded : Icons.info_outline_rounded,
+                        color: isPaid ? const Color(0xFF1CC8FF) : const Color(0xFF94A3B8),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Active Plan: $planLabel',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: isPaid
+                          ? const Color(0xFF16A34A).withValues(alpha: 0.2)
+                          : const Color(0xFF334155),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      isPaid ? 'Active' : 'Free Tier',
+                      style: TextStyle(
+                        color: isPaid ? const Color(0xFF4ADE80) : const Color(0xFF94A3B8),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              const Text(
+                "Today's Remaining Limits",
+                style: TextStyle(
+                  color: Color(0xFF8FA7B2),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildUsageStatMini(
+                      icon: Icons.movie_filter_rounded,
+                      label: 'Auditions',
+                      remaining: remaining.auditionApplications,
+                      limit: limits.auditionApplicationsPerDay,
+                      color: const Color(0xFF38BDF8),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildUsageStatMini(
+                      icon: Icons.favorite_rounded,
+                      label: 'Likes',
+                      remaining: remaining.likes,
+                      limit: limits.likesPerDay,
+                      color: const Color(0xFFE940B7),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildUsageStatMini(
+                      icon: Icons.chat_bubble_rounded,
+                      label: 'Comments',
+                      remaining: remaining.comments,
+                      limit: limits.commentsPerDay,
+                      color: const Color(0xFFA855F7),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildUsageStatMini({
+    required IconData icon,
+    required String label,
+    required int remaining,
+    required int limit,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFF07141C),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.05),
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(height: 4),
+          Text(
+            '$remaining / $limit',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFF8FA7B2),
+              fontSize: 10,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

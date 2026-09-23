@@ -17,6 +17,7 @@ import '../../features/apply_job/data/repository/apply_job_repository.dart';
 import '../../features/messages/data/datasource/messages_remote_datasource.dart';
 import '../../features/messages/data/repository/messages_repository.dart';
 import '../../features/subscription/data/datasource/subscription_remote_datasource.dart';
+import '../../features/subscription/presentation/providers/subscription_provider.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -141,6 +142,13 @@ Future<void> initDependencies() async {
     sl.registerLazySingleton<SubscriptionRemoteDataSource>(
       () => SubscriptionRemoteDataSource(
         sl<DioClient>(),
+      ),
+    );
+  }
+  if (!sl.isRegistered<SubscriptionProvider>()) {
+    sl.registerLazySingleton<SubscriptionProvider>(
+      () => SubscriptionProvider(
+        sl<SubscriptionRemoteDataSource>(),
       ),
     );
   }

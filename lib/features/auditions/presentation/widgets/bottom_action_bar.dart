@@ -6,6 +6,8 @@ import 'package:aicc/core/constants/app_colors.dart';
 
 import '../../../../core/routes/app_routes.dart';
 import '../../../apply_job/presentation/providers/apply_job_provider.dart';
+import '../../../subscription/presentation/providers/subscription_provider.dart';
+import '../../../subscription/presentation/widgets/limit_upgrade_dialog.dart';
 import '../../data/models/audition_model.dart';
 
 class BottomActionBar extends StatelessWidget {
@@ -87,10 +89,21 @@ class BottomActionBar extends StatelessWidget {
                   // Disabled when already applied
                   onPressed: hasApplied
                       ? null
-                      : onApply ??
-                          () {
+                      : () {
+                          final subProvider = context.read<SubscriptionProvider>();
+                          if (!subProvider.canApplyAudition) {
+                            LimitUpgradeDialog.show(
+                              context,
+                              type: LimitType.auditionApplication,
+                            );
+                            return;
+                          }
+                          if (onApply != null) {
+                            onApply!();
+                          } else {
                             context.push(AppRoutes.applyJob, extra: audition);
-                          },
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     disabledBackgroundColor: Colors.transparent,

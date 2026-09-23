@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/routes/app_routes.dart';
@@ -60,7 +61,8 @@ class CustomBottomNavbar extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _NavItem(
-                      icon: Icons.home_outlined,
+                      // icon: Icons.home_outlined,
+                      icon: LucideIcons.home,
                       label: "Home",
                       selected: index == 0,
                       onTap: () => onItemSelected(AppRoutes.home),
@@ -68,7 +70,8 @@ class CustomBottomNavbar extends StatelessWidget {
                   ),
                   Expanded(
                     child: _NavItem(
-                      icon: Icons.search,
+                      // icon: Icons.search,
+                      icon: LucideIcons.search,
                       label: "Explore",
                       selected: index == 1,
                       onTap: () => onItemSelected(AppRoutes.explore),
@@ -77,7 +80,8 @@ class CustomBottomNavbar extends StatelessWidget {
                   const SizedBox(width: 70),
                   Expanded(
                     child: _NavItem(
-                      icon: Icons.mic_none,
+                      // icon: Icons.mic_none,
+                      icon: LucideIcons.clapperboard,
                       label: "Auditions",
                       selected: index == 3,
                       onTap: () => onItemSelected(AppRoutes.auditions),
@@ -85,7 +89,8 @@ class CustomBottomNavbar extends StatelessWidget {
                   ),
                   Expanded(
                     child: _NavItem(
-                      icon: Icons.person_outline,
+                      // icon: Icons.person_outline,
+                      icon: LucideIcons.userRound,
                       label: "Profile",
                       selected: index == 4,
                       onTap: () => onItemSelected(AppRoutes.artistProfile),

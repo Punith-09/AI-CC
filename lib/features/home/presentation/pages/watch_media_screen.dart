@@ -20,6 +20,8 @@ import '../../data/models/comment_model.dart';
 import '../../data/models/feed_post_model.dart';
 import '../../data/repository/home_repository.dart';
 import '../providers/home_feed_provider.dart';
+import '../../../subscription/presentation/providers/subscription_provider.dart';
+import '../../../subscription/presentation/widgets/limit_upgrade_dialog.dart';
 
 class WatchMediaScreen extends StatefulWidget {
   final FeedPostModel post;
@@ -226,6 +228,14 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
     final text = _commentController.text.trim();
     if (text.isEmpty || _isPostingComment || _post.id.isEmpty) return;
 
+    final subProvider = context.read<SubscriptionProvider>();
+    if (!subProvider.canComment) {
+      LimitUpgradeDialog.show(context, type: LimitType.comment);
+      return;
+    }
+
+    subProvider.recordCommentUsed();
+
     setState(() => _isPostingComment = true);
     _commentController.clear();
     FocusScope.of(context).unfocus();
@@ -243,9 +253,21 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
           _isPostingComment = false;
         });
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() => _isPostingComment = false);
+        final sub = context.read<SubscriptionProvider>();
+        final errStr = e.toString().toLowerCase();
+        if (errStr.contains('limit') ||
+            errStr.contains('quota') ||
+            errStr.contains('upgrade') ||
+            errStr.contains('429') ||
+            errStr.contains('403')) {
+          sub.markLimitReached(LimitType.comment);
+          LimitUpgradeDialog.show(context, type: LimitType.comment);
+        } else {
+          sub.revertCommentUsed();
+        }
       }
     }
   }
@@ -259,6 +281,16 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
 
     final originalPost = _post;
     final isLiked = !_post.liked;
+
+    if (isLiked) {
+      final subProvider = context.read<SubscriptionProvider>();
+      if (!subProvider.canLike) {
+        LimitUpgradeDialog.show(context, type: LimitType.like);
+        return;
+      }
+      subProvider.recordLikeUsed();
+    }
+
     final likesCount = isLiked
         ? _post.likesCount + 1
         : (_post.likesCount > 0 ? _post.likesCount - 1 : 0);
@@ -324,6 +356,21 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
             likesCount: originalPost.likesCount,
           );
         } catch (_) {}
+
+        if (isLiked) {
+          final sub = context.read<SubscriptionProvider>();
+          final errStr = e.toString().toLowerCase();
+          if (errStr.contains('limit') ||
+              errStr.contains('quota') ||
+              errStr.contains('upgrade') ||
+              errStr.contains('429') ||
+              errStr.contains('403')) {
+            sub.markLimitReached(LimitType.like);
+            LimitUpgradeDialog.show(context, type: LimitType.like);
+          } else {
+            sub.revertLikeUsed();
+          }
+        }
       }
     }
   }

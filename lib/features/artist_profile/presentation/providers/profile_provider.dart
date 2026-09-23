@@ -5,6 +5,7 @@ import 'package:aicc/core/network/dio_client.dart';
 import 'package:aicc/features/artist_profile/data/models/artist_model.dart';
 import 'package:aicc/features/artist_profile/data/models/portfolio_model.dart';
 import 'package:aicc/features/artist_profile/data/repository/profile_repository.dart';
+import 'package:aicc/features/subscription/presentation/providers/subscription_provider.dart';
 
 class ProfileProvider with ChangeNotifier {
   final ProfileRepository _repository;
@@ -40,6 +41,9 @@ class ProfileProvider with ChangeNotifier {
         isVerified: true,
       );
     }
+    if (plan != null && sl.isRegistered<SubscriptionProvider>()) {
+      sl<SubscriptionProvider>().setActivePlan(plan);
+    }
     notifyListeners();
   }
 
@@ -55,6 +59,9 @@ class ProfileProvider with ChangeNotifier {
               data?['currentPlan'] ??
               data?['activePlan'] ??
               (subMap is Map ? subMap['plan'] : null);
+          if (sl.isRegistered<SubscriptionProvider>()) {
+            sl<SubscriptionProvider>().fetchSubscription(silent: true);
+          }
           if (plan != null &&
               plan.toString().trim().isNotEmpty &&
               plan.toString().trim().toLowerCase() != 'free') {

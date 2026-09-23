@@ -14,6 +14,8 @@ import '../widgets/submit_button.dart';
 import '../../../auditions/data/models/audition_model.dart';
 import '../../../auditions/presentation/providers/auditions_provider.dart';
 import '../../../artist_profile/presentation/providers/profile_provider.dart';
+import '../../../subscription/presentation/providers/subscription_provider.dart';
+import '../../../subscription/presentation/widgets/limit_upgrade_dialog.dart';
 
 class ApplyScreen extends StatefulWidget {
   final AuditionModel? audition;
@@ -154,6 +156,15 @@ class _ApplyScreenState
       return;
     }
 
+    final subProvider = context.read<SubscriptionProvider>();
+    if (!subProvider.canApplyAudition) {
+      LimitUpgradeDialog.show(
+        context,
+        type: LimitType.auditionApplication,
+      );
+      return;
+    }
+
     final provider =
     context.read<ApplyJobProvider>();
 
@@ -168,6 +179,11 @@ class _ApplyScreenState
     }
 
     if (success) {
+      // Decrement audition applications counter
+      try {
+        context.read<SubscriptionProvider>().recordAuditionApplied();
+      } catch (_) {}
+
       // Update local audition state immediately so the list/details
       // reflect the applied status without waiting for a server re-fetch.
       if (mounted) {
@@ -196,10 +212,26 @@ class _ApplyScreenState
         Navigator.of(context).pop(true);
       }
     } else {
-      _showMessage(
-        provider.errorMessage ??
-            'Failed to submit application.',
-      );
+      final err = (provider.errorMessage ?? '').toLowerCase();
+      if (err.contains('limit') ||
+          err.contains('quota') ||
+          err.contains('upgrade') ||
+          err.contains('plan') ||
+          err.contains('reached')) {
+        try {
+          context.read<SubscriptionProvider>().markLimitReached(LimitType.auditionApplication);
+        } catch (_) {}
+        LimitUpgradeDialog.show(
+          context,
+          type: LimitType.auditionApplication,
+          customMessage: provider.errorMessage,
+        );
+      } else {
+        _showMessage(
+          provider.errorMessage ??
+              'Failed to submit application.',
+        );
+      }
     }
   }
 
@@ -297,6 +329,9 @@ class _ApplyScreenState
         context
             .read<AuditionsProvider>()
             .markAuditionUnapplied(_auditionId);
+        try {
+          context.read<SubscriptionProvider>().revertAuditionApplied();
+        } catch (_) {}
       }
 
       _showMessage(
