@@ -1,92 +1,184 @@
 import 'package:aicc/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:provider/provider.dart';
 
+import '../../../../core/responsive/responsive_breakpoints.dart';
+import '../../data/models/feed_post_model.dart';
+import '../providers/home_feed_provider.dart';
 import 'comments_bottom_sheet.dart';
+import '../../../subscription/presentation/providers/subscription_provider.dart';
+import '../../../subscription/presentation/widgets/limit_upgrade_dialog.dart';
 
 class FeedActions extends StatefulWidget {
-  const FeedActions({super.key});
+  final FeedPostModel post;
+
+  const FeedActions({
+    super.key,
+    required this.post,
+  });
 
   @override
   State<FeedActions> createState() => _FeedActionsState();
 }
 
 class _FeedActionsState extends State<FeedActions> {
-  bool liked=false;
-  bool saved=false;
+  bool _saved = false;
+
+  /// Format large numbers: 1200 → "1.2k", 1_200_000 → "1.2M"
+  String _formatCount(int count) {
+    if (count >= 1000000) {
+      final m = count / 1000000;
+      return '${m.toStringAsFixed(m.truncateToDouble() == m ? 0 : 1)}M';
+    }
+    if (count >= 1000) {
+      final k = count / 1000;
+      return '${k.toStringAsFixed(k.truncateToDouble() == k ? 0 : 1)}k';
+    }
+    return count.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return
-      Container(
-        padding: const EdgeInsets.only(left: 16,top: 0,right: 16,bottom: 0),
-        child: Row(
-          children: [
-            IconButton(
-                onPressed: (){
-                  setState(() {
-                    liked=!liked;
-                  });
+    final isLiked = widget.post.liked;
+    final likesCount = widget.post.likesCount;
+    final commentsCount = widget.post.commentsCount;
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    final iconColor = AppColors.black;
+    final countColor = AppColors.black;
+
+    return Container(
+      padding: const EdgeInsets.only(left: 6, top: 0, right: 14, bottom: 0),
+      child: Row(
+        children: [
+          // ── Like icon + count ──────────────────────────────
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: () {
+                  final subProvider = context.read<SubscriptionProvider>();
+                  if (!isLiked && !subProvider.canLike) {
+                    LimitUpgradeDialog.show(context, type: LimitType.like);
+                    return;
+                  }
+                  context.read<HomeFeedProvider>().toggleLike(
+                    widget.post.id,
+                    context: context,
+                  );
                 },
-                icon: liked?Icon(
-                  Icons.favorite,
-                  size: 35,color: Color(0xFF00FFD9),
-                  shadows: [
-                    Shadow(
-                      color: const Color(0xFF00FFC4),
-                      blurRadius: 30,
-                      offset: Offset.zero,
-                    ),
-                  ],):
-                Icon(
-                    Icons.favorite_border,
-                    size: 35
-                )
-            ),
-
-
-            const SizedBox(width: 18),
-            IconButton(
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: const Color(0xFF102B36),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(25),
-                    ),
-                  ),
-                  builder: (context) {
-                    return const CommentsBottomSheet();
-                  },
-                );
-              },
-              icon: const Icon(
-                LucideIcons.messageCircle,
-                size: 28,
+                icon: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  transitionBuilder: (child, anim) =>
+                      ScaleTransition(scale: anim, child: child),
+                  child: isLiked
+                      ? const Icon(
+                          Icons.favorite,
+                          key: ValueKey('liked'),
+                          size: 28,
+                          color: Color(0xFFE940B7),
+                          shadows: [
+                            Shadow(
+                              color: Color(0xFFE940B7),
+                              blurRadius: 18,
+                            ),
+                          ],
+                        )
+                      : Icon(
+                          Icons.favorite_border,
+                          key: const ValueKey('unliked'),
+                          size: 28,
+                          color: iconColor,
+                        ),
+                ),
               ),
-            ),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: Text(
+                  _formatCount(likesCount),
+                  key: ValueKey(likesCount),
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: isLiked
+                        ? const Color(0xFFE940B7)
+                        : countColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
 
+          const SizedBox(width: 4),
 
-            const SizedBox(width: 18),
+          // ── Comment icon + count ───────────────────────────
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: () {
+                  if(!isDesktop) {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: const Color(0xFF102B36),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(25)),
+                      ),
+                      builder: (context) =>
+                          CommentsBottomSheet(post: widget.post),
+                    );
+                  }else{
 
-            const Icon(
-              LucideIcons.send,
-              size: 28,
-            ),
-
-            const Spacer(),
-
-            IconButton(
-                onPressed: (){
-                  setState(() {
-                    saved=!saved;
-                  });
+                  }
                 },
-                icon: saved?Icon(Icons.bookmark, size: 35 ):Icon(Icons.bookmark_border, size: 35)
+                icon: Icon(
+                  LucideIcons.messageCircle,
+                  size: 24,
+                  color: iconColor,
+                ),
+              ),
+              Text(
+                _formatCount(commentsCount),
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  color: countColor,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(width: 4),
+
+          // Share Button
+          IconButton(
+            onPressed: () {},
+            icon: Icon(
+              LucideIcons.send,
+              size: 25,
+              color: iconColor,
             ),
-          ],
-        ) ,
-      );
+          ),
+
+          const Spacer(),
+
+          // Bookmark / Save Button
+          IconButton(
+            onPressed: () {
+              setState(() {
+                _saved = !_saved;
+              });
+            },
+            icon: Icon(
+              _saved ? Icons.bookmark : Icons.bookmark_border,
+              size: 30,
+              color: _saved ? const Color(0xFF8E3CF7) : iconColor,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

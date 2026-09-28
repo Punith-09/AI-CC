@@ -43,9 +43,9 @@ import '../constants/app_colors.dart';
 class AppTheme {
   AppTheme._();
 
-  static ThemeData darkTheme = ThemeData(
+  static ThemeData get lightTheme => ThemeData(
     useMaterial3: true,
-    brightness: Brightness.dark,
+    brightness: Brightness.light,
 
     fontFamily: 'Poppins',
 
@@ -56,64 +56,68 @@ class AppTheme {
     splashColor: Colors.transparent,
     highlightColor: Colors.transparent,
 
-    colorScheme: const ColorScheme.dark(
+    colorScheme: const ColorScheme.light(
       primary: AppColors.primary,
       secondary: AppColors.secondary,
       surface: AppColors.card,
-      error: Colors.redAccent,
+      onSurface: AppColors.black,
+      onPrimary: Colors.white,
+      error: AppColors.danger,
     ),
 
     appBarTheme: const AppBarTheme(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.white,
+      foregroundColor: AppColors.black,
       elevation: 0,
       centerTitle: false,
       iconTheme: IconThemeData(
-        color: Colors.white,
+        color: AppColors.black,
       ),
       titleTextStyle: TextStyle(
-        color: Colors.white,
-        fontSize: 24,
-        fontWeight: FontWeight.w600,
+        color: AppColors.black,
+        fontSize: 22,
+        fontWeight: FontWeight.w700,
+        fontFamily: 'Poppins',
       ),
     ),
 
     textTheme: const TextTheme(
       displayLarge: TextStyle(
-        color: Colors.white,
+        color: AppColors.black,
         fontWeight: FontWeight.bold,
       ),
 
       displayMedium: TextStyle(
-        color: Colors.white,
+        color: AppColors.black,
         fontWeight: FontWeight.bold,
       ),
 
       headlineLarge: TextStyle(
-        color: Colors.white,
+        color: AppColors.black,
         fontWeight: FontWeight.w700,
       ),
 
       headlineMedium: TextStyle(
-        color: Colors.white,
+        color: AppColors.black,
         fontWeight: FontWeight.w600,
       ),
 
       titleLarge: TextStyle(
-        color: Colors.white,
+        color: AppColors.black,
         fontWeight: FontWeight.w600,
       ),
 
       titleMedium: TextStyle(
-        color: Colors.white,
+        color: AppColors.black,
         fontWeight: FontWeight.w500,
       ),
 
       bodyLarge: TextStyle(
-        color: Colors.white,
+        color: AppColors.black,
       ),
 
       bodyMedium: TextStyle(
-        color: Colors.white70,
+        color: AppColors.blackShade,
       ),
 
       bodySmall: TextStyle(
@@ -121,19 +125,19 @@ class AppTheme {
       ),
 
       labelLarge: TextStyle(
-        color: Colors.white,
+        color: AppColors.black,
         fontWeight: FontWeight.w600,
       ),
     ),
 
     iconTheme: const IconThemeData(
-      color: Colors.white,
+      color: AppColors.black,
       size: 24,
     ),
 
     dividerTheme: const DividerThemeData(
       color: AppColors.divider,
-      thickness: .5,
+      thickness: 1,
     ),
 
     cardTheme: CardThemeData(
@@ -141,6 +145,7 @@ class AppTheme {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(22),
+        side: const BorderSide(color: AppColors.border, width: 1),
       ),
       margin: EdgeInsets.zero,
     ),
@@ -156,12 +161,12 @@ class AppTheme {
 
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide.none,
+        borderSide: const BorderSide(color: AppColors.border),
       ),
 
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide.none,
+        borderSide: const BorderSide(color: AppColors.border),
       ),
 
       focusedBorder: OutlineInputBorder(
@@ -173,13 +178,13 @@ class AppTheme {
       ),
 
       hintStyle: const TextStyle(
-        color: AppColors.greyText,
+        color: AppColors.hint,
       ),
     ),
 
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.buttonPrimary,
         foregroundColor: Colors.white,
 
         minimumSize: const Size(double.infinity, 52),
@@ -193,8 +198,12 @@ class AppTheme {
         textStyle: const TextStyle(
           fontWeight: FontWeight.w600,
           fontSize: 16,
+          fontFamily: 'Poppins',
         ),
       ),
     ),
   );
-}
+
+  /// Alias for backward compatibility ensuring entire app renders in white theme
+  static ThemeData get darkTheme => lightTheme;
+}

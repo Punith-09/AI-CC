@@ -1,20 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../../../core/api/api_endpoints.dart';
+import '../../data/models/chat_model.dart';
 
 class ProfileHeader extends StatelessWidget {
-  const ProfileHeader({super.key});
+  final ChatModel? chat;
+  final VoidCallback? onViewProfile;
+
+  const ProfileHeader({super.key, this.chat, this.onViewProfile});
 
   @override
   Widget build(BuildContext context) {
+    final name = (chat?.participantName.isNotEmpty == true)
+        ? chat!.participantName
+        : 'Creator';
+    final role = (chat?.participantRole.isNotEmpty == true)
+        ? chat!.participantRole
+        : 'Artist';
+    final avatar = chat?.participantAvatar ?? '';
+    final isOnline = chat?.isOnline ?? false;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1F5A6A), Color(0xFF123B4A)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: const BoxDecoration(
+        color: Colors.white,
         border: Border(
-          bottom: BorderSide(color: Colors.white.withOpacity(.08)),
+          bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1),
         ),
       ),
       child: Row(
@@ -22,68 +33,81 @@ class ProfileHeader extends StatelessWidget {
           Stack(
             children: [
               Container(
-                width: 72,
-                height: 72,
+                width: 54,
+                height: 54,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  image: const DecorationImage(
-                    image: NetworkImage("https://i.pravatar.cc/300?img=12"),
-                    fit: BoxFit.cover,
-                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  color: const Color(0xFFF1F5F9),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: avatar.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: ApiEndpoints.formatMediaUrl(avatar),
+                          fit: BoxFit.cover,
+                          errorWidget: (ctx, url, err) => _fallback(name),
+                        )
+                      : _fallback(name),
                 ),
               ),
               Positioned(
-                right: 3,
-                bottom: 3,
+                right: 0,
+                bottom: 0,
                 child: Container(
-                  width: 18,
-                  height: 18,
+                  width: 14,
+                  height: 14,
                   decoration: BoxDecoration(
-                    color: Colors.greenAccent,
+                    color: isOnline ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xff1F1F28), width: 3),
+                    border: Border.all(color: Colors.white, width: 2.5),
                   ),
                 ),
               ),
             ],
           ),
 
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
 
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Rahul Sharma",
-                  style: TextStyle(
-                    color: Colors.white,
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF111827),
                     fontWeight: FontWeight.bold,
-                    fontSize: 22,
+                    fontSize: 17,
                   ),
                 ),
+                if (role.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    role,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+                  ),
+                ],
                 const SizedBox(height: 4),
-                Text(
-                  "Casting Director",
-                  style: TextStyle(color: Colors.grey.shade400, fontSize: 15),
-                ),
-                const SizedBox(height: 8),
                 Row(
                   children: [
                     Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: Colors.greenAccent,
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        color: isOnline ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
                         shape: BoxShape.circle,
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    const Text(
-                      "Online",
+                    const SizedBox(width: 5),
+                    Text(
+                      isOnline ? 'Online' : 'Offline',
                       style: TextStyle(
-                        color: Colors.greenAccent,
-                        fontSize: 13,
+                        color: isOnline ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -93,25 +117,42 @@ class ProfileHeader extends StatelessWidget {
             ),
           ),
 
+          const SizedBox(width: 8),
+
           IntrinsicWidth(
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF123B4A),
+                backgroundColor: const Color(0xFF7C3AED),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25),
+                  borderRadius: BorderRadius.circular(20),
                 ),
               ),
-              onPressed: () {},
+              onPressed: onViewProfile,
               child: const Text(
-                "View Profile",
-                style: TextStyle(fontWeight: FontWeight.w600),
+                'View Profile',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _fallback(String name) {
+    final initials = name.trim().isEmpty
+        ? '?'
+        : name.trim().split(' ').take(2).map((w) => w[0]).join().toUpperCase();
+    return Container(
+      color: const Color(0xFFF1F5F9),
+      child: Center(
+        child: Text(
+          initials,
+          style: const TextStyle(color: Color(0xFF111827), fontWeight: FontWeight.bold, fontSize: 18),
+        ),
       ),
     );
   }

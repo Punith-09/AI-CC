@@ -1,4 +1,5 @@
 import 'package:aicc/common/widgets/app_background.dart';
+import 'package:aicc/core/responsive/responsive_breakpoints.dart';
 import 'package:aicc/features/creator_profile/presentation/widgets/action_buttons.dart';
 import 'package:aicc/features/creator_profile/presentation/widgets/creator_avatar.dart';
 import 'package:aicc/features/creator_profile/presentation/widgets/creator_header.dart';
@@ -13,57 +14,58 @@ class CreatorProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+
+    final content = SingleChildScrollView(
+      child: Column(
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.bottomCenter,
+            children: [
+              const CreatorHeader(),
+              Positioned(
+                bottom: -45,
+                child: CreatorAvatar(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 70),
+          const CreatorInfo(),
+          const SizedBox(height: 28),
+          const StatsCard(),
+          const SizedBox(height: 24),
+          const ActionButtons(),
+          const SizedBox(height: 30),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: ProfileTabs(),
+          ),
+          const SizedBox(height: 25),
+          const PostGrid(),
+          const SizedBox(height: 100),
+        ],
+      ),
+    );
+
+    if (isDesktop) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 780),
+            child: content,
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.transparent,
-
       body: AppBackground(
         child: SafeArea(
           top: false,
-
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-
-                Stack(
-                  clipBehavior: Clip.none,
-                  alignment: Alignment.bottomCenter,
-                  children: [
-                    const CreatorHeader(),
-
-                    Positioned(
-                      bottom: -45,
-                      child: CreatorAvatar(),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 70),
-
-                const CreatorInfo(),
-
-                const SizedBox(height: 28),
-
-                const StatsCard(),
-
-                const SizedBox(height: 24),
-
-                const ActionButtons(),
-
-                const SizedBox(height: 30),
-
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  child: ProfileTabs(),
-                ),
-
-                const SizedBox(height: 25),
-
-                const PostGrid(),
-
-                const SizedBox(height: 100),
-              ],
-            ),
-          ),
+          child: content,
         ),
       ),
     );

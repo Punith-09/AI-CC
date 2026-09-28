@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/routes/app_routes.dart';
@@ -25,6 +27,7 @@ class CustomBottomNavbar extends StatelessWidget {
       case AppRoutes.auditions:
         return 3;
       case AppRoutes.artistProfile:
+      case AppRoutes.subscription:
         return 4;
       default:
         return 0;
@@ -41,24 +44,34 @@ class CustomBottomNavbar extends StatelessWidget {
         clipBehavior: Clip.none,
         alignment: Alignment.topCenter,
         children: [
-          Positioned(
+            Positioned(
             bottom: 0,
             left: 0,
             right: 0,
             child: Container(
               height: 72,
-              decoration: const BoxDecoration(
-                color: AppColors.card,
-                borderRadius: BorderRadius.vertical(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(24),
                 ),
+                border: const Border(
+                  top: BorderSide(color: AppColors.divider, width: 1),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, -3),
+                  ),
+                ],
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: _NavItem(
-                      icon: Icons.home_outlined,
+                      icon: LucideIcons.home,
                       label: "Home",
                       selected: index == 0,
                       onTap: () => onItemSelected(AppRoutes.home),
@@ -66,7 +79,7 @@ class CustomBottomNavbar extends StatelessWidget {
                   ),
                   Expanded(
                     child: _NavItem(
-                      icon: Icons.search,
+                      icon: LucideIcons.search,
                       label: "Explore",
                       selected: index == 1,
                       onTap: () => onItemSelected(AppRoutes.explore),
@@ -75,7 +88,7 @@ class CustomBottomNavbar extends StatelessWidget {
                   const SizedBox(width: 70),
                   Expanded(
                     child: _NavItem(
-                      icon: Icons.mic_none,
+                      icon: LucideIcons.clapperboard,
                       label: "Auditions",
                       selected: index == 3,
                       onTap: () => onItemSelected(AppRoutes.auditions),
@@ -83,7 +96,7 @@ class CustomBottomNavbar extends StatelessWidget {
                   ),
                   Expanded(
                     child: _NavItem(
-                      icon: Icons.person_outline,
+                      icon: LucideIcons.userRound,
                       label: "Profile",
                       selected: index == 4,
                       onTap: () => onItemSelected(AppRoutes.artistProfile),
@@ -96,41 +109,32 @@ class CustomBottomNavbar extends StatelessWidget {
           Positioned(
             top: -8,
             child: GestureDetector(
-              onTap: () async => onItemSelected(
-                  // AppRoutes.post
-                  await showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    barrierColor: Colors.black.withOpacity(0.65),
-                    builder: (context) {
-                      return const CreateBottomSheet();
-                    },
-                  )
-              ),
+              onTap: () async {
+                final route = await showModalBottomSheet<String>(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  barrierColor: Colors.black.withValues(alpha: 0.65),
+                  builder: (context) {
+                    return const CreateBottomSheet();
+                  },
+                );
+                if (route != null && context.mounted) {
+                  context.push(route);
+                }
+              },
               child: Container(
                 width: 58,
                 height: 58,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [
-                      AppColors.primary,
-                      AppColors.secondary,
-                    ],
-                  ),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    width: 2,
-                  ),
+                  color: AppColors.buttonPrimary,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.6),
-                      blurRadius: 18,
-                      spreadRadius: 2,
-                      offset: const Offset(0, 8),
+                      color: AppColors.buttonPrimary.withValues(alpha: 0.35),
+                      blurRadius: 14,
+                      spreadRadius: 1,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),

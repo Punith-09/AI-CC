@@ -35,7 +35,7 @@ class CategoryChip extends StatelessWidget {
           border: Border.all(
             color: isSelected
                 ? const Color(0xFF8E3CF7)
-                : Colors.white.withValues(alpha: 0.08),
+                : AppColors.whiteShade,
           ),
           boxShadow: isSelected
               ? [
@@ -58,7 +58,7 @@ class CategoryChip extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: isSelected ? Colors.white : Colors.white70,
+                  color: isSelected ? Colors.white : AppColors.black,
                 ),
               ),
       ),

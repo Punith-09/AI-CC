@@ -1,4 +1,4 @@
-import 'package:aicc/core/constants/app_colors.dart';
+import 'package:aicc/core/responsive/responsive_breakpoints.dart';
 import 'package:flutter/material.dart';
 
 class PortfolioHeader extends StatelessWidget {
@@ -6,31 +6,18 @@ class PortfolioHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
     return Row(
       children: [
-
-        const Text(
+        Text(
           "Portfolio",
           style: TextStyle(
-            color: Colors.white,
+            color: isDesktop ? const Color(0xFF0F172A) : Colors.white,
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
         ),
-
         const Spacer(),
-
-        TextButton(
-          onPressed: () {},
-
-          child: const Text(
-            "View All",
-            style: TextStyle(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
       ],
     );
   }

@@ -1,4 +1,3 @@
-import 'package:aicc/common/widgets/app_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -7,7 +6,6 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routes/app_routes.dart';
-import '../widgets/social_buttons.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -33,85 +31,91 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
+    final isDesktop = MediaQuery.sizeOf(context).width >= 1024;
+
     return Scaffold(
-      body: SizedBox(
-        width: double.infinity,
-        child: AppBackground(child:SafeArea(
-          child: Stack(
-            children: [
-              Align(
-                alignment: Alignment.topCenter,
-                child: Column(
-                  children: [
-                    const SizedBox(height: 60),
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: 'Welcome ',
-                            style: GoogleFonts.plusJakartaSans(
-                              color: AppColors.white,
-                              fontSize: 37,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.1,
-                            ),
+      backgroundColor: isDesktop ? const Color(0xFFF8FAFC) : Colors.white,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(
+              horizontal: isDesktop ? 24 : 16,
+              vertical: isDesktop ? 40 : 20,
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 460),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // ----------------------------------------------------
+                  // HEADER / BRANDING
+                  // ----------------------------------------------------
+                  RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'Welcome ',
+                          style: GoogleFonts.plusJakartaSans(
+                            color: AppColors.black,
+                            fontSize: 34,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
                           ),
-                          TextSpan(
-                            text: 'Back!',
-                            style: GoogleFonts.plusJakartaSans(
-                              color: const Color(0xFFB16CFF),
-                              fontSize: 37,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.1,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                        .animate()
-                        .fade(duration: 1000.ms)
-                        .slideY(
-                      begin: -0.5,
-                      end: 0,
-                    ),
-
-                    const SizedBox(height: 5),
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 40),
-                      child: Text(
-                        "Log in to continue your journey with\nAICC AI-Matched Auditions",
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: AppColors.whiteShade,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
                         ),
+                        TextSpan(
+                          text: 'Back!',
+                          style: GoogleFonts.plusJakartaSans(
+                            color: AppColors.primary,
+                            fontSize: 34,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                      .animate()
+                      .fade(duration: 800.ms)
+                      .slideY(begin: -0.2, end: 0),
+
+                  const SizedBox(height: 8),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      "Log in to continue your journey with\nAICC AI-Matched Auditions",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        color: AppColors.greyText,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        height: 1.4,
                       ),
-                    )
-                        .animate(delay: 300.ms)
-                        .fade(duration: 1000.ms)
-                        .slideY(begin: 0.5, end: 0),
-                  ],
-                ),
-              ),
+                    ),
+                  )
+                      .animate(delay: 200.ms)
+                      .fade(duration: 800.ms),
 
+                  const SizedBox(height: 28),
 
-              Align(
-                alignment: AlignmentGeometry.directional(0.2,0.3 ),
-                child: SingleChildScrollView(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 80),
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(30, 35, 30, 35),
+                  // ----------------------------------------------------
+                  // FORM CONTAINER
+                  // ----------------------------------------------------
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E1E2C),
-                      borderRadius: BorderRadius.circular(30),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: const Color(0xFFE2E8F0),
+                        width: 1.2,
+                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.black.withValues(alpha: 0.4),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 20,
-                          offset: const Offset(0, 10),
+                          offset: const Offset(0, 8),
                         ),
                       ],
                     ),
@@ -119,54 +123,81 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-
-                        const Text(
-                          "EMAIL OR HCC ID",
-                          style: TextStyle(
-                            color: AppColors.whiteShade,
-                            fontSize: 15,
+                        Text(
+                          "EMAIL OR TMA ID",
+                          style: GoogleFonts.poppins(
+                            color: AppColors.black,
+                            fontSize: 13,
                             fontWeight: FontWeight.w700,
+                            letterSpacing: 0.3,
                           ),
                         ),
                         const SizedBox(height: 8),
 
                         TextField(
                           controller: _emailController,
-                          style: const TextStyle(color: AppColors.white),
+                          style: GoogleFonts.poppins(
+                            color: AppColors.black,
+                            fontSize: 14,
+                          ),
                           decoration: InputDecoration(
-                            hintText: "name@example.com",
-                            hintStyle: const TextStyle(color: AppColors.whiteShade),
-                            prefixIcon:
-                            const Icon(Icons.email, color: AppColors.whiteShade),
+                            hintText: "name@gmail.com",
+                            hintStyle: GoogleFonts.poppins(
+                              color: AppColors.hint,
+                              fontSize: 14,
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.email_outlined,
+                              color: Color(0xFF64748B),
+                              size: 20,
+                            ),
                             filled: true,
-                            fillColor: const Color(0xFF2A2A3D),
+                            fillColor: const Color(0xFFF8FAFC),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(15),
-                              borderSide: BorderSide.none,
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: AppColors.primary,
+                                width: 1.5,
+                              ),
                             ),
                           ),
                         ),
 
                         const SizedBox(height: 20),
 
-
-                        const Row(
+                        Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
                               "PASSWORD",
-                              style: TextStyle(
-                                color:AppColors.whiteShade,
-                                fontSize: 15,
+                              style: GoogleFonts.poppins(
+                                color: AppColors.black,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w700,
+                                letterSpacing: 0.3,
                               ),
                             ),
-                            Text(
-                              "Forgot Password?",
-                              style: TextStyle(
-                                color: AppColors.whiteShade,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
+                            GestureDetector(
+                              onTap: () {},
+                              child: Text(
+                                "Forgot Password?",
+                                style: GoogleFonts.poppins(
+                                  color: AppColors.primary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ],
@@ -177,18 +208,28 @@ class _LoginScreenState extends State<LoginScreen> {
                         TextField(
                           controller: _passwordController,
                           obscureText: !isPasswordVisible,
-                          style: const TextStyle(color: Colors.white),
+                          style: GoogleFonts.poppins(
+                            color: AppColors.black,
+                            fontSize: 14,
+                          ),
                           decoration: InputDecoration(
                             hintText: "••••••••",
-                            hintStyle: const TextStyle(color: AppColors.whiteShade),
-                            prefixIcon:
-                            const Icon(Icons.lock, color: AppColors.whiteShade),
+                            hintStyle: GoogleFonts.poppins(
+                              color: AppColors.hint,
+                              fontSize: 14,
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.lock_outline,
+                              color: Color(0xFF64748B),
+                              size: 20,
+                            ),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 isPasswordVisible
                                     ? Icons.visibility
                                     : Icons.visibility_off,
-                                color: AppColors.whiteShade,
+                                color: const Color(0xFF64748B),
+                                size: 20,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -197,159 +238,216 @@ class _LoginScreenState extends State<LoginScreen> {
                               },
                             ),
                             filled: true,
-                            fillColor: const Color(0xFF2A2A3D),
+                            fillColor: const Color(0xFFF8FAFC),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(15),
-                              borderSide: BorderSide.none,
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: AppColors.primary,
+                                width: 1.5,
+                              ),
                             ),
                           ),
                         ),
 
-                        const SizedBox(height: 25),
+                        const SizedBox(height: 26),
 
+                        // Solid Primary Login Button (no gradient)
                         SizedBox(
                           width: double.infinity,
-                          height: 60,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: AppColors.authBtnGradient,
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                              ),
-                              borderRadius: BorderRadius.circular(9),
-                              border: Border.all(
-                                color: const Color(0xFFB66AF5),
-                                width: 0.6,
-                              ),
-                              boxShadow: [
-                                const BoxShadow(
-                                  color:  Color(0x889B3FE4),
-                                  blurRadius: 10,
-                                  spreadRadius: 0,
-                                ),
-                              ],
-                            ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(9),
-                                onTap: authProvider.isLoading
-                                    ? null
-                                    : () async {
-                                        final email = _emailController.text;
-                                        final password = _passwordController.text;
-                                        if (email.isEmpty || password.isEmpty) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(
-                                              content: Text('Please enter email and password.'),
+                          height: 52,
+                          child: ElevatedButton(
+                            onPressed: authProvider.isLoading
+                                ? null
+                                : () async {
+                                    final email = _emailController.text.trim();
+                                    final password = _passwordController.text;
+                                    if (email.isEmpty || password.isEmpty) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: const Text(
+                                            'Please enter both email/HCC ID and password.',
+                                            style: TextStyle(color: Colors.white),
+                                          ),
+                                          backgroundColor: AppColors.danger,
+                                          behavior: SnackBarBehavior.floating,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                    final success = await context.read<AuthProvider>().login(email, password);
+                                    if (success) {
+                                      if (context.mounted) {
+                                        context.go(AppRoutes.home);
+                                      }
+                                    } else {
+                                      if (context.mounted) {
+                                        final errorMsg = context.read<AuthProvider>().errorMessage;
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              errorMsg ?? 'Invalid email/HCC ID or password.',
+                                              style: const TextStyle(color: Colors.white),
                                             ),
-                                          );
-                                          return;
-                                        }
-                                        final success = await context.read<AuthProvider>().login(email, password);
-                                        if (success) {
-                                          if (context.mounted) {
-                                            context.go(AppRoutes.home);
-                                          }
-                                        } else {
-                                          if (context.mounted) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(
-                                                content: Text(context.read<AuthProvider>().errorMessage ?? 'Login failed'),
-                                              ),
-                                            );
-                                          }
-                                        }
-                                      },
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  child: Row(
+                                            backgroundColor: AppColors.danger,
+                                            behavior: SnackBarBehavior.floating,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.buttonPrimary,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              shadowColor: AppColors.buttonPrimary.withValues(alpha: 0.3),
+                            ),
+                            child: authProvider.isLoading
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2.2,
+                                    ),
+                                  )
+                                : Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
-                                    children: authProvider.isLoading
-                                        ? [
-                                            const SizedBox(
-                                              width: 24,
-                                              height: 24,
-                                              child: CircularProgressIndicator(
-                                                color: Colors.white,
-                                                strokeWidth: 2.5,
-                                              ),
-                                            ),
-                                          ]
-                                        : [
-                                            const Text(
-                                              'Login',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.w600,
-                                                letterSpacing: 0.2,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            const Icon(
-                                              Icons.chevron_right,
-                                              color: Colors.white,
-                                              size: 20,
-                                            ),
-                                          ],
+                                    children: [
+                                      Text(
+                                        'Login',
+                                        style: GoogleFonts.poppins(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Icon(
+                                        Icons.arrow_forward_rounded,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ),
-                            ),
                           ),
                         ),
 
                         const SizedBox(height: 24),
 
                         /// OR CONTINUE WITH
-                        const Row(
+                        Row(
                           children: [
-                            Expanded(child: Divider(color: Colors.white24)),
+                            const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
                             Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 10),
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
                               child: Text(
                                 "OR CONTINUE WITH",
-                                style: TextStyle(
-                                    color: Colors.white54, fontSize: 14),
+                                style: GoogleFonts.poppins(
+                                  color: AppColors.hint,
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.8,
+                                ),
                               ),
                             ),
-                            Expanded(child: Divider(color: Colors.white24)),
+                            const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
                           ],
                         ),
 
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 18),
 
-                        /// SOCIAL BUTTONS
-
-                        SocialButtons(
-                          onGoogleTap: () {
-                            // Google login
-                          },
-                          onAppleTap: () {
-                            // Apple login
-                          },
-                          onFacebookTap: () {
-                            // Facebook login
-                          },
+                        /// GOOGLE SIGN IN BUTTON
+                        InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: authProvider.isLoading
+                              ? null
+                              : () async {
+                                  final success = await context
+                                      .read<AuthProvider>()
+                                      .loginWithGoogle();
+                                  if (success) {
+                                    if (context.mounted) {
+                                      context.go(AppRoutes.home);
+                                    }
+                                  } else {
+                                    if (context.mounted) {
+                                      final errorMsg = context
+                                          .read<AuthProvider>()
+                                          .errorMessage;
+                                      if (errorMsg != null &&
+                                          errorMsg.isNotEmpty) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              errorMsg,
+                                              style: const TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                            backgroundColor: AppColors.danger,
+                                            behavior: SnackBarBehavior.floating,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  }
+                                },
+                          child: Container(
+                            height: 48,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: const Color(0xFFE2E8F0),
+                              ),
+                            ),
+                            child: Center(
+                              child: Image.asset(
+                                'assets/images/google.png',
+                                height: 24,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                ),
-              ),
 
+                  const SizedBox(height: 24),
 
-              Align(
-                alignment: AlignmentGeometry.directional(0,0.9 ),
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 24),
-                  child: RichText(
+                  // FOOTER SIGNUP LINK
+                  RichText(
                     text: TextSpan(
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 15,
+                      style: GoogleFonts.poppins(
+                        color: AppColors.greyText,
+                        fontSize: 14,
                       ),
                       children: [
                         const TextSpan(
@@ -359,13 +457,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           alignment: PlaceholderAlignment.middle,
                           child: GestureDetector(
                             onTap: () {
-                              context.go(AppRoutes.signup);
+                              context.push(AppRoutes.role);
                             },
-                            child: const Text(
+                            child: Text(
                               "Sign Up Now",
-                              style: TextStyle(
-                                color: AppColors.pink,
-                                fontWeight: FontWeight.bold,
+                              style: GoogleFonts.poppins(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
                               ),
                             ),
                           ),
@@ -373,25 +472,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
-        ) ),
-
+        ),
       ),
-    );
-  }
-
-  Widget _socialBtn(IconData icon) {
-    return Container(
-      height: 55,
-      width: 55,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: AppColors.white),
-      ),
-      child: Icon(icon, color: AppColors.white),
     );
   }
 }

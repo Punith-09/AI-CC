@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
+import '../../../apply_job/presentation/providers/apply_job_provider.dart';
+import '../../../../core/responsive/responsive_breakpoints.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../providers/auditions_provider.dart';
 import '../widgets/analytics_card.dart';
 import '../widgets/audition_cards.dart';
@@ -33,6 +38,8 @@ class _AuditionScreenState extends State<AuditionScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AuditionsProvider>().fetchAuditions();
+      context.read<AuditionsProvider>().fetchMyPostedAuditions();
+      context.read<ApplyJobProvider>().fetchMyApplications();
     });
   }
 
@@ -84,58 +91,68 @@ class _AuditionScreenState extends State<AuditionScreen> {
   @override
   Widget build(BuildContext context) {
     final auditionsProvider = context.watch<AuditionsProvider>();
+    final applyJobProvider = context.watch<ApplyJobProvider>();
+    final appliedCount = applyJobProvider.applications.length;
     final displayedAuditions = _filterAuditions(auditionsProvider.auditions);
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    final titleColor = isDesktop ? const Color(0xFF0F172A) : Colors.white;
+    final sectionTitleColor = isDesktop ? const Color(0xFF0F172A) : Colors.white;
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF1F5A6A),
-              Color(0xFF123B4A),
-              Color(0xFF0B1F2A),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
+    final content = Column(
+      children: [
+        /// Top Section (Non-Scrollable)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             children: [
-              /// Top Section (Non-Scrollable)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    /// Header
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          "AI Recommendations",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                            color: Colors.white12,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.notifications_none,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ],
+              /// Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Auditions",
+                    style: TextStyle(
+                      color: titleColor,
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
                     ),
+                  ),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () {
+                      context.push(AppRoutes.post);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isDesktop
+                            ? const Color(0xFF8E3CF7)
+                            : Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isDesktop ? Colors.transparent : Colors.white24,
+                        ),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.add, color: Colors.white, size: 18),
+                          SizedBox(width: 4),
+                          Text(
+                            "Post",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
 
-                    const SizedBox(height: 18),
+              const SizedBox(height: 18),
 
                     AuditionSearchBar(
                       controller: _searchController,
@@ -162,26 +179,119 @@ class _AuditionScreenState extends State<AuditionScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
                     children: [
-                      const AnalyticsCard(),
+                      AnalyticsCard(appliedCount: appliedCount),
 
                       const SizedBox(height: 24),
 
+                      // =======================================================
+                      // MY POSTED AUDITIONS
+                      // =======================================================
+                      if (auditionsProvider.isMyPostedLoading)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Center(
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          ),
+                        )
+                      else if (auditionsProvider.myPostedAuditions.isNotEmpty) ...[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "My Posted Auditions",
+                              style: TextStyle(
+                                color: sectionTitleColor,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              "${auditionsProvider.myPostedAuditions.length}",
+                              style: const TextStyle(
+                                color: Color(0xFF4AD0FB),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        ...auditionsProvider.myPostedAuditions.map((audition) {
+                          final applicantsCount = audition.applicantsCount;
+                          final loc = audition.location.isNotEmpty ? audition.location : 'Location N/A';
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(16),
+                              onTap: () {
+                                context.push(
+                                  AppRoutes.auditionDetails,
+                                  extra: audition,
+                                );
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                                decoration: BoxDecoration(
+                                  color: isDesktop
+                                      ? Colors.white
+                                      : const Color(0xFF143E4D).withValues(alpha: 0.8),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: isDesktop
+                                        ? const Color(0xFFE2E8F0)
+                                        : Colors.white.withValues(alpha: 0.15),
+                                    width: 1,
+                                  ),
+                                  boxShadow: isDesktop
+                                      ? [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(alpha: 0.03),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      audition.title,
+                                      style: TextStyle(
+                                        color: isDesktop ? const Color(0xFF0F172A) : Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      "$applicantsCount applicant(s) · $loc",
+                                      style: TextStyle(
+                                        color: isDesktop
+                                            ? const Color(0xFF64748B)
+                                            : const Color(0xFFB0B6C4),
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                        const SizedBox(height: 20),
+                      ],
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: const [
+                        children: [
                           Text(
                             "Top Matches for You",
                             style: TextStyle(
-                              color: Colors.white,
+                              color: sectionTitleColor,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            "View All",
-                            style: TextStyle(
-                              color: Colors.white54,
-                              fontSize: 14,
                             ),
                           ),
                         ],
@@ -221,8 +331,8 @@ class _AuditionScreenState extends State<AuditionScreen> {
                                 const SizedBox(height: 12),
                                 Text(
                                   "No auditions matching \"$_searchQuery\"",
-                                  style: const TextStyle(
-                                    color: Colors.white70,
+                                  style: TextStyle(
+                                    color: isDesktop ? const Color(0xFF334155) : Colors.white70,
                                     fontSize: 15,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -250,20 +360,13 @@ class _AuditionScreenState extends State<AuditionScreen> {
 
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: const [
+                        children: [
                           Text(
                             "New Auditions",
                             style: TextStyle(
-                              color: Colors.white,
+                              color: sectionTitleColor,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            "View All",
-                            style: TextStyle(
-                              color: Colors.white54,
-                              fontSize: 14,
                             ),
                           ),
                         ],
@@ -271,7 +374,11 @@ class _AuditionScreenState extends State<AuditionScreen> {
 
                       const SizedBox(height: 16),
 
-                      NewAuditionCard(onPressed: () {}),
+                      NewAuditionCard(
+                        onPressed: () {
+                          context.push(AppRoutes.post);
+                        },
+                      ),
 
                       const SizedBox(height: 100),
                     ],
@@ -279,7 +386,34 @@ class _AuditionScreenState extends State<AuditionScreen> {
                 ),
               ),
             ],
+          );
+
+    if (isDesktop) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: content,
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF1F5A6A),
+              Color(0xFF123B4A),
+              Color(0xFF0B1F2A),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
+        ),
+        child: SafeArea(
+          child: content,
         ),
       ),
     );

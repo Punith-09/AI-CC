@@ -1,4 +1,6 @@
 import 'package:aicc/common/widgets/app_background.dart';
+import 'package:aicc/core/constants/app_colors.dart';
+import 'package:aicc/core/responsive/responsive_breakpoints.dart';
 import 'package:aicc/features/artist_profile/presentation/widgets/artist_avatar.dart';
 import 'package:aicc/features/artist_profile/presentation/widgets/artist_info.dart';
 import 'package:aicc/features/artist_profile/presentation/widgets/audition_button.dart';
@@ -7,13 +9,14 @@ import 'package:aicc/features/artist_profile/presentation/widgets/portfolio_grid
 import 'package:aicc/features/artist_profile/presentation/widgets/portfolio_header.dart';
 import 'package:aicc/features/artist_profile/presentation/widgets/profile_header.dart';
 import 'package:aicc/features/artist_profile/presentation/widgets/role_chips.dart';
-import 'package:aicc/features/artist_profile/presentation/widgets/social_links.dart';
+
 import 'package:aicc/features/artist_profile/presentation/widgets/stats_card.dart';
+import 'package:aicc/features/artist_profile/presentation/widgets/subscription_button.dart';
 import 'package:flutter/material.dart';
-
-import '../../data/datasource/portfolio_data.dart';
-
+import 'package:go_router/go_router.dart';
+import 'package:aicc/core/routes/app_routes.dart';
 import 'package:provider/provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../presentation/providers/profile_provider.dart';
 
 class ArtistProfileScreen extends StatefulWidget {
@@ -39,66 +42,232 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
 
-      body: AppBackground(
-        child: SafeArea(
-          child: Consumer<ProfileProvider>(
-            builder: (context, provider, child) {
-              if (provider.isLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (provider.error != null) {
-                return Center(
-                  child: Text(
-                    provider.error!,
-                    style: const TextStyle(color: Colors.red),
+    final content = Consumer<ProfileProvider>(
+      builder: (context, provider, child) {
+        if (provider.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (provider.error != null) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    if (Navigator.canPop(context))
+                      IconButton(
+                        icon: Icon(Icons.arrow_back, color: isDesktop ? const Color(0xFF0F172A) : Colors.white),
+                        onPressed: () => context.pop(),
+                      )
+                    else
+                      const SizedBox(width: 48),
+                    Text(
+                      "Profile",
+                      style: TextStyle(
+                        color: AppColors.black,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.logout, color: Colors.redAccent),
+                      tooltip: "Logout",
+                      onPressed: () async {
+                        try {
+                          final authProvider = context.read<AuthProvider>();
+                          final profileProvider = context.read<ProfileProvider>();
+                          await authProvider.logout();
+                          profileProvider.clear();
+                        } catch (e) {
+                          debugPrint('Logout error: $e');
+                        } finally {
+                          if (context.mounted) {
+                            context.go(AppRoutes.splash);
+                          }
+                        }
+                      },
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: isDesktop ? Colors.white : const Color(0xFF123B4A).withOpacity(0.85),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isDesktop ? const Color(0xFFE2E8F0) : Colors.white.withOpacity(0.1),
+                    ),
+                    boxShadow: isDesktop
+                        ? [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 16,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent.withOpacity(0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.cloud_off_rounded,
+                          color: Colors.redAccent,
+                          size: 44,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Text(
+                        "Unable to Load Profile",
+                        style: TextStyle(
+                          color: isDesktop ? const Color(0xFF0F172A) : Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        provider.error!,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: isDesktop ? const Color(0xFF64748B) : Colors.white.withOpacity(0.7),
+                          fontSize: 13,
+                        ),
+                      ),
+                            const SizedBox(height: 24),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: Colors.redAccent,
+                                      side: const BorderSide(color: Colors.redAccent),
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    onPressed: () async {
+                                      try {
+                                        final authProvider = context.read<AuthProvider>();
+                                        final profileProvider = context.read<ProfileProvider>();
+                                        await authProvider.logout();
+                                        profileProvider.clear();
+                                      } catch (e) {
+                                        debugPrint('Logout error: $e');
+                                      } finally {
+                                        if (context.mounted) {
+                                          context.go(AppRoutes.welcome);
+                                        }
+                                      }
+                                    },
+                                    icon: const Icon(Icons.logout, size: 18),
+                                    label: const Text("Log Out"),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF087F9C),
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      if (widget.userId != null) {
+                                        context.read<ProfileProvider>().fetchUserProfile(widget.userId!);
+                                      } else {
+                                        context.read<ProfileProvider>().fetchMyProfile();
+                                      }
+                                    },
+                                    icon: const Icon(Icons.refresh, size: 18),
+                                    label: const Text("Retry"),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                    ],
                   ),
                 );
               }
               
               // Depending on whether it's 'me' or someone else:
               final profile = widget.userId != null ? provider.viewedProfile : provider.currentProfile;
-              
-              // We just let the widgets use dummy data for now or fallback, 
-              // but we integrated the API layer properly.
-              
+              final mediaList = widget.userId != null ? provider.viewedMedia : provider.myMedia;
+              final effectivePlan = widget.userId != null
+                  ? profile?.plan
+                  : (provider.myActivePlan ?? profile?.plan);
+
               return SingleChildScrollView(
                 child: Column(
                   children: [
-                    Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        ProfileHeader(coverImage: profile?.coverImage),
+                    const ProfileHeader(),
 
-                        Positioned(
-                          left: 24,
-                          bottom: -45,
-                          child: ArtistAvatar(profileImage: profile?.profileImage),
-                        ),
+                    const SizedBox(height: 12),
 
-                        Positioned(
-                          left: 150, 
-                          bottom: -30,
-                          child: ArtistInfo(
-                            name: profile?.name,
-                            city: profile?.city,
-                            state: profile?.state,
-                          ),
-                        ),
-                      ],
+                    Center(
+                      child: ArtistAvatar(
+                        profileImage: profile?.profileImage,
+                        name: profile?.name,
+                      ),
                     ),
 
-                    const SizedBox(height: 40),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 18),
+
+                    Center(
+                      child: ArtistInfo(
+                        name: profile?.name,
+                        city: profile?.city,
+                        state: profile?.state,
+                        plan: effectivePlan,
+                        isVerified: profile?.isVerified ??
+                            (effectivePlan != null && effectivePlan.isNotEmpty),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
 
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: RoleChips(roles: profile?.roles),
+                      child: Center(
+                        child: RoleChips(roles: profile?.roles),
+                      ),
                     ),
 
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 18),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: SubscriptionButton(
+                        activePlan: effectivePlan,
+                        onTap: () {
+                          context.push(AppRoutes.subscription).then((_) {
+                            if (context.mounted && widget.userId == null) {
+                              context.read<ProfileProvider>().fetchMyProfile();
+                            }
+                          });
+                        },
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
 
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -109,7 +278,7 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -119,7 +288,7 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 28),
 
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20),
@@ -128,41 +297,50 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
 
                     const SizedBox(height: 18),
 
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
-                      child: PortfolioGrid(
-                        items: portfolioList,
-                      ),
-                    ),
-
-                    const SizedBox(height: 30),
-
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
-                      child: SocialLinks(),
-                    ),
-
-                    const SizedBox(height: 24),
-
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
-                      // Mocking the follow button integration over Audition Button
-                      child: GestureDetector(
-                        onTap: () {
-                          if (widget.userId != null) {
-                             provider.followUser(widget.userId!);
-                          }
-                        },
-                        child: const AuditionButton(),
+                      child: PortfolioGrid(
+                        items: mediaList,
+                        profile: profile,
                       ),
                     ),
 
+                    if (widget.userId != null) ...[
+                      const SizedBox(height: 30),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: GestureDetector(
+                          onTap: () {
+                            provider.followUser(widget.userId!);
+                          },
+                          child: const AuditionButton(),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 40),
                   ],
                 ),
               );
             },
+          );
+
+    if (isDesktop) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 780),
+            child: content,
           ),
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: AppBackground(
+        child: SafeArea(
+          child: content,
         ),
       ),
     );

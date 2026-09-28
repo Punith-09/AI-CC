@@ -1,210 +1,130 @@
 import 'package:aicc/core/constants/app_colors.dart';
+import 'package:aicc/core/responsive/responsive_breakpoints.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/routes/app_routes.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../providers/profile_provider.dart';
 
 class ProfileHeader extends StatelessWidget {
   final String? coverImage;
-  const ProfileHeader({super.key, this.coverImage});
+  final bool isOtherUser;
 
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 300,
-
-      child:
-      Stack(
-        children: [
-          Positioned.fill(
-            child: (coverImage != null && coverImage!.isNotEmpty && coverImage!.startsWith('http'))
-                ? Image.network(
-                    coverImage!,
-                    fit: BoxFit.cover,
-                    alignment: Alignment.centerRight,
-                    errorBuilder: (_, __, ___) => Image.asset(
-                      "assets/images/coverPic.png",
-                      fit: BoxFit.cover,
-                      alignment: Alignment.centerRight,
-                    ),
-                  )
-                : Image.asset(
-                    coverImage != null && coverImage!.isNotEmpty ? coverImage! : "assets/images/coverPic.png",
-                    fit: BoxFit.cover,
-                    alignment: Alignment.centerRight,
-                  ),
-          ),
-
-
-          Positioned.fill(
-            child: Container(
-              color: AppColors.black.withOpacity(0.18),
-            ),
-          ),
-
-          // Bottom fade into app background
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.transparent,
-                    Color(0xff1c5362).withOpacity(.15),
-                    Color(0xff1c5362).withOpacity(.25),
-                    Color(0xff143c49).withOpacity(.55),
-                    Color(0xff11343e),
-
-                  ],
-                  stops: const [
-                    0.0,
-                    0.35,
-                    0.55,
-                    0.72,
-                    0.88,
-                    1.0,
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Side vignette (makes edges blend nicely)
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: [
-                    AppColors.background.withOpacity(.45),
-                    Colors.transparent,
-                    Colors.transparent,
-                    AppColors.background.withOpacity(.25),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          // Top buttons
-          Positioned(
-            top: 18,
-            left: 16,
-            child: _CircleButton(
-              icon: LucideIcons.chevronLeft,
-              onTap: () => context.pop(),
-            ),
-          ),
-
-          Positioned(
-            top: 18,
-            right: 16,
-            child: Builder(
-              builder: (context) {
-                return _CircleButton(
-                  icon: LucideIcons.ellipsisVertical,
-                  onTap: () async {
-                    final RenderBox button = context.findRenderObject() as RenderBox;
-                    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-
-                    final position = RelativeRect.fromRect(
-                      Rect.fromPoints(
-                        button.localToGlobal(Offset.zero, ancestor: overlay),
-                        button.localToGlobal(
-                          button.size.bottomRight(Offset.zero),
-                          ancestor: overlay,
-                        ),
-                      ),
-                      Offset.zero & overlay.size,
-                    );
-
-                    final value = await showMenu<String>(
-                      context: context,
-                      position: position,
-                      color: const Color(0xFF1E2A38),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      items: const [
-                        PopupMenuItem(
-                          value: 'edit',
-                          child: Row(
-                            children: [
-                              Icon(Icons.edit_outlined, size: 20),
-                              SizedBox(width: 10),
-                              Text('Edit'),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'logout',
-                          child: Row(
-                            children: [
-                              Icon(Icons.logout, size: 20, color: Colors.red),
-                              SizedBox(width: 10),
-                              Text(
-                                'Logout',
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-
-                    switch (value) {
-                      case 'edit':
-
-                        context.push('/edit-profile');
-                        break;
-
-                      case 'logout':
-                      context.go(AppRoutes.login);
-                        break;
-                    }
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      )
-    );
-  }
-}
-
-class _CircleButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _CircleButton({
-    required this.icon,
-    required this.onTap,
+  const ProfileHeader({
+    super.key,
+    this.coverImage,
+    this.isOtherUser = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(40),
-      onTap: onTap,
-      child: Container(
-        width: 46,
-        height: 46,
-        decoration: BoxDecoration(
-          color: AppColors.black.withOpacity(.35),
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: AppColors.white.withOpacity(.08),
-          ),
-        ),
-        child: Icon(
-          icon,
-          color: AppColors.white,
-          size: 24,
-        ),
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          if (!isOtherUser)
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isDesktop ? const Color(0xFFE2E8F0) : AppColors.white.withValues(alpha: .08),
+                ),
+                boxShadow: isDesktop
+                    ? [
+                        BoxShadow(
+                          color: AppColors.white,
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  splashColor: Colors.transparent,
+                  highlightColor: Colors.transparent,
+                  hoverColor: Colors.transparent,
+                ),
+                child: PopupMenuButton<String>(
+                  padding: EdgeInsets.zero,
+                  icon: Icon(
+                    LucideIcons.ellipsisVertical,
+                    color: AppColors.black,
+                    size: 22,
+                  ),
+                  color:  Colors.white ,
+                  elevation: isDesktop ? 6 : 8,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      color: isDesktop ? const Color(0xFFE2E8F0) : Colors.white.withValues(alpha: 0.1),
+                    ),
+                  ),
+                  onSelected: (value) async {
+                    if (value == 'edit') {
+                      context.push(AppRoutes.editArtistProfile);
+                    } else if (value == 'logout') {
+                      try {
+                        final authProvider = context.read<AuthProvider>();
+                        final profileProvider = context.read<ProfileProvider>();
+                        await authProvider.logout();
+                        profileProvider.clear();
+                      } catch (e) {
+                        debugPrint('Logout error: $e');
+                      } finally {
+                        if (context.mounted) {
+                          context.go(AppRoutes.welcome);
+                        }
+                      }
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem<String>(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit_outlined, size: 20, color: const Color(0xFF334155) ),
+                          const SizedBox(width: 10),
+                          Text('Edit', style: TextStyle(color: AppColors.black)),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem<String>(
+                      value: 'logout',
+                      child: Row(
+                        children: [
+                          Icon(Icons.logout, size: 20, color: Colors.redAccent),
+                          SizedBox(width: 10),
+                          Text(
+                            'Logout',
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
