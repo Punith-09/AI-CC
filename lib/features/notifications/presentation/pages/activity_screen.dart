@@ -1,3 +1,4 @@
+import 'package:aicc/core/responsive/responsive_breakpoints.dart';
 import 'package:flutter/material.dart';
 import '../widgets/activity_card.dart';
 import '../widgets/activity_end_text.dart';
@@ -48,9 +49,51 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+
+    final content = Column(
+      children: [
+        const SizedBox(height: 16),
+        ActivityTabBar(
+          selectedIndex: selectedTab,
+          onChanged: (index) {
+            setState(() {
+              selectedTab = index;
+            });
+          },
+        ),
+        const SizedBox(height: 20),
+        Expanded(
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: activities.length + 1,
+            separatorBuilder: (_, __) => const SizedBox(height: 14),
+            itemBuilder: (context, index) {
+              if (index == activities.length) {
+                return const ActivityEndText();
+              }
+
+              return ActivityCard(activity: activities[index]);
+            },
+          ),
+        ),
+      ],
+    );
+
+    if (isDesktop) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: content,
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.transparent,
-
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -61,7 +104,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
               colors: [
                 Color(0xFF1F5A6A),
                 Color(0xFF123B4A),
-                //Color(0xFF0B1F2A),
               ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
@@ -94,7 +136,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
           ),
         ],
       ),
-
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -107,37 +148,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: Column(
-          children: [
-            const SizedBox(height: 16),
-
-            ActivityTabBar(
-              selectedIndex: selectedTab,
-              onChanged: (index) {
-                setState(() {
-                  selectedTab = index;
-                });
-              },
-            ),
-
-            const SizedBox(height: 20),
-
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: activities.length + 1,
-                separatorBuilder: (_, __) => const SizedBox(height: 14),
-                itemBuilder: (context, index) {
-                  if (index == activities.length) {
-                    return const ActivityEndText();
-                  }
-
-                  return ActivityCard(activity: activities[index]);
-                },
-              ),
-            ),
-          ],
-        ),
+        child: content,
       ),
     );
   }

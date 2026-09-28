@@ -1,4 +1,5 @@
 import 'package:aicc/common/widgets/app_background.dart';
+import 'package:aicc/core/responsive/responsive_breakpoints.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -1085,6 +1086,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   Widget build(BuildContext context) {
     // Watch ProfileProvider to instantly reflect subscription state changes
     context.watch<ProfileProvider>();
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
 
     final proPlan = _getPlan('pro') ??
         _plansResponse.plans.firstOrNull ??
@@ -1095,98 +1097,110 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             ? _plansResponse.plans[1]
             : PaymentPlansResponse.defaultPlans().plans[1]);
 
+    final content = Column(
+      children: [
+        if (!isDesktop) _buildTopAppBar(context),
+        Expanded(
+          child: RefreshIndicator(
+            color: const Color(0xFF38BDF8),
+            backgroundColor: const Color(0xFF0F3647),
+            onRefresh: _fetchPlans,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 12),
+                  _buildHeroSection(),
+                  _buildActivePlanUsageCard(),
+                  const SizedBox(height: 26),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Choose Your Plan",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      if (_isLoading)
+                        const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFF38BDF8),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  ..._plansResponse.plans.map((plan) {
+                    final isSelected = _selectedPlan == plan.plan;
+                    final isRecommended =
+                        _plansResponse.recommendedPlan == plan.plan;
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: _buildPlanCard(
+                        plan: plan,
+                        isSelected: isSelected,
+                        isRecommended: isRecommended,
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        "Plan Benefits & Limits",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  _buildWhatYouGetSection(proPlan, proMaxPlan),
+                  const SizedBox(height: 24),
+                  _buildSecurePaymentFooter(),
+                  SizedBox(height: isDesktop ? 40 : 110),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+
+    if (isDesktop) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 780),
+            child: content,
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFF071922),
-      body:
-      AppBackground(
+      body: AppBackground(
         child: SafeArea(
           bottom: false,
-          child: Column(
-            children: [
-              _buildTopAppBar(context),
-              Expanded(
-                child: RefreshIndicator(
-                  color: const Color(0xFF38BDF8),
-                  backgroundColor: const Color(0xFF0F3647),
-                  onRefresh: _fetchPlans,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(
-                      parent: BouncingScrollPhysics(),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 12),
-                        _buildHeroSection(),
-                        _buildActivePlanUsageCard(),
-                        const SizedBox(height: 26),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              "Choose Your Plan",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: -0.2,
-                              ),
-                            ),
-                            if (_isLoading)
-                              const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Color(0xFF38BDF8),
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        ..._plansResponse.plans.map((plan) {
-                          final isSelected = _selectedPlan == plan.plan;
-                          final isRecommended =
-                              _plansResponse.recommendedPlan == plan.plan;
-
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: _buildPlanCard(
-                              plan: plan,
-                              isSelected: isSelected,
-                              isRecommended: isRecommended,
-                            ),
-                          );
-                        }),
-                        const SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              "Plan Benefits & Limits",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: -0.2,
-                              ),
-                            ),
-
-                          ],
-                        ),
-                        const SizedBox(height: 14),
-                        _buildWhatYouGetSection(proPlan, proMaxPlan),
-                        const SizedBox(height: 24),
-                        _buildSecurePaymentFooter(),
-                        const SizedBox(height: 110), // Bottom navbar offset
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+          child: content,
         ),
       ),
     );

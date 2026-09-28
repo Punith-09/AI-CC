@@ -3,60 +3,57 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  /// Primary
-  static const Color primary = Color(0xff4ad0fb);
-  // static const Color primary = Color(0xff1e1e2c);
+  /// Primary Brand Color
+  static const Color primary = Color(0xFF7C3AED);
+  static const Color buttonPrimary = Color(0xFF7C3AED);
 
-  static const Color secondary = Color(0xff276f8a);
+  static const Color secondary = Color(0xFF6D28D9);
 
-  static const Color gradient = Color(0xffCC3EFF);
+  static const Color gradient = Color(0xFF7C3AED);
 
+  /// Solid White Backgrounds (replaces dark gradients)
   static const List<Color> backGroundGradient = [
-    Color(0xFF1F5A6A),
-    Color(0xFF123B4A),
-    Color(0xFF0B1F2A),
+    Color(0xFFFFFFFF),
+    Color(0xFFFFFFFF),
+    Color(0xFFFFFFFF),
   ];
 
+  /// Fixed Solid Button Colors (replaces gradient buttons)
   static const List<Color> authBtnGradient = [
-    Color(0xFF9940E9),
-    Color(0xFF6525B7),
+    buttonPrimary,
+    buttonPrimary,
   ];
 
   static const List<Color> BtnGradient = [
-    Color(0xff20D5FF),
-    Color(0xffCC3EFF)
+    buttonPrimary,
+    buttonPrimary,
   ];
 
   /// Backgrounds
-  static const Color background = Color(0xff061B39);
+  static const Color background = Color(0xFFFFFFFF);
+  static const Color scaffold = Color(0xFFFFFFFF);
+  static const Color card = Color(0xFFFFFFFF);
+  static const Color textField = Color(0xFFF3F4F6);
+  static const Color logo = Color(0xFF111827);
 
-  static const Color scaffold = Color(0xFF1C5260);
+  /// Text & Neutrals (Black / Charcoal for maximum contrast on white)
+  static const Color black = Color(0xFF111827);
+  static const Color blackShade = Color(0xFF1F2937);
+  static const Color greyText = Color(0xFF4B5563);
+  static const Color grey = Color(0xFF6B7280);
+  static const Color hint = Color(0xFF9CA3AF);
+  static const Color whiteShade = Color(0xFFAAAAAA);
+  static const Color whiteShade1 = Color(0xFFF3F3F3);
 
-  static const Color card = Color(0xff0e2730);
+  static const Color divider = Color(0xFFE5E7EB);
+  static const Color border = Color(0xFFE5E7EB);
 
-  static const Color textField = Color(0xff0e2730);
-  static const Color logo = Color(0xff051925);
-
-  /// Text
-
-  static const Color greyText = Color(0xffAEB8CC);
-  static const Color grey = Color(0xff9e9e9e);
-
-  static const Color hint = Color(0xff7C8CA8);
-
-  static const Color divider = Color(0xff20406D);
-
-  static const Color border = Color(0xff234B83);
-
-  static const Color success = Color(0xff27AE60);
+  static const Color success = Color(0xFF10B981);
   static const Color white = Color(0xFFFFFFFF);
-  static const Color whiteShade = Color(0xFF979797);
-  static const Color black = Color(0xFF000000);
-  static const Color blackShade = Color(0xFF292929);
-  static const Color purple = Color(0xFF9C27B0);
-  static const Color pink = Color(0xFFE91E63);
+  static const Color purple = Color(0xFF7C3AED);
+  static const Color pink = Color(0xFFEC4899);
 
-  static const Color warning = Color(0xffF2C94C);
-
-  static const Color danger = Color(0xffEB5757);
+  static const Color warning = Color(0xFFF59E0B);
+  static const Color danger = Color(0xFFEF4444);
 }
+

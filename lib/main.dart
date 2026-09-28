@@ -106,7 +106,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       title: "AICC",
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.lightTheme,
       routerConfig: appRouter,
     );
   }

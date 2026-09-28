@@ -1,5 +1,6 @@
 import 'package:aicc/core/api/api_endpoints.dart';
 import 'package:aicc/core/constants/app_colors.dart';
+import 'package:aicc/core/responsive/responsive_breakpoints.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/models/portfolio_model.dart';
@@ -16,17 +17,18 @@ class PortfolioCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
     final cleanUrl = ApiEndpoints.formatMediaUrl(item.image);
     final isNetwork = cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://');
     final isAsset = cleanUrl.startsWith('assets/');
 
     Widget buildPlaceholder() {
       return Container(
-        color: const Color(0xFF103E48),
+        color: isDesktop ? const Color(0xFFF1F5F9) : const Color(0xFF103E48),
         alignment: Alignment.center,
         child: Icon(
           item.isVideo ? Icons.videocam_outlined : Icons.photo_outlined,
-          color: Colors.white38,
+          color: isDesktop ? const Color(0xFF94A3B8) : Colors.white38,
           size: 32,
         ),
       );
@@ -74,7 +76,7 @@ class PortfolioCard extends StatelessWidget {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: AppColors.border,
+                    color: isDesktop ? const Color(0xFFE2E8F0) : AppColors.border,
                   ),
                   borderRadius: BorderRadius.circular(18),
                 ),

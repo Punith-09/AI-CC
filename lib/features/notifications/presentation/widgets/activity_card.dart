@@ -1,3 +1,4 @@
+import 'package:aicc/core/responsive/responsive_breakpoints.dart';
 import 'package:flutter/material.dart';
 import '../../data/models/activity_model.dart';
 
@@ -11,10 +12,22 @@ class ActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF0B1F2A),
+        color: isDesktop ? Colors.white : const Color(0xFF0B1F2A),
         borderRadius: BorderRadius.circular(18),
+        border: isDesktop ? Border.all(color: const Color(0xFFE2E8F0)) : null,
+        boxShadow: isDesktop
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
       ),
       child: Row(
         children: [
@@ -22,17 +35,26 @@ class ActivityCard extends StatelessWidget {
             Container(
               width: 4,
               height: 120,
-              color: Colors.amber,
+              decoration: BoxDecoration(
+                color: Colors.amber,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(18),
+                  bottomLeft: Radius.circular(18),
+                ),
+              ),
             ),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 24,
-                    backgroundColor: Colors.grey,
-                    child: Icon(Icons.person),
+                    backgroundColor: isDesktop ? const Color(0xFFF1F5F9) : Colors.grey,
+                    child: Icon(
+                      Icons.person,
+                      color: isDesktop ? const Color(0xFF64748B) : Colors.white,
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -44,8 +66,8 @@ class ActivityCard extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 activity.title,
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                style: TextStyle(
+                                  color: isDesktop ? const Color(0xFF0F172A) : Colors.white,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 17,
                                 ),
@@ -53,8 +75,8 @@ class ActivityCard extends StatelessWidget {
                             ),
                             Text(
                               activity.time,
-                              style: const TextStyle(
-                                color: Colors.white54,
+                              style: TextStyle(
+                                color: isDesktop ? const Color(0xFF94A3B8) : Colors.white54,
                                 fontSize: 12,
                               ),
                             )
@@ -63,8 +85,8 @@ class ActivityCard extends StatelessWidget {
                         const SizedBox(height: 6),
                         Text(
                           activity.subtitle,
-                          style: const TextStyle(
-                            color: Colors.white70,
+                          style: TextStyle(
+                            color: isDesktop ? const Color(0xFF64748B) : Colors.white70,
                             height: 1.4,
                           ),
                         ),
@@ -88,9 +110,9 @@ class ActivityCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const Icon(
+                  Icon(
                     Icons.chevron_right,
-                    color: Colors.white30,
+                    color: isDesktop ? const Color(0xFF94A3B8) : Colors.white30,
                   )
                 ],
               ),

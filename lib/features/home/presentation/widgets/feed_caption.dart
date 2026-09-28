@@ -1,7 +1,9 @@
+import 'package:aicc/core/constants/app_colors.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../data/models/feed_post_model.dart';
@@ -16,6 +18,13 @@ class FeedCaption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    final likesTextColor = AppColors.black;
+    final nameColor = AppColors.black;
+    final bodyColor = AppColors.black;
+    final hashtagColor = isDesktop ? const Color(0xFF8E3CF7) : const Color(0xff4C8DFF);
+    final timeColor = AppColors.black;
+
     final hasDesc = post.description.isNotEmpty;
     final captionText = post.title.isNotEmpty
         ? (hasDesc ? '${post.title} — ${post.description}' : post.title)
@@ -28,25 +37,25 @@ class FeedCaption extends StatelessWidget {
         children: [
           Text(
             "${post.likesCount} likes",
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 15,
-              color: Colors.white,
+              color: likesTextColor,
             ),
           ),
           const SizedBox(height: 8),
           RichText(
             text: TextSpan(
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14.5,
-                color: Colors.white70,
+                color: bodyColor,
                 height: 1.45,
               ),
               children: [
                 TextSpan(
                   text: "${post.creatorName} ",
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: nameColor,
                     fontWeight: FontWeight.w600,
                   ),
                   recognizer: TapGestureRecognizer()
@@ -80,8 +89,8 @@ class FeedCaption extends StatelessWidget {
                 if (post.hashtags != null && post.hashtags!.isNotEmpty) ...[
                   TextSpan(
                     text: " ${post.hashtags}",
-                    style: const TextStyle(
-                      color: Color(0xff4C8DFF),
+                    style: TextStyle(
+                      color: hashtagColor,
                     ),
                   ),
                 ],
@@ -91,8 +100,8 @@ class FeedCaption extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             post.timeAgo,
-            style: const TextStyle(
-              color: Colors.white54,
+            style: TextStyle(
+              color: timeColor,
               fontSize: 11.5,
               fontWeight: FontWeight.w500,
               letterSpacing: 0.3,

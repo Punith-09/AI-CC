@@ -1,4 +1,6 @@
 import 'package:aicc/common/widgets/app_background.dart';
+import 'package:aicc/core/constants/app_colors.dart';
+import 'package:aicc/core/responsive/responsive_breakpoints.dart';
 import 'package:aicc/features/artist_profile/presentation/widgets/artist_avatar.dart';
 import 'package:aicc/features/artist_profile/presentation/widgets/artist_info.dart';
 import 'package:aicc/features/artist_profile/presentation/widgets/audition_button.dart';
@@ -40,102 +42,108 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
 
-      body: AppBackground(
-        child: SafeArea(
-          child: Consumer<ProfileProvider>(
-            builder: (context, provider, child) {
-              if (provider.isLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (provider.error != null) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          if (Navigator.canPop(context))
-                            IconButton(
-                              icon: const Icon(Icons.arrow_back, color: Colors.white),
-                              onPressed: () => context.pop(),
-                            )
-                          else
-                            const SizedBox(width: 48),
-                          const Text(
-                            "Profile",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.logout, color: Colors.redAccent),
-                            tooltip: "Logout",
-                            onPressed: () async {
-                              try {
-                                final authProvider = context.read<AuthProvider>();
-                                final profileProvider = context.read<ProfileProvider>();
-                                await authProvider.logout();
-                                profileProvider.clear();
-                              } catch (e) {
-                                debugPrint('Logout error: $e');
-                              } finally {
-                                if (context.mounted) {
-                                  context.go(AppRoutes.splash);
-                                }
-                              }
-                            },
-                          ),
-                        ],
+    final content = Consumer<ProfileProvider>(
+      builder: (context, provider, child) {
+        if (provider.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (provider.error != null) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    if (Navigator.canPop(context))
+                      IconButton(
+                        icon: Icon(Icons.arrow_back, color: isDesktop ? const Color(0xFF0F172A) : Colors.white),
+                        onPressed: () => context.pop(),
+                      )
+                    else
+                      const SizedBox(width: 48),
+                    Text(
+                      "Profile",
+                      style: TextStyle(
+                        color: AppColors.black,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
-                      const Spacer(),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.logout, color: Colors.redAccent),
+                      tooltip: "Logout",
+                      onPressed: () async {
+                        try {
+                          final authProvider = context.read<AuthProvider>();
+                          final profileProvider = context.read<ProfileProvider>();
+                          await authProvider.logout();
+                          profileProvider.clear();
+                        } catch (e) {
+                          debugPrint('Logout error: $e');
+                        } finally {
+                          if (context.mounted) {
+                            context.go(AppRoutes.splash);
+                          }
+                        }
+                      },
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: isDesktop ? Colors.white : const Color(0xFF123B4A).withOpacity(0.85),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isDesktop ? const Color(0xFFE2E8F0) : Colors.white.withOpacity(0.1),
+                    ),
+                    boxShadow: isDesktop
+                        ? [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 16,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                       Container(
-                        padding: const EdgeInsets.all(24),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF123B4A).withOpacity(0.85),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.1),
-                          ),
+                          color: Colors.redAccent.withOpacity(0.15),
+                          shape: BoxShape.circle,
                         ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.redAccent.withOpacity(0.15),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.cloud_off_rounded,
-                                color: Colors.redAccent,
-                                size: 44,
-                              ),
-                            ),
-                            const SizedBox(height: 18),
-                            const Text(
-                              "Unable to Load Profile",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              provider.error!,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
-                                fontSize: 13,
-                              ),
-                            ),
+                        child: const Icon(
+                          Icons.cloud_off_rounded,
+                          color: Colors.redAccent,
+                          size: 44,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Text(
+                        "Unable to Load Profile",
+                        style: TextStyle(
+                          color: isDesktop ? const Color(0xFF0F172A) : Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        provider.error!,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: isDesktop ? const Color(0xFF64748B) : Colors.white.withOpacity(0.7),
+                          fontSize: 13,
+                        ),
+                      ),
                             const SizedBox(height: 24),
                             Row(
                               children: [
@@ -314,7 +322,25 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                 ),
               );
             },
+          );
+
+    if (isDesktop) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 780),
+            child: content,
           ),
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: AppBackground(
+        child: SafeArea(
+          child: content,
         ),
       ),
     );

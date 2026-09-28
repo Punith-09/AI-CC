@@ -1,4 +1,5 @@
 import 'package:aicc/core/constants/app_colors.dart';
+import 'package:aicc/core/responsive/responsive_breakpoints.dart';
 import 'package:flutter/material.dart';
 
 import 'stat_item.dart';
@@ -12,23 +13,33 @@ class StatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+
     return Container(
       padding: const EdgeInsets.symmetric(
         vertical: 24,
         horizontal: 12,
       ),
       decoration: BoxDecoration(
-        color: AppColors.card.withOpacity(.55),
+        color: isDesktop ? Colors.white : AppColors.card.withOpacity(.55),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: AppColors.border.withOpacity(.6),
+          color: isDesktop ? const Color(0xFFE2E8F0) : AppColors.border.withOpacity(.6),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(.08),
-            blurRadius: 20,
-          ),
-        ],
+        boxShadow: isDesktop
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 16,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : [
+                BoxShadow(
+                  color: AppColors.primary.withOpacity(.08),
+                  blurRadius: 20,
+                ),
+              ],
       ),
       child: IntrinsicHeight(
         child: Row(
@@ -40,7 +51,7 @@ class StatsCard extends StatelessWidget {
               title: "Projects",
             ),
             VerticalDivider(
-              color: AppColors.border.withOpacity(.5),
+              color: isDesktop ? const Color(0xFFE2E8F0) : AppColors.border.withOpacity(.5),
               thickness: 1,
             ),
             StatItem(
@@ -50,7 +61,7 @@ class StatsCard extends StatelessWidget {
               title: "Followers",
             ),
             VerticalDivider(
-              color: AppColors.border.withOpacity(.5),
+              color: isDesktop ? const Color(0xFFE2E8F0) : AppColors.border.withOpacity(.5),
               thickness: 1,
             ),
             StatItem(

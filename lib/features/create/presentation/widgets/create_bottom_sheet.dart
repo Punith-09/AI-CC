@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/responsive/responsive_breakpoints.dart';
 
 class CreateBottomSheet extends StatelessWidget {
   const CreateBottomSheet({super.key});
@@ -11,14 +12,17 @@ class CreateBottomSheet extends StatelessWidget {
   static const Color cardColor = Color(0xFF103E48);
   static const Color accentColor = Color(0xFF25C7F2);
 
+
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
     return SafeArea(
       child: Container(
-        decoration: const BoxDecoration(
-          color: backgroundColor,
+        decoration:  BoxDecoration(
+          color: AppColors.white,
           borderRadius: BorderRadius.vertical(
             top: Radius.circular(28),
+            bottom: isDesktop? Radius.circular(28):Radius.circular(0),
           ),
         ),
         child: Padding(
@@ -26,7 +30,7 @@ class CreateBottomSheet extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Drag Handle
+
               Container(
                 width: 42,
                 height: 4,
@@ -44,7 +48,7 @@ class CreateBottomSheet extends StatelessWidget {
                  Text(
                    "Create",
                    style: GoogleFonts.montserrat(
-                     color: AppColors.white,
+                     color: AppColors.black,
                      fontSize: 22,
                      // letterSpacing: 2.1,
                      fontWeight: FontWeight.w800,
@@ -55,7 +59,7 @@ class CreateBottomSheet extends StatelessWidget {
 
               const SizedBox(height: 22),
 
-              // Post Audition
+
               _CreateOption(
                 icon: Icons.assignment_outlined,
                 title: 'Post Audition',
@@ -65,7 +69,7 @@ class CreateBottomSheet extends StatelessWidget {
 
               const SizedBox(height: 10),
 
-              // Upload Video
+
               _CreateOption(
                 icon: Icons.video_library_outlined,
                 title: 'Upload Video',
@@ -75,7 +79,7 @@ class CreateBottomSheet extends StatelessWidget {
 
               const SizedBox(height: 10),
 
-              // Upload Photo
+
               _CreateOption(
                 icon: Icons.photo_camera_outlined,
                 title: 'Upload Photo',
@@ -85,7 +89,7 @@ class CreateBottomSheet extends StatelessWidget {
 
               const SizedBox(height: 18),
 
-              // Divider
+
               Container(
                 height: 1,
                 color: Colors.white.withValues(alpha: 0.08),
@@ -93,7 +97,8 @@ class CreateBottomSheet extends StatelessWidget {
 
               const SizedBox(height: 8),
 
-              // Cancel
+
+              if(!isDesktop)
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
@@ -148,7 +153,7 @@ class _CreateOption extends StatelessWidget {
             vertical: 13,
           ),
           decoration: BoxDecoration(
-            color: const Color(0xFF103E48),
+            color: AppColors.whiteShade1,
             borderRadius: BorderRadius.circular(17),
             border: Border.all(
               color: Colors.white.withValues(alpha: 0.06),
@@ -156,24 +161,25 @@ class _CreateOption extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Icon Container
+
               Container(
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF25C7F2).withValues(alpha: 0.10),
+                  color:AppColors.buttonPrimary.withValues(alpha: 0.10),
+                  border: Border.all(color: AppColors.buttonPrimary),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
                   icon,
-                  color: const Color(0xFF25C7F2),
+                  color:  AppColors.buttonPrimary,
                   size: 24,
                 ),
               ),
 
               const SizedBox(width: 14),
 
-              // Text
+
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,7 +187,7 @@ class _CreateOption extends StatelessWidget {
                     Text(
                       title,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.black,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
@@ -190,7 +196,7 @@ class _CreateOption extends StatelessWidget {
                     Text(
                       subtitle,
                       style: const TextStyle(
-                        color: Colors.white54,
+                        color: AppColors.black,
                         fontSize: 11.5,
                       ),
                     ),
@@ -198,10 +204,10 @@ class _CreateOption extends StatelessWidget {
                 ),
               ),
 
-              // Arrow
+
               const Icon(
                 Icons.arrow_forward_ios_rounded,
-                color: Colors.white30,
+                color: AppColors.black,
                 size: 15,
               ),
             ],

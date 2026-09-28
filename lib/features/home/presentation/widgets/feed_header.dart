@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../common/widgets/user_avatar.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../data/models/feed_post_model.dart';
@@ -47,6 +48,12 @@ class FeedHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    final titleColor = AppColors.black;
+    final subColor = AppColors.black;
+    final accentColor = isDesktop ? const Color(0xFF8E3CF7) : AppColors.primary;
+    final iconColor = AppColors.black;
+
     return Container(
       padding: const EdgeInsets.only(left: 16, top: 16, right: 16, bottom: 0),
       child: Row(
@@ -59,7 +66,7 @@ class FeedHeader extends StatelessWidget {
               name: post.creatorName,
               radius: 22,
               fontSize: 16,
-              backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+              backgroundColor: AppColors.whiteShade
             ),
           ),
           const SizedBox(width: 12),
@@ -75,22 +82,14 @@ class FeedHeader extends StatelessWidget {
                       Flexible(
                         child: Text(
                           post.creatorName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16.5,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: titleColor,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      // if (post.isVerified) ...[
-                      //   const SizedBox(width: 5),
-                      //   const Icon(
-                      //     Icons.verified,
-                      //     size: 16,
-                      //     color: AppColors.primary,
-                      //   ),
-                      // ],
                     ],
                   ),
                   if (post.location.isNotEmpty ||
@@ -101,17 +100,17 @@ class FeedHeader extends StatelessWidget {
                       child: Row(
                         children: [
                           if (post.location.isNotEmpty) ...[
-                            const Icon(
+                            Icon(
                               LucideIcons.mapPin,
                               size: 12,
-                              color: Colors.white70,
+                              color: subColor,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               post.location,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.white70,
+                                color: subColor,
                               ),
                             ),
                           ],
@@ -121,9 +120,9 @@ class FeedHeader extends StatelessWidget {
                             const SizedBox(width: 6),
                             Text(
                               '•  ${post.creatorCategory}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: AppColors.primary,
+                                color: accentColor,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -131,10 +130,10 @@ class FeedHeader extends StatelessWidget {
                               post.creatorCategory!.isNotEmpty) ...[
                             Text(
                               post.creatorCategory!,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w500,
+                                color: accentColor,
+                                fontWeight: FontWeight.w900,
                               ),
                             ),
                           ],
@@ -145,9 +144,30 @@ class FeedHeader extends StatelessWidget {
               ),
             ),
           ),
-          const Icon(
+          if (isDesktop) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFF8E3CF7),
+                  width: 1.2,
+                ),
+              ),
+              child: const Text(
+                'Follow',
+                style: TextStyle(
+                  color: Color(0xFF8E3CF7),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+          ],
+          Icon(
             Icons.more_horiz,
-            color: Colors.white70,
+            color: iconColor,
           ),
         ],
       ),

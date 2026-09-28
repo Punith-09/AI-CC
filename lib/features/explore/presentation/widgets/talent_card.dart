@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../../../core/routes/app_routes.dart';
 
 class TalentCard extends StatelessWidget {
@@ -14,6 +15,7 @@ class TalentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
     final formattedPic = talent.pic.isNotEmpty
         ? ApiEndpoints.formatMediaUrl(talent.pic)
         : '';
@@ -27,15 +29,19 @@ class TalentCard extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF092530),
+          color: isDesktop ? Colors.white : const Color(0xFF092530),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: AppColors.primary.withValues(alpha: 0.22),
+            color: isDesktop
+                ? const Color(0xFFE2E8F0)
+                : AppColors.primary.withValues(alpha: 0.22),
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
+              color: isDesktop
+                  ? Colors.black.withValues(alpha: 0.04)
+                  : Colors.black.withValues(alpha: 0.25),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -99,11 +105,11 @@ class TalentCard extends StatelessWidget {
                           formattedPic,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
-                              _buildSilhouette(),
+                              _buildSilhouette(isDesktop: isDesktop),
                         ),
                       ),
                     )
-                  : _buildSilhouette(),
+                  : _buildSilhouette(isDesktop: isDesktop),
             ),
 
             // ── Bottom Name ─────────────────────────────────────
@@ -120,7 +126,7 @@ class TalentCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.poppins(
-                      color: Colors.white,
+                      color: isDesktop ? const Color(0xFF0F172A) : Colors.white,
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.2,
@@ -135,22 +141,22 @@ class TalentCard extends StatelessWidget {
     );
   }
 
-  Widget _buildSilhouette() {
+  Widget _buildSilhouette({bool isDesktop = false}) {
     return Container(
       width: 58,
       height: 58,
       decoration: BoxDecoration(
-        color: const Color(0xFF133644),
+        color: isDesktop ? const Color(0xFFF1F5F9) : const Color(0xFF133644),
         shape: BoxShape.circle,
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
+          color: isDesktop ? const Color(0xFFE2E8F0) : Colors.white.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
-      child: const Center(
+      child: Center(
         child: Icon(
           Icons.person_rounded,
-          color: Colors.white70,
+          color: isDesktop ? const Color(0xFF94A3B8) : Colors.white70,
           size: 36,
         ),
       ),

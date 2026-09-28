@@ -187,49 +187,43 @@ class _ChatScreenState extends State<ChatScreen> {
     final chat = _chat;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: false,
 
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1F5A6A),
+        backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         automaticallyImplyLeading: false,
         leading: IconButton(
           onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF111827), size: 18),
         ),
         title: Text(
           chat?.participantName.isNotEmpty == true
               ? chat!.participantName
               : 'Chat',
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Color(0xFF111827),
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
         ),
         actions: const [
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 10),
-            child: Icon(Icons.photo_camera_outlined, color: Colors.white),
+            child: Icon(Icons.photo_camera_outlined, color: Color(0xFF64748B)),
           ),
           Padding(
             padding: EdgeInsets.only(right: 15),
-            child: Icon(Icons.more_vert, color: Colors.white),
+            child: Icon(Icons.more_vert, color: Color(0xFF64748B)),
           ),
         ],
       ),
 
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF1F5A6A),
-              Color(0xFF123B4A),
-              Color(0xFF0B1F2A),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+        color: const Color(0xFFF8FAFC),
         child: SafeArea(
           child: Column(
             children: [
@@ -243,7 +237,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 },
               ),
 
-              const Divider(color: Colors.white10, height: 1),
+              const Divider(color: Color(0xFFE2E8F0), height: 1),
 
               // Messages list
               Expanded(
@@ -251,7 +245,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     ? const Center(
                         child: Text(
                           'Open a conversation to start chatting.',
-                          style: TextStyle(color: Colors.white54),
+                          style: TextStyle(color: Color(0xFF64748B)),
                         ),
                       )
                     : Consumer<MessagesProvider>(
@@ -260,7 +254,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               provider.messagesForChat(chat.id).isEmpty) {
                             return const Center(
                               child: CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation(Colors.white54),
+                                valueColor: AlwaysStoppedAnimation(Color(0xFF7C3AED)),
                               ),
                             );
                           }
@@ -272,7 +266,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               child: Text(
                                 'No messages yet.\nSay hello! 👋',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.white38, fontSize: 15),
+                                style: TextStyle(color: Color(0xFF64748B), fontSize: 15),
                               ),
                             );
                           }
@@ -400,11 +394,21 @@ class _DateChip extends StatelessWidget {
   Widget build(BuildContext context) {
     if (label.isEmpty) return const SizedBox.shrink();
     return Center(
-      child: Chip(
-        backgroundColor: const Color(0xFF0B1F2A),
-        label: Text(
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE2E8F0),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
           label,
-          style: const TextStyle(color: Colors.white70, fontSize: 12),
+          style: const TextStyle(
+            color: Color(0xFF475569),
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
+          ),
         ),
       ),
     );

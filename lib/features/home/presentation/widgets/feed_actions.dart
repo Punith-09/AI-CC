@@ -1,7 +1,9 @@
+import 'package:aicc/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../data/models/feed_post_model.dart';
 import '../providers/home_feed_provider.dart';
 import 'comments_bottom_sheet.dart';
@@ -41,6 +43,9 @@ class _FeedActionsState extends State<FeedActions> {
     final isLiked = widget.post.liked;
     final likesCount = widget.post.likesCount;
     final commentsCount = widget.post.commentsCount;
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    final iconColor = AppColors.black;
+    final countColor = AppColors.black;
 
     return Container(
       padding: const EdgeInsets.only(left: 6, top: 0, right: 14, bottom: 0),
@@ -79,11 +84,11 @@ class _FeedActionsState extends State<FeedActions> {
                             ),
                           ],
                         )
-                      : const Icon(
+                      : Icon(
                           Icons.favorite_border,
-                          key: ValueKey('unliked'),
+                          key: const ValueKey('unliked'),
                           size: 28,
-                          color: Colors.white,
+                          color: iconColor,
                         ),
                 ),
               ),
@@ -97,7 +102,7 @@ class _FeedActionsState extends State<FeedActions> {
                     fontWeight: FontWeight.w600,
                     color: isLiked
                         ? const Color(0xFFE940B7)
-                        : Colors.white70,
+                        : countColor,
                   ),
                 ),
               ),
@@ -112,30 +117,34 @@ class _FeedActionsState extends State<FeedActions> {
             children: [
               IconButton(
                 onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: const Color(0xFF102B36),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(25)),
-                    ),
-                    builder: (context) =>
-                        CommentsBottomSheet(post: widget.post),
-                  );
+                  if(!isDesktop) {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: const Color(0xFF102B36),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(25)),
+                      ),
+                      builder: (context) =>
+                          CommentsBottomSheet(post: widget.post),
+                    );
+                  }else{
+
+                  }
                 },
-                icon: const Icon(
+                icon: Icon(
                   LucideIcons.messageCircle,
                   size: 24,
-                  color: Colors.white,
+                  color: iconColor,
                 ),
               ),
               Text(
                 _formatCount(commentsCount),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white70,
+                  color: countColor,
                 ),
               ),
             ],
@@ -146,10 +155,10 @@ class _FeedActionsState extends State<FeedActions> {
           // Share Button
           IconButton(
             onPressed: () {},
-            icon: const Icon(
+            icon: Icon(
               LucideIcons.send,
               size: 25,
-              color: Colors.white,
+              color: iconColor,
             ),
           ),
 
@@ -165,7 +174,7 @@ class _FeedActionsState extends State<FeedActions> {
             icon: Icon(
               _saved ? Icons.bookmark : Icons.bookmark_border,
               size: 30,
-              color: _saved ? const Color(0xFF8E3CF7) : Colors.white,
+              color: _saved ? const Color(0xFF8E3CF7) : iconColor,
             ),
           ),
         ],

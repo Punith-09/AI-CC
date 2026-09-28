@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 
 import 'app_routes.dart';
 import '../storage/local_storage.dart';
+import '../responsive/responsive_breakpoints.dart';
+import '../responsive/desktop_shell.dart';
 
 import '../../common/widgets/custom_bottom_navbar.dart';
 import '../../features/messages/presentation/providers/messages_provider.dart';
@@ -65,11 +67,6 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.signup,
       builder: (_, __) => const SignUpWizardPage(),
-    ),
-
-    GoRoute(
-      path: AppRoutes.messages,
-      builder: (_, __) => const MessagesScreen(),
     ),
 
     GoRoute(
@@ -268,6 +265,14 @@ final GoRouter appRouter = GoRouter(
           path: AppRoutes.creatorProfile,
           builder: (_, __) => const CreatorProfileScreen(),
         ),
+
+        // -----------------------------------------------------
+        // MESSAGES
+        // -----------------------------------------------------
+        GoRoute(
+          path: AppRoutes.messages,
+          builder: (_, __) => const MessagesScreen(),
+        ),
       ],
     ),
   ],
@@ -317,6 +322,14 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final currentLocation = GoRouterState.of(context).uri.toString();
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+
+    if (isDesktop) {
+      return DesktopShell(
+        currentLocation: currentLocation,
+        child: widget.child,
+      );
+    }
 
     return Scaffold(
       extendBody: true,

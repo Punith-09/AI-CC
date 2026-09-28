@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../data/models/audition_model.dart';
 
 class AuditionCard extends StatelessWidget {
@@ -49,35 +50,54 @@ class AuditionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    final titleColor = isDesktop ? const Color(0xFF0F172A) : Colors.white;
+    final roleColor = isDesktop ? const Color(0xFF64748B) : Colors.white.withValues(alpha: 0.7);
+    final deadlineColor = isDesktop ? const Color(0xFFD97706) : Colors.amber.shade300;
+    final descColor = isDesktop ? const Color(0xFF475569) : Colors.white.withValues(alpha: 0.75);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFF14323D),
-            Color(0xFF0D232C),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
+        color: isDesktop ? Colors.white : null,
+        gradient: isDesktop
+            ? null
+            : const LinearGradient(
+                colors: [
+                  Color(0xFF14323D),
+                  Color(0xFF0D232C),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+        borderRadius: BorderRadius.circular(isDesktop ? 16 : 20),
         border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.3),
+          color: isDesktop
+              ? const Color(0xFFE2E8F0)
+              : AppColors.primary.withValues(alpha: 0.3),
           width: 1.2,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.05),
-            blurRadius: 20,
-            spreadRadius: -2,
-          ),
-        ],
+        boxShadow: isDesktop
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 12,
+                  offset: const Offset(0, 3),
+                ),
+              ]
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.25),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.05),
+                  blurRadius: 20,
+                  spreadRadius: -2,
+                ),
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,17 +109,21 @@ class AuditionCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.15),
+                    color: isDesktop
+                        ? const Color(0xFFF3E8FF)
+                        : AppColors.primary.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.5),
+                      color: isDesktop
+                          ? const Color(0xFF8E3CF7)
+                          : AppColors.primary.withValues(alpha: 0.5),
                       width: 1,
                     ),
                   ),
                   child: Text(
                     displayCategory,
-                    style: const TextStyle(
-                      color: AppColors.primary,
+                    style: TextStyle(
+                      color: isDesktop ? const Color(0xFF8E3CF7) : AppColors.primary,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -114,7 +138,7 @@ class AuditionCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: roleColor,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -129,13 +153,13 @@ class AuditionCard extends StatelessWidget {
                     Icon(
                       Icons.calendar_today_outlined,
                       size: 13,
-                      color: Colors.amber.shade300,
+                      color: deadlineColor,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       displayDeadline,
                       style: TextStyle(
-                        color: Colors.amber.shade300,
+                        color: deadlineColor,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -151,8 +175,8 @@ class AuditionCard extends StatelessWidget {
           /// Title
           Text(
             displayTitle,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: titleColor,
               fontSize: 20,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.2,
@@ -167,13 +191,13 @@ class AuditionCard extends StatelessWidget {
             runSpacing: 10,
             children: [
               if (displayLocation.isNotEmpty)
-                _buildMetaChip(Icons.location_on_outlined, displayLocation),
+                _buildMetaChip(Icons.location_on_outlined, displayLocation, isDesktop: isDesktop),
               if (displayPayout.isNotEmpty)
-                _buildMetaChip(Icons.payments_outlined, displayPayout),
+                _buildMetaChip(Icons.payments_outlined, displayPayout, isDesktop: isDesktop),
               if (displayLanguage.isNotEmpty && displayLanguage != 'N/A')
-                _buildMetaChip(Icons.translate_outlined, displayLanguage),
+                _buildMetaChip(Icons.translate_outlined, displayLanguage, isDesktop: isDesktop),
               if (applicants != null && applicants != 'N/A')
-                _buildMetaChip(Icons.people_alt_outlined, applicants!),
+                _buildMetaChip(Icons.people_alt_outlined, applicants!, isDesktop: isDesktop),
             ],
           ),
 
@@ -184,7 +208,7 @@ class AuditionCard extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.75),
+                color: descColor,
                 fontSize: 13,
                 height: 1.45,
               ),
@@ -213,31 +237,37 @@ class AuditionCard extends StatelessWidget {
                   child: OutlinedButton(
                     onPressed: onView,
                     style: OutlinedButton.styleFrom(
-                      backgroundColor: const Color(0xFF091F28),
+                      backgroundColor: isDesktop ? Colors.white : const Color(0xFF091F28),
                       side: BorderSide(
-                        color: AppColors.primary.withValues(alpha: 0.6),
+                        color: isDesktop
+                            ? const Color(0xFF8E3CF7)
+                            : AppColors.primary.withValues(alpha: 0.6),
                         width: 1.2,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           "View details",
                           style: TextStyle(
-                            color: AppColors.primary,
+                            color: isDesktop
+                                ? const Color(0xFF8E3CF7)
+                                : AppColors.primary,
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        SizedBox(width: 6),
+                        const SizedBox(width: 6),
                         Icon(
                           Icons.arrow_forward_rounded,
                           size: 16,
-                          color: AppColors.primary,
+                          color: isDesktop
+                              ? const Color(0xFF8E3CF7)
+                              : AppColors.primary,
                         ),
                       ],
                     ),
@@ -312,14 +342,14 @@ class AuditionCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMetaChip(IconData icon, String text) {
+  Widget _buildMetaChip(IconData icon, String text, {bool isDesktop = false}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
+        color: isDesktop ? const Color(0xFFF8FAFC) : Colors.white.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: isDesktop ? const Color(0xFFE2E8F0) : Colors.white.withValues(alpha: 0.08),
           width: 1,
         ),
       ),
@@ -329,14 +359,14 @@ class AuditionCard extends StatelessWidget {
           Icon(
             icon,
             size: 14,
-            color: AppColors.primary,
+            color: isDesktop ? const Color(0xFF8E3CF7) : AppColors.primary,
           ),
           const SizedBox(width: 6),
           Text(
             text,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: Colors.white,
+              color: isDesktop ? const Color(0xFF334155) : Colors.white,
               fontWeight: FontWeight.w500,
             ),
           ),

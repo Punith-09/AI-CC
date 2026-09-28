@@ -1,3 +1,4 @@
+import 'package:aicc/core/responsive/responsive_breakpoints.dart';
 import 'package:aicc/core/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -18,29 +19,40 @@ class PortfolioGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+
     if (items.isEmpty) {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
         decoration: BoxDecoration(
-          color: const Color(0xFF103E48).withValues(alpha: 0.5),
+          color: isDesktop ? Colors.white : const Color(0xFF103E48).withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.08),
+            color: isDesktop ? const Color(0xFFE2E8F0) : Colors.white.withValues(alpha: 0.08),
           ),
+          boxShadow: isDesktop
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: Column(
           children: [
             Icon(
               Icons.photo_library_outlined,
               size: 40,
-              color: Colors.white.withValues(alpha: 0.3),
+              color: isDesktop ? const Color(0xFF94A3B8) : Colors.white.withValues(alpha: 0.3),
             ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               "No posts yet",
               style: TextStyle(
-                color: Colors.white70,
+                color: isDesktop ? const Color(0xFF0F172A) : Colors.white70,
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
               ),
@@ -50,7 +62,7 @@ class PortfolioGrid extends StatelessWidget {
               "Photos and videos you upload will appear here.",
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.45),
+                color: isDesktop ? const Color(0xFF64748B) : Colors.white.withValues(alpha: 0.45),
                 fontSize: 12,
               ),
             ),
@@ -63,11 +75,11 @@ class PortfolioGrid extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: items.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: isDesktop ? 3 : 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: .82,
+        childAspectRatio: isDesktop ? 0.88 : 0.82,
       ),
       itemBuilder: (context, index) {
         final item = items[index];

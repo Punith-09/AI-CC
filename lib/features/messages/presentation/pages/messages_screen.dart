@@ -7,9 +7,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../data/models/chat_model.dart';
 import '../providers/messages_provider.dart';
+import 'chat_screen.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({super.key});
@@ -22,6 +24,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   Timer? _pollingTimer;
+  ChatModel? _selectedChat;
 
   @override
   void initState() {
@@ -47,77 +50,146 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: AppColors.backGroundGradient,
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+
+    if (isDesktop) {
+      return Scaffold(
+        backgroundColor: AppColors.white,
+        body: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Left Column: Conversations List
+            SizedBox(
+              width: 880,
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    right: BorderSide(color: Color(0xFFE2E8F0), width: 1),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    _buildAppBar(context, isDesktop: true),
+                    const SizedBox(height: 8),
+                    _buildSearchBar(),
+                    const SizedBox(height: 8),
+                    Expanded(child: _buildChatsList(isDesktop: true)),
+                  ],
+                ),
+              ),
+            ),
+
+            // Right Column: Active Conversation
+            // Expanded(
+            //   child: _selectedChat != null
+            //       ? ChatScreen(
+            //           key: ValueKey(_selectedChat!.id),
+            //           chat: _selectedChat,
+            //         )
+            //       : _buildNoChatSelectedState(),
+            // ),
+          ],
         ),
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // -----------------------------------------------
-              // APP BAR
-              // -----------------------------------------------
-              _buildAppBar(context),
+      );
+    }
 
-              const SizedBox(height: 16),
-
-              // -----------------------------------------------
-              // SEARCH BAR
-              // -----------------------------------------------
-              _buildSearchBar(),
-
-              const SizedBox(height: 16),
-
-              // -----------------------------------------------
-              // CHATS LIST
-              // -----------------------------------------------
-              Expanded(child: _buildChatsList()),
-            ],
-          ),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildAppBar(context, isDesktop: false),
+            const SizedBox(height: 8),
+            _buildSearchBar(),
+            const SizedBox(height: 8),
+            Expanded(child: _buildChatsList(isDesktop: false)),
+          ],
         ),
       ),
     );
   }
 
-  // =========================================================
-  // APP BAR
-  // =========================================================
+  // Widget _buildNoChatSelectedState() {
+  //   return Container(
+  //     color: const Color(0xFFF8FAFC),
+  //     child: Center(
+  //       child: Column(
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           Container(
+  //             width: 72,
+  //             height: 72,
+  //             decoration: BoxDecoration(
+  //               color: AppColors.primary.withValues(alpha: 0.1),
+  //               shape: BoxShape.circle,
+  //             ),
+  //             child: const Icon(
+  //               LucideIcons.messageSquare,
+  //               size: 32,
+  //               color: AppColors.primary,
+  //             ),
+  //           ),
+  //           const SizedBox(height: 16),
+  //           const Text(
+  //             'Select a conversation',
+  //             style: TextStyle(
+  //               color: Color(0xFF111827),
+  //               fontSize: 18,
+  //               fontWeight: FontWeight.bold,
+  //             ),
+  //           ),
+  //           const SizedBox(height: 6),
+  //           const Text(
+  //             'Choose a chat from the left panel to start messaging',
+  //             style: TextStyle(
+  //               color: Color(0xFF64748B),
+  //               fontSize: 13.5,
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
-  Widget _buildAppBar(BuildContext context) {
+  Widget _buildAppBar(BuildContext context, {required bool isDesktop}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 16 : 20,
+        vertical: 12,
+      ),
       child: Row(
         children: [
-          // Back button
-          GestureDetector(
-            onTap: () => context.pop(),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.12),
+          // Back button on mobile
+          if (!isDesktop) ...[
+            InkWell(
+              onTap: () {
+                if (Navigator.canPop(context)) {
+                  context.pop();
+                } else {
+                  context.go(AppRoutes.home);
+                }
+              },
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: const Icon(
+                  Icons.arrow_back_ios_new,
+                  color: Color(0xFF111827),
+                  size: 16,
                 ),
               ),
-              child: const Icon(
-                Icons.arrow_back_ios_new,
-                color: Colors.white,
-                size: 18,
-              ),
             ),
-          ),
-
-          const SizedBox(width: 16),
+            const SizedBox(width: 12),
+          ],
 
           // Title
           Expanded(
@@ -125,17 +197,17 @@ class _MessagesScreenState extends State<MessagesScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Consumer<MessagesProvider>(
-                  builder: (_, provider, __) {
+                  builder: (context, provider, child) {
                     final unreadCount = provider.totalUnreadCount;
                     return Row(
                       children: [
                         const Text(
                           'Messages',
                           style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.3,
+                            color: Color(0xFF111827),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
                           ),
                         ),
                         if (unreadCount > 0) ...[
@@ -146,9 +218,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF38BDF8), Color(0xFF818CF8)],
-                              ),
+                              color: AppColors.primary,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -168,8 +238,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 const Text(
                   'Your conversations',
                   style: TextStyle(
-                    color: Colors.white54,
+                    color: Color(0xFF64748B),
                     fontSize: 12,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -178,20 +249,16 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
           // Compose icon
           Container(
-            width: 40,
-            height: 40,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: AppColors.BtnGradient,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(12),
+              color: AppColors.buttonPrimary,
+              borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.4),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+                  color: AppColors.buttonPrimary.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
@@ -212,14 +279,14 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   Widget _buildSearchBar() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
-        height: 48,
+        height: 44,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.07),
-          borderRadius: BorderRadius.circular(16),
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.1),
+            color: const Color(0xFFE2E8F0),
           ),
         ),
         child: TextField(
@@ -227,13 +294,13 @@ class _MessagesScreenState extends State<MessagesScreen> {
           onChanged: (value) {
             setState(() => _searchQuery = value.toLowerCase());
           },
-          style: const TextStyle(color: Colors.white, fontSize: 14),
+          style: const TextStyle(color: Color(0xFF111827), fontSize: 13.5),
           decoration: InputDecoration(
             hintText: 'Search conversations...',
-            hintStyle: const TextStyle(color: Colors.white38, fontSize: 14),
+            hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13.5),
             prefixIcon: const Icon(
               LucideIcons.search,
-              color: Colors.white38,
+              color: Color(0xFF94A3B8),
               size: 18,
             ),
             suffixIcon: _searchQuery.isNotEmpty
@@ -244,13 +311,15 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     },
                     child: const Icon(
                       Icons.close,
-                      color: Colors.white38,
+                      color: Color(0xFF94A3B8),
                       size: 18,
                     ),
                   )
                 : null,
             border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(vertical: 14),
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(vertical: 12),
           ),
         ),
       ),
@@ -261,10 +330,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
   // CHATS LIST
   // =========================================================
 
-  Widget _buildChatsList() {
+  Widget _buildChatsList({required bool isDesktop}) {
     return Consumer<MessagesProvider>(
       builder: (context, provider, _) {
-        // Loading
         if (provider.isLoadingChats && provider.chats.isEmpty) {
           return const Center(
             child: CircularProgressIndicator(
@@ -274,48 +342,57 @@ class _MessagesScreenState extends State<MessagesScreen> {
           );
         }
 
-        // Error
         if (provider.errorMessage != null && provider.chats.isEmpty) {
           return _buildErrorState(provider);
         }
 
-        // Filter by search
         final chats = provider.chats.where((chat) {
           if (_searchQuery.isEmpty) return true;
           return chat.participantName.toLowerCase().contains(_searchQuery) ||
               chat.lastMessage.toLowerCase().contains(_searchQuery);
         }).toList();
 
-        // Empty
         if (chats.isEmpty) {
           return _buildEmptyState();
         }
 
+        // On desktop, auto-select first conversation if none selected
+        if (isDesktop && _selectedChat == null && chats.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && _selectedChat == null) {
+              setState(() => _selectedChat = chats.first);
+            }
+          });
+        }
+
         return RefreshIndicator(
           color: AppColors.primary,
-          backgroundColor: AppColors.card,
+          backgroundColor: Colors.white,
           onRefresh: () => provider.fetchChats(),
           child: ListView.separated(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 80),
             itemCount: chats.length,
-            separatorBuilder: (_, __) => Divider(
-              color: Colors.white.withValues(alpha: 0.06),
-              height: 1,
-            ),
+            separatorBuilder: (context, index) => const SizedBox(height: 6),
             itemBuilder: (context, index) {
               final chat = chats[index];
+              final isSelected = isDesktop && _selectedChat?.id == chat.id;
+
               return _ChatTile(
                 chat: chat,
+                isSelected: isSelected,
                 onTap: () async {
-                  // Mark as read immediately on open
                   provider.markChatAsRead(chat.id);
-                  await context.push(
-                    AppRoutes.chat,
-                    extra: chat,
-                  );
-                  if (context.mounted) {
-                    context.read<MessagesProvider>().fetchChats(silent: true);
+                  if (isDesktop) {
+                    setState(() => _selectedChat = chat);
+                  } else {
+                    await context.push(
+                      AppRoutes.chat,
+                      extra: chat,
+                    );
+                    if (context.mounted) {
+                      context.read<MessagesProvider>().fetchChats(silent: true);
+                    }
                   }
                 },
                 onLongPress: () => _showChatOptions(context, chat),
@@ -331,7 +408,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     final provider = context.read<MessagesProvider>();
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF131F2E),
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -346,7 +423,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: const Color(0xFFE2E8F0),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -358,7 +435,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                       Text(
                         chat.participantName.isNotEmpty ? chat.participantName : 'Conversation',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: Color(0xFF111827),
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
@@ -370,11 +447,11 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 ListTile(
                   leading: Icon(
                     chat.isUnread ? LucideIcons.mailOpen : LucideIcons.mail,
-                    color: const Color(0xFF38BDF8),
+                    color: AppColors.primary,
                   ),
                   title: Text(
                     chat.isUnread ? 'Mark as read' : 'Mark as unread',
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    style: const TextStyle(color: Color(0xFF111827), fontSize: 14),
                   ),
                   onTap: () {
                     Navigator.pop(ctx);
@@ -386,10 +463,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(LucideIcons.user, color: Colors.white70),
+                  leading: const Icon(LucideIcons.user, color: Color(0xFF64748B)),
                   title: const Text(
                     'View Profile',
-                    style: TextStyle(color: Colors.white, fontSize: 14),
+                    style: TextStyle(color: Color(0xFF111827), fontSize: 14),
                   ),
                   onTap: () {
                     Navigator.pop(ctx);
@@ -416,35 +493,35 @@ class _MessagesScreenState extends State<MessagesScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.06),
+            width: 72,
+            height: 72,
+            decoration: const BoxDecoration(
+              color: Color(0xFFF1F5F9),
               shape: BoxShape.circle,
             ),
             child: const Icon(
               LucideIcons.messageSquare,
-              color: Colors.white30,
-              size: 36,
+              color: Color(0xFF94A3B8),
+              size: 32,
             ),
           ),
           const SizedBox(height: 16),
           const Text(
             'No conversations yet',
             style: TextStyle(
-              color: Colors.white,
+              color: Color(0xFF111827),
               fontSize: 16,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           const Text(
             'Start a conversation with a\ncreator or artist',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white38,
+              color: Color(0xFF64748B),
               fontSize: 13,
-              height: 1.5,
+              height: 1.4,
             ),
           ),
         ],
@@ -463,25 +540,23 @@ class _MessagesScreenState extends State<MessagesScreen> {
         children: [
           const Icon(
             Icons.wifi_off_rounded,
-            color: Colors.white30,
-            size: 48,
+            color: Color(0xFF94A3B8),
+            size: 44,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Text(
             provider.errorMessage ?? 'Failed to load chats.',
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white54, fontSize: 14),
+            style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           GestureDetector(
             onTap: () => provider.fetchChats(),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 11),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: AppColors.BtnGradient,
-                ),
-                borderRadius: BorderRadius.circular(12),
+                color: AppColors.buttonPrimary,
+                borderRadius: BorderRadius.circular(10),
               ),
               child: const Text(
                 'Retry',
@@ -499,16 +574,18 @@ class _MessagesScreenState extends State<MessagesScreen> {
 }
 
 // ===========================================================
-// CHAT TILE (Instagram Style Read/Unread)
+// CHAT TILE
 // ===========================================================
 
 class _ChatTile extends StatelessWidget {
   final ChatModel chat;
+  final bool isSelected;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
 
   const _ChatTile({
     required this.chat,
+    this.isSelected = false,
     required this.onTap,
     this.onLongPress,
   });
@@ -520,67 +597,61 @@ class _ChatTile extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       onLongPress: onLongPress,
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 4),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFF3E8FF) : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primary
+                : (isUnread ? const Color(0xFFC4B5FD) : const Color(0xFFE2E8F0)),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
         child: Row(
           children: [
-            // Avatar with Instagram-like unread ring
+            // Avatar
             Stack(
               clipBehavior: Clip.none,
               children: [
                 Container(
-                  width: 54,
-                  height: 54,
-                  padding: EdgeInsets.all(isUnread ? 2.5 : 0),
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: isUnread
-                        ? const LinearGradient(
-                            colors: [Color(0xFF38BDF8), Color(0xFF8E3CF7)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          )
-                        : null,
-                    border: isUnread
-                        ? null
-                        : Border.all(
-                            color: Colors.white.withValues(alpha: 0.1),
-                            width: 1,
-                          ),
+                    border: Border.all(
+                      color: isUnread ? AppColors.primary : const Color(0xFFE2E8F0),
+                      width: isUnread ? 2 : 1,
+                    ),
                   ),
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color(0xFF0F1B27),
-                    ),
-                    padding: const EdgeInsets.all(1.5),
-                    child: ClipOval(
-                      child: chat.participantAvatar.isNotEmpty
-                          ? CachedNetworkImage(
-                              imageUrl: ApiEndpoints.formatMediaUrl(chat.participantAvatar),
-                              fit: BoxFit.cover,
-                              errorWidget: (ctx, url, err) =>
-                                  _AvatarFallback(name: chat.participantName),
-                            )
-                          : _AvatarFallback(name: chat.participantName),
-                    ),
+                  padding: const EdgeInsets.all(2),
+                  child: ClipOval(
+                    child: chat.participantAvatar.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: ApiEndpoints.formatMediaUrl(chat.participantAvatar),
+                            fit: BoxFit.cover,
+                            errorWidget: (ctx, url, err) =>
+                                _AvatarFallback(name: chat.participantName),
+                          )
+                        : _AvatarFallback(name: chat.participantName),
                   ),
                 ),
 
                 // Online indicator
                 if (chat.isOnline)
                   Positioned(
-                    right: 2,
-                    bottom: 2,
+                    right: 0,
+                    bottom: 0,
                     child: Container(
-                      width: 13,
-                      height: 13,
+                      width: 12,
+                      height: 12,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF22C55E),
+                        color: const Color(0xFF10B981),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: const Color(0xFF0B1F2A),
+                          color: Colors.white,
                           width: 2,
                         ),
                       ),
@@ -589,9 +660,9 @@ class _ChatTile extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
 
-            // Content (Name, Last message, Time, Dot)
+            // Content
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -605,22 +676,21 @@ class _ChatTile extends StatelessWidget {
                               ? chat.participantName
                               : 'Creator',
                           style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 15.5,
-                            fontWeight: isUnread ? FontWeight.w700 : FontWeight.w500,
-                            letterSpacing: 0.2,
+                            color: const Color(0xFF111827),
+                            fontSize: 14.5,
+                            fontWeight: isUnread ? FontWeight.w700 : FontWeight.w600,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Text(
                         _formatTime(chat.lastMessageAt),
                         style: TextStyle(
                           color: isUnread
-                              ? const Color(0xFF38BDF8)
-                              : Colors.white38,
-                          fontSize: 11.5,
+                              ? AppColors.primary
+                              : const Color(0xFF94A3B8),
+                          fontSize: 11,
                           fontWeight: isUnread
                               ? FontWeight.w600
                               : FontWeight.normal,
@@ -629,9 +699,9 @@ class _ChatTile extends StatelessWidget {
                     ],
                   ),
 
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
 
-                  // Row 2: Last Message + Unread Blue Dot
+                  // Row 2: Last Message + Unread Dot
                   Row(
                     children: [
                       Expanded(
@@ -641,9 +711,9 @@ class _ChatTile extends StatelessWidget {
                               : 'Tap to chat...',
                           style: TextStyle(
                             color: isUnread
-                                ? Colors.white
-                                : Colors.white38,
-                            fontSize: 13.5,
+                                ? const Color(0xFF111827)
+                                : const Color(0xFF64748B),
+                            fontSize: 12.5,
                             fontWeight: isUnread
                                 ? FontWeight.w600
                                 : FontWeight.normal,
@@ -654,26 +724,14 @@ class _ChatTile extends StatelessWidget {
                         ),
                       ),
 
-                      // Instagram Blue Unread Dot
                       if (isUnread) ...[
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 8),
                         Container(
-                          width: 9,
-                          height: 9,
+                          width: 8,
+                          height: 8,
                           decoration: const BoxDecoration(
                             shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [Color(0xFF38BDF8), Color(0xFF818CF8)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Color(0x8038BDF8),
-                                blurRadius: 6,
-                                spreadRadius: 1,
-                              ),
-                            ],
+                            color: AppColors.primary,
                           ),
                         ),
                       ],
@@ -683,21 +741,21 @@ class _ChatTile extends StatelessWidget {
                   // Role badge (if present)
                   if (chat.participantRole.isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.only(top: 5),
+                      padding: const EdgeInsets.only(top: 4),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 7,
-                          vertical: 2,
+                          horizontal: 6,
+                          vertical: 1.5,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.14),
-                          borderRadius: BorderRadius.circular(5),
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           chat.participantRole,
                           style: const TextStyle(
-                            color: Color(0xFF93C5FD),
-                            fontSize: 10.5,
+                            color: Color(0xFF475569),
+                            fontSize: 10,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -791,17 +849,16 @@ class _AvatarFallback extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initial =
-        name.isNotEmpty ? name[0].toUpperCase() : '?';
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
 
     return Container(
-      color: const Color(0xFF1E293B),
+      color: const Color(0xFFF1F5F9),
       child: Center(
         child: Text(
           initial,
           style: const TextStyle(
-            color: Colors.white,
-            fontSize: 20,
+            color: Color(0xFF111827),
+            fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
         ),

@@ -6,6 +6,7 @@ import 'package:video_player/video_player.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../data/models/feed_post_model.dart';
 import '../../data/repository/home_repository.dart';
 
@@ -233,13 +234,16 @@ class _FeedVideoPlayerState extends State<FeedVideoPlayer> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    final videoHeight = isDesktop ? 460.0 : 280.0;
+
     if (!widget.post.isVideo) {
       return GestureDetector(
         onTap: widget.onTapMedia,
         behavior: HitTestBehavior.opaque,
         child: SizedBox(
           width: double.infinity,
-          height: 280,
+          height: videoHeight,
           child: _buildThumbnail(),
         ),
       );
@@ -248,7 +252,7 @@ class _FeedVideoPlayerState extends State<FeedVideoPlayer> {
     return Container(
       key: _widgetKey,
       width: double.infinity,
-      height: 280,
+      height: videoHeight,
       color: const Color(0xFF0F1722),
       child: Stack(
         alignment: Alignment.center,
@@ -265,7 +269,7 @@ class _FeedVideoPlayerState extends State<FeedVideoPlayer> {
               behavior: HitTestBehavior.opaque,
               child: SizedBox.expand(
                 child: FittedBox(
-                  fit: BoxFit.cover,
+                  fit: isDesktop ? BoxFit.contain : BoxFit.cover,
                   child: SizedBox(
                     width: _controller!.value.size.width,
                     height: _controller!.value.size.height,

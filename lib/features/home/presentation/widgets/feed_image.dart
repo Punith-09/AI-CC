@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../data/models/feed_post_model.dart';
 import 'feed_video_player.dart';
@@ -22,8 +23,11 @@ class FeedImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+
     if (post.isVideo) {
       return ClipRRect(
+        borderRadius: BorderRadius.circular(isDesktop ? 12 : 0),
         child: FeedVideoPlayer(
           post: post,
           onTapMedia: () => _openWatchMedia(context),
@@ -38,14 +42,17 @@ class FeedImage extends StatelessWidget {
       onTap: () => _openWatchMedia(context),
       behavior: HitTestBehavior.opaque,
       child: ClipRRect(
+        borderRadius: BorderRadius.circular(isDesktop ? 12 : 0),
         child: Container(
           width: double.infinity,
-          color: const Color(0xFF1B2330),
+          height: isDesktop ? 480 : null,
+          color: const Color(0xFF0F1722),
           child: isNetwork
               ? Image.network(
                   formattedMediaUrl,
                   width: double.infinity,
-                  fit: BoxFit.fitWidth,
+                  height: isDesktop ? 480 : null,
+                  fit: isDesktop ? BoxFit.contain : BoxFit.fitWidth,
                   errorBuilder: (context, error, stackTrace) {
                     return _buildErrorWidget();
                   },
@@ -54,14 +61,14 @@ class FeedImage extends StatelessWidget {
                       return child;
                     }
 
-                    return const SizedBox(
-                      height: 260,
+                    return SizedBox(
+                      height: isDesktop ? 480 : 260,
                       child: Center(
                         child: SizedBox(
                           width: 28,
                           height: 28,
                           child: CircularProgressIndicator(
-                            color: AppColors.primary,
+                            color: isDesktop ? const Color(0xFF8E3CF7) : AppColors.primary,
                             strokeWidth: 2,
                           ),
                         ),
@@ -74,7 +81,8 @@ class FeedImage extends StatelessWidget {
                       ? formattedMediaUrl
                       : 'assets/images/post1.jpeg',
                   width: double.infinity,
-                  fit: BoxFit.fitWidth,
+                  height: isDesktop ? 480 : null,
+                  fit: isDesktop ? BoxFit.contain : BoxFit.fitWidth,
                 ),
         ),
       ),

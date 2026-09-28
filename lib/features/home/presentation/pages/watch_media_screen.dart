@@ -11,6 +11,7 @@ import '../../../../common/widgets/user_avatar.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../../artist_profile/data/repository/profile_repository.dart';
@@ -40,6 +41,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   final TextEditingController _commentController = TextEditingController();
   final FocusNode _commentFocusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
+  final ScrollController _desktopCommentsScrollController = ScrollController();
 
   // Video Controller State
   VideoPlayerController? _videoController;
@@ -110,6 +112,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
     _commentController.dispose();
     _commentFocusNode.dispose();
     _scrollController.dispose();
+    _desktopCommentsScrollController.dispose();
     super.dispose();
   }
 
@@ -300,7 +303,6 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
     });
 
     try {
-      // Sync to HomeFeedProvider if post exists in feed
       try {
         context.read<HomeFeedProvider>().syncPostLike(
           _post.id,
@@ -449,7 +451,6 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
       currentUserName = LocalStorage.instance.getUserName();
     } catch (_) {}
 
-    // Check by creator ID
     if (_post.creatorId != null &&
         _post.creatorId!.isNotEmpty &&
         currentUserId != null &&
@@ -457,7 +458,6 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
       if (_post.creatorId == currentUserId) return true;
     }
 
-    // Check by creator name
     if (_post.creatorName.isNotEmpty &&
         currentUserName != null &&
         currentUserName.isNotEmpty) {
@@ -467,7 +467,6 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
       }
     }
 
-    // Check by ProfileProvider currentProfile
     try {
       final currentProfile = context.read<ProfileProvider>().currentProfile;
       if (currentProfile != null) {
@@ -504,70 +503,177 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      resizeToAvoidBottomInset: true,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: AppColors.backGroundGradient,
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              // ── Header / Top Bar ──
-              _buildTopBar(),
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
 
-              // ── Scrollable Body ──
+    return Scaffold(
+      backgroundColor: isDesktop ? const Color(0xFFF8FAFC) : Colors.white,
+      resizeToAvoidBottomInset: true,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            // Top Bar
+            _buildTopBar(isDesktop: isDesktop),
+
+            // Body (Desktop 2-column or Mobile single-column)
+            Expanded(
+              child: isDesktop
+                  ? _buildDesktopLayout()
+                  : _buildMobileLayout(),
+            ),
+
+            // Fixed bottom comment bar on Mobile
+            if (!isDesktop) _buildBottomCommentBar(isDesktop: false),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // =========================================================
+  // DESKTOP LAYOUT (2 Columns)
+  // =========================================================
+
+  Widget _buildDesktopLayout() {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1240),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Left Column: Media Player + Title/Desc + Stats + Actions
               Expanded(
+                flex: 7,
                 child: SingleChildScrollView(
                   controller: _scrollController,
                   physics: const BouncingScrollPhysics(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // 1. Media Section (Video Player or Photo)
-                      _buildMediaSection(),
+                      // Media Section
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: _buildMediaSection(isDesktop: true),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
 
-                      const SizedBox(height: 16),
-
-                      // 2. Creator Info & Follow / Message Buttons
-                      _buildCreatorRow(),
-
-                      const SizedBox(height: 14),
-
-                      // 3. Post Title & Description
-                      _buildTitleAndDescription(),
-
-                      const SizedBox(height: 14),
-
-                      // 4. Views & Likes Stat Row
-                      _buildStatsRow(),
-
-                      const SizedBox(height: 12),
-
-                      // 5. Action Buttons (Like, Comment, Share)
-                      _buildActionButtonsRow(),
-
-                      const SizedBox(height: 8),
-
-                      const Divider(color: Colors.white12, height: 16, thickness: 1),
-
-                      // 6. Comments Header & List
-                      _buildCommentsSection(),
-
+                      // Card containing Title, Description, Stats & Action Buttons
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.03),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildTitleAndDescription(isDesktop: true),
+                            const SizedBox(height: 16),
+                            _buildStatsRow(),
+                            const SizedBox(height: 12),
+                            _buildActionButtonsRow(),
+                          ],
+                        ),
+                      ),
                       const SizedBox(height: 30),
                     ],
                   ),
                 ),
               ),
 
-              // ── Bottom Fixed Comment Bar ──
-              _buildBottomCommentBar(),
+              const SizedBox(width: 24),
+
+              // Right Column: Creator Info + Comments Section + Input Bar
+              Expanded(
+                flex: 5,
+                child: Container(
+                  height: MediaQuery.of(context).size.height - 130,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      // Creator Header Card
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        child: _buildCreatorRow(isDesktop: true),
+                      ),
+
+                      const Divider(height: 1, color: Color(0xFFE2E8F0)),
+
+                      // Comments List Header & Body
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+                        child: Row(
+                          children: [
+                            Text(
+                              'Comments (${_comments.length})',
+                              style: GoogleFonts.poppins(
+                                color: const Color(0xFF111827),
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      Expanded(
+                        child: _isLoadingComments
+                            ? const Center(
+                                child: SizedBox(
+                                  width: 28,
+                                  height: 28,
+                                  child: CircularProgressIndicator(
+                                    color: AppColors.buttonPrimary,
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              )
+                            : _comments.isEmpty
+                                ? _buildEmptyComments()
+                                : ListView.separated(
+                                    controller: _desktopCommentsScrollController,
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    itemCount: _comments.length,
+                                    separatorBuilder: (_, index) => const Divider(height: 18, color: Color(0xFFF1F5F9)),
+                                    itemBuilder: (context, index) {
+                                      return _buildCommentTile(_comments[index]);
+                                    },
+                                  ),
+                      ),
+
+                      // Fixed Bottom Comment Input inside Right Card
+                      _buildBottomCommentBar(isDesktop: true),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -576,42 +682,101 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   }
 
   // =========================================================
+  // MOBILE LAYOUT (Single Column)
+  // =========================================================
+
+  Widget _buildMobileLayout() {
+    return SingleChildScrollView(
+      controller: _scrollController,
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. Media Section
+          _buildMediaSection(isDesktop: false),
+
+          const SizedBox(height: 14),
+
+          // 2. Creator Info & Follow / Message Buttons
+          _buildCreatorRow(isDesktop: false),
+
+          const SizedBox(height: 14),
+
+          // 3. Post Title & Description
+          _buildTitleAndDescription(isDesktop: false),
+
+          const SizedBox(height: 14),
+
+          // 4. Views & Likes Stat Row
+          _buildStatsRow(),
+
+          const SizedBox(height: 10),
+
+          // 5. Action Buttons (Like, Comment, Share)
+          _buildActionButtonsRow(),
+
+          const SizedBox(height: 8),
+
+          const Divider(color: Color(0xFFE5E7EB), height: 16, thickness: 1),
+
+          // 6. Comments Header & List
+          _buildCommentsSection(isDesktop: false),
+
+          const SizedBox(height: 30),
+        ],
+      ),
+    );
+  }
+
+  // =========================================================
   // TOP BAR
   // =========================================================
 
-  Widget _buildTopBar() {
+  Widget _buildTopBar({required bool isDesktop}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.02),
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 24 : 16,
+        vertical: 12,
+      ),
+      decoration: const BoxDecoration(
+        color: Colors.white,
         border: Border(
-          bottom: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
+          bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
         ),
       ),
       child: Row(
         children: [
           // Back button
-          GestureDetector(
-            onTap: () => context.pop(),
-            behavior: HitTestBehavior.opaque,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.arrow_back,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'Back',
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
+          InkWell(
+            onTap: () {
+              if (Navigator.of(context).canPop()) {
+                context.pop();
+              } else {
+                context.go(AppRoutes.home);
+              }
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.arrow_back,
+                    color: Color(0xFF111827),
+                    size: 20,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 6),
+                  Text(
+                    isDesktop ? 'Back to Feed' : 'Back',
+                    style: GoogleFonts.poppins(
+                      color: const Color(0xFF111827),
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
 
@@ -619,14 +784,13 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
           Expanded(
             child: Center(
               child: Padding(
-                padding: const EdgeInsets.only(right: 60),
+                padding: EdgeInsets.only(right: isDesktop ? 100 : 60),
                 child: Text(
                   _post.isVideo ? 'Watch Video' : 'View Photo',
                   style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 17,
+                    color: const Color(0xFF111827),
+                    fontSize: 16.5,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: 0.3,
                   ),
                 ),
               ),
@@ -641,11 +805,13 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   // MEDIA SECTION
   // =========================================================
 
-  Widget _buildMediaSection() {
+  Widget _buildMediaSection({required bool isDesktop}) {
+    final mediaHeight = isDesktop ? 460.0 : 270.0;
+
     if (_post.isVideo) {
       return Container(
         width: double.infinity,
-        height: 270,
+        height: mediaHeight,
         color: const Color(0xFF0F1722),
         child: Stack(
           alignment: Alignment.center,
@@ -676,14 +842,14 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                     width: 44,
                     height: 44,
                     child: CircularProgressIndicator(
-                      color: Color(0xFF7C4DFF),
+                      color: AppColors.buttonPrimary,
                       strokeWidth: 3,
                     ),
                   ),
                 ),
               ),
 
-            // Controls Overlay with Play/Pause and "Tap to Play/Pause"
+            // Controls Overlay with Play/Pause
             if (_showVideoControls || !_isVideoPlaying)
               GestureDetector(
                 onTap: _togglePlayPause,
@@ -696,14 +862,14 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                       children: [
                         // Circle Play/Pause Button
                         Container(
-                          width: 64,
-                          height: 64,
+                          width: 60,
+                          height: 60,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.black.withValues(alpha: 0.45),
+                            color: Colors.black.withValues(alpha: 0.5),
                             border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.8),
-                              width: 2.5,
+                              color: Colors.white.withValues(alpha: 0.85),
+                              width: 2.2,
                             ),
                           ),
                           child: Icon(
@@ -711,11 +877,10 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                                 ? Icons.pause_rounded
                                 : Icons.play_arrow_rounded,
                             color: Colors.white,
-                            size: 38,
+                            size: 36,
                           ),
                         ),
                         const SizedBox(height: 10),
-                        // "Tap to Play/Pause" badge
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
                           decoration: BoxDecoration(
@@ -752,7 +917,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                       const SizedBox(height: 10),
                       ElevatedButton(
                         onPressed: _initializeVideo,
-                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF7C4DFF)),
+                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.buttonPrimary),
                         child: const Text('Retry', style: TextStyle(color: Colors.white)),
                       ),
                     ],
@@ -768,24 +933,24 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
     final photoUrl = ApiEndpoints.formatMediaUrl(_post.mediaUrl);
     return Container(
       width: double.infinity,
-      constraints: const BoxConstraints(maxHeight: 380),
+      constraints: BoxConstraints(maxHeight: isDesktop ? 500 : 380),
       color: const Color(0xFF0F1722),
       child: photoUrl.startsWith('http')
           ? CachedNetworkImage(
               imageUrl: photoUrl,
               fit: BoxFit.contain,
-              placeholder: (context, url) => const SizedBox(
-                height: 260,
-                child: Center(
+              placeholder: (context, url) => SizedBox(
+                height: isDesktop ? 340 : 260,
+                child: const Center(
                   child: CircularProgressIndicator(
-                    color: Color(0xFF7C4DFF),
+                    color: AppColors.buttonPrimary,
                     strokeWidth: 2,
                   ),
                 ),
               ),
-              errorWidget: (context, url, error) => const SizedBox(
-                height: 240,
-                child: Center(
+              errorWidget: (context, url, error) => SizedBox(
+                height: isDesktop ? 300 : 240,
+                child: const Center(
                   child: Icon(LucideIcons.image, color: Colors.white38, size: 48),
                 ),
               ),
@@ -815,9 +980,9 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   // CREATOR ROW
   // =========================================================
 
-  Widget _buildCreatorRow() {
+  Widget _buildCreatorRow({required bool isDesktop}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: isDesktop ? 0 : 16),
       child: Row(
         children: [
           // Avatar
@@ -826,9 +991,9 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
             child: UserAvatar(
               imageUrl: _post.creatorPic,
               name: _post.creatorName,
-              radius: 24,
-              fontSize: 16,
-              backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+              radius: 22,
+              fontSize: 15,
+              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
             ),
           ),
           const SizedBox(width: 12),
@@ -846,16 +1011,16 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                         child: Text(
                           _post.creatorName.isNotEmpty ? _post.creatorName : 'Creator',
                           style: GoogleFonts.poppins(
-                            fontSize: 16.5,
+                            fontSize: 15.5,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                            color: const Color(0xFF111827),
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       if (_post.isVerified) ...[
                         const SizedBox(width: 4),
-                        const Icon(Icons.verified, size: 15, color: Color(0xFF22D3EE)),
+                        const Icon(Icons.verified, size: 15, color: Color(0xFF0284C7)),
                       ],
                     ],
                   ),
@@ -866,7 +1031,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                         : (_post.isVideo ? 'Actor' : 'Artist'),
                     style: GoogleFonts.poppins(
                       fontSize: 12.5,
-                      color: Colors.white60,
+                      color: const Color(0xFF64748B),
                       fontWeight: FontWeight.w400,
                     ),
                   ),
@@ -877,34 +1042,20 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
 
           // Follow & Message Buttons (hidden for logged-in user)
           if (!_isCurrentUser) ...[
-            // Follow Button
+            // Follow Button (SOLID COLOR)
             GestureDetector(
               onTap: _toggleFollow,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
                 decoration: BoxDecoration(
-                  gradient: _isFollowing
-                      ? null
-                      : const LinearGradient(
-                          colors: [Color(0xFF7C4DFF), Color(0xFF9066FF)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                  color: _isFollowing ? const Color(0xFF0D2533) : null,
-                  borderRadius: BorderRadius.circular(22),
+                  color: _isFollowing
+                      ? const Color(0xFFF1F5F9)
+                      : AppColors.buttonPrimary,
+                  borderRadius: BorderRadius.circular(20),
                   border: _isFollowing
-                      ? Border.all(color: AppColors.primary.withValues(alpha: 0.6), width: 1.2)
+                      ? Border.all(color: const Color(0xFFCBD5E1), width: 1)
                       : null,
-                  boxShadow: _isFollowing
-                      ? []
-                      : [
-                          BoxShadow(
-                            color: const Color(0xFF7C4DFF).withValues(alpha: 0.35),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
                 ),
                 child: _isFollowLoading
                     ? const SizedBox(
@@ -915,8 +1066,8 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                     : Text(
                         _isFollowing ? 'Following' : 'Follow',
                         style: GoogleFonts.poppins(
-                          color: _isFollowing ? AppColors.primary : Colors.white,
-                          fontSize: 13,
+                          color: _isFollowing ? const Color(0xFF334155) : Colors.white,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -925,21 +1076,21 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
 
             const SizedBox(width: 8),
 
-            // Message Button
+            // Message Button (Clean border outline)
             GestureDetector(
               onTap: _messageCreator,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.09),
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFCBD5E1), width: 1),
                 ),
                 child: Text(
                   'Message',
                   style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 13,
+                    color: const Color(0xFF1E293B),
+                    fontSize: 12.5,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -955,12 +1106,12 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   // TITLE & DESCRIPTION
   // =========================================================
 
-  Widget _buildTitleAndDescription() {
+  Widget _buildTitleAndDescription({required bool isDesktop}) {
     final title = _post.title;
     final desc = _post.description;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: isDesktop ? 0 : 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -968,19 +1119,19 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
             Text(
               title,
               style: GoogleFonts.poppins(
-                fontSize: 16,
+                fontSize: isDesktop ? 18 : 16,
                 fontWeight: FontWeight.w700,
-                color: Colors.white,
+                color: const Color(0xFF111827),
               ),
             ),
           if (desc.isNotEmpty) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
               desc,
               style: GoogleFonts.poppins(
                 fontSize: 14,
-                color: Colors.white70,
-                height: 1.4,
+                color: const Color(0xFF4B5563),
+                height: 1.45,
               ),
             ),
           ],
@@ -998,7 +1149,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
-          const Divider(color: Colors.white10, height: 1, thickness: 1),
+          const Divider(color: Color(0xFFE5E7EB), height: 1, thickness: 1),
           const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1009,13 +1160,13 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                   const Icon(
                     LucideIcons.eye,
                     size: 16,
-                    color: Colors.white60,
+                    color: Color(0xFF64748B),
                   ),
                   const SizedBox(width: 6),
                   Text(
                     '${_post.viewsCount} views',
                     style: GoogleFonts.poppins(
-                      color: Colors.white60,
+                      color: const Color(0xFF64748B),
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                     ),
@@ -1029,7 +1180,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                   Icon(
                     _post.liked ? Icons.favorite : Icons.favorite_border,
                     size: 16,
-                    color: const Color(0xFFE940B7),
+                    color: const Color(0xFFE11D48),
                   ),
                   const SizedBox(width: 6),
                   AnimatedSwitcher(
@@ -1038,7 +1189,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                       '${_post.likesCount} likes',
                       key: ValueKey(_post.likesCount),
                       style: GoogleFonts.poppins(
-                        color: Colors.white70,
+                        color: const Color(0xFF1F2937),
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1065,7 +1216,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          // ── Like Button ──
+          // Like Button
           InkWell(
             onTap: _toggleLike,
             borderRadius: BorderRadius.circular(12),
@@ -1080,7 +1231,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                     child: Icon(
                       isLiked ? Icons.favorite : Icons.favorite_border,
                       key: ValueKey(isLiked),
-                      color: isLiked ? const Color(0xFFE940B7) : Colors.white70,
+                      color: isLiked ? const Color(0xFFE11D48) : const Color(0xFF4B5563),
                       size: 22,
                     ),
                   ),
@@ -1088,7 +1239,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                   Text(
                     'Like',
                     style: GoogleFonts.poppins(
-                      color: isLiked ? const Color(0xFFE940B7) : Colors.white70,
+                      color: isLiked ? const Color(0xFFE11D48) : const Color(0xFF4B5563),
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -1098,15 +1249,17 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
             ),
           ),
 
-          // ── Comment Button ──
+          // Comment Button
           InkWell(
             onTap: () {
               _commentFocusNode.requestFocus();
-              _scrollController.animateTo(
-                _scrollController.position.maxScrollExtent,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-              );
+              if (_scrollController.hasClients) {
+                _scrollController.animateTo(
+                  _scrollController.position.maxScrollExtent,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+              }
             },
             borderRadius: BorderRadius.circular(12),
             child: Padding(
@@ -1116,14 +1269,14 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                 children: [
                   const Icon(
                     LucideIcons.messageSquare,
-                    color: Colors.white70,
+                    color: Color(0xFF4B5563),
                     size: 22,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Comment',
                     style: GoogleFonts.poppins(
-                      color: Colors.white70,
+                      color: const Color(0xFF4B5563),
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -1133,7 +1286,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
             ),
           ),
 
-          // ── Share Button ──
+          // Share Button
           InkWell(
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -1151,14 +1304,14 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                 children: [
                   const Icon(
                     LucideIcons.share2,
-                    color: Colors.white70,
+                    color: Color(0xFF4B5563),
                     size: 22,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Share',
                     style: GoogleFonts.poppins(
-                      color: Colors.white70,
+                      color: const Color(0xFF4B5563),
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -1173,10 +1326,10 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   }
 
   // =========================================================
-  // COMMENTS SECTION
+  // COMMENTS SECTION (Mobile)
   // =========================================================
 
-  Widget _buildCommentsSection() {
+  Widget _buildCommentsSection({required bool isDesktop}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -1186,7 +1339,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
           Text(
             'Comments (${_comments.length})',
             style: GoogleFonts.poppins(
-              color: Colors.white,
+              color: const Color(0xFF111827),
               fontSize: 16,
               fontWeight: FontWeight.w700,
             ),
@@ -1203,56 +1356,59 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                   width: 28,
                   height: 28,
                   child: CircularProgressIndicator(
-                    color: Color(0xFF7C4DFF),
+                    color: AppColors.buttonPrimary,
                     strokeWidth: 2,
                   ),
                 ),
               ),
             )
           else if (_comments.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Center(
-                child: Column(
-                  children: [
-                    Icon(
-                      LucideIcons.messageSquareDashed,
-                      color: Colors.white.withValues(alpha: 0.25),
-                      size: 38,
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'No comments yet.',
-                      style: GoogleFonts.poppins(
-                        color: Colors.white54,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Be the first to share your thoughts!',
-                      style: GoogleFonts.poppins(
-                        color: Colors.white38,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
+            _buildEmptyComments()
           else
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _comments.length,
-              separatorBuilder: (_, i) => const SizedBox(height: 14),
+              separatorBuilder: (_, index) => const Divider(height: 16, color: Color(0xFFF1F5F9)),
               itemBuilder: (context, index) {
-                final comment = _comments[index];
-                return _buildCommentTile(comment);
+                return _buildCommentTile(_comments[index]);
               },
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyComments() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 28),
+      child: Center(
+        child: Column(
+          children: [
+            Icon(
+              LucideIcons.messageSquareDashed,
+              color: const Color(0xFF94A3B8),
+              size: 38,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'No comments yet.',
+              style: GoogleFonts.poppins(
+                color: const Color(0xFF64748B),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Be the first to share your thoughts!',
+              style: GoogleFonts.poppins(
+                color: const Color(0xFF94A3B8),
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1277,7 +1433,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                   Text(
                     comment.username,
                     style: GoogleFonts.poppins(
-                      color: Colors.white,
+                      color: const Color(0xFF111827),
                       fontSize: 13.5,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1286,7 +1442,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                   Text(
                     comment.timeAgo,
                     style: GoogleFonts.poppins(
-                      color: Colors.white38,
+                      color: const Color(0xFF94A3B8),
                       fontSize: 11,
                     ),
                   ),
@@ -1296,7 +1452,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
               Text(
                 comment.comment,
                 style: GoogleFonts.poppins(
-                  color: Colors.white70,
+                  color: const Color(0xFF334155),
                   fontSize: 13,
                   height: 1.35,
                 ),
@@ -1321,7 +1477,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
           icon: Icon(
             comment.isLiked ? Icons.favorite : Icons.favorite_border,
             size: 16,
-            color: comment.isLiked ? const Color(0xFFE940B7) : Colors.white30,
+            color: comment.isLiked ? const Color(0xFFE11D48) : const Color(0xFFCBD5E1),
           ),
         ),
       ],
@@ -1332,19 +1488,28 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   // BOTTOM COMMENT BAR
   // =========================================================
 
-  Widget _buildBottomCommentBar() {
+  Widget _buildBottomCommentBar({required bool isDesktop}) {
     return Container(
       padding: EdgeInsets.only(
         left: 16,
         right: 16,
         top: 10,
-        bottom: MediaQuery.of(context).padding.bottom + 10,
+        bottom: isDesktop ? 12 : MediaQuery.of(context).padding.bottom + 10,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFF0A1622),
+        color: Colors.white,
         border: Border(
-          top: BorderSide(color: Colors.white.withValues(alpha: 0.1), width: 0.8),
+          top: BorderSide(
+            color: const Color(0xFFE5E7EB),
+            width: isDesktop ? 1 : 0.8,
+          ),
         ),
+        borderRadius: isDesktop
+            ? const BorderRadius.only(
+                bottomLeft: Radius.circular(16),
+                bottomRight: Radius.circular(16),
+              )
+            : null,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -1355,36 +1520,36 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
               controller: _commentController,
               focusNode: _commentFocusNode,
               style: GoogleFonts.poppins(
-                color: Colors.white,
+                color: const Color(0xFF111827),
                 fontSize: 14,
               ),
               decoration: InputDecoration(
                 hintText: 'Add a comment...',
                 hintStyle: GoogleFonts.poppins(
-                  color: Colors.white38,
+                  color: const Color(0xFF94A3B8),
                   fontSize: 14,
                 ),
                 filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.07),
+                fillColor: const Color(0xFFF8FAFC),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
                 ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(26),
+                  borderRadius: BorderRadius.circular(24),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(26),
-                  borderSide: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFE2E8F0),
                     width: 1,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(26),
+                  borderRadius: BorderRadius.circular(24),
                   borderSide: const BorderSide(
-                    color: Color(0xFF7C4DFF),
+                    color: AppColors.buttonPrimary,
                     width: 1.5,
                   ),
                 ),
@@ -1395,27 +1560,16 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
 
           const SizedBox(width: 10),
 
-          // Post button
+          // Post button (SOLID PURPLE, NO GRADIENT)
           GestureDetector(
             onTap: _postComment,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              height: 46,
+              height: 44,
               padding: const EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF7C4DFF), Color(0xFF9E6FFF)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(26),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF7C4DFF).withValues(alpha: 0.4),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                color: AppColors.buttonPrimary,
+                borderRadius: BorderRadius.circular(24),
               ),
               child: Center(
                 child: _isPostingComment
@@ -1431,9 +1585,8 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                         'Post',
                         style: GoogleFonts.poppins(
                           color: Colors.white,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           fontSize: 14,
-                          letterSpacing: 0.3,
                         ),
                       ),
               ),

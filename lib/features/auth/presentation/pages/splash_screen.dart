@@ -143,132 +143,108 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final logoWidth = screenWidth > 600 ? 280.0 : (screenWidth * 0.65).clamp(200.0, 300.0);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF06151D),
+      backgroundColor: Colors.white,
       body: SizedBox.expand(
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-
-            Image.asset(
-              'assets/images/splash_background.png',
-              fit: BoxFit.cover,
-            ),
-
-            // Slight dark overlay for better logo visibility
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withValues(alpha: 0.08),
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.12),
-                  ],
-                ),
-              ),
-            ),
-
-            // ============================================================
-            // CONTENT
-            // ============================================================
-
-            SafeArea(
-              child: Center(
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 440),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-
                     // ----------------------------------------------------
                     // AICC LOGO
                     // ----------------------------------------------------
-
                     Image.asset(
                       'assets/icons/aicc2.png',
-                      width: MediaQuery.of(context).size.width * 0.68,
+                      width: logoWidth,
                       fit: BoxFit.contain,
                     )
                         .animate()
                         .fade(
-                      duration: 800.ms,
-                      curve: Curves.easeOut,
-                    )
+                          duration: 800.ms,
+                          curve: Curves.easeOut,
+                        )
                         .scale(
-                      begin: const Offset(0.55, 0.55),
-                      end: const Offset(1, 1),
-                      duration: 1200.ms,
-                      curve: Curves.easeOutBack,
-                    )
+                          begin: const Offset(0.7, 0.7),
+                          end: const Offset(1, 1),
+                          duration: 1100.ms,
+                          curve: Curves.easeOutBack,
+                        )
                         .then()
                         .shimmer(
-                      duration: 1200.ms,
-                      delay: 100.ms,
-                      angle: 0.5,
-                    ),
+                          duration: 1200.ms,
+                          delay: 100.ms,
+                          angle: 0.5,
+                          color: const Color(0xFF7C3AED).withValues(alpha: 0.25),
+                        ),
 
                     const SizedBox(height: 28),
 
                     // ----------------------------------------------------
                     // COMPANY NAME
                     // ----------------------------------------------------
-
                     const Text(
                       'ALL INDIA CASTING CONNECT',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Color(0xFFD9A936),
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 2.4,
+                        color: Color(0xFFB45309),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 2.2,
                       ),
                     )
                         .animate()
                         .fade(
-                      delay: 1100.ms,
-                      duration: 700.ms,
-                    )
+                          delay: 800.ms,
+                          duration: 700.ms,
+                        )
                         .slideY(
-                      begin: 0.35,
-                      end: 0,
-                      delay: 1100.ms,
-                      duration: 700.ms,
-                      curve: Curves.easeOut,
-                    ),
+                          begin: 0.35,
+                          end: 0,
+                          delay: 800.ms,
+                          duration: 700.ms,
+                          curve: Curves.easeOut,
+                        ),
 
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
 
                     // ----------------------------------------------------
                     // TAGLINE
                     // ----------------------------------------------------
-
                     const Text(
                       'ACTORS  |  MODELS  |  ARTISTS  |  CREATORS',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 1.7,
+                        color: Color(0xFF4B5563),
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.5,
                       ),
                     )
                         .animate()
                         .fade(
-                      delay: 1500.ms,
-                      duration: 700.ms,
-                    )
+                          delay: 1100.ms,
+                          duration: 700.ms,
+                        )
                         .slideY(
-                      begin: 0.25,
-                      end: 0,
-                      delay: 1500.ms,
-                      duration: 700.ms,
-                      curve: Curves.easeOut,
-                    ),
+                          begin: 0.25,
+                          end: 0,
+                          delay: 1100.ms,
+                          duration: 700.ms,
+                          curve: Curves.easeOut,
+                        ),
                   ],
                 ),
               ),
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'package:aicc/core/responsive/responsive_breakpoints.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:aicc/core/constants/app_colors.dart';
@@ -20,6 +21,7 @@ class ArtistInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
     String location = "";
     if (city != null && city!.isNotEmpty && state != null && state!.isNotEmpty) {
       location = '$city, $state';
@@ -47,10 +49,10 @@ class ArtistInfo extends StatelessWidget {
           children: [
             Text(
               name?.isNotEmpty == true ? name! : "Unknown",
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: isDesktop ? const Color(0xFF0F172A) : Colors.white,
                 letterSpacing: -0.3,
               ),
             ),
@@ -69,16 +71,16 @@ class ArtistInfo extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.location_on_outlined,
               size: 18,
-              color: AppColors.greyText,
+              color: isDesktop ? const Color(0xFF94A3B8) : AppColors.greyText,
             ),
             const SizedBox(width: 4),
             Text(
               location,
-              style: const TextStyle(
-                color: AppColors.greyText,
+              style: TextStyle(
+                color: isDesktop ? const Color(0xFF64748B) : AppColors.greyText,
                 fontSize: 16,
               ),
             ),
