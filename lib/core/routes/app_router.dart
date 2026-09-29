@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:aicc/features/auth/presentation/pages/splash_screen.dart';
-import 'package:aicc/features/roles/presentation/pages/roles_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -47,8 +46,7 @@ final GoRouter appRouter = GoRouter(
 
     final isAuthRoute =
         location == AppRoutes.welcome ||
-        location == AppRoutes.login ||
-        location == AppRoutes.signup;
+        location == AppRoutes.login;
 
     if (isLoggedIn && isAuthRoute) {
       return AppRoutes.home;
@@ -63,11 +61,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: AppRoutes.splash, builder: (_, __) => const SplashScreen()),
 
     GoRoute(path: AppRoutes.login, builder: (_, __) => const LoginScreen()),
-
-    GoRoute(
-      path: AppRoutes.signup,
-      builder: (_, __) => const SignUpWizardPage(),
-    ),
+    GoRoute(path: AppRoutes.signup, builder: (_, __) => const SignupScreen()),
 
     GoRoute(
       path: AppRoutes.chat,
@@ -136,11 +130,6 @@ final GoRouter appRouter = GoRouter(
         return const AuditionDetails();
       },
     ),
-
-    // =========================================================
-    // ROLES
-    // =========================================================
-    GoRoute(path: AppRoutes.role, builder: (_, __) => RolesScreen()),
 
     // =========================================================
     // UPLOAD PHOTO

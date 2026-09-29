@@ -10,8 +10,6 @@ class AppRoutes {
   static const String explore = "/explore";
   static const String post = "/post";
   static const String auditions = "/auditions";
-  static const String role = "/role";
-
   static const String artistProfile = "/artistProfile";
   static const String editArtistProfile = "/editArtistProfile";
   static const String exploreProfile = "/exploreProfile";

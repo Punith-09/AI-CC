@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../data/models/login_response.dart';
 import '../../data/repository/auth_repository.dart';
+import '../../data/models/register_request.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthRepository _authRepository;
@@ -32,6 +33,24 @@ class AuthProvider extends ChangeNotifier {
     try {
       final response = await _authRepository.login(identifier.trim(), password);
       _currentUser = response.userModel;
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = _cleanErrorMessage(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> register(RegisterRequest request) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _authRepository.register(request);
       _isLoading = false;
       notifyListeners();
       return true;
