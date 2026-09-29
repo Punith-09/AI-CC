@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../providers/subscription_provider.dart';
 
@@ -138,13 +139,20 @@ class LimitUpgradeDialog extends StatelessWidget {
         break;
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dialogBg = isDark ? AppColors.darkCard : Colors.white;
+    final titleColor = isDark ? AppColors.darkText : AppColors.lightText;
+    final descColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
+    final badgeBg = isDark ? AppColors.darkSurface : const Color(0xFFFEF3C7);
+    final badgeTextColor = isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309);
+
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: const Color(0xFF0C1929),
+          color: dialogBg,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: const Color(0xFFF59E0B).withValues(alpha: 0.4),
@@ -152,13 +160,13 @@ class LimitUpgradeDialog extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+              color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
               blurRadius: 30,
               spreadRadius: 2,
             ),
-            const BoxShadow(
-              color: Colors.black87,
-              blurRadius: 40,
+            BoxShadow(
+              color: isDark ? Colors.black87 : Colors.black.withValues(alpha: 0.08),
+              blurRadius: 30,
             ),
           ],
         ),
@@ -196,7 +204,7 @@ class LimitUpgradeDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFF1E293B),
+                color: badgeBg,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: const Color(0xFFF59E0B).withValues(alpha: 0.5),
@@ -205,8 +213,8 @@ class LimitUpgradeDialog extends StatelessWidget {
               ),
               child: Text(
                 'Current Plan: $planLabel',
-                style: const TextStyle(
-                  color: Color(0xFFFBBF24),
+                style: TextStyle(
+                  color: badgeTextColor,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.5,
@@ -219,8 +227,8 @@ class LimitUpgradeDialog extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: titleColor,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.2,
@@ -232,8 +240,8 @@ class LimitUpgradeDialog extends StatelessWidget {
             Text(
               description,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Color(0xFF94A3B8),
+              style: TextStyle(
+                color: descColor,
                 fontSize: 13.5,
                 height: 1.45,
               ),

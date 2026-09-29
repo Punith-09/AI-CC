@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'desktop_header.dart';
 import 'desktop_right_panel.dart';
 import 'desktop_sidebar.dart';
+import '../constants/app_colors.dart';
 import '../routes/app_routes.dart';
 
 class DesktopShell extends StatelessWidget {
@@ -44,9 +45,10 @@ class DesktopShell extends StatelessWidget {
             currentLocation == AppRoutes.explore);
 
     final maxContentWidth = _getMaxContentWidth(currentLocation);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? AppColors.darkScaffold : const Color(0xFFF8FAFC),
       body: Column(
         children: [
           // ── Fixed Top Header ─────────────────────────────────

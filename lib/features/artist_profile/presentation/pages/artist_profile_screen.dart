@@ -44,6 +44,8 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
   Widget build(BuildContext context) {
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final content = Consumer<ProfileProvider>(
       builder: (context, provider, child) {
         if (provider.isLoading) {
@@ -59,7 +61,10 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                   children: [
                     if (Navigator.canPop(context))
                       IconButton(
-                        icon: Icon(Icons.arrow_back, color: isDesktop ? const Color(0xFF0F172A) : Colors.white),
+                        icon: Icon(
+                          Icons.arrow_back,
+                          color: isDark ? AppColors.darkText : const Color(0xFF0F172A),
+                        ),
                         onPressed: () => context.pop(),
                       )
                     else
@@ -67,7 +72,7 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                     Text(
                       "Profile",
                       style: TextStyle(
-                        color: AppColors.black,
+                        color: isDark ? AppColors.darkText : AppColors.black,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -96,20 +101,18 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: isDesktop ? Colors.white : const Color(0xFF123B4A).withOpacity(0.85),
+                    color: isDark ? AppColors.darkCard : Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: isDesktop ? const Color(0xFFE2E8F0) : Colors.white.withOpacity(0.1),
+                      color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
                     ),
-                    boxShadow: isDesktop
-                        ? [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.04),
-                              blurRadius: 16,
-                              offset: const Offset(0, 2),
-                            ),
-                          ]
-                        : null,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                        blurRadius: 16,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -130,7 +133,7 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                       Text(
                         "Unable to Load Profile",
                         style: TextStyle(
-                          color: isDesktop ? const Color(0xFF0F172A) : Colors.white,
+                          color: isDark ? AppColors.darkText : const Color(0xFF0F172A),
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -140,7 +143,7 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen> {
                         provider.error!,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: isDesktop ? const Color(0xFF64748B) : Colors.white.withOpacity(0.7),
+                          color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
                           fontSize: 13,
                         ),
                       ),

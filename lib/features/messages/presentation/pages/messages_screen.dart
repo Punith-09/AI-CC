@@ -11,7 +11,6 @@ import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../data/models/chat_model.dart';
 import '../providers/messages_provider.dart';
-import 'chat_screen.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({super.key});
@@ -51,10 +50,14 @@ class _MessagesScreenState extends State<MessagesScreen> {
   @override
   Widget build(BuildContext context) {
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scaffoldBg = isDark ? AppColors.darkScaffold : AppColors.lightScaffold;
+    final containerBg = isDark ? AppColors.darkCard : Colors.white;
+    final borderColor = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
 
     if (isDesktop) {
       return Scaffold(
-        backgroundColor: AppColors.white,
+        backgroundColor: scaffoldBg,
         body: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -62,99 +65,52 @@ class _MessagesScreenState extends State<MessagesScreen> {
             SizedBox(
               width: 880,
               child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                decoration: BoxDecoration(
+                  color: containerBg,
                   border: Border(
-                    right: BorderSide(color: Color(0xFFE2E8F0), width: 1),
+                    right: BorderSide(color: borderColor, width: 1),
                   ),
                 ),
                 child: Column(
                   children: [
-                    _buildAppBar(context, isDesktop: true),
+                    _buildAppBar(context, isDesktop: true, isDark: isDark),
                     const SizedBox(height: 8),
-                    _buildSearchBar(),
+                    _buildSearchBar(isDark: isDark),
                     const SizedBox(height: 8),
-                    Expanded(child: _buildChatsList(isDesktop: true)),
+                    Expanded(child: _buildChatsList(isDesktop: true, isDark: isDark)),
                   ],
                 ),
               ),
             ),
-
-            // Right Column: Active Conversation
-            // Expanded(
-            //   child: _selectedChat != null
-            //       ? ChatScreen(
-            //           key: ValueKey(_selectedChat!.id),
-            //           chat: _selectedChat,
-            //         )
-            //       : _buildNoChatSelectedState(),
-            // ),
           ],
         ),
       );
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: scaffoldBg,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildAppBar(context, isDesktop: false),
+            _buildAppBar(context, isDesktop: false, isDark: isDark),
             const SizedBox(height: 8),
-            _buildSearchBar(),
+            _buildSearchBar(isDark: isDark),
             const SizedBox(height: 8),
-            Expanded(child: _buildChatsList(isDesktop: false)),
+            Expanded(child: _buildChatsList(isDesktop: false, isDark: isDark)),
           ],
         ),
       ),
     );
   }
 
-  // Widget _buildNoChatSelectedState() {
-  //   return Container(
-  //     color: const Color(0xFFF8FAFC),
-  //     child: Center(
-  //       child: Column(
-  //         mainAxisSize: MainAxisSize.min,
-  //         children: [
-  //           Container(
-  //             width: 72,
-  //             height: 72,
-  //             decoration: BoxDecoration(
-  //               color: AppColors.primary.withValues(alpha: 0.1),
-  //               shape: BoxShape.circle,
-  //             ),
-  //             child: const Icon(
-  //               LucideIcons.messageSquare,
-  //               size: 32,
-  //               color: AppColors.primary,
-  //             ),
-  //           ),
-  //           const SizedBox(height: 16),
-  //           const Text(
-  //             'Select a conversation',
-  //             style: TextStyle(
-  //               color: Color(0xFF111827),
-  //               fontSize: 18,
-  //               fontWeight: FontWeight.bold,
-  //             ),
-  //           ),
-  //           const SizedBox(height: 6),
-  //           const Text(
-  //             'Choose a chat from the left panel to start messaging',
-  //             style: TextStyle(
-  //               color: Color(0xFF64748B),
-  //               fontSize: 13.5,
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
+  Widget _buildAppBar(BuildContext context, {required bool isDesktop, required bool isDark}) {
+    final titleColor = isDark ? AppColors.darkText : const Color(0xFF111827);
+    final subtitleColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
+    final backBtnBg = isDark ? AppColors.darkSurface : const Color(0xFFF8FAFC);
+    final backBtnBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final backIconColor = isDark ? AppColors.darkText : const Color(0xFF111827);
 
-  Widget _buildAppBar(BuildContext context, {required bool isDesktop}) {
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: isDesktop ? 16 : 20,
@@ -177,13 +133,13 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                  color: backBtnBg,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: backBtnBorder),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.arrow_back_ios_new,
-                  color: Color(0xFF111827),
+                  color: backIconColor,
                   size: 16,
                 ),
               ),
@@ -201,10 +157,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     final unreadCount = provider.totalUnreadCount;
                     return Row(
                       children: [
-                        const Text(
+                        Text(
                           'Messages',
                           style: TextStyle(
-                            color: Color(0xFF111827),
+                            color: titleColor,
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
                             letterSpacing: -0.3,
@@ -235,10 +191,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     );
                   },
                 ),
-                const Text(
+                Text(
                   'Your conversations',
                   style: TextStyle(
-                    color: Color(0xFF64748B),
+                    color: subtitleColor,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -277,30 +233,33 @@ class _MessagesScreenState extends State<MessagesScreen> {
   // SEARCH BAR
   // =========================================================
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar({required bool isDark}) {
+    final searchBg = isDark ? AppColors.darkTextField : const Color(0xFFF8FAFC);
+    final searchBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final textColor = isDark ? AppColors.darkText : const Color(0xFF111827);
+    final hintColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         height: 44,
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
+          color: searchBg,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: const Color(0xFFE2E8F0),
-          ),
+          border: Border.all(color: searchBorder),
         ),
         child: TextField(
           controller: _searchController,
           onChanged: (value) {
             setState(() => _searchQuery = value.toLowerCase());
           },
-          style: const TextStyle(color: Color(0xFF111827), fontSize: 13.5),
+          style: TextStyle(color: textColor, fontSize: 13.5),
           decoration: InputDecoration(
             hintText: 'Search conversations...',
-            hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13.5),
-            prefixIcon: const Icon(
+            hintStyle: TextStyle(color: hintColor, fontSize: 13.5),
+            prefixIcon: Icon(
               LucideIcons.search,
-              color: Color(0xFF94A3B8),
+              color: hintColor,
               size: 18,
             ),
             suffixIcon: _searchQuery.isNotEmpty
@@ -309,9 +268,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                       _searchController.clear();
                       setState(() => _searchQuery = '');
                     },
-                    child: const Icon(
+                    child: Icon(
                       Icons.close,
-                      color: Color(0xFF94A3B8),
+                      color: hintColor,
                       size: 18,
                     ),
                   )
@@ -330,7 +289,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
   // CHATS LIST
   // =========================================================
 
-  Widget _buildChatsList({required bool isDesktop}) {
+  Widget _buildChatsList({required bool isDesktop, required bool isDark}) {
     return Consumer<MessagesProvider>(
       builder: (context, provider, _) {
         if (provider.isLoadingChats && provider.chats.isEmpty) {
@@ -353,7 +312,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
         }).toList();
 
         if (chats.isEmpty) {
-          return _buildEmptyState();
+          return _buildEmptyState(isDark: isDark);
         }
 
         // On desktop, auto-select first conversation if none selected
@@ -367,7 +326,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
         return RefreshIndicator(
           color: AppColors.primary,
-          backgroundColor: Colors.white,
+          backgroundColor: isDark ? AppColors.darkCard : Colors.white,
           onRefresh: () => provider.fetchChats(),
           child: ListView.separated(
             physics: const BouncingScrollPhysics(),
@@ -405,77 +364,90 @@ class _MessagesScreenState extends State<MessagesScreen> {
   }
 
   void _showChatOptions(BuildContext context, ChatModel chat) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final provider = context.read<MessagesProvider>();
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE2E8F0),
-                    borderRadius: BorderRadius.circular(2),
+        final sheetBg = isDark ? AppColors.darkCard : Colors.white;
+        final handleColor = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+        final titleColor = isDark ? AppColors.darkText : const Color(0xFF111827);
+        final itemTextColor = isDark ? AppColors.darkText : const Color(0xFF111827);
+        final secondaryIconColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
+
+        return Container(
+          decoration: BoxDecoration(
+            color: sheetBg,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: handleColor,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    children: [
-                      Text(
-                        chat.participantName.isNotEmpty ? chat.participantName : 'Conversation',
-                        style: const TextStyle(
-                          color: Color(0xFF111827),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      children: [
+                        Text(
+                          chat.participantName.isNotEmpty ? chat.participantName : 'Conversation',
+                          style: TextStyle(
+                            color: titleColor,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                ListTile(
-                  leading: Icon(
-                    chat.isUnread ? LucideIcons.mailOpen : LucideIcons.mail,
-                    color: AppColors.primary,
+                  const SizedBox(height: 12),
+                  ListTile(
+                    leading: Icon(
+                      chat.isUnread ? LucideIcons.mailOpen : LucideIcons.mail,
+                      color: AppColors.primary,
+                    ),
+                    title: Text(
+                      chat.isUnread ? 'Mark as read' : 'Mark as unread',
+                      style: TextStyle(color: itemTextColor, fontSize: 14),
+                    ),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      if (chat.isUnread) {
+                        provider.markChatAsRead(chat.id);
+                      } else {
+                        provider.markChatAsUnread(chat.id);
+                      }
+                    },
                   ),
-                  title: Text(
-                    chat.isUnread ? 'Mark as read' : 'Mark as unread',
-                    style: const TextStyle(color: Color(0xFF111827), fontSize: 14),
+                  ListTile(
+                    leading: Icon(LucideIcons.user, color: secondaryIconColor),
+                    title: Text(
+                      'View Profile',
+                      style: TextStyle(color: itemTextColor, fontSize: 14),
+                    ),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      if (chat.participantId.isNotEmpty) {
+                        context.push(AppRoutes.exploreProfile, extra: chat.participantId);
+                      }
+                    },
                   ),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    if (chat.isUnread) {
-                      provider.markChatAsRead(chat.id);
-                    } else {
-                      provider.markChatAsUnread(chat.id);
-                    }
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(LucideIcons.user, color: Color(0xFF64748B)),
-                  title: const Text(
-                    'View Profile',
-                    style: TextStyle(color: Color(0xFF111827), fontSize: 14),
-                  ),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    if (chat.participantId.isNotEmpty) {
-                      context.push(AppRoutes.exploreProfile, extra: chat.participantId);
-                    }
-                  },
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -487,7 +459,12 @@ class _MessagesScreenState extends State<MessagesScreen> {
   // EMPTY STATE
   // =========================================================
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState({required bool isDark}) {
+    final emptyBg = isDark ? AppColors.darkSurface : const Color(0xFFF1F5F9);
+    final emptyIconColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8);
+    final titleColor = isDark ? AppColors.darkText : const Color(0xFF111827);
+    final subtitleColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
+
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -495,31 +472,31 @@ class _MessagesScreenState extends State<MessagesScreen> {
           Container(
             width: 72,
             height: 72,
-            decoration: const BoxDecoration(
-              color: Color(0xFFF1F5F9),
+            decoration: BoxDecoration(
+              color: emptyBg,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               LucideIcons.messageSquare,
-              color: Color(0xFF94A3B8),
+              color: emptyIconColor,
               size: 32,
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'No conversations yet',
             style: TextStyle(
-              color: Color(0xFF111827),
+              color: titleColor,
               fontSize: 16,
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'Start a conversation with a\ncreator or artist',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Color(0xFF64748B),
+              color: subtitleColor,
               fontSize: 13,
               height: 1.4,
             ),
@@ -593,6 +570,22 @@ class _ChatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isUnread = chat.isUnread;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final selectedBg = isDark
+        ? AppColors.primary.withValues(alpha: 0.15)
+        : const Color(0xFFF3E8FF);
+    final normalBg = isDark ? AppColors.darkCard : Colors.white;
+    final selectedBorder = AppColors.primary;
+    final normalBorder = isUnread
+        ? (isDark ? AppColors.primary.withValues(alpha: 0.5) : const Color(0xFFC4B5FD))
+        : (isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0));
+    final nameColor = isDark ? AppColors.darkText : const Color(0xFF111827);
+    final msgColor = isUnread
+        ? (isDark ? AppColors.darkText : const Color(0xFF111827))
+        : (isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B));
+    final roleBadgeBg = isDark ? AppColors.darkSurface : const Color(0xFFF1F5F9);
+    final roleBadgeText = isDark ? AppColors.darkTextSecondary : const Color(0xFF475569);
 
     return InkWell(
       onTap: onTap,
@@ -601,12 +594,10 @@ class _ChatTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFF3E8FF) : Colors.white,
+          color: isSelected ? selectedBg : normalBg,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isSelected
-                ? AppColors.primary
-                : (isUnread ? const Color(0xFFC4B5FD) : const Color(0xFFE2E8F0)),
+            color: isSelected ? selectedBorder : normalBorder,
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -622,7 +613,7 @@ class _ChatTile extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isUnread ? AppColors.primary : const Color(0xFFE2E8F0),
+                      color: isUnread ? AppColors.primary : (isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0)),
                       width: isUnread ? 2 : 1,
                     ),
                   ),
@@ -633,9 +624,9 @@ class _ChatTile extends StatelessWidget {
                             imageUrl: ApiEndpoints.formatMediaUrl(chat.participantAvatar),
                             fit: BoxFit.cover,
                             errorWidget: (ctx, url, err) =>
-                                _AvatarFallback(name: chat.participantName),
+                                _AvatarFallback(name: chat.participantName, isDark: isDark),
                           )
-                        : _AvatarFallback(name: chat.participantName),
+                        : _AvatarFallback(name: chat.participantName, isDark: isDark),
                   ),
                 ),
 
@@ -651,7 +642,7 @@ class _ChatTile extends StatelessWidget {
                         color: const Color(0xFF10B981),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: Colors.white,
+                          color: isDark ? AppColors.darkCard : Colors.white,
                           width: 2,
                         ),
                       ),
@@ -676,7 +667,7 @@ class _ChatTile extends StatelessWidget {
                               ? chat.participantName
                               : 'Creator',
                           style: TextStyle(
-                            color: const Color(0xFF111827),
+                            color: nameColor,
                             fontSize: 14.5,
                             fontWeight: isUnread ? FontWeight.w700 : FontWeight.w600,
                           ),
@@ -689,7 +680,7 @@ class _ChatTile extends StatelessWidget {
                         style: TextStyle(
                           color: isUnread
                               ? AppColors.primary
-                              : const Color(0xFF94A3B8),
+                              : (isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8)),
                           fontSize: 11,
                           fontWeight: isUnread
                               ? FontWeight.w600
@@ -710,9 +701,7 @@ class _ChatTile extends StatelessWidget {
                               ? chat.lastMessage
                               : 'Tap to chat...',
                           style: TextStyle(
-                            color: isUnread
-                                ? const Color(0xFF111827)
-                                : const Color(0xFF64748B),
+                            color: msgColor,
                             fontSize: 12.5,
                             fontWeight: isUnread
                                 ? FontWeight.w600
@@ -748,13 +737,13 @@ class _ChatTile extends StatelessWidget {
                           vertical: 1.5,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
+                          color: roleBadgeBg,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           chat.participantRole,
-                          style: const TextStyle(
-                            color: Color(0xFF475569),
+                          style: TextStyle(
+                            color: roleBadgeText,
                             fontSize: 10,
                             fontWeight: FontWeight.w500,
                           ),
@@ -844,20 +833,23 @@ class _ChatTile extends StatelessWidget {
 
 class _AvatarFallback extends StatelessWidget {
   final String name;
+  final bool isDark;
 
-  const _AvatarFallback({required this.name});
+  const _AvatarFallback({required this.name, this.isDark = false});
 
   @override
   Widget build(BuildContext context) {
     final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    final bg = isDark ? AppColors.darkSurface : const Color(0xFFF1F5F9);
+    final textColor = isDark ? AppColors.darkText : const Color(0xFF111827);
 
     return Container(
-      color: const Color(0xFFF1F5F9),
+      color: bg,
       child: Center(
         child: Text(
           initial,
-          style: const TextStyle(
-            color: Color(0xFF111827),
+          style: TextStyle(
+            color: textColor,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),

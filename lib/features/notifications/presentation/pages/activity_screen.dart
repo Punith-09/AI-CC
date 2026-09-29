@@ -1,3 +1,4 @@
+import 'package:aicc/core/constants/app_colors.dart';
 import 'package:aicc/core/responsive/responsive_breakpoints.dart';
 import 'package:flutter/material.dart';
 import '../widgets/activity_card.dart';
@@ -50,6 +51,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
   @override
   Widget build(BuildContext context) {
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final content = Column(
       children: [
@@ -95,25 +97,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: isDark ? AppColors.darkCard : Colors.white,
         elevation: 0,
         centerTitle: true,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Color(0xFF1F5A6A),
-                Color(0xFF123B4A),
-              ],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-        ),
-        title: const Text(
+        title: Text(
           "Activity",
           style: TextStyle(
-            color: Colors.white,
+            color: isDark ? AppColors.darkText : AppColors.lightText,
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
@@ -123,13 +113,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
             padding: const EdgeInsets.only(right: 16),
             child: Container(
               padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
-                color: Colors.white12,
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSurface : const Color(0xFFF1F5F9),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.check_circle_outline,
-                color: Colors.white,
+                color: isDark ? AppColors.darkText : AppColors.lightText,
                 size: 20,
               ),
             ),
@@ -137,17 +127,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         ],
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF1F5A6A),
-              Color(0xFF123B4A),
-              Color(0xFF0B1F2A),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+        color: Theme.of(context).scaffoldBackgroundColor,
         child: content,
       ),
     );

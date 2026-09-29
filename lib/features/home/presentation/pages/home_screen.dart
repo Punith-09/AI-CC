@@ -212,10 +212,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final isLoading = feedProvider.isLoading;
     final errorMessage = feedProvider.errorMessage;
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final feedListWidget = RefreshIndicator(
-      color: isDesktop ? const Color(0xFF8E3CF7) : AppColors.primary,
-      backgroundColor: isDesktop ? Colors.white : const Color(0xFF102B36),
+      color: AppColors.primary,
+      backgroundColor: isDark ? AppColors.darkCard : Colors.white,
       onRefresh: () => feedProvider.refreshFeed(),
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(
@@ -236,7 +237,7 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.symmetric(vertical: 48),
               child: Center(
                 child: CircularProgressIndicator(
-                  color: isDesktop ? const Color(0xFF8E3CF7) : AppColors.primary,
+                  color: AppColors.primary,
                 ),
               ),
             );
@@ -262,7 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       errorMessage,
                       style: TextStyle(
-                        color: isDesktop ? const Color(0xFF64748B) : Colors.white70,
+                        color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
                         fontSize: 14,
                       ),
                       textAlign: TextAlign.center,
@@ -270,7 +271,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 12),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isDesktop ? const Color(0xFF8E3CF7) : AppColors.primary,
+                        backgroundColor: AppColors.primary,
                       ),
                       onPressed: () {
                         feedProvider.fetchFeed();
@@ -293,14 +294,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Icon(
                     Icons.photo_library_outlined,
-                    color: isDesktop ? const Color(0xFF94A3B8) : Colors.white30,
+                    color: isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8),
                     size: 48,
                   ),
                   const SizedBox(height: 12),
                   Text(
                     'No posts or videos yet',
                     style: TextStyle(
-                      color: isDesktop ? const Color(0xFF0F172A) : Colors.white70,
+                      color: isDark ? AppColors.darkText : AppColors.lightText,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -309,7 +310,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     'Be the first one to share a photo or video reel!',
                     style: TextStyle(
-                      color: isDesktop ? const Color(0xFF64748B) : Colors.white38,
+                      color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
                       fontSize: 13,
                     ),
                   ),

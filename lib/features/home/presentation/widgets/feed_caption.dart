@@ -18,12 +18,12 @@ class FeedCaption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
-    final likesTextColor = AppColors.black;
-    final nameColor = AppColors.black;
-    final bodyColor = AppColors.black;
-    final hashtagColor = isDesktop ? const Color(0xFF8E3CF7) : const Color(0xff4C8DFF);
-    final timeColor = AppColors.black;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final likesTextColor = isDark ? AppColors.darkText : AppColors.black;
+    final nameColor = isDark ? AppColors.darkText : AppColors.black;
+    final bodyColor = isDark ? AppColors.darkText : AppColors.black;
+    final hashtagColor = AppColors.primary;
+    final timeColor = isDark ? AppColors.darkTextSecondary : AppColors.greyText;
 
     final hasDesc = post.description.isNotEmpty;
     final captionText = post.title.isNotEmpty

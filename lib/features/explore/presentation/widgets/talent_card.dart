@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../../../core/routes/app_routes.dart';
 
 class TalentCard extends StatelessWidget {
@@ -15,7 +14,11 @@ class TalentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? AppColors.darkCard : Colors.white;
+    final cardBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final nameColor = isDark ? AppColors.darkText : AppColors.lightText;
+
     final formattedPic = talent.pic.isNotEmpty
         ? ApiEndpoints.formatMediaUrl(talent.pic)
         : '';
@@ -29,19 +32,15 @@ class TalentCard extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: isDesktop ? Colors.white : const Color(0xFF092530),
+          color: cardBg,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isDesktop
-                ? const Color(0xFFE2E8F0)
-                : AppColors.primary.withValues(alpha: 0.22),
+            color: cardBorder,
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: isDesktop
-                  ? Colors.black.withValues(alpha: 0.04)
-                  : Colors.black.withValues(alpha: 0.25),
+              color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -105,11 +104,11 @@ class TalentCard extends StatelessWidget {
                           formattedPic,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
-                              _buildSilhouette(isDesktop: isDesktop),
+                              _buildSilhouette(isDark: isDark),
                         ),
                       ),
                     )
-                  : _buildSilhouette(isDesktop: isDesktop),
+                  : _buildSilhouette(isDark: isDark),
             ),
 
             // ── Bottom Name ─────────────────────────────────────
@@ -126,7 +125,7 @@ class TalentCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.poppins(
-                      color: isDesktop ? const Color(0xFF0F172A) : Colors.white,
+                      color: nameColor,
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.2,
@@ -141,22 +140,22 @@ class TalentCard extends StatelessWidget {
     );
   }
 
-  Widget _buildSilhouette({bool isDesktop = false}) {
+  Widget _buildSilhouette({bool isDark = false}) {
     return Container(
       width: 58,
       height: 58,
       decoration: BoxDecoration(
-        color: isDesktop ? const Color(0xFFF1F5F9) : const Color(0xFF133644),
+        color: isDark ? AppColors.darkSurface : const Color(0xFFF1F5F9),
         shape: BoxShape.circle,
         border: Border.all(
-          color: isDesktop ? const Color(0xFFE2E8F0) : Colors.white.withValues(alpha: 0.1),
+          color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
           width: 1,
         ),
       ),
       child: Center(
         child: Icon(
           Icons.person_rounded,
-          color: isDesktop ? const Color(0xFF94A3B8) : Colors.white70,
+          color: isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8),
           size: 36,
         ),
       ),

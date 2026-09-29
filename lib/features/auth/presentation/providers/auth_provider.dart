@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/storage/local_storage.dart';
+import '../../data/models/login_response.dart';
 import '../../data/repository/auth_repository.dart';
 
 class AuthProvider extends ChangeNotifier {
@@ -7,11 +9,14 @@ class AuthProvider extends ChangeNotifier {
 
   bool _isLoading = false;
   String? _errorMessage;
+  UserModel? _currentUser;
 
   AuthProvider(this._authRepository);
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  UserModel? get currentUser => _currentUser;
+  String? get userRole => _currentUser?.role ?? LocalStorage.instance.getUserRole();
   bool get isLoggedIn => _authRepository.isUserLoggedIn();
 
   void clearError() {
@@ -19,13 +24,14 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> login(String email, String password) async {
+  Future<bool> login(String identifier, String password) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      await _authRepository.login(email.trim(), password);
+      final response = await _authRepository.login(identifier.trim(), password);
+      _currentUser = response.userModel;
       _isLoading = false;
       notifyListeners();
       return true;
@@ -59,17 +65,23 @@ class AuthProvider extends ChangeNotifier {
     if (error is DioException) {
       final responseData = error.response?.data;
       if (responseData is Map) {
-        final msg = responseData['message']?.toString() ??
-            responseData['error']?.toString() ??
-            responseData['detail']?.toString() ??
-            responseData['msg']?.toString();
-        if (msg != null && msg.isNotEmpty && !msg.toLowerCase().contains('internal server error')) {
+        final rawMsg = responseData['message'] ??
+            responseData['error'] ??
+            responseData['detail'] ??
+            responseData['msg'];
+        String msg = '';
+        if (rawMsg is List) {
+          msg = rawMsg.join(', ');
+        } else if (rawMsg != null) {
+          msg = rawMsg.toString();
+        }
+        if (msg.isNotEmpty && !msg.toLowerCase().contains('internal server error')) {
           return msg;
         }
       }
       final statusCode = error.response?.statusCode;
       if (statusCode == 401 || statusCode == 400) {
-        return 'Invalid email/HCC ID or password. Please try again.';
+        return 'Invalid email / phone / TRK ID or password. Please try again.';
       } else if (statusCode == 404) {
         return 'Account not found. Please check your credentials or sign up.';
       } else if (statusCode == 500) {
@@ -80,17 +92,18 @@ class AuthProvider extends ChangeNotifier {
           error.type == DioExceptionType.connectionError) {
         return 'Network connection error. Please check your internet connection.';
       }
-      return 'Invalid email/HCC ID or password. Please try again.';
+      return 'Invalid email / phone / TRK ID or password. Please try again.';
     }
 
     final raw = error.toString().replaceFirst('Exception: ', '').trim();
     if (raw.contains('DioException') || raw.contains('RequestOptions.validateStatus') || raw.isEmpty) {
-      return 'Invalid email/HCC ID or password. Please try again.';
+      return 'Invalid email / phone / TRK ID or password. Please try again.';
     }
     return raw;
   }
 
   Future<void> logout() async {
+    _currentUser = null;
     await _authRepository.logout();
     notifyListeners();
   }

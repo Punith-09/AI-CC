@@ -12,8 +12,8 @@ class AppBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: Colors.white,
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: child,
     );
   }
-}
+}

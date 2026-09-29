@@ -28,6 +28,8 @@ class BottomActionBar extends StatelessWidget {
         (audition != null &&
             applyProvider.getApplicationForAudition(audition!.id) != null);
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -41,30 +43,30 @@ class BottomActionBar extends StatelessWidget {
                     context.go(AppRoutes.auditions);
                   },
                   style: OutlinedButton.styleFrom(
-                    backgroundColor: const Color(0xFF06233E),
-                    side: const BorderSide(
-                      color: Color(0xFF1CC8FF),
+                    backgroundColor: isDark ? AppColors.darkSurface : const Color(0xFFF1F5F9),
+                    side: BorderSide(
+                      color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
                       width: 1.2,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         "Not Interested",
                         style: TextStyle(
-                          color: AppColors.white,
+                          color: isDark ? AppColors.darkText : AppColors.lightText,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Icon(
                         Icons.arrow_forward,
                         size: 18,
-                        color: AppColors.white,
+                        color: isDark ? AppColors.darkText : AppColors.lightText,
                       ),
                     ],
                   ),

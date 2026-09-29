@@ -18,6 +18,12 @@ class CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final unselectedBg = isDark ? AppColors.darkCard : const Color(0xFFF1F5F9);
+    final unselectedBorder = isDark ? AppColors.darkBorder : AppColors.whiteShade;
+    final unselectedText = isDark ? AppColors.darkTextSecondary : const Color(0xFF475569);
+    final unselectedIcon = isDark ? AppColors.darkTextSecondary : AppColors.greyText;
+
     return InkWell(
       borderRadius: BorderRadius.circular(30),
       onTap: onTap,
@@ -30,12 +36,12 @@ class CategoryChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? const Color(0xFF8E3CF7)
-              : Colors.white.withValues(alpha: 0.12),
+              : unselectedBg,
           borderRadius: BorderRadius.circular(30),
           border: Border.all(
             color: isSelected
                 ? const Color(0xFF8E3CF7)
-                : AppColors.whiteShade,
+                : unselectedBorder,
           ),
           boxShadow: isSelected
               ? [
@@ -50,7 +56,7 @@ class CategoryChip extends StatelessWidget {
         child: icon != null
             ? Icon(
                 icon,
-                color: isSelected ? Colors.white : AppColors.greyText,
+                color: isSelected ? Colors.white : unselectedIcon,
                 size: 20,
               )
             : Text(
@@ -58,7 +64,7 @@ class CategoryChip extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: isSelected ? Colors.white : AppColors.black,
+                  color: isSelected ? Colors.white : unselectedText,
                 ),
               ),
       ),

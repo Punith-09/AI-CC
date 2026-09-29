@@ -325,11 +325,17 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sheetBg = isDark ? AppColors.darkCard : Colors.white;
+    final titleColor = isDark ? AppColors.darkText : AppColors.lightText;
+    final handleColor = isDark ? Colors.white24 : Colors.black12;
+    final dividerColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.78,
-      decoration: const BoxDecoration(
-        color: Color(0xFF102B36),
-        borderRadius: BorderRadius.vertical(
+      decoration: BoxDecoration(
+        color: sheetBg,
+        borderRadius: const BorderRadius.vertical(
           top: Radius.circular(24),
         ),
       ),
@@ -340,21 +346,21 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
             width: 44,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white24,
+              color: handleColor,
               borderRadius: BorderRadius.circular(20),
             ),
           ),
           const SizedBox(height: 14),
           Text(
             "Comments (${_comments.length})",
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: titleColor,
             ),
           ),
           const SizedBox(height: 8),
-          Divider(color: Colors.white.withValues(alpha: 0.08)),
+          Divider(color: dividerColor),
 
           // Comments List
           Expanded(
@@ -369,6 +375,12 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
   }
 
   Widget _buildCommentsList() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? AppColors.darkText : AppColors.lightText;
+    final textSecondary = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
+    final textTertiary = isDark ? AppColors.darkTextSecondary.withValues(alpha: 0.6) : const Color(0xFF94A3B8);
+    final dividerColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(
@@ -390,7 +402,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
             const SizedBox(height: 8),
             Text(
               _errorMessage!,
-              style: const TextStyle(color: Colors.white70, fontSize: 13),
+              style: TextStyle(color: textSecondary, fontSize: 13),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 10),
@@ -407,26 +419,26 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: const [
+          children: [
             Icon(
               Icons.chat_bubble_outline_rounded,
-              color: Colors.white24,
+              color: isDark ? Colors.white24 : Colors.black12,
               size: 48,
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Text(
               "No comments yet",
               style: TextStyle(
-                color: Colors.white70,
+                color: textSecondary,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Text(
               "Be the first to share your thoughts!",
               style: TextStyle(
-                color: Colors.white38,
+                color: textTertiary,
                 fontSize: 13,
               ),
             ),
@@ -440,7 +452,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       itemCount: _comments.length,
       separatorBuilder: (context, index) => Divider(
-        color: Colors.white.withValues(alpha: 0.04),
+        color: dividerColor,
         height: 16,
       ),
       itemBuilder: (context, index) {
@@ -461,10 +473,10 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
               Flexible(
                 child: Text(
                   displayName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
-                    color: Colors.white,
+                    color: textColor,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -480,9 +492,9 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
               const SizedBox(width: 8),
               Text(
                 comment.timeAgo,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
-                  color: Colors.white38,
+                  color: textTertiary,
                 ),
               ),
             ],
@@ -491,8 +503,8 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
             padding: const EdgeInsets.only(top: 4),
             child: Text(
               comment.comment,
-              style: const TextStyle(
-                color: Colors.white70,
+              style: TextStyle(
+                color: textSecondary,
                 fontSize: 13.5,
                 height: 1.3,
               ),
@@ -514,7 +526,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                       comment.isLiked ? Icons.favorite : Icons.favorite_border,
                       key: ValueKey('comment_like_${comment.id}_${comment.isLiked}'),
                       size: 20,
-                      color: comment.isLiked ? const Color(0xFFE940B7) : Colors.white60,
+                      color: comment.isLiked ? const Color(0xFFE940B7) : (isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8)),
                       shadows: comment.isLiked
                           ? const [
                               Shadow(
@@ -532,7 +544,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
-                        color: comment.isLiked ? const Color(0xFFE940B7) : Colors.white54,
+                        color: comment.isLiked ? const Color(0xFFE940B7) : textSecondary,
                       ),
                     ),
                   ],
@@ -546,6 +558,12 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
   }
 
   Widget _buildInputBar() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final inputBg = isDark ? AppColors.darkSurface : const Color(0xFFF1F5F9);
+    final inputBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final inputText = isDark ? AppColors.darkText : AppColors.lightText;
+    final inputHint = isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8);
+
     return SafeArea(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -566,7 +584,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
                         fontSize: 11,
                         color: remaining <= 0
                             ? const Color(0xFFF59E0B)
-                            : Colors.white38,
+                            : (isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
                         fontWeight: remaining <= 0 ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
@@ -593,74 +611,74 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
             padding: const EdgeInsets.fromLTRB(14, 2, 14, 12),
             child: Row(
               children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.card,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.08),
-                  ),
-                ),
-                child: TextField(
-                  controller: _commentController,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                  ),
-                  cursorColor: AppColors.primary,
-                  decoration: const InputDecoration(
-                    hintText: "Write a comment...",
-                    hintStyle: TextStyle(
-                      color: Colors.white38,
-                      fontSize: 14,
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 12,
-                    ),
-                  ),
-                  onSubmitted: (_) => _handlePostComment(),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  colors: [AppColors.primary, Color(0xFFCC3EFF)],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.35),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: IconButton(
-                onPressed: _isPosting ? null : _handlePostComment,
-                icon: _isPosting
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Icon(
-                        Icons.send_rounded,
-                        color: Colors.white,
-                        size: 20,
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: inputBg,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: inputBorder,
                       ),
-              ),
+                    ),
+                    child: TextField(
+                      controller: _commentController,
+                      style: TextStyle(
+                        color: inputText,
+                        fontSize: 14,
+                      ),
+                      cursorColor: AppColors.primary,
+                      decoration: InputDecoration(
+                        hintText: "Write a comment...",
+                        hintStyle: TextStyle(
+                          color: inputHint,
+                          fontSize: 14,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 12,
+                        ),
+                      ),
+                      onSubmitted: (_) => _handlePostComment(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [AppColors.primary, Color(0xFFCC3EFF)],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.35),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: IconButton(
+                    onPressed: _isPosting ? null : _handlePostComment,
+                    icon: _isPosting
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.send_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
         ],
       ),
     );

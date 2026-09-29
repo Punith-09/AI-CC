@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'core/di/injection_container.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_provider.dart';
 import 'core/routes/app_router.dart';
 import 'core/storage/local_storage.dart';
 import 'core/network/dio_client.dart';
@@ -56,6 +57,9 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
+          create: (_) => ThemeProvider(),
+        ),
+        ChangeNotifierProvider(
           create: (_) => AuthProvider(sl<AuthRepository>()),
         ),
         ChangeNotifierProvider(
@@ -103,10 +107,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+
     return MaterialApp.router(
       title: "AICC",
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeProvider.themeMode,
       routerConfig: appRouter,
     );
   }

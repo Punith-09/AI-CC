@@ -1,5 +1,4 @@
 import 'package:aicc/core/constants/app_colors.dart';
-import 'package:aicc/core/responsive/responsive_breakpoints.dart';
 import 'package:flutter/material.dart';
 
 class InfoCard extends StatelessWidget {
@@ -18,31 +17,24 @@ class InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: isDesktop ? Colors.white : AppColors.card.withOpacity(.55),
+          color: isDark ? AppColors.darkCard : Colors.white,
           borderRadius: BorderRadius.circular(22),
           border: Border.all(
-            color: isDesktop ? const Color(0xFFE2E8F0) : AppColors.border.withOpacity(.6),
+            color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
           ),
-          boxShadow: isDesktop
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 16,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(.08),
-                    blurRadius: 18,
-                  ),
-                ],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,7 +56,7 @@ class InfoCard extends StatelessWidget {
             Text(
               title,
               style: TextStyle(
-                color: isDesktop ? const Color(0xFF64748B) : AppColors.greyText,
+                color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
                 fontSize: 14,
               ),
             ),
@@ -72,7 +64,7 @@ class InfoCard extends StatelessWidget {
             Text(
               value,
               style: TextStyle(
-                color: isDesktop ? const Color(0xFF0F172A) : Colors.white,
+                color: isDark ? AppColors.darkText : const Color(0xFF0F172A),
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),

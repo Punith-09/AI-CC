@@ -1,4 +1,4 @@
-import 'package:aicc/core/responsive/responsive_breakpoints.dart';
+import 'package:aicc/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class ActivityTabBar extends StatelessWidget {
@@ -13,26 +13,28 @@ class ActivityTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     const tabs = ["All", "Matches", "Updates"];
+
+    final containerBg = isDark ? AppColors.darkCard : Colors.white;
+    final containerBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final unselectedTextColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         height: 45,
         decoration: BoxDecoration(
-          color: isDesktop ? Colors.white : const Color(0xFF0B1F2A),
+          color: containerBg,
           borderRadius: BorderRadius.circular(14),
-          border: isDesktop ? Border.all(color: const Color(0xFFE2E8F0)) : null,
-          boxShadow: isDesktop
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 6,
-                    offset: const Offset(0, 1),
-                  ),
-                ]
-              : null,
+          border: Border.all(color: containerBorder),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.12 : 0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 1),
+            ),
+          ],
         ),
         child: Row(
           children: List.generate(
@@ -44,7 +46,7 @@ class ActivityTabBar extends StatelessWidget {
                   margin: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     color: selectedIndex == index
-                        ? (isDesktop ? const Color(0xFF8E3CF7) : const Color(0xffc5bfbf))
+                        ? AppColors.buttonPrimary
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -53,8 +55,8 @@ class ActivityTabBar extends StatelessWidget {
                       tabs[index],
                       style: TextStyle(
                         color: selectedIndex == index
-                            ? (isDesktop ? Colors.white : Colors.black)
-                            : (isDesktop ? const Color(0xFF64748B) : Colors.white70),
+                            ? Colors.white
+                            : unselectedTextColor,
                         fontWeight: FontWeight.w700,
                       ),
                     ),

@@ -1,3 +1,4 @@
+import 'package:aicc/core/constants/app_colors.dart';
 import 'package:aicc/core/responsive/responsive_breakpoints.dart';
 import 'package:aicc/core/routes/app_routes.dart';
 import 'package:flutter/material.dart';
@@ -20,39 +21,38 @@ class PortfolioGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (items.isEmpty) {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
         decoration: BoxDecoration(
-          color: isDesktop ? Colors.white : const Color(0xFF103E48).withValues(alpha: 0.5),
+          color: isDark ? AppColors.darkCard : Colors.white,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isDesktop ? const Color(0xFFE2E8F0) : Colors.white.withValues(alpha: 0.08),
+            color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
           ),
-          boxShadow: isDesktop
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.12 : 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           children: [
             Icon(
               Icons.photo_library_outlined,
               size: 40,
-              color: isDesktop ? const Color(0xFF94A3B8) : Colors.white.withValues(alpha: 0.3),
+              color: isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8),
             ),
             const SizedBox(height: 12),
             Text(
               "No posts yet",
               style: TextStyle(
-                color: isDesktop ? const Color(0xFF0F172A) : Colors.white70,
+                color: isDark ? AppColors.darkText : const Color(0xFF0F172A),
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
               ),
@@ -62,7 +62,7 @@ class PortfolioGrid extends StatelessWidget {
               "Photos and videos you upload will appear here.",
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: isDesktop ? const Color(0xFF64748B) : Colors.white.withValues(alpha: 0.45),
+                color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
                 fontSize: 12,
               ),
             ),

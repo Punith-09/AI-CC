@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '../constants/app_colors.dart';
 import '../routes/app_routes.dart';
 import '../../features/auditions/presentation/providers/auditions_provider.dart';
 
@@ -189,6 +190,14 @@ class _StatTile extends StatelessWidget {
 class _TrendingAuditionsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? AppColors.darkCard : Colors.white;
+    final cardBorder = isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB);
+    final titleColor = isDark ? AppColors.darkText : const Color(0xFF0F172A);
+    final tileBg = isDark ? AppColors.darkSurface : const Color(0xFFF8FAFC);
+    final tileBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final subtitleColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
+
     return Consumer<AuditionsProvider>(
       builder: (context, provider, _) {
         final auditions = provider.auditions.take(3).toList();
@@ -196,10 +205,10 @@ class _TrendingAuditionsCard extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardBg,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: const Color(0xFFE5E7EB),
+              color: cardBorder,
               width: 1,
             ),
             boxShadow: [
@@ -219,7 +228,7 @@ class _TrendingAuditionsCard extends StatelessWidget {
                   Text(
                     "Trending Auditions",
                     style: GoogleFonts.poppins(
-                      color: const Color(0xFF0F172A),
+                      color: titleColor,
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                     ),
@@ -245,7 +254,7 @@ class _TrendingAuditionsCard extends StatelessWidget {
                   child: Text(
                     "Discover new casting calls and auditions daily.",
                     style: GoogleFonts.poppins(
-                      color: const Color(0xFF64748B),
+                      color: subtitleColor,
                       fontSize: 12,
                     ),
                   ),
@@ -265,9 +274,9 @@ class _TrendingAuditionsCard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
+                          color: tileBg,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          border: Border.all(color: tileBorder),
                         ),
                         child: Row(
                           children: [
@@ -294,7 +303,7 @@ class _TrendingAuditionsCard extends StatelessWidget {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: GoogleFonts.poppins(
-                                      color: const Color(0xFF0F172A),
+                                      color: titleColor,
                                       fontSize: 12.5,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -304,17 +313,17 @@ class _TrendingAuditionsCard extends StatelessWidget {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: GoogleFonts.poppins(
-                                      color: const Color(0xFF64748B),
+                                      color: subtitleColor,
                                       fontSize: 11,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const Icon(
+                            Icon(
                               Icons.arrow_forward_ios_rounded,
                               size: 12,
-                              color: Color(0xFF94A3B8),
+                              color: subtitleColor,
                             ),
                           ],
                         ),

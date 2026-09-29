@@ -106,9 +106,12 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
   }
 
   void _showChangeSourceSheet() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : AppColors.lightText;
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF0E2E38),
+      backgroundColor: isDark ? AppColors.darkCard : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -124,14 +127,14 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: isDark ? Colors.white24 : Colors.black12,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
                 Text(
                   'Select Photo Source',
                   style: GoogleFonts.poppins(
-                    color: Colors.white,
+                    color: textColor,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -141,7 +144,7 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
                   leading: const Icon(LucideIcons.folder, color: Color(0xFF8E3CF7)),
                   title: Text(
                     'Choose from Gallery',
-                    style: GoogleFonts.poppins(color: Colors.white),
+                    style: GoogleFonts.poppins(color: textColor),
                   ),
                   onTap: () {
                     Navigator.pop(context);
@@ -152,7 +155,7 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
                   leading: const Icon(LucideIcons.camera, color: Color(0xFFE940B7)),
                   title: Text(
                     'Take a Photo with Camera',
-                    style: GoogleFonts.poppins(color: Colors.white),
+                    style: GoogleFonts.poppins(color: textColor),
                   ),
                   onTap: () {
                     Navigator.pop(context);
@@ -244,9 +247,10 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
   @override
   Widget build(BuildContext context) {
     final isUploading = context.watch<PhotosProvider>().isUploading;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.scaffold,
+      backgroundColor: isDark ? AppColors.darkScaffold : AppColors.lightScaffold,
       body: AppBackground(
         child: SafeArea(
           child: Column(
@@ -304,6 +308,8 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
   }
 
   Widget _buildTopBar(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Stack(
@@ -348,7 +354,7 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
               style: GoogleFonts.poppins(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: Colors.white,
+                color: isDark ? Colors.white : AppColors.lightText,
                 letterSpacing: 0.2,
               ),
             ),
@@ -359,6 +365,8 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
   }
 
   Widget _buildUploadBox() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return DottedBorder(
       borderType: BorderType.RRect,
       radius: const Radius.circular(24),
@@ -369,7 +377,7 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 26),
         decoration: BoxDecoration(
-          color: const Color(0xFF0F323D).withValues(alpha: 0.7),
+          color: isDark ? const Color(0xFF0F323D).withValues(alpha: 0.7) : const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(24),
         ),
         child: _selectedImage == null ? _buildEmptyState() : _buildPreviewState(),
@@ -378,6 +386,8 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
   }
 
   Widget _buildEmptyState() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -389,7 +399,7 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
         Text(
           'Add your photo',
           style: GoogleFonts.poppins(
-            color: Colors.white,
+            color: isDark ? Colors.white : AppColors.lightText,
             fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
@@ -670,10 +680,11 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
   }
 
   Widget _buildSectionLabel(String text) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Text(
       text,
       style: GoogleFonts.poppins(
-        color: Colors.white,
+        color: isDark ? Colors.white : AppColors.lightText,
         fontSize: 14.5,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.2,
@@ -686,24 +697,26 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
     required String hintText,
     required IconData icon,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF0F323D),
+        color: isDark ? const Color(0xFF0F323D) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
         ),
       ),
       child: TextField(
         controller: controller,
         style: GoogleFonts.poppins(
-          color: Colors.white,
+          color: isDark ? Colors.white : AppColors.lightText,
           fontSize: 14.5,
         ),
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: GoogleFonts.poppins(
-            color: AppColors.greyText.withValues(alpha: 0.7),
+            color: isDark ? AppColors.greyText.withValues(alpha: 0.7) : const Color(0xFF94A3B8),
             fontSize: 14,
           ),
           prefixIcon: Icon(
@@ -730,25 +743,27 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
     required TextEditingController controller,
     required String hintText,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF0F323D),
+        color: isDark ? const Color(0xFF0F323D) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
         ),
       ),
       child: TextField(
         controller: controller,
         maxLines: 5,
         style: GoogleFonts.poppins(
-          color: Colors.white,
+          color: isDark ? Colors.white : AppColors.lightText,
           fontSize: 14.5,
         ),
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: GoogleFonts.poppins(
-            color: AppColors.greyText.withValues(alpha: 0.7),
+            color: isDark ? AppColors.greyText.withValues(alpha: 0.7) : const Color(0xFF94A3B8),
             fontSize: 14,
           ),
           border: InputBorder.none,

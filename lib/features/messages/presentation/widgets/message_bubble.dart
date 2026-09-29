@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/api/api_endpoints.dart';
+import '../../../../core/constants/app_colors.dart';
 
 class MessageBubble extends StatelessWidget {
   final bool isSender;
@@ -18,6 +19,15 @@ class MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Receiver bubble colors
+    final receiverBubbleBg = isDark ? AppColors.darkCard : const Color(0xFFF1F5F9);
+    final receiverBubbleBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final receiverTextColor = isDark ? AppColors.darkText : const Color(0xFF111827);
+    final receiverTimeColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
+    final avatarBg = isDark ? AppColors.darkSurface : const Color(0xFFF1F5F9);
+    final avatarIconColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
+
     return Align(
       alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
       child: Row(
@@ -28,7 +38,7 @@ class MessageBubble extends StatelessWidget {
           if (!isSender) ...[
             CircleAvatar(
               radius: 15,
-              backgroundColor: const Color(0xFFF1F5F9),
+              backgroundColor: avatarBg,
               child: participantAvatar.isNotEmpty
                   ? ClipOval(
                       child: CachedNetworkImage(
@@ -36,14 +46,14 @@ class MessageBubble extends StatelessWidget {
                         width: 30,
                         height: 30,
                         fit: BoxFit.cover,
-                        errorWidget: (ctx, url, err) => const Icon(
+                        errorWidget: (ctx, url, err) => Icon(
                           Icons.person,
                           size: 15,
-                          color: Color(0xFF64748B),
+                          color: avatarIconColor,
                         ),
                       ),
                     )
-                  : const Icon(Icons.person, size: 15, color: Color(0xFF64748B)),
+                  : Icon(Icons.person, size: 15, color: avatarIconColor),
             ),
             const SizedBox(width: 8),
           ],
@@ -53,7 +63,7 @@ class MessageBubble extends StatelessWidget {
               constraints: const BoxConstraints(maxWidth: 320),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: isSender ? const Color(0xFF7C3AED) : const Color(0xFFF1F5F9),
+                color: isSender ? AppColors.buttonPrimary : receiverBubbleBg,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(18),
                   topRight: const Radius.circular(18),
@@ -61,7 +71,7 @@ class MessageBubble extends StatelessWidget {
                   bottomRight: Radius.circular(isSender ? 4 : 18),
                 ),
                 border: Border.all(
-                  color: isSender ? const Color(0xFF7C3AED) : const Color(0xFFE2E8F0),
+                  color: isSender ? AppColors.buttonPrimary : receiverBubbleBorder,
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -77,7 +87,7 @@ class MessageBubble extends StatelessWidget {
                   Text(
                     message,
                     style: TextStyle(
-                      color: isSender ? Colors.white : const Color(0xFF111827),
+                      color: isSender ? Colors.white : receiverTextColor,
                       fontSize: 15,
                       height: 1.4,
                     ),
@@ -92,7 +102,7 @@ class MessageBubble extends StatelessWidget {
                         style: TextStyle(
                           color: isSender
                               ? Colors.white.withValues(alpha: 0.8)
-                              : const Color(0xFF64748B),
+                              : receiverTimeColor,
                           fontSize: 11,
                         ),
                       ),

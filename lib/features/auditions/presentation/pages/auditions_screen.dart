@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../apply_job/presentation/providers/apply_job_provider.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../providers/auditions_provider.dart';
@@ -95,8 +96,12 @@ class _AuditionScreenState extends State<AuditionScreen> {
     final appliedCount = applyJobProvider.applications.length;
     final displayedAuditions = _filterAuditions(auditionsProvider.auditions);
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
-    final titleColor = isDesktop ? const Color(0xFF0F172A) : Colors.white;
-    final sectionTitleColor = isDesktop ? const Color(0xFF0F172A) : Colors.white;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleColor = isDark ? AppColors.darkText : AppColors.lightText;
+    final sectionTitleColor = isDark ? AppColors.darkText : AppColors.lightText;
+    final cardBg = isDark ? AppColors.darkCard : Colors.white;
+    final cardBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final subtitleColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
 
     final content = Column(
       children: [
@@ -125,13 +130,8 @@ class _AuditionScreenState extends State<AuditionScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
-                        color: isDesktop
-                            ? const Color(0xFF8E3CF7)
-                            : Colors.white.withValues(alpha: 0.15),
+                        color: AppColors.buttonPrimary,
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isDesktop ? Colors.transparent : Colors.white24,
-                        ),
                       ),
                       child: const Row(
                         children: [
@@ -154,239 +154,234 @@ class _AuditionScreenState extends State<AuditionScreen> {
 
               const SizedBox(height: 18),
 
-                    AuditionSearchBar(
-                      controller: _searchController,
-                      onChanged: _onSearchChanged,
-                      onClear: _clearSearch,
-                    ),
-
-                    const SizedBox(height: 18),
-
-                    AuditionChips(
-                      categories: categories,
-                      selectedIndex: selectedIndex,
-                      onSelected: _onCategorySelected,
-                    ),
-
-                    const SizedBox(height: 15),
-                  ],
-                ),
+              AuditionSearchBar(
+                controller: _searchController,
+                onChanged: _onSearchChanged,
+                onClear: _clearSearch,
               ),
 
-              /// Scrollable Content Below
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
+              const SizedBox(height: 18),
+
+              AuditionChips(
+                categories: categories,
+                selectedIndex: selectedIndex,
+                onSelected: _onCategorySelected,
+              ),
+
+              const SizedBox(height: 15),
+            ],
+          ),
+        ),
+
+        /// Scrollable Content Below
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              children: [
+                AnalyticsCard(appliedCount: appliedCount),
+
+                const SizedBox(height: 24),
+
+                // =======================================================
+                // MY POSTED AUDITIONS
+                // =======================================================
+                if (auditionsProvider.isMyPostedLoading)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  )
+                else if (auditionsProvider.myPostedAuditions.isNotEmpty) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      AnalyticsCard(appliedCount: appliedCount),
-
-                      const SizedBox(height: 24),
-
-                      // =======================================================
-                      // MY POSTED AUDITIONS
-                      // =======================================================
-                      if (auditionsProvider.isMyPostedLoading)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          child: Center(
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                          ),
-                        )
-                      else if (auditionsProvider.myPostedAuditions.isNotEmpty) ...[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "My Posted Auditions",
-                              style: TextStyle(
-                                color: sectionTitleColor,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+                      Text(
+                        "My Posted Auditions",
+                        style: TextStyle(
+                          color: sectionTitleColor,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        "${auditionsProvider.myPostedAuditions.length}",
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  ...auditionsProvider.myPostedAuditions.map((audition) {
+                    final applicantsCount = audition.applicantsCount;
+                    final loc = audition.location.isNotEmpty ? audition.location : 'Location N/A';
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () {
+                          context.push(
+                            AppRoutes.auditionDetails,
+                            extra: audition,
+                          );
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: cardBg,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: cardBorder,
+                              width: 1,
                             ),
-                            Text(
-                              "${auditionsProvider.myPostedAuditions.length}",
-                              style: const TextStyle(
-                                color: Color(0xFF4AD0FB),
-                                fontSize: 14,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                audition.title,
+                                style: TextStyle(
+                                  color: titleColor,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                "$applicantsCount applicant(s) · $loc",
+                                style: TextStyle(
+                                  color: subtitleColor,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: 20),
+                ],
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Top Matches for You",
+                      style: TextStyle(
+                        color: sectionTitleColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                if (auditionsProvider.isLoading)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 32),
+                    child: Center(
+                      child: CircularProgressIndicator(color: AppColors.primary),
+                    ),
+                  )
+                else if (auditionsProvider.errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 32),
+                    child: Center(
+                      child: Text(
+                        auditionsProvider.errorMessage!,
+                        style: const TextStyle(color: Colors.redAccent, fontSize: 14),
+                      ),
+                    ),
+                  )
+                else if (_searchQuery.trim().isNotEmpty && displayedAuditions.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 36),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.search_off_rounded,
+                            size: 48,
+                            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            "No auditions matching \"$_searchQuery\"",
+                            style: TextStyle(
+                              color: isDark ? AppColors.darkTextSecondary : const Color(0xFF334155),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 10),
+                          TextButton(
+                            onPressed: _clearSearch,
+                            child: const Text(
+                              "Clear search",
+                              style: TextStyle(
+                                color: AppColors.primary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 14),
-                        ...auditionsProvider.myPostedAuditions.map((audition) {
-                          final applicantsCount = audition.applicantsCount;
-                          final loc = audition.location.isNotEmpty ? audition.location : 'Location N/A';
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(16),
-                              onTap: () {
-                                context.push(
-                                  AppRoutes.auditionDetails,
-                                  extra: audition,
-                                );
-                              },
-                              child: Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                                decoration: BoxDecoration(
-                                  color: isDesktop
-                                      ? Colors.white
-                                      : const Color(0xFF143E4D).withValues(alpha: 0.8),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: isDesktop
-                                        ? const Color(0xFFE2E8F0)
-                                        : Colors.white.withValues(alpha: 0.15),
-                                    width: 1,
-                                  ),
-                                  boxShadow: isDesktop
-                                      ? [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(alpha: 0.03),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ]
-                                      : null,
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      audition.title,
-                                      style: TextStyle(
-                                        color: isDesktop ? const Color(0xFF0F172A) : Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 5),
-                                    Text(
-                                      "$applicantsCount applicant(s) · $loc",
-                                      style: TextStyle(
-                                        color: isDesktop
-                                            ? const Color(0xFF64748B)
-                                            : const Color(0xFFB0B6C4),
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        }),
-                        const SizedBox(height: 20),
-                      ],
-
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Top Matches for You",
-                            style: TextStyle(
-                              color: sectionTitleColor,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
                           ),
                         ],
                       ),
+                    ),
+                  )
+                else
+                  AuditionCards(auditions: displayedAuditions),
 
-                      const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
-                      if (auditionsProvider.isLoading)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 32),
-                          child: Center(
-                            child: CircularProgressIndicator(color: Colors.white),
-                          ),
-                        )
-                      else if (auditionsProvider.errorMessage != null)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 32),
-                          child: Center(
-                            child: Text(
-                              auditionsProvider.errorMessage!,
-                              style: const TextStyle(color: Colors.redAccent, fontSize: 14),
-                            ),
-                          ),
-                        )
-                      else if (_searchQuery.trim().isNotEmpty && displayedAuditions.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 36),
-                          child: Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.search_off_rounded,
-                                  size: 48,
-                                  color: Colors.white38,
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  "No auditions matching \"$_searchQuery\"",
-                                  style: TextStyle(
-                                    color: isDesktop ? const Color(0xFF334155) : Colors.white70,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 10),
-                                TextButton(
-                                  onPressed: _clearSearch,
-                                  child: const Text(
-                                    "Clear search",
-                                    style: TextStyle(
-                                      color: Color(0xFF4AD0FB),
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      else
-                        AuditionCards(auditions: displayedAuditions),
-
-                      const SizedBox(height: 24),
-
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "New Auditions",
-                            style: TextStyle(
-                              color: sectionTitleColor,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "New Auditions",
+                      style: TextStyle(
+                        color: sectionTitleColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
-
-                      const SizedBox(height: 16),
-
-                      NewAuditionCard(
-                        onPressed: () {
-                          context.push(AppRoutes.post);
-                        },
-                      ),
-
-                      const SizedBox(height: 100),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          );
+
+                const SizedBox(height: 16),
+
+                NewAuditionCard(
+                  onPressed: () {
+                    context.push(AppRoutes.post);
+                  },
+                ),
+
+                const SizedBox(height: 100),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
 
     if (isDesktop) {
       return Scaffold(
@@ -401,17 +396,7 @@ class _AuditionScreenState extends State<AuditionScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF1F5A6A),
-              Color(0xFF123B4A),
-              Color(0xFF0B1F2A),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+        color: Theme.of(context).scaffoldBackgroundColor,
         child: SafeArea(
           child: content,
         ),

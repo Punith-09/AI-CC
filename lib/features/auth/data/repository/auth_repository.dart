@@ -7,13 +7,13 @@ import '../datasource/google_auth_datasource.dart';
 
 abstract class AuthRepository {
   Future<LoginResponse> login(
-      String email,
-      String password,
-      );
+    String identifier,
+    String password,
+  );
 
   Future<LoginResponse> register(
-      RegisterRequest request,
-      );
+    RegisterRequest request,
+  );
 
   Future<void> loginWithGoogle();
 
@@ -28,10 +28,10 @@ class AuthRepositoryImpl implements AuthRepository {
   final LocalStorage _localStorage;
 
   AuthRepositoryImpl(
-      this._remoteDataSource,
-      this._googleAuthDataSource,
-      this._localStorage,
-      );
+    this._remoteDataSource,
+    this._googleAuthDataSource,
+    this._localStorage,
+  );
 
   // ============================
   // LOGIN
@@ -39,11 +39,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<LoginResponse> login(
-      String email,
-      String password,
-      ) async {
+    String identifier,
+    String password,
+  ) async {
     final response = await _remoteDataSource.login(
-      email,
+      identifier,
       password,
     );
 
@@ -52,31 +52,73 @@ class AuthRepositoryImpl implements AuthRepository {
         response.token,
       );
 
-      await _localStorage.saveUserEmail(
-        email,
-      );
+      final user = response.userModel;
+      final userMap = response.user;
 
-      if (response.user != null) {
-        final userId = response.user!['_id'] ??
-            response.user!['id'] ??
-            response.user!['userId'];
+      if (user != null) {
+        if (user.id.isNotEmpty) {
+          await _localStorage.saveUserId(user.id);
+        }
+        if (user.email.isNotEmpty) {
+          await _localStorage.saveUserEmail(user.email);
+        }
+        if (user.fullName.isNotEmpty) {
+          await _localStorage.saveUserName(user.fullName);
+        }
+        if (user.profilePhoto != null && user.profilePhoto!.isNotEmpty) {
+          await _localStorage.saveUserProfilePhoto(user.profilePhoto!);
+        }
+        if (user.role != null && user.role!.isNotEmpty) {
+          await _localStorage.saveUserRole(user.role!);
+        }
+        if (user.trkCode != null && user.trkCode!.isNotEmpty) {
+          await _localStorage.saveUserTrkCode(user.trkCode!);
+        }
+        if (user.mobile != null && user.mobile!.isNotEmpty) {
+          await _localStorage.saveUserMobile(user.mobile!);
+        }
+        if (userMap != null) {
+          await _localStorage.saveUserData(userMap);
+        }
+      } else if (userMap != null) {
+        final userId = userMap['_id'] ?? userMap['id'] ?? userMap['userId'];
         if (userId != null && userId.toString().isNotEmpty) {
           await _localStorage.saveUserId(userId.toString());
         }
 
-        final name = response.user!['fullName'] ??
-            response.user!['name'] ??
-            response.user!['username'];
+        final email = userMap['email'] ?? identifier;
+        if (email != null && email.toString().isNotEmpty) {
+          await _localStorage.saveUserEmail(email.toString());
+        }
+
+        final name = userMap['fullName'] ?? userMap['name'] ?? userMap['username'];
         if (name != null && name.toString().isNotEmpty) {
           await _localStorage.saveUserName(name.toString());
         }
 
-        final photo = response.user!['profilePhoto'] ??
-            response.user!['profile_photo'] ??
-            response.user!['avatar'];
+        final photo = userMap['profilePhoto'] ?? userMap['profile_photo'] ?? userMap['avatar'];
         if (photo != null && photo.toString().isNotEmpty) {
           await _localStorage.saveUserProfilePhoto(photo.toString());
         }
+
+        final role = userMap['role'];
+        if (role != null && role.toString().isNotEmpty) {
+          await _localStorage.saveUserRole(role.toString());
+        }
+
+        final trkCode = userMap['trkCode'] ?? userMap['trk_code'];
+        if (trkCode != null && trkCode.toString().isNotEmpty) {
+          await _localStorage.saveUserTrkCode(trkCode.toString());
+        }
+
+        final mobile = userMap['mobile'];
+        if (mobile != null && mobile.toString().isNotEmpty) {
+          await _localStorage.saveUserMobile(mobile.toString());
+        }
+
+        await _localStorage.saveUserData(userMap);
+      } else {
+        await _localStorage.saveUserEmail(identifier);
       }
     }
 

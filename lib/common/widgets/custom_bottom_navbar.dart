@@ -38,6 +38,8 @@ class CustomBottomNavbar extends StatelessWidget {
   Widget build(BuildContext context) {
     final index = currentIndex;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return SizedBox(
       height: 82,
       child: Stack(
@@ -51,16 +53,19 @@ class CustomBottomNavbar extends StatelessWidget {
             child: Container(
               height: 72,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? AppColors.darkCard : Colors.white,
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(24),
                 ),
-                border: const Border(
-                  top: BorderSide(color: AppColors.divider, width: 1),
+                border: Border(
+                  top: BorderSide(
+                    color: isDark ? AppColors.darkBorder : AppColors.divider,
+                    width: 1,
+                  ),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
+                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
                     blurRadius: 12,
                     offset: const Offset(0, -3),
                   ),
@@ -167,6 +172,9 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final unselectedColor = isDark ? AppColors.darkTextSecondary : AppColors.hint;
+
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -177,14 +185,14 @@ class _NavItem extends StatelessWidget {
             Icon(
               icon,
               size: 24,
-              color: selected ? AppColors.primary : AppColors.hint,
+              color: selected ? AppColors.primary : unselectedColor,
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
                 fontSize: 11,
-                color: selected ? AppColors.primary : AppColors.hint,
+                color: selected ? AppColors.primary : unselectedColor,
               ),
             ),
           ],

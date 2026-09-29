@@ -20,14 +20,26 @@ class ChatInput extends StatefulWidget {
 class _ChatInputState extends State<ChatInput> {
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final containerBg = isDark ? AppColors.darkCard : Colors.white;
+    final borderTopColor = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final inputFieldBg = isDark ? AppColors.darkTextField : const Color(0xFFF8FAFC);
+    final inputBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final textColor = isDark ? AppColors.darkText : const Color(0xFF111827);
+    final hintColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8);
+    final attachIconColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
+    final micBg = isDark ? AppColors.darkSurface : const Color(0xFFF1F5F9);
+    final micBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final micIconColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF475569);
+
     return SafeArea(
       top: false,
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: const Border(
-            top: BorderSide(color: Color(0xFFE2E8F0), width: 1),
+          color: containerBg,
+          border: Border(
+            top: BorderSide(color: borderTopColor, width: 1),
           ),
           boxShadow: [
             BoxShadow(
@@ -44,14 +56,14 @@ class _ChatInputState extends State<ChatInput> {
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: const [
-                  _QuickActionChip(icon: Icons.folder_open, title: "Portfolio"),
-                  SizedBox(width: 8),
-                  _QuickActionChip(icon: Icons.calendar_today, title: "Schedule"),
-                  SizedBox(width: 8),
-                  _QuickActionChip(icon: Icons.person_outline, title: "Profile"),
-                  SizedBox(width: 8),
-                  _QuickActionChip(icon: Icons.video_camera_back_outlined, title: "Audition"),
+                children: [
+                  _QuickActionChip(icon: Icons.folder_open, title: "Portfolio", isDark: isDark),
+                  const SizedBox(width: 8),
+                  _QuickActionChip(icon: Icons.calendar_today, title: "Schedule", isDark: isDark),
+                  const SizedBox(width: 8),
+                  _QuickActionChip(icon: Icons.person_outline, title: "Profile", isDark: isDark),
+                  const SizedBox(width: 8),
+                  _QuickActionChip(icon: Icons.video_camera_back_outlined, title: "Audition", isDark: isDark),
                 ],
               ),
             ),
@@ -62,27 +74,27 @@ class _ChatInputState extends State<ChatInput> {
               children: [
                 IconButton(
                   onPressed: () {},
-                  icon: const Icon(Icons.attach_file, color: Color(0xFF64748B)),
+                  icon: Icon(Icons.attach_file, color: attachIconColor),
                 ),
 
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
+                      color: inputFieldBg,
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      border: Border.all(color: inputBorder),
                     ),
                     child: TextField(
                       controller: widget.controller,
-                      style: const TextStyle(
-                        color: Color(0xFF111827),
+                      style: TextStyle(
+                        color: textColor,
                         fontSize: 14.5,
                       ),
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => widget.onSend?.call(),
                       decoration: InputDecoration(
                         hintText: "Type a message...",
-                        hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
+                        hintStyle: TextStyle(color: hintColor),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
@@ -92,9 +104,9 @@ class _ChatInputState extends State<ChatInput> {
                         ),
                         suffixIcon: IconButton(
                           onPressed: () {},
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.emoji_emotions_outlined,
-                            color: Color(0xFF94A3B8),
+                            color: hintColor,
                           ),
                         ),
                       ),
@@ -136,13 +148,13 @@ class _ChatInputState extends State<ChatInput> {
 
                 Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
+                    color: micBg,
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: micBorder),
                   ),
                   child: IconButton(
                     onPressed: () {},
-                    icon: const Icon(Icons.mic_none, color: Color(0xFF475569), size: 20),
+                    icon: Icon(Icons.mic_none, color: micIconColor, size: 20),
                   ),
                 ),
               ],
@@ -157,17 +169,22 @@ class _ChatInputState extends State<ChatInput> {
 class _QuickActionChip extends StatelessWidget {
   final IconData icon;
   final String title;
+  final bool isDark;
 
-  const _QuickActionChip({required this.icon, required this.title});
+  const _QuickActionChip({required this.icon, required this.title, this.isDark = false});
 
   @override
   Widget build(BuildContext context) {
+    final chipBg = isDark ? AppColors.darkSurface : const Color(0xFFF1F5F9);
+    final chipBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final textColor = isDark ? AppColors.darkText : const Color(0xFF111827);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: chipBg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: chipBorder),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -176,8 +193,8 @@ class _QuickActionChip extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             title,
-            style: const TextStyle(
-              color: Color(0xFF111827),
+            style: TextStyle(
+              color: textColor,
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
             ),

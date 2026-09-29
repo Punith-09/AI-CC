@@ -50,6 +50,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   Widget build(BuildContext context) {
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleColor = isDark ? AppColors.darkText : AppColors.lightText;
+    final subtitleColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
+    final popupMenuColor = isDark ? AppColors.darkCard : Colors.white;
+    final popupMenuBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
 
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,7 +74,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: _SearchBar(
             controller: _searchController,
-            isDesktop: isDesktop,
+            isDark: isDark,
             onChanged: (q) =>
                 context.read<ExploreProvider>().onSearchChanged(q),
           ),
@@ -89,7 +94,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
             itemBuilder: (_, i) => _CategoryChip(
               category: categories[i],
               isSelected: _selectedCategoryIndex == i,
-              isDesktop: isDesktop,
+              isDark: isDark,
               onTap: () => _onCategoryTap(i),
             ),
           ),
@@ -106,7 +111,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               Text(
                 'TOP MATCHES NEAR YOU',
                 style: GoogleFonts.poppins(
-                  color: isDesktop ? const Color(0xFF0F172A) : Colors.white,
+                  color: titleColor,
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.6,
@@ -115,16 +120,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
               Consumer<ExploreProvider>(
                 builder: (context, provider, _) {
                   return PopupMenuButton<String>(
-                    color: isDesktop ? Colors.white : const Color(0xFF1A1A2E),
+                    color: popupMenuColor,
                     initialValue: provider.selectedLocation,
                     onSelected: (String newValue) {
                       provider.onLocationChanged(newValue);
                     },
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
-                      side: isDesktop
-                          ? const BorderSide(color: Color(0xFFE2E8F0))
-                          : BorderSide.none,
+                      side: BorderSide(color: popupMenuBorder),
                     ),
                     itemBuilder: (BuildContext context) {
                       return <String>[
@@ -146,125 +149,125 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           child: Text(
                             value,
                             style: GoogleFonts.poppins(
-                              color: isDesktop
-                                  ? const Color(0xFF0F172A)
-                                  : Colors.white,
+                              color: isDark ? AppColors.darkText : AppColors.lightText,
                               fontSize: 14,
                             ),
                           ),
                         );
                       }).toList();
                     },
-                          child: Row(
-                            children: [
-                              const Icon(
-                                LucideIcons.mapPin,
-                                color: AppColors.primary,
-                                size: 15,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                provider.selectedLocation.isEmpty ? 'Anywhere' : provider.selectedLocation,
-                                style: GoogleFonts.poppins(
-                                  color: AppColors.primary,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(width: 2),
-                              const Icon(
-                                Icons.arrow_drop_down,
-                                color: AppColors.primary,
-                                size: 16,
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // ── Grid ─────────────────────────────────────────────
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Consumer<ExploreProvider>(
-                    builder: (context, provider, _) {
-                      if (provider.isLoading) {
-                        return const Center(
-                          child: CircularProgressIndicator(
+                    child: Row(
+                      children: [
+                        const Icon(
+                          LucideIcons.mapPin,
+                          color: AppColors.primary,
+                          size: 15,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          provider.selectedLocation.isEmpty ? 'Anywhere' : provider.selectedLocation,
+                          style: GoogleFonts.poppins(
                             color: AppColors.primary,
-                            strokeWidth: 2.5,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
                           ),
-                        );
-                      }
-
-                      if (provider.error != null) {
-                        return Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  LucideIcons.wifiOff,
-                                  color: Colors.white38,
-                                  size: 40,
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  provider.error!,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(color: Colors.white60),
-                                ),
-                                const SizedBox(height: 16),
-                                TextButton(
-                                  onPressed: () => provider.fetchExploreUsers(),
-                                  child: const Text(
-                                    'Retry',
-                                    style: TextStyle(color: AppColors.primary),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }
-
-                      if (provider.talents.isEmpty) {
-                        return Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                LucideIcons.users,
-                                color: Colors.white24,
-                                size: 48,
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                'No talent found',
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white38,
-                                  fontSize: 15,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-
-                      return TalentGrid(talents: provider.talents);
-                    },
-                  ),
-                ),
+                        ),
+                        const SizedBox(width: 2),
+                        const Icon(
+                          Icons.arrow_drop_down,
+                          color: AppColors.primary,
+                          size: 16,
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ],
-          );
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // ── Grid ─────────────────────────────────────────────
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Consumer<ExploreProvider>(
+              builder: (context, provider, _) {
+                if (provider.isLoading) {
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.primary,
+                      strokeWidth: 2.5,
+                    ),
+                  );
+                }
+
+                if (provider.error != null) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            LucideIcons.wifiOff,
+                            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8),
+                            size: 40,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            provider.error!,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextButton(
+                            onPressed: () => provider.fetchExploreUsers(),
+                            child: const Text(
+                              'Retry',
+                              style: TextStyle(color: AppColors.primary),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                if (provider.talents.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          LucideIcons.users,
+                          color: isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8),
+                          size: 48,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No talent found',
+                          style: GoogleFonts.poppins(
+                            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return TalentGrid(talents: provider.talents);
+              },
+            ),
+          ),
+        ),
+      ],
+    );
 
     if (isDesktop) {
       return Scaffold(
@@ -290,12 +293,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
 class _SearchBar extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
-  final bool isDesktop;
+  final bool isDark;
 
   const _SearchBar({
     required this.controller,
     required this.onChanged,
-    this.isDesktop = false,
+    this.isDark = false,
   });
 
   @override
@@ -303,32 +306,28 @@ class _SearchBar extends StatelessWidget {
     return Container(
       height: 50,
       decoration: BoxDecoration(
-        color: isDesktop ? Colors.white : const Color(0xFF0D2533),
+        color: isDark ? AppColors.darkTextField : Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isDesktop
-              ? const Color(0xFFE2E8F0)
-              : AppColors.primary.withValues(alpha: 0.25),
+          color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
           width: 1,
         ),
-        boxShadow: isDesktop
-            ? [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ]
-            : null,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.1 : 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: TextField(
         controller: controller,
         onChanged: onChanged,
         style: GoogleFonts.poppins(
-          color: isDesktop ? const Color(0xFF0F172A) : Colors.white,
+          color: isDark ? AppColors.darkText : AppColors.lightText,
           fontSize: 14,
         ),
-        cursorColor: isDesktop ? const Color(0xFF8E3CF7) : AppColors.primary,
+        cursorColor: AppColors.primary,
         decoration: InputDecoration(
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
@@ -337,12 +336,12 @@ class _SearchBar extends StatelessWidget {
           contentPadding: const EdgeInsets.symmetric(vertical: 14),
           prefixIcon: Icon(
             LucideIcons.search,
-            color: isDesktop ? const Color(0xFF94A3B8) : AppColors.hint,
+            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8),
             size: 20,
           ),
           hintText: 'Search by name, role or skills...',
           hintStyle: GoogleFonts.poppins(
-            color: isDesktop ? const Color(0xFF94A3B8) : AppColors.hint,
+            color: isDark ? AppColors.darkTextSecondary : AppColors.hint,
             fontSize: 13.5,
           ),
         ),
@@ -357,13 +356,13 @@ class _SearchBar extends StatelessWidget {
 class _CategoryChip extends StatelessWidget {
   final ExploreCategory category;
   final bool isSelected;
-  final bool isDesktop;
+  final bool isDark;
   final VoidCallback onTap;
 
   const _CategoryChip({
     required this.category,
     required this.isSelected,
-    this.isDesktop = false,
+    this.isDark = false,
     required this.onTap,
   });
 
@@ -371,15 +370,10 @@ class _CategoryChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasIcon = category.icon != null && category.title.isEmpty;
 
-    final unselectedBg = isDesktop
-        ? Colors.white
-        : Colors.white.withValues(alpha: 0.12);
-    final unselectedBorder = isDesktop
-        ? const Color(0xFFE2E8F0)
-        : Colors.white.withValues(alpha: 0.08);
-    final unselectedText = isDesktop
-        ? const Color(0xFF475569)
-        : Colors.white;
+    final unselectedBg = isDark ? AppColors.darkCard : Colors.white;
+    final unselectedBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final unselectedText = isDark ? AppColors.darkTextSecondary : const Color(0xFF475569);
+    final unselectedIconColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
 
     return GestureDetector(
       onTap: onTap,
@@ -391,38 +385,34 @@ class _CategoryChip extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFF8E3CF7)
+              ? AppColors.buttonPrimary
               : unselectedBg,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFF8E3CF7)
-                : AppColors.whiteShade,
+                ? AppColors.buttonPrimary
+                : unselectedBorder,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: const Color(0xFF8E3CF7).withValues(alpha: 0.35),
+                    color: AppColors.buttonPrimary.withValues(alpha: 0.35),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ]
-              : (isDesktop
-                  ? [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
-                      ),
-                    ]
-                  : null),
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.1 : 0.03),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
         ),
         child: hasIcon
             ? Icon(
                 category.icon!,
-                color: isSelected
-                    ? Colors.white
-                    : (isDesktop ? const Color(0xFF64748B) : AppColors.hint),
+                color: isSelected ? Colors.white : unselectedIconColor,
                 size: 18,
               )
             : Text(

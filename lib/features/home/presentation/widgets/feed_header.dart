@@ -48,11 +48,12 @@ class FeedHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
-    final titleColor = AppColors.black;
-    final subColor = AppColors.black;
-    final accentColor = isDesktop ? const Color(0xFF8E3CF7) : AppColors.primary;
-    final iconColor = AppColors.black;
+    final titleColor = isDark ? AppColors.darkText : AppColors.black;
+    final subColor = isDark ? AppColors.darkTextSecondary : AppColors.greyText;
+    final accentColor = AppColors.primary;
+    final iconColor = isDark ? AppColors.darkTextSecondary : AppColors.black;
 
     return Container(
       padding: const EdgeInsets.only(left: 16, top: 16, right: 16, bottom: 0),
@@ -150,14 +151,14 @@ class FeedHeader extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: const Color(0xFF8E3CF7),
+                  color: AppColors.primary,
                   width: 1.2,
                 ),
               ),
               child: const Text(
                 'Follow',
                 style: TextStyle(
-                  color: Color(0xFF8E3CF7),
+                  color: AppColors.primary,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),

@@ -1,4 +1,4 @@
-import 'package:aicc/core/responsive/responsive_breakpoints.dart';
+import 'package:aicc/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../data/models/activity_model.dart';
 
@@ -12,22 +12,28 @@ class ActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? AppColors.darkCard : Colors.white;
+    final cardBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final titleColor = isDark ? AppColors.darkText : const Color(0xFF0F172A);
+    final subtitleColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
+    final timeColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8);
+    final avatarBg = isDark ? AppColors.darkSurface : const Color(0xFFF1F5F9);
+    final avatarIconColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
+    final chevronColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8);
 
     return Container(
       decoration: BoxDecoration(
-        color: isDesktop ? Colors.white : const Color(0xFF0B1F2A),
+        color: cardBg,
         borderRadius: BorderRadius.circular(18),
-        border: isDesktop ? Border.all(color: const Color(0xFFE2E8F0)) : null,
-        boxShadow: isDesktop
-            ? [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ]
-            : null,
+        border: Border.all(color: cardBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -50,10 +56,10 @@ class ActivityCard extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 24,
-                    backgroundColor: isDesktop ? const Color(0xFFF1F5F9) : Colors.grey,
+                    backgroundColor: avatarBg,
                     child: Icon(
                       Icons.person,
-                      color: isDesktop ? const Color(0xFF64748B) : Colors.white,
+                      color: avatarIconColor,
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -67,7 +73,7 @@ class ActivityCard extends StatelessWidget {
                               child: Text(
                                 activity.title,
                                 style: TextStyle(
-                                  color: isDesktop ? const Color(0xFF0F172A) : Colors.white,
+                                  color: titleColor,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 17,
                                 ),
@@ -76,7 +82,7 @@ class ActivityCard extends StatelessWidget {
                             Text(
                               activity.time,
                               style: TextStyle(
-                                color: isDesktop ? const Color(0xFF94A3B8) : Colors.white54,
+                                color: timeColor,
                                 fontSize: 12,
                               ),
                             )
@@ -86,7 +92,7 @@ class ActivityCard extends StatelessWidget {
                         Text(
                           activity.subtitle,
                           style: TextStyle(
-                            color: isDesktop ? const Color(0xFF64748B) : Colors.white70,
+                            color: subtitleColor,
                             height: 1.4,
                           ),
                         ),
@@ -112,7 +118,7 @@ class ActivityCard extends StatelessWidget {
                   ),
                   Icon(
                     Icons.chevron_right,
-                    color: isDesktop ? const Color(0xFF94A3B8) : Colors.white30,
+                    color: chevronColor,
                   )
                 ],
               ),

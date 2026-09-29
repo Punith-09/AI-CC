@@ -159,9 +159,11 @@ class _PostScreenState extends State<PostScreen> {
   @override
   Widget build(BuildContext context) {
     final auditionsProvider = context.watch<AuditionsProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? AppColors.white : AppColors.lightText;
 
     return Scaffold(
-      backgroundColor:AppColors.scaffold,
+      backgroundColor: isDark ? AppColors.darkScaffold : AppColors.lightScaffold,
       body: AppBackground(
         child: SafeArea(
           child: SingleChildScrollView(
@@ -190,10 +192,10 @@ class _PostScreenState extends State<PostScreen> {
                             minimumSize: const Size(50, 36),
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          child:  IconButton(
-                            icon: const Icon(
+                          child: IconButton(
+                            icon: Icon(
                               LucideIcons.chevronLeft,
-                              color: AppColors.white,
+                              color: textColor,
                               size: 24,
                             ),
                             onPressed: () {
@@ -206,12 +208,12 @@ class _PostScreenState extends State<PostScreen> {
                           ),
                         ),
                       ),
-                      const Center(
+                      Center(
                         child: Text(
                           'Post New Audition',
                           style: TextStyle(
                             fontSize: 20,
-                            color: AppColors.white,
+                            color: textColor,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -249,12 +251,12 @@ class _PostScreenState extends State<PostScreen> {
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? Colors.deepPurpleAccent
-                                : const Color(0xff1F1F27),
+                                : (isDark ? const Color(0xff1F1F27) : const Color(0xFFF1F5F9)),
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
                               color: isSelected
                                   ? Colors.deepPurpleAccent
-                                  : borderColor,
+                                  : (isDark ? borderColor : const Color(0xFFE2E8F0)),
                             ),
                           ),
                           child: Text(
@@ -262,7 +264,7 @@ class _PostScreenState extends State<PostScreen> {
                             style: TextStyle(
                               color: isSelected
                                   ? Colors.white
-                                  : Colors.grey.shade400,
+                                  : (isDark ? Colors.grey.shade400 : const Color(0xFF475569)),
                               fontSize: 13,
                               fontWeight: isSelected
                                   ? FontWeight.w600
@@ -425,10 +427,11 @@ class _PostScreenState extends State<PostScreen> {
   }
 
   Widget _buildLabel(String text) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Text(
       text,
-      style: const TextStyle(
-        color: AppColors.white,
+      style: TextStyle(
+        color: isDark ? AppColors.white : AppColors.lightText,
         fontWeight: FontWeight.w600,
         fontSize: 14,
       ),
@@ -445,29 +448,31 @@ class _PostScreenState extends State<PostScreen> {
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return TextField(
       controller: controller,
       maxLines: maxLines,
       readOnly: readOnly,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: isDark ? Colors.white : AppColors.lightText),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.grey.shade500),
+        hintStyle: TextStyle(color: isDark ? Colors.grey.shade500 : const Color(0xFF94A3B8)),
         prefixIcon: icon != null
-            ? Icon(icon, color: Colors.grey, size: 20)
+            ? Icon(icon, color: isDark ? Colors.grey : const Color(0xFF64748B), size: 20)
             : null,
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: const Color(0xff1F1F27),
+        fillColor: isDark ? const Color(0xff1F1F27) : const Color(0xFFF8FAFC),
         contentPadding: EdgeInsets.symmetric(
           vertical: 16,
           horizontal: icon != null ? 0 : 16,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: borderColor),
+          borderSide: BorderSide(color: isDark ? borderColor : const Color(0xFFE2E8F0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),

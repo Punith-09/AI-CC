@@ -7,6 +7,11 @@ class LocalStorage {
   static const String _keyUserName = 'user_name';
   static const String _keyUserId = 'user_id';
   static const String _keyUserProfilePhoto = 'user_profile_photo';
+  static const String _keyUserRole = 'user_role';
+  static const String _keyUserMobile = 'user_mobile';
+  static const String _keyUserTrkCode = 'user_trk_code';
+  static const String _keyUserJson = 'user_data';
+  static const String _keyThemeMode = 'app_theme_mode';
 
   static LocalStorage? _instance;
   static SharedPreferences? _prefs;
@@ -143,12 +148,64 @@ class LocalStorage {
     return _prefs!.getString(_keyUserProfilePhoto);
   }
 
+  Future<void> saveUserRole(String role) async {
+    await _prefs!.setString(_keyUserRole, role);
+  }
+
+  String? getUserRole() {
+    return _prefs!.getString(_keyUserRole);
+  }
+
+  Future<void> saveUserMobile(String mobile) async {
+    await _prefs!.setString(_keyUserMobile, mobile);
+  }
+
+  String? getUserMobile() {
+    return _prefs!.getString(_keyUserMobile);
+  }
+
+  Future<void> saveUserTrkCode(String trkCode) async {
+    await _prefs!.setString(_keyUserTrkCode, trkCode);
+  }
+
+  String? getUserTrkCode() {
+    return _prefs!.getString(_keyUserTrkCode);
+  }
+
+  Future<void> saveUserData(Map<String, dynamic> data) async {
+    await _prefs!.setString(_keyUserJson, jsonEncode(data));
+  }
+
+  Map<String, dynamic>? getUserData() {
+    final raw = _prefs!.getString(_keyUserJson);
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map) {
+        return Map<String, dynamic>.from(decoded);
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  Future<void> saveThemeMode(String mode) async {
+    await _prefs!.setString(_keyThemeMode, mode);
+  }
+
+  String? getThemeMode() {
+    return _prefs!.getString(_keyThemeMode);
+  }
+
   Future<void> clearAll() async {
     await _prefs!.remove(_keyToken);
     await _prefs!.remove(_keyUserEmail);
     await _prefs!.remove(_keyUserName);
     await _prefs!.remove(_keyUserId);
     await _prefs!.remove(_keyUserProfilePhoto);
+    await _prefs!.remove(_keyUserRole);
+    await _prefs!.remove(_keyUserMobile);
+    await _prefs!.remove(_keyUserTrkCode);
+    await _prefs!.remove(_keyUserJson);
   }
 
   static const String _keyRegisteredPhones = 'registered_phone_numbers';

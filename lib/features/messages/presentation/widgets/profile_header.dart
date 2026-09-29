@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/api/api_endpoints.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../data/models/chat_model.dart';
 
 class ProfileHeader extends StatelessWidget {
@@ -11,6 +12,13 @@ class ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final containerBg = isDark ? AppColors.darkCard : Colors.white;
+    final borderColor = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final avatarBg = isDark ? AppColors.darkSurface : const Color(0xFFF1F5F9);
+    final nameColor = isDark ? AppColors.darkText : const Color(0xFF111827);
+    final roleColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
+
     final name = (chat?.participantName.isNotEmpty == true)
         ? chat!.participantName
         : 'Creator';
@@ -22,10 +30,10 @@ class ProfileHeader extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: containerBg,
         border: Border(
-          bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1),
+          bottom: BorderSide(color: borderColor, width: 1),
         ),
       ),
       child: Row(
@@ -37,7 +45,7 @@ class ProfileHeader extends StatelessWidget {
                 height: 54,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
-                  color: const Color(0xFFF1F5F9),
+                  color: avatarBg,
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
@@ -45,9 +53,9 @@ class ProfileHeader extends StatelessWidget {
                       ? CachedNetworkImage(
                           imageUrl: ApiEndpoints.formatMediaUrl(avatar),
                           fit: BoxFit.cover,
-                          errorWidget: (ctx, url, err) => _fallback(name),
+                          errorWidget: (ctx, url, err) => _fallback(name, isDark: isDark),
                         )
-                      : _fallback(name),
+                      : _fallback(name, isDark: isDark),
                 ),
               ),
               Positioned(
@@ -59,7 +67,10 @@ class ProfileHeader extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isOnline ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2.5),
+                    border: Border.all(
+                      color: containerBg,
+                      width: 2.5,
+                    ),
                   ),
                 ),
               ),
@@ -76,8 +87,8 @@ class ProfileHeader extends StatelessWidget {
                   name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFF111827),
+                  style: TextStyle(
+                    color: nameColor,
                     fontWeight: FontWeight.bold,
                     fontSize: 17,
                   ),
@@ -88,7 +99,7 @@ class ProfileHeader extends StatelessWidget {
                     role,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+                    style: TextStyle(color: roleColor, fontSize: 13),
                   ),
                 ],
                 const SizedBox(height: 4),
@@ -122,7 +133,7 @@ class ProfileHeader extends StatelessWidget {
           IntrinsicWidth(
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF7C3AED),
+                backgroundColor: AppColors.buttonPrimary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 elevation: 0,
@@ -142,16 +153,18 @@ class ProfileHeader extends StatelessWidget {
     );
   }
 
-  Widget _fallback(String name) {
+  Widget _fallback(String name, {bool isDark = false}) {
     final initials = name.trim().isEmpty
         ? '?'
         : name.trim().split(' ').take(2).map((w) => w[0]).join().toUpperCase();
+    final bg = isDark ? AppColors.darkSurface : const Color(0xFFF1F5F9);
+    final textColor = isDark ? AppColors.darkText : const Color(0xFF111827);
     return Container(
-      color: const Color(0xFFF1F5F9),
+      color: bg,
       child: Center(
         child: Text(
           initials,
-          style: const TextStyle(color: Color(0xFF111827), fontWeight: FontWeight.bold, fontSize: 18),
+          style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 18),
         ),
       ),
     );

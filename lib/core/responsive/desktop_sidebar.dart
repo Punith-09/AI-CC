@@ -17,13 +17,15 @@ class DesktopSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       width: 240,
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard : Colors.white,
         border: Border(
           right: BorderSide(
-            color: Color(0xFFE5E7EB),
+            color: isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
             width: 1,
           ),
         ),
@@ -91,7 +93,7 @@ class DesktopSidebar extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Divider(
-              color: const Color(0xFFE2E8F0),
+              color: isDark ? AppColors.darkDivider : const Color(0xFFE2E8F0),
               thickness: 1,
               height: 1,
             ),
@@ -197,6 +199,7 @@ class _SidebarItemState extends State<_SidebarItem> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final active = widget.isSelected;
     final primaryColor = const Color(0xFF8E3CF7);
 
@@ -213,8 +216,8 @@ class _SidebarItemState extends State<_SidebarItem> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
             decoration: BoxDecoration(
               color: active
-                  ? const Color(0xFFF3E8FF)
-                  : (_isHovered ? const Color(0xFFF8FAFC) : Colors.transparent),
+                  ? (isDark ? AppColors.primary.withValues(alpha: 0.2) : const Color(0xFFF3E8FF))
+                  : (_isHovered ? (isDark ? AppColors.darkCardHover : const Color(0xFFF8FAFC)) : Colors.transparent),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -222,7 +225,9 @@ class _SidebarItemState extends State<_SidebarItem> {
                 Icon(
                   widget.icon,
                   size: 20,
-                  color: active ? primaryColor : const Color(0xFF64748B),
+                  color: active
+                      ? primaryColor
+                      : (isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
                 ),
                 const SizedBox(width: 14),
                 Text(
@@ -230,7 +235,9 @@ class _SidebarItemState extends State<_SidebarItem> {
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: active ? FontWeight.w600 : FontWeight.w500,
-                    color: active ? primaryColor : const Color(0xFF334155),
+                    color: active
+                        ? primaryColor
+                        : (isDark ? AppColors.darkText : const Color(0xFF334155)),
                   ),
                 ),
               ],
@@ -255,6 +262,8 @@ class _SidebarSubItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
       child: InkWell(
@@ -267,7 +276,7 @@ class _SidebarSubItem extends StatelessWidget {
               Icon(
                 icon,
                 size: 17,
-                color: const Color(0xFF94A3B8),
+                color: isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8),
               ),
               const SizedBox(width: 12),
               Text(
@@ -275,7 +284,7 @@ class _SidebarSubItem extends StatelessWidget {
                 style: GoogleFonts.poppins(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w500,
-                  color: const Color(0xFF64748B),
+                  color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
                 ),
               ),
             ],

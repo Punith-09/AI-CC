@@ -117,19 +117,17 @@ class _FeedActionsState extends State<FeedActions> {
             children: [
               IconButton(
                 onPressed: () {
-                  if(!isDesktop) {
+                  if (!isDesktop) {
                     showModalBottomSheet(
                       context: context,
                       isScrollControlled: true,
-                      backgroundColor: const Color(0xFF102B36),
+                      backgroundColor: Colors.transparent,
                       shape: const RoundedRectangleBorder(
-                        borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(25)),
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
                       ),
-                      builder: (context) =>
-                          CommentsBottomSheet(post: widget.post),
+                      builder: (context) => CommentsBottomSheet(post: widget.post),
                     );
-                  }else{
+                  } else {
 
                   }
                 },

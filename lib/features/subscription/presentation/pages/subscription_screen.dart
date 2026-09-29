@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/routes/app_routes.dart';
@@ -195,11 +196,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     final currentPlanObj = _getPlan(currentPlanKey);
     final currentPlanName = currentPlanObj?.label ??
         (currentPlanKey.toLowerCase().contains('max') ? 'Pro Max' : 'Pro');
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showDialog(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        backgroundColor: const Color(0xFF0A222E),
+        backgroundColor: isDark ? const Color(0xFF0A222E) : Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
           side: BorderSide(
@@ -215,7 +217,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: const Color(0xFF201338),
+                color: isDark ? const Color(0xFF201338) : const Color(0xFFF3E8FF),
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: const Color(0xFF8B5CF6).withValues(alpha: 0.6),
@@ -231,17 +233,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               child: const Center(
                 child: FaIcon(
                   FontAwesomeIcons.crown,
-                  color: Color(0xFFFDE047),
+                  color: Color(0xFFF59E0B),
                   size: 24,
                 ),
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'Downgrade Not Allowed',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white,
+                color: isDark ? Colors.white : AppColors.lightText,
                 fontSize: 19,
                 fontWeight: FontWeight.bold,
               ),
@@ -250,10 +252,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: const Color(0xFF061821),
+                color: isDark ? const Color(0xFF061821) : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: const Color(0xFF133644),
+                  color: isDark ? const Color(0xFF133644) : const Color(0xFFE2E8F0),
                   width: 1,
                 ),
               ),
@@ -262,10 +264,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
+                      Text(
                         'Current Plan: ',
                         style: TextStyle(
-                          color: Color(0xFF8FA7B2),
+                          color: isDark ? const Color(0xFF8FA7B2) : const Color(0xFF64748B),
                           fontSize: 13,
                         ),
                       ),
@@ -295,8 +297,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   Text(
                     'You already have an active $currentPlanName subscription. Switching or downgrading to ${targetPlan.label} is not permitted while your current subscription is running.',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF8FA7B2),
+                    style: TextStyle(
+                      color: isDark ? const Color(0xFF8FA7B2) : const Color(0xFF64748B),
                       fontSize: 12.5,
                       height: 1.45,
                     ),
@@ -334,10 +336,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 
   void _showCurrentPlanInfoDialog(SubscriptionPlan plan) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showDialog(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        backgroundColor: const Color(0xFF0A222E),
+        backgroundColor: isDark ? const Color(0xFF0A222E) : Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
           side: BorderSide(
@@ -353,7 +357,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: const Color(0xFF0A2E1C),
+                color: isDark ? const Color(0xFF0A2E1C) : const Color(0xFFDCFCE7),
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: const Color(0xFF22C55E).withValues(alpha: 0.6),
@@ -363,7 +367,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               child: const Center(
                 child: Icon(
                   Icons.check_circle_rounded,
-                  color: Color(0xFF4ADE80),
+                  color: Color(0xFF16A34A),
                   size: 30,
                 ),
               ),
@@ -372,8 +376,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             Text(
               '${plan.label} is Active',
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: isDark ? Colors.white : AppColors.lightText,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -382,8 +386,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             Text(
               'You are already subscribed to the ${plan.label} plan and enjoying all its premium benefits.',
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Color(0xFF8FA7B2),
+              style: TextStyle(
+                color: isDark ? const Color(0xFF8FA7B2) : const Color(0xFF64748B),
                 fontSize: 13,
                 height: 1.4,
               ),
@@ -711,6 +715,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 
   void _showSuccessDialog(SubscriptionPlan? plan) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showModalBottomSheet(
       context: context,
       isDismissible: false,
@@ -719,10 +725,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       builder: (ctx) {
         return Container(
           padding: const EdgeInsets.all(24),
-          decoration: const BoxDecoration(
-            color: Color(0xFF0A222E),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF0A222E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: const Border(
               top: BorderSide(color: Color(0xFF22C55E), width: 2),
             ),
           ),
@@ -734,7 +740,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF133B2B),
+                    color: isDark ? const Color(0xFF133B2B) : const Color(0xFFDCFCE7),
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: const Color(0xFF22C55E).withValues(alpha: 0.6),
@@ -752,8 +758,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 const SizedBox(height: 16),
                 Text(
                   "${plan?.label ?? 'Subscription'} Activated!",
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : AppColors.lightText,
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
@@ -763,7 +769,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   "Thank you for your payment. Your plan is now active with all premium features and verified badge.",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.7),
+                    color: isDark ? Colors.white.withValues(alpha: 0.7) : const Color(0xFF64748B),
                     fontSize: 13,
                     height: 1.4,
                   ),
@@ -867,6 +873,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     }
 
     bool isSubmitting = false;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showModalBottomSheet(
       context: context,
@@ -877,10 +884,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           builder: (bottomSheetContext, setSheetState) {
             return Container(
               padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                color: Color(0xFF0A222E),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-                border: Border(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF0A222E) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                border: const Border(
                   top: BorderSide(color: Color(0xFF8B5CF6), width: 1.5),
                 ),
               ),
@@ -894,7 +901,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                         width: 40,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: Colors.white24,
+                          color: isDark ? Colors.white24 : Colors.black12,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -906,7 +913,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                           width: 44,
                           height: 44,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF201338),
+                            color: isDark ? const Color(0xFF201338) : const Color(0xFFF3E8FF),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: const Color(0xFF8B5CF6).withValues(alpha: 0.5),
@@ -926,16 +933,16 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                           children: [
                             Text(
                               plan.label,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : AppColors.lightText,
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             Text(
                               _getPlanSubtitle(plan.plan),
-                              style: const TextStyle(
-                                color: Color(0xFF8FA7B2),
+                              style: TextStyle(
+                                color: isDark ? const Color(0xFF8FA7B2) : const Color(0xFF64748B),
                                 fontSize: 12,
                               ),
                             ),
@@ -947,8 +954,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                           children: [
                             Text(
                               '₹${plan.amountRupees}',
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : AppColors.lightText,
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -965,27 +972,33 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    const Divider(color: Color(0xFF153B4B)),
+                    Divider(color: isDark ? const Color(0xFF153B4B) : const Color(0xFFE2E8F0)),
                     const SizedBox(height: 12),
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.verified_user_outlined,
+                        const Icon(Icons.verified_user_outlined,
                             color: Color(0xFF38BDF8), size: 18),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Text(
                           'Instant Activation & Verified Badge',
-                          style: TextStyle(color: Colors.white70, fontSize: 13),
+                          style: TextStyle(
+                            color: isDark ? Colors.white70 : const Color(0xFF475569),
+                            fontSize: 13,
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.security, color: Color(0xFF22C55E), size: 18),
-                        SizedBox(width: 8),
+                        const Icon(Icons.security, color: Color(0xFF22C55E), size: 18),
+                        const SizedBox(width: 8),
                         Text(
                           '256-bit Encrypted Checkout with Razorpay',
-                          style: TextStyle(color: Colors.white70, fontSize: 13),
+                          style: TextStyle(
+                            color: isDark ? Colors.white70 : const Color(0xFF475569),
+                            fontSize: 13,
+                          ),
                         ),
                       ],
                     ),
@@ -1087,6 +1100,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     // Watch ProfileProvider to instantly reflect subscription state changes
     context.watch<ProfileProvider>();
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final proPlan = _getPlan('pro') ??
         _plansResponse.plans.firstOrNull ??
@@ -1120,10 +1134,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         "Choose Your Plan",
                         style: TextStyle(
-                          color: Colors.white,
+                          color: isDark ? Colors.white : AppColors.lightText,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           letterSpacing: -0.2,
@@ -1159,10 +1173,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
+                      Text(
                         "Plan Benefits & Limits",
                         style: TextStyle(
-                          color: Colors.white,
+                          color: isDark ? Colors.white : AppColors.lightText,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           letterSpacing: -0.2,
@@ -1196,7 +1210,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF071922),
+      backgroundColor: isDark ? AppColors.darkScaffold : AppColors.lightScaffold,
       body: AppBackground(
         child: SafeArea(
           bottom: false,
@@ -1207,13 +1221,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 
   Widget _buildTopAppBar(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
-            icon: const Icon(LucideIcons.chevronLeft, color: Colors.white, size: 24),
+            icon: Icon(LucideIcons.chevronLeft, color: isDark ? Colors.white : AppColors.lightText, size: 24),
             onPressed: () {
               if (Navigator.canPop(context)) {
                 context.pop();
@@ -1222,10 +1238,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               }
             },
           ),
-          const Text(
+          Text(
             "Subscription",
             style: TextStyle(
-              color: Colors.white,
+              color: isDark ? Colors.white : AppColors.lightText,
               fontSize: 19,
               fontWeight: FontWeight.w600,
             ),

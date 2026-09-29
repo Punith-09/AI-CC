@@ -7,13 +7,13 @@ import '../models/register_request.dart';
 
 abstract class AuthRemoteDataSource {
   Future<LoginResponse> login(
-      String email,
-      String password,
-      );
+    String identifier,
+    String password,
+  );
 
   Future<LoginResponse> register(
-      RegisterRequest request,
-      );
+    RegisterRequest request,
+  );
 
   Future<LoginResponse> loginWithGoogle(String idToken);
 }
@@ -29,14 +29,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<LoginResponse> login(
-      String email,
-      String password,
-      ) async {
+    String identifier,
+    String password,
+  ) async {
     try {
       final response = await _dioClient.post(
         ApiEndpoints.login,
         data: {
-          'email': email,
+          'identifier': identifier.trim(),
           'password': password,
         },
       );
@@ -54,18 +54,23 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       print('LOGIN API DIO ERROR: ${e.response?.data}');
       final responseData = e.response?.data;
       if (responseData is Map) {
-        final msg = responseData['message']?.toString() ??
-            responseData['error']?.toString() ??
-            responseData['detail']?.toString() ??
-            responseData['msg']?.toString() ??
-            '';
+        final rawMsg = responseData['message'] ??
+            responseData['error'] ??
+            responseData['detail'] ??
+            responseData['msg'];
+        String msg = '';
+        if (rawMsg is List) {
+          msg = rawMsg.join(', ');
+        } else if (rawMsg != null) {
+          msg = rawMsg.toString();
+        }
         if (msg.isNotEmpty && !msg.toLowerCase().contains('internal server error')) {
           throw Exception(msg);
         }
       }
       final statusCode = e.response?.statusCode;
       if (statusCode == 401 || statusCode == 400) {
-        throw Exception('Invalid email/HCC ID or password. Please try again.');
+        throw Exception('Invalid identifier or password. Please try again.');
       } else if (statusCode == 404) {
         throw Exception('Account not found. Please check your credentials or sign up.');
       } else if (statusCode == 500) {
@@ -77,7 +82,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           e.type == DioExceptionType.connectionError) {
         throw Exception('Network connection error. Please check your internet connection.');
       }
-      throw Exception('Invalid email/HCC ID or password. Please try again.');
+      throw Exception('Invalid identifier or password. Please try again.');
     } catch (e) {
       print('LOGIN API ERROR: $e');
       rethrow;

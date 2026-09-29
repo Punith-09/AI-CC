@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
 import '../routes/app_routes.dart';
 import '../storage/local_storage.dart';
+import '../theme/theme_provider.dart';
 import '../../common/widgets/user_avatar.dart';
 import '../../features/create/presentation/widgets/create_bottom_sheet.dart';
 import '../../features/explore/presentation/providers/explore_provider.dart';
@@ -45,14 +46,16 @@ class _DesktopHeaderState extends State<DesktopHeader> {
       currentUserPic = LocalStorage.instance.getUserProfilePhoto();
     } catch (_) {}
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       height: 70,
       padding: const EdgeInsets.symmetric(horizontal: 28),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard : Colors.white,
         border: Border(
           bottom: BorderSide(
-            color: Color(0xFFE5E7EB),
+            color: isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
             width: 1,
           ),
         ),
@@ -101,7 +104,7 @@ class _DesktopHeaderState extends State<DesktopHeader> {
                           Text(
                             "AICC",
                             style: GoogleFonts.poppins(
-                              color: const Color(0xFF0F172A),
+                              color: isDark ? AppColors.darkText : const Color(0xFF0F172A),
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 0.5,
@@ -129,7 +132,7 @@ class _DesktopHeaderState extends State<DesktopHeader> {
                       Text(
                         "Auditions • Talent • Opportunities",
                         style: GoogleFonts.poppins(
-                          color: const Color(0xFF64748B),
+                          color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
                           fontSize: 10.5,
                           fontWeight: FontWeight.w500,
                         ),
@@ -293,6 +296,17 @@ class _DesktopHeaderState extends State<DesktopHeader> {
 
               // const SizedBox(width: 8),
 
+              // Theme Toggle Button
+              Consumer<ThemeProvider>(
+                builder: (context, themeProv, _) => _HeaderIconButton(
+                  icon: themeProv.isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                  tooltip: themeProv.isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode",
+                  onTap: () => themeProv.toggleTheme(),
+                ),
+              ),
+
+              const SizedBox(width: 8),
+
               // Notifications Action
               _HeaderIconButton(
                 icon: LucideIcons.bell,
@@ -303,20 +317,16 @@ class _DesktopHeaderState extends State<DesktopHeader> {
               const SizedBox(width: 14),
 
               // User Profile Avatar Chip
-              // InkWell(
-              //   onTap: () => context.go(AppRoutes.artistProfile),
-              //   borderRadius: BorderRadius.circular(24),
-              //   child:
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: const Color(0xFFE2E8F0),
-                    ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkSurface : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
                   ),
-                  child: Row(
+                ),
+                child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       UserAvatar(
@@ -335,7 +345,7 @@ class _DesktopHeaderState extends State<DesktopHeader> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.poppins(
-                              color: const Color(0xFF0F172A),
+                              color: isDark ? AppColors.darkText : const Color(0xFF0F172A),
                               fontSize: 12.5,
                               fontWeight: FontWeight.w600,
                             ),
@@ -368,6 +378,8 @@ class _HeaderIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Tooltip(
       message: tooltip,
       child: InkWell(
@@ -377,15 +389,15 @@ class _HeaderIconButton extends StatelessWidget {
           width: 38,
           height: 38,
           decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
+            color: isDark ? AppColors.darkTextField : const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0)),
           ),
           child: Center(
             child: Icon(
               icon,
               size: 19,
-              color: const Color(0xFF475569),
+              color: isDark ? AppColors.darkText : const Color(0xFF475569),
             ),
           ),
         ),

@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/api/api_endpoints.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/storage/local_storage.dart';
@@ -185,45 +186,50 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final chat = _chat;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final appBarBg = isDark ? AppColors.darkCard : Colors.white;
+    final titleColor = isDark ? AppColors.darkText : const Color(0xFF111827);
+    final iconColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
+    final bodyBg = isDark ? AppColors.darkScaffold : const Color(0xFFF8FAFC);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: appBarBg,
       resizeToAvoidBottomInset: true,
       extendBodyBehindAppBar: false,
 
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: appBarBg,
         elevation: 0,
         centerTitle: true,
         automaticallyImplyLeading: false,
         leading: IconButton(
           onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF111827), size: 18),
+          icon: Icon(Icons.arrow_back_ios_new, color: titleColor, size: 18),
         ),
         title: Text(
           chat?.participantName.isNotEmpty == true
               ? chat!.participantName
               : 'Chat',
-          style: const TextStyle(
-            color: Color(0xFF111827),
+          style: TextStyle(
+            color: titleColor,
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
         ),
-        actions: const [
+        actions: [
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10),
-            child: Icon(Icons.photo_camera_outlined, color: Color(0xFF64748B)),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Icon(Icons.photo_camera_outlined, color: iconColor),
           ),
           Padding(
-            padding: EdgeInsets.only(right: 15),
-            child: Icon(Icons.more_vert, color: Color(0xFF64748B)),
+            padding: const EdgeInsets.only(right: 15),
+            child: Icon(Icons.more_vert, color: iconColor),
           ),
         ],
       ),
 
       body: Container(
-        color: const Color(0xFFF8FAFC),
+        color: bodyBg,
         child: SafeArea(
           child: Column(
             children: [
@@ -237,7 +243,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 },
               ),
 
-              const Divider(color: Color(0xFFE2E8F0), height: 1),
+              Divider(
+                color: isDark ? AppColors.darkDivider : const Color(0xFFE2E8F0),
+                height: 1,
+              ),
 
               // Messages list
               Expanded(
@@ -262,11 +271,14 @@ class _ChatScreenState extends State<ChatScreen> {
                           final messages = provider.messagesForChat(chat.id);
 
                           if (messages.isEmpty) {
-                            return const Center(
+                            return Center(
                               child: Text(
                                 'No messages yet.\nSay hello! 👋',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(color: Color(0xFF64748B), fontSize: 15),
+                                style: TextStyle(
+                                  color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                                  fontSize: 15,
+                                ),
                               ),
                             );
                           }
@@ -393,18 +405,19 @@ class _DateChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (label.isEmpty) return const SizedBox.shrink();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         decoration: BoxDecoration(
-          color: const Color(0xFFE2E8F0),
+          color: isDark ? AppColors.darkSurface : const Color(0xFFE2E8F0),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
           label,
-          style: const TextStyle(
-            color: Color(0xFF475569),
+          style: TextStyle(
+            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF475569),
             fontSize: 11,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.5,

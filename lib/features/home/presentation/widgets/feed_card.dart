@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../data/models/feed_post_model.dart';
 import 'feed_actions.dart';
 import 'feed_caption.dart';
@@ -18,25 +17,23 @@ class FeedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDesktop ? Colors.white : AppColors.card,
-        borderRadius: BorderRadius.circular(isDesktop ? 16 : 22),
+        color: isDark ? AppColors.darkCard : Colors.white,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDesktop ? const Color(0xFFE5E7EB) : Colors.white10,
+          color: isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
           width: 1,
         ),
-        boxShadow: isDesktop
-            ? [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ]
-            : null,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.12 : 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

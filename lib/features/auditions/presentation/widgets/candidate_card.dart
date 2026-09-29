@@ -26,17 +26,17 @@ class CandidateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final cardBorder = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final titleColor = isDark ? Colors.white : const Color(0xFF111827);
+    final subtitleColor = isDark ? Colors.grey : const Color(0xFF64748B);
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-            colors: [
-              Color(0xFF123B4A),
-              Color(0xFF0B1F2A),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-        ),
+        color: cardBg,
+        border: Border.all(color: cardBorder),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
@@ -97,8 +97,8 @@ class CandidateCard extends StatelessWidget {
 
                     Text(
                       name,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: titleColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 20,
                       ),
@@ -108,8 +108,8 @@ class CandidateCard extends StatelessWidget {
 
                     Text(
                       "$role • $age",
-                      style: const TextStyle(
-                        color: Colors.grey,
+                      style: TextStyle(
+                        color: subtitleColor,
                       ),
                     ),
                   ],
@@ -128,10 +128,10 @@ class CandidateCard extends StatelessWidget {
 
           const SizedBox(height: 22),
 
-          const Text(
+          Text(
             "AI Match Score",
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: titleColor,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -191,8 +191,8 @@ class CandidateCard extends StatelessWidget {
                   icon: const Icon(Icons.star),
                   label: const Text("Shortlist"),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF123B4A),
-                    foregroundColor: Colors.white,
+                    backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF3E8FF),
+                    foregroundColor: isDark ? Colors.white : const Color(0xFF7C3AED),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),

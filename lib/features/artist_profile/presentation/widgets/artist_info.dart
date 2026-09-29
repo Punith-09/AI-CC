@@ -22,6 +22,7 @@ class ArtistInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     String location = "";
     if (city != null && city!.isNotEmpty && state != null && state!.isNotEmpty) {
       location = '$city, $state';
@@ -52,7 +53,7 @@ class ArtistInfo extends StatelessWidget {
               style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
-                color: isDesktop ? const Color(0xFF0F172A) : Colors.white,
+                color: isDark ? AppColors.darkText : AppColors.black,
                 letterSpacing: -0.3,
               ),
             ),
@@ -74,13 +75,13 @@ class ArtistInfo extends StatelessWidget {
             Icon(
               Icons.location_on_outlined,
               size: 18,
-              color: isDesktop ? const Color(0xFF94A3B8) : AppColors.greyText,
+              color: isDark ? AppColors.darkTextSecondary : (isDesktop ? const Color(0xFF94A3B8) : AppColors.greyText),
             ),
             const SizedBox(width: 4),
             Text(
               location,
               style: TextStyle(
-                color: isDesktop ? const Color(0xFF64748B) : AppColors.greyText,
+                color: isDark ? AppColors.darkTextSecondary : (isDesktop ? const Color(0xFF64748B) : AppColors.greyText),
                 fontSize: 16,
               ),
             ),

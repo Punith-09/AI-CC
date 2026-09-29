@@ -18,7 +18,13 @@ class AuditionSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final hasText = controller != null && controller!.text.isNotEmpty;
+    final textColor = isDark ? AppColors.darkText : AppColors.lightText;
+    final hintColor = isDark ? AppColors.darkTextSecondary : AppColors.hint;
+    final iconColor = isDark ? AppColors.darkTextSecondary : AppColors.grey;
+    final fillColor = isDark ? AppColors.darkTextField : AppColors.lightTextField;
+    final borderColor = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
 
     return SizedBox(
       height: 46,
@@ -26,44 +32,43 @@ class AuditionSearchBar extends StatelessWidget {
         controller: controller,
         onChanged: onChanged,
         onTap: onTap,
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: textColor,
           fontSize: 14.5,
         ),
+        cursorColor: AppColors.primary,
         decoration: InputDecoration(
           hintText: "Search role title, location...",
           hintStyle: TextStyle(
-            color: Colors.grey.shade500,
+            color: hintColor,
             fontSize: 14,
           ),
-          prefixIcon: const Icon(
+          prefixIcon: Icon(
             Icons.search,
             size: 22,
-            color: Colors.grey,
+            color: iconColor,
           ),
           suffixIcon: hasText
               ? IconButton(
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.close,
                     size: 18,
-                    color: Colors.grey,
+                    color: iconColor,
                   ),
                   onPressed: onClear,
                 )
               : null,
           filled: true,
-          fillColor: AppColors.card,
+          fillColor: fillColor,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(24),
-            borderSide: BorderSide(
-              color: Colors.white.withValues(alpha: 0.08),
-            ),
+            borderSide: BorderSide(color: borderColor),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(24),
             borderSide: const BorderSide(
-              color: Color(0xFF8E3CF7),
+              color: AppColors.primary,
               width: 1.2,
             ),
           ),

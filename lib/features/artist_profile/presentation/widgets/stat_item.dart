@@ -1,5 +1,4 @@
 import 'package:aicc/core/constants/app_colors.dart';
-import 'package:aicc/core/responsive/responsive_breakpoints.dart';
 import 'package:flutter/material.dart';
 
 class StatItem extends StatelessWidget {
@@ -18,7 +17,7 @@ class StatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Expanded(
       child: Column(
@@ -35,7 +34,7 @@ class StatItem extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              color: isDesktop ? const Color(0xFF0F172A) : AppColors.white,
+              color: isDark ? AppColors.darkText : const Color(0xFF0F172A),
               fontSize: 30,
               fontWeight: FontWeight.bold,
             ),
@@ -46,7 +45,7 @@ class StatItem extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-              color: isDesktop ? const Color(0xFF64748B) : AppColors.greyText,
+              color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
               fontSize: 16,
             ),
           ),

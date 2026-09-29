@@ -8,21 +8,23 @@ import '../../../../core/responsive/responsive_breakpoints.dart';
 class CreateBottomSheet extends StatelessWidget {
   const CreateBottomSheet({super.key});
 
-  static const Color backgroundColor = Color(0xFF082F38);
-  static const Color cardColor = Color(0xFF103E48);
-  static const Color accentColor = Color(0xFF25C7F2);
-
-
   @override
   Widget build(BuildContext context) {
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? AppColors.darkCard : Colors.white;
+    final textColor = isDark ? AppColors.darkText : AppColors.lightText;
+    final handleColor = isDark ? Colors.white24 : Colors.black12;
+    final dividerColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final cancelColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
+
     return SafeArea(
       child: Container(
-        decoration:  BoxDecoration(
-          color: AppColors.white,
+        decoration: BoxDecoration(
+          color: bgColor,
           borderRadius: BorderRadius.vertical(
-            top: Radius.circular(28),
-            bottom: isDesktop? Radius.circular(28):Radius.circular(0),
+            top: const Radius.circular(28),
+            bottom: isDesktop ? const Radius.circular(28) : Radius.zero,
           ),
         ),
         child: Padding(
@@ -30,13 +32,12 @@ class CreateBottomSheet extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-
               Container(
                 width: 42,
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: handleColor,
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -45,20 +46,18 @@ class CreateBottomSheet extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                 Text(
-                   "Create",
-                   style: GoogleFonts.montserrat(
-                     color: AppColors.black,
-                     fontSize: 22,
-                     // letterSpacing: 2.1,
-                     fontWeight: FontWeight.w800,
-                   ),
-                 )
+                  Text(
+                    "Create",
+                    style: GoogleFonts.montserrat(
+                      color: textColor,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  )
                 ],
               ),
 
               const SizedBox(height: 22),
-
 
               _CreateOption(
                 icon: Icons.assignment_outlined,
@@ -69,7 +68,6 @@ class CreateBottomSheet extends StatelessWidget {
 
               const SizedBox(height: 10),
 
-
               _CreateOption(
                 icon: Icons.video_library_outlined,
                 title: 'Upload Video',
@@ -78,7 +76,6 @@ class CreateBottomSheet extends StatelessWidget {
               ),
 
               const SizedBox(height: 10),
-
 
               _CreateOption(
                 icon: Icons.photo_camera_outlined,
@@ -89,36 +86,34 @@ class CreateBottomSheet extends StatelessWidget {
 
               const SizedBox(height: 18),
 
-
               Container(
                 height: 1,
-                color: Colors.white.withValues(alpha: 0.08),
+                color: dividerColor,
               ),
 
               const SizedBox(height: 8),
 
-
-              if(!isDesktop)
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              if (!isDesktop)
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                  ),
-                  child: const Text(
-                    'Cancel',
-                    style: TextStyle(
-                      color: Colors.white60,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(
+                        color: cancelColor,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
@@ -142,6 +137,13 @@ class _CreateOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final itemBg = isDark ? AppColors.darkSurface : const Color(0xFFF8FAFC);
+    final itemBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final titleColor = isDark ? AppColors.darkText : AppColors.lightText;
+    final subtitleColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
+    final arrowColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -153,32 +155,30 @@ class _CreateOption extends StatelessWidget {
             vertical: 13,
           ),
           decoration: BoxDecoration(
-            color: AppColors.whiteShade1,
+            color: itemBg,
             borderRadius: BorderRadius.circular(17),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.06),
+              color: itemBorder,
             ),
           ),
           child: Row(
             children: [
-
               Container(
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color:AppColors.buttonPrimary.withValues(alpha: 0.10),
-                  border: Border.all(color: AppColors.buttonPrimary),
+                  color: AppColors.buttonPrimary.withValues(alpha: 0.10),
+                  border: Border.all(color: AppColors.buttonPrimary.withValues(alpha: 0.3)),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
                   icon,
-                  color:  AppColors.buttonPrimary,
+                  color: AppColors.buttonPrimary,
                   size: 24,
                 ),
               ),
 
               const SizedBox(width: 14),
-
 
               Expanded(
                 child: Column(
@@ -186,8 +186,8 @@ class _CreateOption extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        color: AppColors.black,
+                      style: TextStyle(
+                        color: titleColor,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
@@ -195,8 +195,8 @@ class _CreateOption extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: const TextStyle(
-                        color: AppColors.black,
+                      style: TextStyle(
+                        color: subtitleColor,
                         fontSize: 11.5,
                       ),
                     ),
@@ -204,10 +204,9 @@ class _CreateOption extends StatelessWidget {
                 ),
               ),
 
-
-              const Icon(
+              Icon(
                 Icons.arrow_forward_ios_rounded,
-                color: AppColors.black,
+                color: arrowColor,
                 size: 15,
               ),
             ],
