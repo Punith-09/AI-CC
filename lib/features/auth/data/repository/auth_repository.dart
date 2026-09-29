@@ -3,6 +3,7 @@ import '../../../../core/storage/local_storage.dart';
 import '../datasource/auth_remote_datasource.dart';
 import '../models/login_response.dart';
 import '../models/register_request.dart';
+
 import '../datasource/google_auth_datasource.dart';
 
 abstract class AuthRepository {
@@ -14,6 +15,8 @@ abstract class AuthRepository {
   Future<LoginResponse> register(
       RegisterRequest request,
       );
+
+
 
   Future<void> loginWithGoogle();
 
@@ -91,11 +94,8 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<LoginResponse> register(
       RegisterRequest request,
       ) async {
-    final response =
-    await _remoteDataSource.register(request);
+    final response = await _remoteDataSource.register(request);
 
-    // If backend automatically logs user in
-    // after registration.
     if (response.token.isNotEmpty) {
       await _localStorage.saveToken(
         response.token,
@@ -104,10 +104,6 @@ class AuthRepositoryImpl implements AuthRepository {
       await _localStorage.saveUserEmail(
         request.email,
       );
-
-      if (request.fullName.isNotEmpty) {
-        await _localStorage.saveUserName(request.fullName);
-      }
 
       if (response.user != null) {
         final userId = response.user!['_id'] ??
@@ -135,6 +131,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
     return response;
   }
+
 
   
 

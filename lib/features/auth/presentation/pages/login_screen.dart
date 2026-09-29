@@ -442,36 +442,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 24),
 
-                  // FOOTER SIGNUP LINK
-                  RichText(
-                    text: TextSpan(
-                      style: GoogleFonts.poppins(
-                        color: AppColors.greyText,
-                        fontSize: 14,
-                      ),
-                      children: [
-                        const TextSpan(
-                          text: "Don't have an account yet? ",
-                        ),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.middle,
-                          child: GestureDetector(
-                            onTap: () {
-                              context.push(AppRoutes.role);
-                            },
-                            child: Text(
-                              "Sign Up Now",
-                              style: GoogleFonts.poppins(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+
                 ],
               ),
             ),

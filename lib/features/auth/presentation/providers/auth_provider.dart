@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import '../../data/repository/auth_repository.dart';
+import '../../data/models/register_request.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthRepository _authRepository;
@@ -26,6 +27,24 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       await _authRepository.login(email.trim(), password);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = _cleanErrorMessage(e);
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> register(RegisterRequest request) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _authRepository.register(request);
       _isLoading = false;
       notifyListeners();
       return true;
