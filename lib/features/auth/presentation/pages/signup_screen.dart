@@ -1,3 +1,4 @@
+import 'package:aicc/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -40,11 +41,11 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.black,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.black,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: AppColors.white),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -52,7 +53,7 @@ class _SignupScreenState extends State<SignupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Logo
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -60,7 +61,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     width: 107,
                     height: 101,
                     child: Image.asset(
-                      'assets/icons/aicc3.png',
+                      'assets/images/treekologo.png',
                       fit: BoxFit.contain,
                     ),
                   ),
@@ -69,7 +70,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     width: 171,
                     height: 55,
                     child: Image.asset(
-                      'assets/icons/text.png',
+                      'assets/images/TreeKo.png',
                       fit: BoxFit.contain,
                     ),
                   ),
@@ -308,32 +309,56 @@ class _SignupScreenState extends State<SignupScreen> {
     bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
   }) {
-    return Container(
-      decoration: BoxDecoration(
+    return TextField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+
+      style: GoogleFonts.sora(
+        fontSize: 14,
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: borderGrey, width: 1.2),
       ),
-      child: TextField(
-        controller: controller,
-        obscureText: obscureText,
-        keyboardType: keyboardType,
-        style: GoogleFonts.sora(
+
+      decoration: InputDecoration(
+        hintText: hint,
+
+        hintStyle: GoogleFonts.sora(
           fontSize: 14,
-          color: Colors.black87,
+          color: Colors.white,
         ),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: GoogleFonts.sora(
-            fontSize: 14,
-            color: greyColor,
+
+        filled: true,
+        fillColor: Colors.black,
+
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
+
+        // Normal border
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+
+        // Unfocused
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+
+        // Focused
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(
+            color: AppColors.primary,
+            width: 1.2,
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          border: InputBorder.none,
         ),
       ),
     );
   }
+
 
   Widget _buildDropdown({
     String? label,
@@ -376,7 +401,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   color: greyColor,
                 ),
               ),
-              icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey[700]),
+              icon: Icon(Icons.keyboard_arrow_down, color: AppColors.black),
               items: items.map((String item) {
                 return DropdownMenuItem<String>(
                   value: item,
@@ -384,7 +409,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     item,
                     style: GoogleFonts.sora(
                       fontSize: 14,
-                      color: Colors.black87,
+                      color: AppColors.white,
                     ),
                   ),
                 );

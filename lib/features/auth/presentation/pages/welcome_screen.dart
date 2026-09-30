@@ -1,3 +1,4 @@
+import 'package:aicc/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -11,18 +12,18 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const primaryBrown = Color(0xFF8B5E34);
-    
+
+    return
     // AnnotatedRegion handles SystemUI changes properly without direct method invocation in build
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.white,
-        statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.white,
+    // return AnnotatedRegion<SystemUiOverlayStyle>(
+      // value: const SystemUiOverlayStyle(
+      //   statusBarColor: Colors.white,
+      //   statusBarIconBrightness: Brightness.dark,
+      //   systemNavigationBarColor: Colors.white,
+      //   systemNavigationBarIconBrightness: Brightness.dark,
+      // ),
+       Scaffold(
+        backgroundColor: AppColors.black,
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -76,7 +77,7 @@ class WelcomeScreen extends StatelessWidget {
                           'ALL KINDS OF FILM INDUSTRY WORKS',
                           textAlign: TextAlign.center,
                           style: GoogleFonts.sora(
-                            color: primaryBrown,
+                            color: AppColors.primary,
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
@@ -89,7 +90,7 @@ class WelcomeScreen extends StatelessWidget {
                           'WELCOME !',
                           textAlign: TextAlign.center,
                           style: GoogleFonts.montserrat(
-                            color: primaryBrown,
+                            color: AppColors.primary,
                             fontSize: 20,
                             fontWeight: FontWeight.w600,
                           ),
@@ -101,9 +102,9 @@ class WelcomeScreen extends StatelessWidget {
                         _buildButton(
                           context: context,
                           text: 'Login',
-                          textColor: Colors.white,
-                          backgroundColor: primaryBrown,
-                          borderColor: primaryBrown,
+                          textColor: AppColors.black,
+                          backgroundColor: AppColors.primary,
+                          borderColor: AppColors.primary,
                           fontSize: 16,
                           onTap: () {
                             context.push(AppRoutes.login);
@@ -116,9 +117,9 @@ class WelcomeScreen extends StatelessWidget {
                         _buildButton(
                           context: context,
                           text: 'Sign Up',
-                          textColor: primaryBrown,
-                          backgroundColor: Colors.white,
-                          borderColor: primaryBrown,
+                          textColor: AppColors.primary,
+                          backgroundColor: AppColors.black,
+                          borderColor: AppColors.primary,
                           fontSize: 16,
                           onTap: () {
                             context.push(AppRoutes.signup);
@@ -134,7 +135,7 @@ class WelcomeScreen extends StatelessWidget {
             },
           ),
         ),
-      ),
+      // ),
     );
   }
 

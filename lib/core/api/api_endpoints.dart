@@ -5,6 +5,7 @@ class ApiEndpoints {
     return 'http://localhost:3000';
     // return 'http://10.0.2.2:3000r';
     // return 'https://casting-be.onrender.com';
+    // return 'https://country-december-conservative-housewares.trycloudflare.com';
   }
 
   static const String login = '/auth/login';

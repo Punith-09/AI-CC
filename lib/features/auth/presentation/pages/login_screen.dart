@@ -22,11 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isPasswordVisible = false;
 
-  static const Color _primaryBrown = Color(0xFF8B5E34);
-  static const Color _accentGold = Color(0xFFD39A4A);
-  static const Color _buttonBorderColor = Color(0xFFC5A880);
-  static const Color _fieldBorderColor = Color(0xFFD4D4D8);
-  static const Color _hintTextColor = Color(0xFF9E9E9E);
+
 
   @override
   void dispose() {
@@ -158,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 1.6,
-                                  color: _primaryBrown,
+                                  color: AppColors.text,
                                 ),
                               )
                                   .animate(delay: 250.ms)
@@ -175,7 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: GoogleFonts.sora(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w600,
-                                  color: _primaryBrown,
+                                  color: AppColors.primary,
                                   letterSpacing: 0,
                                   height: 1.0,
                                 ),
@@ -196,17 +192,20 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: GoogleFonts.inter(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF222222),
+                                  color: const Color(0xFF000000),
+                                  backgroundColor: AppColors.white
                                 ),
                                 decoration: InputDecoration(
                                   hintText: 'Email / Phone Number / TRK ID',
                                   hintStyle: GoogleFonts.inter(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w400,
-                                    color: _hintTextColor,
+                                    color: AppColors.white,
+                                    backgroundColor: AppColors.black
+
                                   ),
                                   filled: true,
-                                  fillColor: Colors.white,
+                                  fillColor: AppColors.black,
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 22,
                                     vertical: 14,
@@ -214,21 +213,21 @@ class _LoginScreenState extends State<LoginScreen> {
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(30),
                                     borderSide: const BorderSide(
-                                      color: _fieldBorderColor,
+                                      color: AppColors.white,
                                       width: 1.2,
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(30),
                                     borderSide: const BorderSide(
-                                      color: _fieldBorderColor,
+                                      color: AppColors.white,
                                       width: 1.2,
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(30),
                                     borderSide: const BorderSide(
-                                      color: _primaryBrown,
+                                      color: AppColors.primary,
                                       width: 1.4,
                                     ),
                                   ),
@@ -243,6 +242,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               // PASSWORD INPUT
                               // ----------------------------------------------------
                               TextField(
+
                                 controller: _passwordController,
                                 obscureText: !_isPasswordVisible,
                                 textInputAction: TextInputAction.done,
@@ -257,10 +257,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                   hintStyle: GoogleFonts.inter(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w400,
-                                    color: _hintTextColor,
+                                    color: AppColors.white,
+                                    backgroundColor: AppColors.black
                                   ),
                                   filled: true,
-                                  fillColor: Colors.white,
+                                  fillColor: Colors.black,
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 22,
                                     vertical: 14,
@@ -283,21 +284,21 @@ class _LoginScreenState extends State<LoginScreen> {
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(30),
                                     borderSide: const BorderSide(
-                                      color: _fieldBorderColor,
+                                      color: AppColors.white,
                                       width: 1.2,
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(30),
                                     borderSide: const BorderSide(
-                                      color: _fieldBorderColor,
+                                      color: AppColors.white,
                                       width: 1.2,
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(30),
                                     borderSide: const BorderSide(
-                                      color: _primaryBrown,
+                                      color: AppColors.primary,
                                       width: 1.4,
                                     ),
                                   ),
@@ -306,7 +307,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   .animate(delay: 550.ms)
                                   .fade(duration: 600.ms),
 
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 16),
 
                               // ----------------------------------------------------
                               // FORGOT PASSWORD?
@@ -324,7 +325,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       style: GoogleFonts.inter(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w400,
-                                        color: _accentGold,
+                                        color: Color(0xFFD39A4A),
                                         letterSpacing: 0,
                                         height: 1.0,
                                       ),
@@ -350,9 +351,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ? null
                                       : _handleLogin,
                                   style: OutlinedButton.styleFrom(
-                                    backgroundColor: Colors.white,
+                                    backgroundColor: AppColors.black,
+                                    foregroundColor: AppColors.primary,
                                     side: const BorderSide(
-                                      color: _buttonBorderColor,
+                                      color: AppColors.primary,
                                       width: 1.2,
                                     ),
                                     shape: RoundedRectangleBorder(
@@ -368,7 +370,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                             strokeWidth: 2,
                                             valueColor:
                                                 AlwaysStoppedAnimation<Color>(
-                                              _primaryBrown,
+                                                  AppColors.primary,
                                             ),
                                           ),
                                         )
@@ -377,7 +379,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           style: GoogleFonts.sora(
                                             fontSize: 15,
                                             fontWeight: FontWeight.w600,
-                                            color: _primaryBrown,
+                                            color: AppColors.primary,
                                           ),
                                         ),
                                 ),
@@ -392,7 +394,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               // SIGN UP LINK
                               // ----------------------------------------------------
                               GestureDetector(
-                                onTap: () => context.push(AppRoutes.role),
+                                onTap: () => context.push(AppRoutes.signup),
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 4),
                                   child: Text.rich(
@@ -401,7 +403,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       style: GoogleFonts.inter(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w400,
-                                        color: _primaryBrown.withValues(alpha: 0.75),
+                                        color: AppColors.text.withValues(alpha: 0.75),
                                       ),
                                       children: [
                                         TextSpan(
@@ -409,7 +411,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           style: GoogleFonts.inter(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w700,
-                                            color: _primaryBrown,
+                                            color: AppColors.primary,
                                           ),
                                         ),
                                       ],

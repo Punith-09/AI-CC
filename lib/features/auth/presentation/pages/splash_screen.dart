@@ -129,7 +129,7 @@ class _SplashScreenState extends State<SplashScreen> {
       const Duration(milliseconds: 3800),
           () {
         if (mounted) {
-          context.go(AppRoutes.login);
+          context.go(AppRoutes.welcome);
         }
       },
     );

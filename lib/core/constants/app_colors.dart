@@ -4,10 +4,11 @@ class AppColors {
   AppColors._();
 
   /// Primary Brand Color
-  static const Color primary = Color(0xFF7C3AED);
-  static const Color buttonPrimary = Color(0xFF7C3AED);
-  static const Color secondary = Color(0xFF6D28D9);
-  static const Color gradient = Color(0xFF7C3AED);
+  static const Color primary = Color(0xFFDC8B20);
+  static const Color buttonPrimary = Color(0xFFDC8B20);
+  static const Color secondary = Color(0xFFDC8B20);
+  static const Color gradient = Color(0xFFDC8B20);
+  static const Color text = Color(0xFF8B5E34);
 
   // ============================================================
   // LIGHT PALETTE
@@ -29,7 +30,7 @@ class AppColors {
   static const Color darkCard = Color(0xFF1E293B);
   static const Color darkCardHover = Color(0xFF334155);
   static const Color darkSurface = Color(0xFF1E293B);
-  static const Color darkTextField = Color(0xFF334155);
+  static const Color darkTextField = Color(0xFFF3F4F6);
   static const Color darkText = Color(0xFFF8FAFC);
   static const Color darkTextSecondary = Color(0xFF94A3B8);
   static const Color darkBorder = Color(0xFF334155);
@@ -60,7 +61,7 @@ class AppColors {
   static const Color textField = Color(0xFFF3F4F6);
   static const Color logo = Color(0xFF111827);
 
-  static const Color black = Color(0xFF111827);
+  static const Color black = Color(0xFF000000);
   static const Color blackShade = Color(0xFF1F2937);
   static const Color greyText = Color(0xFF4B5563);
   static const Color grey = Color(0xFF6B7280);
