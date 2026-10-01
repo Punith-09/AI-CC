@@ -370,7 +370,7 @@ class _FooterLinks extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            "© 2026 India Casting Club / AICC. All rights reserved.",
+            "© 2026 India Casting Club / Treeko. All rights reserved.",
             style: GoogleFonts.poppins(
               color: const Color(0xFF94A3B8),
               fontSize: 11,

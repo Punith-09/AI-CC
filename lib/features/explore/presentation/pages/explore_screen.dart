@@ -52,9 +52,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final titleColor = isDark ? AppColors.darkText : AppColors.lightText;
-    final subtitleColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
-    final popupMenuColor = isDark ? AppColors.darkCard : Colors.white;
-    final popupMenuBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final popupMenuColor = isDark ? const Color(0xFF1C1C1E) : Colors.white;
+    final popupMenuBorder = isDark ? const Color(0xFF2C2C2E) : const Color(0xFFE2E8F0);
 
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,10 +61,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
         // ── App Bar (Mobile only) ────────────────────────────
         if (!isDesktop) ...[
           const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             child: ExploreAppbar(),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
         ] else
           const SizedBox(height: 16),
 
@@ -80,41 +79,45 @@ class _ExploreScreenState extends State<ExploreScreen> {
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 18),
 
-        // ── Category chips ───────────────────────────────────
+        // ── Category tabs (text-based, underline for selected) ──
         SizedBox(
-          height: 40,
+          height: 36,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
             itemCount: categories.length,
             separatorBuilder: (context, index) =>
-                const SizedBox(width: 10),
-            itemBuilder: (_, i) => _CategoryChip(
-              category: categories[i],
-              isSelected: _selectedCategoryIndex == i,
-              isDark: isDark,
-              onTap: () => _onCategoryTap(i),
-            ),
+                const SizedBox(width: 24),
+            itemBuilder: (_, i) {
+              // Skip the filter icon (index 0) — we hide it to match the mockup
+              if (i == 0) return const SizedBox.shrink();
+              return _CategoryTab(
+                category: categories[i],
+                isSelected: _selectedCategoryIndex == i,
+                isDark: isDark,
+                onTap: () => _onCategoryTap(i),
+              );
+            },
           ),
         ),
 
-        const SizedBox(height: 22),
+        const SizedBox(height: 20),
 
-        // ── Section Header: TOP MATCHES NEAR YOU  📍 Mumbai ──
+        // ── Section Header: Top Matches Near You  📍 Select Location ──
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'TOP MATCHES NEAR YOU',
+                'Top Matches Near You',
                 style: GoogleFonts.poppins(
                   color: titleColor,
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
+                  letterSpacing: 0.2,
                 ),
               ),
               Consumer<ExploreProvider>(
@@ -157,18 +160,21 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       }).toList();
                     },
                     child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(
                           LucideIcons.mapPin,
                           color: AppColors.primary,
-                          size: 15,
+                          size: 14,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          provider.selectedLocation.isEmpty ? 'Anywhere' : provider.selectedLocation,
+                          provider.selectedLocation.isEmpty
+                              ? 'Select Location'
+                              : provider.selectedLocation,
                           style: GoogleFonts.poppins(
                             color: AppColors.primary,
-                            fontSize: 13,
+                            fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -189,7 +195,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
         const SizedBox(height: 12),
 
-        // ── Grid ─────────────────────────────────────────────
+        // ── List ─────────────────────────────────────────────
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -213,7 +219,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         children: [
                           Icon(
                             LucideIcons.wifiOff,
-                            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8),
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : const Color(0xFF94A3B8),
                             size: 40,
                           ),
                           const SizedBox(height: 12),
@@ -221,7 +229,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             provider.error!,
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                              color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : const Color(0xFF64748B),
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -245,14 +255,18 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       children: [
                         Icon(
                           LucideIcons.users,
-                          color: isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8),
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : const Color(0xFF94A3B8),
                           size: 48,
                         ),
                         const SizedBox(height: 12),
                         Text(
                           'No talent found',
                           style: GoogleFonts.poppins(
-                            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : const Color(0xFF64748B),
                             fontSize: 15,
                           ),
                         ),
@@ -288,7 +302,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Local search bar widget
+// Search bar
 // ──────────────────────────────────────────────────────────────────────────────
 class _SearchBar extends StatelessWidget {
   final TextEditingController controller;
@@ -303,28 +317,27 @@ class _SearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bgColor = isDark ? const Color(0xFF1C1C1E) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF2C2C2E) : const Color(0xFFE2E8F0);
+    final iconColor = isDark ? const Color(0xFF8A8A8E) : const Color(0xFF94A3B8);
+    final hintColor = isDark ? const Color(0xFF8A8A8E) : const Color(0xFF9CA3AF);
+    final textColor = isDark ? Colors.white : AppColors.lightText;
+
     return Container(
       height: 50,
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkTextField : Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        color: bgColor,
+        borderRadius: BorderRadius.circular(30),
         border: Border.all(
-          color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+          color: borderColor,
           width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.1 : 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: TextField(
         controller: controller,
         onChanged: onChanged,
         style: GoogleFonts.poppins(
-          color: isDark ? AppColors.darkText : AppColors.lightText,
+          color: textColor,
           fontSize: 14,
         ),
         cursorColor: AppColors.primary,
@@ -336,12 +349,12 @@ class _SearchBar extends StatelessWidget {
           contentPadding: const EdgeInsets.symmetric(vertical: 14),
           prefixIcon: Icon(
             LucideIcons.search,
-            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8),
+            color: iconColor,
             size: 20,
           ),
-          hintText: 'Search by name, role or skills...',
+          hintText: 'Search by name, role, skills....',
           hintStyle: GoogleFonts.poppins(
-            color: isDark ? AppColors.darkTextSecondary : AppColors.hint,
+            color: hintColor,
             fontSize: 13.5,
           ),
         ),
@@ -351,15 +364,15 @@ class _SearchBar extends StatelessWidget {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Category chip
+// Category tab (text + underline indicator)
 // ──────────────────────────────────────────────────────────────────────────────
-class _CategoryChip extends StatelessWidget {
+class _CategoryTab extends StatelessWidget {
   final ExploreCategory category;
   final bool isSelected;
   final bool isDark;
   final VoidCallback onTap;
 
-  const _CategoryChip({
+  const _CategoryTab({
     required this.category,
     required this.isSelected,
     this.isDark = false,
@@ -368,61 +381,34 @@ class _CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasIcon = category.icon != null && category.title.isEmpty;
-
-    final unselectedBg = isDark ? AppColors.darkCard : Colors.white;
-    final unselectedBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
-    final unselectedText = isDark ? AppColors.darkTextSecondary : const Color(0xFF475569);
-    final unselectedIconColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
+    final selectedColor = AppColors.primary;
+    final unselectedColor = isDark ? const Color(0xFF8A8A8E) : const Color(0xFF6B7280);
 
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(
-          horizontal: hasIcon ? 12 : 20,
-          vertical: 8,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.buttonPrimary
-              : unselectedBg,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: isSelected
-                ? AppColors.buttonPrimary
-                : unselectedBorder,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            category.title,
+            style: GoogleFonts.poppins(
+              color: isSelected ? selectedColor : unselectedColor,
+              fontSize: 14,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+            ),
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: AppColors.buttonPrimary.withValues(alpha: 0.35),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.1 : 0.03),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-        ),
-        child: hasIcon
-            ? Icon(
-                category.icon!,
-                color: isSelected ? Colors.white : unselectedIconColor,
-                size: 18,
-              )
-            : Text(
-                category.title,
-                style: GoogleFonts.poppins(
-                  color: isSelected ? Colors.white : unselectedText,
-                  fontSize: 13,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                ),
-              ),
+          const SizedBox(height: 4),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: 2,
+            width: isSelected ? 24 : 0,
+            decoration: BoxDecoration(
+              color: selectedColor,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ],
       ),
     );
   }

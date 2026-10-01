@@ -24,6 +24,17 @@ class ArtistModel {
   final String? plan;
   final bool isVerified;
 
+  // ── Fields from /auth/register API ──────────────────────────
+  final String email;
+  final String mobile;
+  final String gender;
+  final String dob;
+  final String stageName;
+  final String username;
+  final int age;
+  final List<String> skills;
+  final List<String> preferredLanguages;
+
   const ArtistModel({
     this.id = '',
     required this.name,
@@ -43,6 +54,15 @@ class ArtistModel {
     this.portfolio = const [],
     this.plan,
     this.isVerified = false,
+    this.email = '',
+    this.mobile = '',
+    this.gender = '',
+    this.dob = '',
+    this.stageName = '',
+    this.username = '',
+    this.age = 0,
+    this.skills = const [],
+    this.preferredLanguages = const [],
   });
 
   /// GET /users/{id} nests city, experience, languages, etc. under `details`.
@@ -141,6 +161,19 @@ class ArtistModel {
           (data['plan'] != null &&
               data['plan'].toString().trim().toLowerCase() != 'free' &&
               data['plan'].toString().trim().toLowerCase() != 'none'),
+      email: _stringValue(data['email'] ?? json['email']),
+      mobile: _stringValue(
+        data['mobile'] ?? data['phone'] ?? data['phoneNumber'] ?? json['mobile'],
+      ),
+      gender: _stringValue(data['gender'] ?? json['gender']),
+      dob: _stringValue(data['dob'] ?? data['dateOfBirth'] ?? json['dob']),
+      stageName: _stringValue(data['stageName'] ?? json['stageName']),
+      username: _stringValue(data['username'] ?? json['username']),
+      age: _intValue(data['age'] ?? json['age']),
+      skills: _listValue(data['skills'] ?? json['skills']),
+      preferredLanguages: _listValue(
+        data['preferredLanguage'] ?? data['preferredLanguages'] ?? json['preferredLanguage'],
+      ),
     );
   }
 
@@ -181,6 +214,15 @@ class ArtistModel {
     List<PortfolioModel>? portfolio,
     String? plan,
     bool? isVerified,
+    String? email,
+    String? mobile,
+    String? gender,
+    String? dob,
+    String? stageName,
+    String? username,
+    int? age,
+    List<String>? skills,
+    List<String>? preferredLanguages,
   }) {
     return ArtistModel(
       id: id ?? this.id,
@@ -201,6 +243,15 @@ class ArtistModel {
       portfolio: portfolio ?? this.portfolio,
       plan: plan ?? this.plan,
       isVerified: isVerified ?? this.isVerified,
+      email: email ?? this.email,
+      mobile: mobile ?? this.mobile,
+      gender: gender ?? this.gender,
+      dob: dob ?? this.dob,
+      stageName: stageName ?? this.stageName,
+      username: username ?? this.username,
+      age: age ?? this.age,
+      skills: skills ?? this.skills,
+      preferredLanguages: preferredLanguages ?? this.preferredLanguages,
     );
   }
 
@@ -435,6 +486,15 @@ class ArtistModel {
       'experience': experience,
       'languages': languages,
       'portfolio': portfolio.map((e) => e.toJson()).toList(),
+      'email': email,
+      'mobile': mobile,
+      'gender': gender,
+      'dob': dob,
+      'stageName': stageName,
+      'username': username,
+      'age': age,
+      'skills': skills,
+      'preferredLanguage': preferredLanguages,
     };
   }
 }

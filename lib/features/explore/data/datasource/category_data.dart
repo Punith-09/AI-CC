@@ -1,35 +1,13 @@
-import 'package:flutter/cupertino.dart';
-
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
-
-// import 'category_model.dart';
 
 const categories = [
-
-  ExploreCategory(
-    title: "",
-    icon: LucideIcons.slidersHorizontal,
-  ),
-
-  ExploreCategory(
-    title: "All",
-  ),
-
-  ExploreCategory(
-    title: "Actor",
-  ),
-
-  ExploreCategory(
-    title: "Model",
-  ),
-
-  ExploreCategory(
-    title: "Singer",
-  ),
+  ExploreCategory(title: "", icon: Icons.tune_rounded), // index 0 – hidden in new UI
+  ExploreCategory(title: "All"),
+  ExploreCategory(title: "Actors"),
+  ExploreCategory(title: "Models"),
+  ExploreCategory(title: "Dancers"),
+  ExploreCategory(title: "Singers"),
 ];
-
-
 
 class ExploreCategory {
   final String title;

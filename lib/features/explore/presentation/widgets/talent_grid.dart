@@ -15,23 +15,28 @@ class TalentGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
-    final columns = isDesktop ? 3 : 2;
 
-    return GridView.builder(
-      padding: EdgeInsets.only(bottom: isDesktop ? 40 : 90, top: 4),
+    // On desktop keep a 2-column grid; on mobile use a vertical list
+    if (isDesktop) {
+      return GridView.builder(
+        padding: const EdgeInsets.only(bottom: 40, top: 4),
+        physics: const BouncingScrollPhysics(),
+        itemCount: talents.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 3.2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 0,
+        ),
+        itemBuilder: (_, index) => TalentCard(talent: talents[index]),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 90, top: 4),
       physics: const BouncingScrollPhysics(),
       itemCount: talents.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: columns,
-        childAspectRatio: isDesktop ? 0.82 : 0.88,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      itemBuilder: (_, index) {
-        return TalentCard(
-          talent: talents[index],
-        );
-      },
+      itemBuilder: (_, index) => TalentCard(talent: talents[index]),
     );
   }
 }
