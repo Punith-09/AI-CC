@@ -282,7 +282,7 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
     // Stats
     final postsCount = profile?.projects ?? 0;
     final followersCount = profile?.followers ?? '0';
-    const shortlistCount = '00';
+    final followingCount = profile?.followingCount ?? '0';
     const viewsCount = '43';
 
     return NestedScrollView(
@@ -292,21 +292,8 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
             color: bgColor,
             child: Column(
               children: [
-                // ── Top Bar ──────────────────────────────────────
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      // Theme toggle switch
-                      _ThemeToggleSwitch(
-                        isDark: isDark,
-                        onToggle: () => themeProvider.toggleTheme(),
-                      ),
-                    ],
-                  ),
-                ),
+                // Top spacing since we removed the Top Bar theme toggle
+                const SizedBox(height: 10),
 
                 // ── Profile Info Row ──────────────────────────────
                 Padding(
@@ -352,6 +339,16 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
                                 ),
                               ),
                             ),
+                            if (profile?.trkCode != null && profile!.trkCode.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                profile.trkCode,
+                                style: TextStyle(
+                                  color: subTextColor,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
                             const SizedBox(height: 6),
                             // Location
                             Row(
@@ -374,17 +371,123 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
                           ],
                         ),
                       ),
-                      // Share / profile icon
-                      Icon(
-                        Icons.share_outlined,
-                        color: subTextColor,
-                        size: 22,
+                      // 3-dot Menu
+                      PopupMenuButton<String>(
+                        icon: Icon(
+                          Icons.more_vert,
+                          color: AppColors.primary,
+                        ),
+                        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: isDark ? Colors.white12 : Colors.black12,
+                          ),
+                        ),
+                        onSelected: (value) {
+                          if (value == 'theme') {
+                            themeProvider.toggleTheme();
+                          } else if (value == 'logout') {
+                            _logout();
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: 'theme',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                                  size: 18,
+                                  color: AppColors.primary,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Theme',
+                                  style: TextStyle(
+                                    color: isDark ? Colors.white : Colors.black87,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'logout',
+                            child: Row(
+                              children: [
+                                Icon(Icons.logout, size: 18, color: AppColors.primary),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Logout',
+                                  style: TextStyle(
+                                    color: isDark ? Colors.white : Colors.black87,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
+
+                // ── Profile Completion Bar ────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Profile Completion',
+                            style: TextStyle(
+                              color: subTextColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            '95%',
+                            style: TextStyle(
+                              color: textColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      LinearProgressIndicator(
+                        value: 0.95,
+                        backgroundColor: isDark ? Colors.white12 : Colors.black12,
+                        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                        minHeight: 4,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                      const SizedBox(height: 4),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          'Complete your profile',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 10,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
 
                 // ── Stats Row ─────────────────────────────────────
                 Padding(
@@ -402,8 +505,8 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
                           isDark: isDark),
                       const SizedBox(width: 8),
                       _StatBox(
-                          value: shortlistCount,
-                          label: 'Shortlist',
+                          value: followingCount.padLeft(2, '0'),
+                          label: 'Following',
                           isDark: isDark),
                       const SizedBox(width: 8),
                       _StatBox(
@@ -963,32 +1066,6 @@ class _BioDataTab extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Logout Button
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: onLogout,
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(
-                    color: isDark ? Colors.white24 : Colors.black26),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                foregroundColor: textColor,
-              ),
-              icon: Icon(Icons.logout, size: 18, color: textColor),
-              label: Text(
-                'Logout',
-                style: TextStyle(
-                    color: textColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15),
-              ),
             ),
           ),
 

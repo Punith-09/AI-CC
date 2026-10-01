@@ -2,8 +2,8 @@ class ApiEndpoints {
   ApiEndpoints._();
 
   static String get baseUrl {
-    // return 'http://localhost:3000';
-    return 'http://10.0.2.2:3000';
+    return 'http://localhost:3000';
+   // return 'http://10.0.2.2:3000';
     // return 'https://casting-be.onrender.com';
     // return 'https://powerpoint-goal-calendars-offers.trycloudflare.com';
   }
@@ -11,6 +11,8 @@ class ApiEndpoints {
   static const String login = '/auth/login';
   static const String register = '/auth/register';
   static const String googleLogin = '/auth/google';
+  static const String forgotPassword = '/auth/forgot-password';
+  static const String resetPassword = '/auth/reset-password';
 
   static const String exploreUsers = '/users/explore';
   static const String profileMe = '/profile/me';

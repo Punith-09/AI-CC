@@ -23,6 +23,7 @@ import '../../features/messages/data/models/chat_model.dart';
 import '../../features/auditions/presentation/pages/auditions_screen.dart';
 import '../../features/auth/presentation/pages/login_screen.dart';
 import '../../features/auth/presentation/pages/signup_screen.dart';
+import '../../features/auth/presentation/pages/forgot_password_screen.dart';
 import '../../features/auth/presentation/pages/welcome_screen.dart';
 import '../../features/creator_profile/presentation/pages/creator_profile_screen.dart';
 import '../../features/explore/presentation/pages/explore_screen.dart';
@@ -59,10 +60,17 @@ final GoRouter appRouter = GoRouter(
   routes: [
 
     GoRoute(path: AppRoutes.welcome, builder: (_, __) => const WelcomeScreen()),
-    GoRoute(path: AppRoutes.splash, builder: (_, __) => const SplashScreen()),
+    GoRoute(path: AppRoutes.welcome, builder: (_, __) => const WelcomeScreen()),
 
     GoRoute(path: AppRoutes.login, builder: (_, __) => const LoginScreen()),
     GoRoute(path: AppRoutes.signup, builder: (_, __) => const SignupScreen()),
+    GoRoute(
+      path: AppRoutes.forgotPassword,
+      builder: (context, state) {
+        final token = state.uri.queryParameters['token'];
+        return ForgotPasswordScreen(token: token);
+      },
+    ),
 
     GoRoute(
       path: AppRoutes.chat,
