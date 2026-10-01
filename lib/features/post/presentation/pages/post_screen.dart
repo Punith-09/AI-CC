@@ -250,12 +250,12 @@ class _PostScreenState extends State<PostScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? Colors.deepPurpleAccent
+                                ? AppColors.primary
                                 : (isDark ? const Color(0xff1F1F27) : const Color(0xFFF1F5F9)),
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
                               color: isSelected
-                                  ? Colors.deepPurpleAccent
+                                  ? AppColors.primary
                                   : (isDark ? borderColor : const Color(0xFFE2E8F0)),
                             ),
                           ),
@@ -472,11 +472,11 @@ class _PostScreenState extends State<PostScreen> {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: isDark ? borderColor : const Color(0xFFE2E8F0)),
+          borderSide: BorderSide(color: AppColors.primary),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Colors.deepPurpleAccent),
+          borderSide: const BorderSide(color: AppColors.primary),
         ),
       ),
     );

@@ -3,9 +3,9 @@ class ApiEndpoints {
 
   static String get baseUrl {
     // return 'http://localhost:3000';
-    return 'http://10.0.2.2:3000';
+    // return 'http://10.0.2.2:3000';
     // return 'https://casting-be.onrender.com';
-    // return 'https://powerpoint-goal-calendars-offers.trycloudflare.com';
+    return 'https://connectors-teaching-premiere-distributor.trycloudflare.com';
   }
 
   static const String login = '/auth/login';
