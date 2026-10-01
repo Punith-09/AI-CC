@@ -114,7 +114,7 @@ flutter:
 
 flutter_launcher_icons:
   android: true
-  image_path: "assets/icons/aicc.png"
+  image_path: "assets/images/treekologo.png"
 
 dependency_overrides:
   firebase_core_web: 3.10.0

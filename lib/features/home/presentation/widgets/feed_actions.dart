@@ -152,30 +152,30 @@ class _FeedActionsState extends State<FeedActions> {
           const SizedBox(width: 4),
 
           // Share Button
-          IconButton(
-            onPressed: () {},
-            icon: Icon(
-              LucideIcons.send,
-              size: 25,
-              color: iconColor,
-            ),
-          ),
+          // IconButton(
+          //   onPressed: () {},
+          //   icon: Icon(
+          //     LucideIcons.send,
+          //     size: 25,
+          //     color: iconColor,
+          //   ),
+          // ),
 
           const Spacer(),
 
           // Bookmark / Save Button
-          IconButton(
-            onPressed: () {
-              setState(() {
-                _saved = !_saved;
-              });
-            },
-            icon: Icon(
-              _saved ? Icons.bookmark : Icons.bookmark_border,
-              size: 30,
-              color: _saved ? const Color(0xFF8E3CF7) : iconColor,
-            ),
-          ),
+          // IconButton(
+          //   onPressed: () {
+          //     setState(() {
+          //       _saved = !_saved;
+          //     });
+          //   },
+          //   icon: Icon(
+          //     _saved ? Icons.bookmark : Icons.bookmark_border,
+          //     size: 30,
+          //     color: _saved ? const Color(0xFF8E3CF7) : iconColor,
+          //   ),
+          // ),
         ],
       ),
     );
