@@ -25,4 +25,6 @@ class AppRoutes {
   static const String appliedAuditions = "/appliedAuditions";
   static const String watchVideo = "/watchVideo";
   static const String subscription = "/subscription";
+  static const String storyUpload = "/storyUpload";
+  static const String storyViewer = "/storyViewer";
 }

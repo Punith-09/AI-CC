@@ -159,16 +159,16 @@ class DesktopSidebar extends StatelessWidget {
           const Spacer(),
 
           // ── Secondary Navigation / Manage ─────────────────────
-          _SidebarSubItem(
-            icon: LucideIcons.crown,
-            label: "Subscription",
-            onTap: () => context.push(AppRoutes.subscription),
-          ),
-          _SidebarSubItem(
-            icon: LucideIcons.bookmark,
-            label: "Applied Auditions",
-            onTap: () => context.push(AppRoutes.appliedAuditions),
-          ),
+          // _SidebarSubItem(
+          //   icon: LucideIcons.crown,
+          //   label: "Subscription",
+          //   onTap: () => context.push(AppRoutes.subscription),
+          // ),
+          // _SidebarSubItem(
+          //   icon: LucideIcons.bookmark,
+          //   label: "Applied Auditions",
+          //   onTap: () => context.push(AppRoutes.appliedAuditions),
+          // ),
 
           const SizedBox(height: 20),
         ],
@@ -201,7 +201,7 @@ class _SidebarItemState extends State<_SidebarItem> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final active = widget.isSelected;
-    final primaryColor = const Color(0xFF8E3CF7);
+    final primaryColor = AppColors.primary;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),

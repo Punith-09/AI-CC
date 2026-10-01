@@ -27,7 +27,7 @@ class AppColors {
   // ============================================================
   // static const Color darkScaffold = Color(0xFF0F172A);
   static const Color darkScaffold = Color(0xFF000000);
-  static const Color darkCard = Color(0xFF1E293B);
+  static const Color darkCard = Color(0xFF000000);
   static const Color darkCardHover = Color(0xFF334155);
   static const Color darkSurface = Color(0xFF1E293B);
   static const Color darkTextField = Color(0xFFF3F4F6);

@@ -15,8 +15,8 @@ class SectionTitle extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
-        style: const TextStyle(
-          color: AppColors.white,
+        style: TextStyle(
+          color: AppColors.getText(context),
           fontSize: 18,
           fontWeight: FontWeight.w700,
         ),

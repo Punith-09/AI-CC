@@ -192,15 +192,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: GoogleFonts.inter(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF000000),
-                                  backgroundColor: AppColors.white
+                                  color:AppColors.white,
+
                                 ),
                                 decoration: InputDecoration(
                                   hintText: 'Email / Phone Number / TRK ID',
                                   hintStyle: GoogleFonts.inter(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w400,
-                                    color: AppColors.white,
+                                    color: AppColors.hint,
                                     backgroundColor: AppColors.black
 
                                   ),
@@ -250,14 +250,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: GoogleFonts.inter(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF222222),
+                                  color: AppColors.white,
                                 ),
                                 decoration: InputDecoration(
                                   hintText: 'Password',
                                   hintStyle: GoogleFonts.inter(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w400,
-                                    color: AppColors.white,
+                                    color: AppColors.hint,
                                     backgroundColor: AppColors.black
                                   ),
                                   filled: true,
@@ -403,7 +403,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       style: GoogleFonts.inter(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w400,
-                                        color: AppColors.text.withValues(alpha: 0.75),
+                                        color: AppColors.hint.withValues(alpha: 0.75),
                                       ),
                                       children: [
                                         TextSpan(

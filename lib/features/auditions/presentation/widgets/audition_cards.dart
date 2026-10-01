@@ -18,21 +18,24 @@ class AuditionCards extends StatelessWidget {
     this.auditions,
   });
 
+  static const AuditionModel demoAudition = AuditionModel(
+    id: 'demo_scifi_short',
+    title: 'Lead Actor for Sci-Fi Short',
+    category: 'Film',
+    role: 'Lead Actor',
+    language: 'English',
+    pay: '2000/day',
+    location: 'Bangalore, India',
+    deadline: '28-11-2026',
+    description:
+        'Looking for a talented actor to play the lead in an upcoming Indie sci-fi short film.',
+  );
+
   @override
   Widget build(BuildContext context) {
-    final list = auditions ?? [];
-
-    if (list.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 32),
-        child: Center(
-          child: Text(
-            "No auditions found.",
-            style: TextStyle(color: Colors.white70, fontSize: 16),
-          ),
-        ),
-      );
-    }
+    final list = (auditions != null && auditions!.isNotEmpty)
+        ? auditions!
+        : const [demoAudition];
 
     return ListView.builder(
       shrinkWrap: true,

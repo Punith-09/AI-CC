@@ -18,6 +18,8 @@ import '../../features/messages/data/datasource/messages_remote_datasource.dart'
 import '../../features/messages/data/repository/messages_repository.dart';
 import '../../features/subscription/data/datasource/subscription_remote_datasource.dart';
 import '../../features/subscription/presentation/providers/subscription_provider.dart';
+import '../../features/stories/data/datasource/stories_remote_datasource.dart';
+import '../../features/stories/data/repository/stories_repository.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -152,4 +154,20 @@ Future<void> initDependencies() async {
       ),
     );
   }
-}
+
+  // Stories Feature
+  if (!sl.isRegistered<StoriesRemoteDataSource>()) {
+    sl.registerLazySingleton<StoriesRemoteDataSource>(
+      () => StoriesRemoteDataSourceImpl(
+        sl<DioClient>(),
+      ),
+    );
+  }
+  if (!sl.isRegistered<StoriesRepository>()) {
+    sl.registerLazySingleton<StoriesRepository>(
+      () => StoriesRepositoryImpl(
+        sl<StoriesRemoteDataSource>(),
+      ),
+    );
+  }
+}

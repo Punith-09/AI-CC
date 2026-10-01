@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../data/models/feed_post_model.dart';
 import '../../data/repository/home_repository.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../artist_profile/data/repository/profile_repository.dart';
+import '../../../artist_profile/presentation/providers/profile_provider.dart';
 import '../../../subscription/presentation/providers/subscription_provider.dart';
 import '../../../subscription/presentation/widgets/limit_upgrade_dialog.dart';
 
@@ -148,6 +150,63 @@ class HomeFeedProvider extends ChangeNotifier {
     }
   }
 
+
+  final Set<String> _followingUserIds = {};
+  final Set<String> _followLoadingUserIds = {};
+
+  bool isFollowing(String? userId) {
+    if (userId == null || userId.isEmpty) return false;
+    return _followingUserIds.contains(userId);
+  }
+
+  bool isFollowLoading(String? userId) {
+    if (userId == null || userId.isEmpty) return false;
+    return _followLoadingUserIds.contains(userId);
+  }
+
+  void syncFollowStatus(String userId, {required bool following}) {
+    if (userId.isEmpty) return;
+    if (following) {
+      _followingUserIds.add(userId);
+    } else {
+      _followingUserIds.remove(userId);
+    }
+    notifyListeners();
+  }
+
+  Future<bool> toggleFollowUser(String userId) async {
+    if (userId.isEmpty || _followLoadingUserIds.contains(userId)) {
+      return _followingUserIds.contains(userId);
+    }
+
+    _followLoadingUserIds.add(userId);
+    notifyListeners();
+
+    try {
+      if (sl.isRegistered<ProfileRepository>()) {
+        await sl<ProfileRepository>().followUser(userId);
+      }
+      final isNowFollowing = !_followingUserIds.contains(userId);
+      if (isNowFollowing) {
+        _followingUserIds.add(userId);
+      } else {
+        _followingUserIds.remove(userId);
+      }
+      _followLoadingUserIds.remove(userId);
+      notifyListeners();
+
+      if (sl.isRegistered<ProfileProvider>()) {
+        sl<ProfileProvider>().syncFollowStatus(userId, following: isNowFollowing);
+      }
+
+      return isNowFollowing;
+    } catch (e) {
+      _followLoadingUserIds.remove(userId);
+      notifyListeners();
+      rethrow;
+    }
+  }
+
   /// Syncs like state for a post across screens
   void syncPostLike(String postId, {required bool liked, required int likesCount}) {
     final index = _posts.indexWhere((p) => p.id == postId);
@@ -168,3 +227,4 @@ class HomeFeedProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
+

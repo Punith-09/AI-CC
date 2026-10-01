@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../core/constants/app_colors.dart';
 import '../../data/models/audition_model.dart';
 
 class AuditionCard extends StatelessWidget {
@@ -36,7 +36,7 @@ class AuditionCard extends StatelessWidget {
   });
 
   String get displayTitle => audition?.title ?? title ?? '';
-  String get displayCategory => audition?.category ?? category ?? '';
+  String get displayCategory => audition?.category ?? category ?? 'Film';
   String get displayRole => audition?.role ?? '';
   String get displayLocation => audition?.location ?? location ?? '';
   String get displayDeadline => audition?.deadline ?? deadline ?? '';
@@ -50,26 +50,26 @@ class AuditionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final titleColor = isDark ? AppColors.darkText : AppColors.lightText;
-    final roleColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
-    final deadlineColor = isDark ? Colors.amber.shade300 : const Color(0xFFD97706);
-    final descColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF475569);
-    final cardBg = isDark ? AppColors.darkCard : Colors.white;
-    final cardBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final cardBg = isDark ? const Color(0xFF141414) : Colors.white;
+    final cardBorder = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : const Color(0xFFE2E8F0);
+    const goldColor = Color(0xFFE5A844);
+    const dateColor = Color(0xFFA37D42);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: cardBg,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: cardBorder,
-          width: 1.2,
+          width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.04),
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.04),
             blurRadius: 12,
             offset: const Offset(0, 3),
           ),
@@ -78,69 +78,52 @@ class AuditionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// Header Row: Category Pill + Role Tag + Deadline Pill
+          /// Top Row: Category Pill on left, Calendar + Deadline on right
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              if (displayCategory.isNotEmpty) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.primary.withValues(alpha: 0.15)
-                        : const Color(0xFFF3E8FF),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppColors.primary.withValues(alpha: isDark ? 0.5 : 1),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    displayCategory,
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
+              // Category Pill
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1F1A10) : const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: goldColor.withValues(alpha: isDark ? 0.25 : 0.6),
+                    width: 0.8,
                   ),
                 ),
-                const SizedBox(width: 8),
-              ],
-              if (displayRole.isNotEmpty)
-                Expanded(
-                  child: Text(
-                    displayRole,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: roleColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
+                child: Text(
+                  displayCategory,
+                  style: const TextStyle(
+                    color: goldColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                   ),
-                )
-              else
-                const Spacer(),
-              if (displayDeadline.isNotEmpty) ...[
+                ),
+              ),
+
+              // Deadline with Calendar icon
+              if (displayDeadline.isNotEmpty)
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.calendar_today_outlined,
+                    const Icon(
+                      LucideIcons.calendar,
                       size: 13,
-                      color: deadlineColor,
+                      color: dateColor,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 5),
                     Text(
                       displayDeadline,
-                      style: TextStyle(
-                        color: deadlineColor,
+                      style: const TextStyle(
+                        color: dateColor,
                         fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
-              ],
             ],
           ),
 
@@ -150,155 +133,155 @@ class AuditionCard extends StatelessWidget {
           Text(
             displayTitle,
             style: TextStyle(
-              color: titleColor,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.2,
+              color: isDark ? Colors.white : const Color(0xFF111827),
+              fontSize: 16.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.1,
             ),
           ),
 
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
 
-          /// Meta Data Grid Chips (Location, Pay, Language, Applicants)
+          /// Meta Data Chips Row (Location, Pay, Language)
           Wrap(
-            spacing: 12,
-            runSpacing: 10,
+            spacing: 8,
+            runSpacing: 8,
             children: [
               if (displayLocation.isNotEmpty)
-                _buildMetaChip(Icons.location_on_outlined, displayLocation, isDark: isDark),
+                _buildMetaChip(
+                  icon: LucideIcons.mapPin,
+                  label: displayLocation,
+                  isDark: isDark,
+                ),
               if (displayPayout.isNotEmpty)
-                _buildMetaChip(Icons.payments_outlined, displayPayout, isDark: isDark),
+                _buildMetaChip(
+                  icon: LucideIcons.banknote,
+                  label: displayPayout,
+                  isDark: isDark,
+                ),
               if (displayLanguage.isNotEmpty && displayLanguage != 'N/A')
-                _buildMetaChip(Icons.translate_outlined, displayLanguage, isDark: isDark),
-              if (applicants != null && applicants != 'N/A')
-                _buildMetaChip(Icons.people_alt_outlined, applicants!, isDark: isDark),
+                _buildMetaChip(
+                  icon: LucideIcons.languages,
+                  label: displayLanguage,
+                  isDark: isDark,
+                ),
             ],
           ),
 
+          /// Description
           if (displayDescription.isNotEmpty) ...[
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             Text(
               displayDescription,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: descColor,
-                fontSize: 13,
-                height: 1.45,
+                color: isDark ? const Color(0xFF8E8E93) : const Color(0xFF4B5563),
+                fontSize: 12.5,
+                height: 1.4,
               ),
             ),
           ],
 
-          // -----------------------------------------------
-          // "Applied" badge + Edit / Delete icons row
-          // Shown only when the user has already applied
-          // -----------------------------------------------
+          /// Applied action row (if user has applied)
           if (_hasApplied) ...[
-            const SizedBox(height: 14),
-            _AppliedActionRow(
-              onDelete: onDelete,
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF27AE60).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFF27AE60), width: 0.8),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.check_circle, size: 14, color: Color(0xFF27AE60)),
+                      SizedBox(width: 4),
+                      Text(
+                        "Application Submitted",
+                        style: TextStyle(
+                          color: Color(0xFF27AE60),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (onDelete != null)
+                  IconButton(
+                    icon: const Icon(LucideIcons.trash2, size: 18, color: Colors.redAccent),
+                    onPressed: onDelete,
+                    tooltip: 'Withdraw Application',
+                  ),
+              ],
             ),
           ],
 
           const SizedBox(height: 16),
 
-          /// Main Action Buttons: View details + Apply Now
+          /// Action Buttons: View Details + Apply Now
           Row(
             children: [
+              // 1. View Details Button
               Expanded(
                 child: SizedBox(
-                  height: 44,
+                  height: 40,
                   child: OutlinedButton(
                     onPressed: onView,
                     style: OutlinedButton.styleFrom(
-                      backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
+                      backgroundColor: isDark ? const Color(0xFF1B1B1D) : const Color(0xFFF1F5F9),
                       side: BorderSide(
-                        color: AppColors.primary.withValues(alpha: isDark ? 0.6 : 1),
-                        width: 1.2,
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.12)
+                            : const Color(0xFFE2E8F0),
+                        width: 1,
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(20),
                       ),
+                      elevation: 0,
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "View details",
-                          style: const TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        const Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 16,
-                          color: AppColors.primary,
-                        ),
-                      ],
+                    child: Text(
+                      "View Details",
+                      style: TextStyle(
+                        color: isDark ? Colors.white : const Color(0xFF111827),
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
               ),
+
               const SizedBox(width: 12),
+
+              // 2. Apply Now Button
               Expanded(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    gradient: _hasApplied
-                        ? const LinearGradient(
-                            colors: [Color(0xFF1B4D3E), Color(0xFF27AE60)],
-                          )
-                        : const LinearGradient(
-                            colors: AppColors.BtnGradient,
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: (_hasApplied
-                                ? const Color(0xFF27AE60)
-                                : AppColors.gradient)
-                            .withValues(alpha: 0.3),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
+                child: SizedBox(
+                  height: 40,
                   child: ElevatedButton(
                     onPressed: _hasApplied ? null : onApply,
                     style: ElevatedButton.styleFrom(
+                      backgroundColor: _hasApplied
+                          ? const Color(0xFF2A2A2A)
+                          : const Color(0xFFE59424),
                       elevation: 0,
-                      backgroundColor: Colors.transparent,
-                      disabledBackgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(44),
+                      disabledBackgroundColor: const Color(0xFF2A2A2A),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (_hasApplied)
-                          const Icon(
-                            Icons.check_circle_outline_rounded,
-                            size: 16,
-                            color: Colors.white,
-                          ),
-                        if (_hasApplied) const SizedBox(width: 6),
-                        Text(
-                          _hasApplied ? "APPLIED" : "APPLY NOW",
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      _hasApplied ? "Applied" : "Apply Now",
+                      style: TextStyle(
+                        color: _hasApplied ? Colors.white60 : Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
@@ -310,15 +293,19 @@ class AuditionCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMetaChip(IconData icon, String text, {bool isDark = false}) {
+  Widget _buildMetaChip({
+    required IconData icon,
+    required String label,
+    required bool isDark,
+  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkTextField : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(10),
+        color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
-          width: 1,
+          color: Colors.white.withValues(alpha: 0.06),
+          width: 0.8,
         ),
       ),
       child: Row(
@@ -326,119 +313,19 @@ class AuditionCard extends StatelessWidget {
         children: [
           Icon(
             icon,
-            size: 14,
-            color: AppColors.primary,
+            size: 13,
+            color: const Color(0xFFFF9500),
           ),
           const SizedBox(width: 6),
           Text(
-            text,
-            style: TextStyle(
-              fontSize: 12,
-              color: isDark ? AppColors.darkTextSecondary : const Color(0xFF334155),
+            label,
+            style: const TextStyle(
+              color: Color(0xFFCCCCCC),
+              fontSize: 11.5,
               fontWeight: FontWeight.w500,
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// -----------------------------------------------------------
-// Applied action row: "Applied ✓" badge + Edit + Delete icons
-// -----------------------------------------------------------
-
-class _AppliedActionRow extends StatelessWidget {
-  final VoidCallback? onDelete;
-
-  const _AppliedActionRow({
-    this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFF27AE60).withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFF27AE60).withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          // "Applied" status badge
-          const Icon(
-            Icons.check_circle_rounded,
-            color: Color(0xFF27AE60),
-            size: 16,
-          ),
-          const SizedBox(width: 8),
-          const Expanded(
-            child: Text(
-              "You've applied · Manage your application",
-              style: TextStyle(
-                color: Color(0xFF27AE60),
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-
-          // Delete (withdraw) icon button
-          _IconBtn(
-            icon: Icons.delete_outline_rounded,
-            tooltip: "Withdraw application",
-            gradient: const [Color(0xffEB5757), Color(0xffFF8C42)],
-            onTap: onDelete,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _IconBtn extends StatelessWidget {
-  final IconData icon;
-  final String tooltip;
-  final List<Color> gradient;
-  final VoidCallback? onTap;
-
-  const _IconBtn({
-    required this.icon,
-    required this.tooltip,
-    required this.gradient,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(colors: gradient),
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: gradient.last.withValues(alpha: 0.4),
-                blurRadius: 8,
-                spreadRadius: -2,
-              ),
-            ],
-          ),
-          child: Icon(
-            icon,
-            color: Colors.white,
-            size: 17,
-          ),
-        ),
       ),
     );
   }

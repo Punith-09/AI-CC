@@ -8,10 +8,6 @@ class AuditionInfoCard extends StatelessWidget {
   final AuditionModel audition;
 
   /// The user's application for this audition.
-  ///
-  /// IMPORTANT:
-  /// application.id = APPLICATION ID
-  /// audition.id = AUDITION ID
   final ApplicationModel? application;
 
   /// Called when user taps edit.
@@ -37,91 +33,50 @@ class AuditionInfoCard extends StatelessWidget {
   });
 
   bool get hasApplied {
-    return application != null &&
-        application!.id.isNotEmpty;
+    return application != null && application!.id.isNotEmpty;
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-
-      padding: const EdgeInsets.all(20),
-
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.background.withValues(
-          alpha: 0.55,
-        ),
-
-        borderRadius: BorderRadius.circular(24),
-
+        color: const Color(0xFF1B1B1F),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.border.withValues(
-            alpha: 0.5,
-          ),
+          color: const Color(0xFF2A2A2E),
+          width: 0.8,
         ),
       ),
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-
         children: [
           // =====================================================
-          // TOP ROW
+          // TOP ROW: Category & Deadline
           // =====================================================
-
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // CATEGORY
-              if (audition.category.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(
-                      alpha: 0.15,
-                    ),
-
-                    borderRadius:
-                    BorderRadius.circular(8),
-
-                    border: Border.all(
-                      color: AppColors.primary
-                          .withValues(alpha: 0.5),
-                    ),
-                  ),
-
-                  child: Text(
-                    audition.category,
-
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
+              // CATEGORY PILL
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF261D13),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  audition.category.isNotEmpty ? audition.category : 'Film',
+                  style: const TextStyle(
+                    color: Color(0xFFDC8B20),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-
-              const SizedBox(width: 12),
-
-              // ROLE
-              if (audition.role.isNotEmpty)
-                Expanded(
-                  child: Text(
-                    audition.role,
-
-                    overflow: TextOverflow.ellipsis,
-
-                    style: const TextStyle(
-                      color: AppColors.greyText,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
+              ),
 
               // DEADLINE
               if (audition.deadline.isNotEmpty)
@@ -129,19 +84,16 @@ class AuditionInfoCard extends StatelessWidget {
                   children: [
                     const Icon(
                       Icons.calendar_today_outlined,
-                      size: 18,
-                      color: Colors.amber,
+                      size: 15,
+                      color: Color(0xFFDC8B20),
                     ),
-
-                    const SizedBox(width: 5),
-
+                    const SizedBox(width: 6),
                     Text(
                       audition.deadline,
-
                       style: const TextStyle(
-                        color: Colors.amber,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFDC8B20),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
@@ -149,51 +101,44 @@ class AuditionInfoCard extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
 
           // =====================================================
           // TITLE
           // =====================================================
-
           Text(
             audition.title,
-
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 25,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
+              height: 1.25,
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
           // =====================================================
           // INFORMATION CHIPS
           // =====================================================
-
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-
             child: Row(
               children: [
-                if (audition.location.isNotEmpty)
+                if (audition.location.isNotEmpty) ...[
                   _InfoChip(
                     icon: Icons.location_on_outlined,
                     text: audition.location,
                   ),
-
-                if (audition.location.isNotEmpty)
-                  const SizedBox(width: 10),
-
-                if (audition.pay.isNotEmpty)
+                  const SizedBox(width: 8),
+                ],
+                if (audition.pay.isNotEmpty) ...[
                   _InfoChip(
                     icon: Icons.payments_outlined,
                     text: audition.pay,
                   ),
-
-                if (audition.pay.isNotEmpty)
-                  const SizedBox(width: 10),
-
+                  const SizedBox(width: 8),
+                ],
                 if (audition.language.isNotEmpty)
                   _InfoChip(
                     icon: Icons.translate,
@@ -203,38 +148,34 @@ class AuditionInfoCard extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 18),
+          const SizedBox(height: 12),
 
           // =====================================================
           // DESCRIPTION
           // =====================================================
-
           Text(
             audition.description.isNotEmpty
                 ? audition.description
                 : "No further description provided.",
-
             maxLines: 3,
-
             overflow: TextOverflow.ellipsis,
-
             style: const TextStyle(
-              color: AppColors.greyText,
-              fontSize: 16,
-              height: 1.5,
+              color: Color(0xFF8E8E93),
+              fontSize: 13,
+              height: 1.4,
             ),
           ),
-
-          const SizedBox(height: 20),
 
           // =====================================================
           // APPLICATION STATUS
           // =====================================================
-
-          if (hasApplied)
-            _buildAppliedSection()
-          else
+          if (hasApplied) ...[
+            const SizedBox(height: 16),
+            _buildAppliedSection(),
+          ] else if (onViewDetails != null || onApply != null) ...[
+            const SizedBox(height: 16),
             _buildNotAppliedSection(),
+          ],
         ],
       ),
     );
@@ -252,183 +193,53 @@ class AuditionInfoCard extends StatelessWidget {
             horizontal: 14,
             vertical: 12,
           ),
-
           decoration: BoxDecoration(
             color: const Color(0xff073F36),
-
-            borderRadius:
-            BorderRadius.circular(18),
-
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.green.withValues(
-                alpha: 0.45,
-              ),
+              color: Colors.green.withValues(alpha: 0.45),
             ),
           ),
-
           child: Row(
             children: [
               const Icon(
                 Icons.check_circle,
                 color: Colors.green,
-                size: 28,
+                size: 24,
               ),
-
-              const SizedBox(width: 12),
-
+              const SizedBox(width: 10),
               const Expanded(
                 child: Text(
                   "You've applied · Manage your application",
-
                   style: TextStyle(
                     color: Colors.green,
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-
-              // =================================================
-              // EDIT
-              // =================================================
-
               if (onEdit != null)
                 _ActionButton(
                   icon: Icons.edit_outlined,
-
                   gradient: const [
                     Color(0xff20D5FF),
                     Color(0xffCC3EFF),
                   ],
-
                   onTap: onEdit!,
                 ),
-
-              if (onEdit != null &&
-                  onWithdraw != null)
+              if (onEdit != null && onWithdraw != null)
                 const SizedBox(width: 8),
-
-              // =================================================
-              // WITHDRAW
-              // =================================================
-
               if (onWithdraw != null)
                 _ActionButton(
                   icon: Icons.delete_outline_rounded,
-
                   gradient: const [
                     Color(0xffEB5757),
                     Color(0xffFF8C42),
                   ],
-
                   onTap: onWithdraw!,
                 ),
             ],
           ),
-        ),
-
-        const SizedBox(height: 18),
-
-        // =====================================================
-        // DETAILS + APPLIED
-        // =====================================================
-
-        Row(
-          children: [
-            if (onViewDetails != null)
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: onViewDetails,
-
-                  style: OutlinedButton.styleFrom(
-                    minimumSize:
-                    const Size(0, 58),
-
-                    side: const BorderSide(
-                      color: AppColors.primary,
-                      width: 1.5,
-                    ),
-
-                    shape:
-                    RoundedRectangleBorder(
-                      borderRadius:
-                      BorderRadius.circular(18),
-                    ),
-                  ),
-
-                  child: const Row(
-                    mainAxisAlignment:
-                    MainAxisAlignment.center,
-
-                    children: [
-                      Text(
-                        "View details",
-
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-
-                      SizedBox(width: 10),
-
-                      Icon(
-                        Icons.arrow_forward,
-                        color: AppColors.primary,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-            const SizedBox(width: 16),
-
-            Expanded(
-              child: Container(
-                height: 58,
-
-                decoration: BoxDecoration(
-                  gradient:
-                  const LinearGradient(
-                    colors: [
-                      Color(0xff1E754D),
-                      Color(0xff20B45A),
-                    ],
-                  ),
-
-                  borderRadius:
-                  BorderRadius.circular(18),
-                ),
-
-                child: const Center(
-                  child: Row(
-                    mainAxisAlignment:
-                    MainAxisAlignment.center,
-
-                    children: [
-                      Icon(
-                        Icons.check_circle_outline,
-                        color: Colors.white,
-                      ),
-
-                      SizedBox(width: 8),
-
-                      Text(
-                        "APPLIED",
-
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
         ),
       ],
     );
@@ -445,63 +256,44 @@ class AuditionInfoCard extends StatelessWidget {
           Expanded(
             child: OutlinedButton(
               onPressed: onViewDetails,
-
               style: OutlinedButton.styleFrom(
-                minimumSize:
-                const Size(0, 58),
-
+                minimumSize: const Size(0, 48),
                 side: const BorderSide(
                   color: AppColors.primary,
                   width: 1.5,
                 ),
-
-                shape:
-                RoundedRectangleBorder(
-                  borderRadius:
-                  BorderRadius.circular(18),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
-
               child: const Text(
                 "View details",
-
                 style: TextStyle(
                   color: AppColors.primary,
-                  fontSize: 17,
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
           ),
-
-        if (onViewDetails != null)
-          const SizedBox(width: 16),
-
+        if (onViewDetails != null && onApply != null)
+          const SizedBox(width: 12),
         if (onApply != null)
           Expanded(
             child: ElevatedButton(
               onPressed: onApply,
-
               style: ElevatedButton.styleFrom(
-                minimumSize:
-                const Size(0, 58),
-
-                backgroundColor:
-                AppColors.primary,
-
-                shape:
-                RoundedRectangleBorder(
-                  borderRadius:
-                  BorderRadius.circular(18),
+                minimumSize: const Size(0, 48),
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
-
               child: const Text(
                 "APPLY",
-
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 17,
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -529,39 +321,27 @@ class _InfoChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 10,
+        horizontal: 12,
+        vertical: 6,
       ),
-
       decoration: BoxDecoration(
-        color: AppColors.card.withValues(
-          alpha: 0.8,
-        ),
-
-        borderRadius:
-        BorderRadius.circular(14),
-
-        border: Border.all(
-          color: AppColors.border,
-        ),
+        color: const Color(0xFF131316),
+        borderRadius: BorderRadius.circular(16),
       ),
-
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             icon,
-            size: 20,
-            color: AppColors.primary,
+            size: 14,
+            color: const Color(0xFFDC8B20),
           ),
-
-          const SizedBox(width: 8),
-
+          const SizedBox(width: 5),
           Text(
             text,
-
             style: const TextStyle(
-              color: Colors.white,
-              fontSize: 15,
+              color: Color(0xFFD1D1D6),
+              fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -590,38 +370,17 @@ class _ActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-
       child: Container(
-        width: 52,
-        height: 52,
-
+        width: 38,
+        height: 38,
         decoration: BoxDecoration(
-          gradient:
-          LinearGradient(colors: gradient),
-
-          borderRadius:
-          BorderRadius.circular(15),
-
-          boxShadow: [
-            BoxShadow(
-              color:
-              gradient.last.withValues(
-                alpha: 0.30,
-              ),
-
-              blurRadius: 10,
-
-              spreadRadius: -2,
-            ),
-          ],
+          gradient: LinearGradient(colors: gradient),
+          borderRadius: BorderRadius.circular(10),
         ),
-
         child: Icon(
           icon,
-
           color: Colors.white,
-
-          size: 25,
+          size: 18,
         ),
       ),
     );

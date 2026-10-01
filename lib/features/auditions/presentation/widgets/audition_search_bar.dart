@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:aicc/core/constants/app_colors.dart';
 
@@ -20,56 +21,58 @@ class AuditionSearchBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final hasText = controller != null && controller!.text.isNotEmpty;
-    final textColor = isDark ? AppColors.darkText : AppColors.lightText;
-    final hintColor = isDark ? AppColors.darkTextSecondary : AppColors.hint;
-    final iconColor = isDark ? AppColors.darkTextSecondary : AppColors.grey;
-    final fillColor = isDark ? AppColors.darkTextField : AppColors.lightTextField;
-    final borderColor = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final textColor = isDark ? Colors.white : AppColors.lightText;
+    const hintColor = Color(0xFF7A7A7A);
+    const borderColor = Color(0xFF5A4418);
+    final fillColor = isDark ? const Color(0xFF0D0D0D) : AppColors.lightTextField;
 
     return SizedBox(
-      height: 46,
+      height: 44,
       child: TextField(
         controller: controller,
         onChanged: onChanged,
         onTap: onTap,
         style: TextStyle(
           color: textColor,
-          fontSize: 14.5,
+          fontSize: 14,
         ),
         cursorColor: AppColors.primary,
         decoration: InputDecoration(
-          hintText: "Search role title, location...",
-          hintStyle: TextStyle(
+          hintText: "Search by role title, location",
+          hintStyle: const TextStyle(
             color: hintColor,
-            fontSize: 14,
+            fontSize: 13.5,
           ),
-          prefixIcon: Icon(
-            Icons.search,
-            size: 22,
-            color: iconColor,
+          prefixIcon: const Icon(
+            LucideIcons.search,
+            size: 18,
+            color: Color(0xFFA37D42),
           ),
           suffixIcon: hasText
               ? IconButton(
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.close,
-                    size: 18,
-                    color: iconColor,
+                    size: 16,
+                    color: Color(0xFFA37D42),
                   ),
                   onPressed: onClear,
                 )
               : null,
           filled: true,
           fillColor: fillColor,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(24),
-            borderSide: BorderSide(color: borderColor),
+            borderSide: BorderSide(
+              color: isDark ? borderColor : const Color(0xFFCBD5E1),
+              width: 1.1,
+            ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(24),
             borderSide: const BorderSide(
-              color: AppColors.primary,
-              width: 1.2,
+              color: Color(0xFFFF9500),
+              width: 1.3,
             ),
           ),
         ),

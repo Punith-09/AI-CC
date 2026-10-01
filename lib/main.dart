@@ -31,6 +31,8 @@ import 'features/apply_job/presentation/providers/apply_job_provider.dart';
 import 'features/messages/data/repository/messages_repository.dart';
 import 'features/messages/presentation/providers/messages_provider.dart';
 import 'features/subscription/presentation/providers/subscription_provider.dart';
+import 'features/stories/data/repository/stories_repository.dart';
+import 'features/stories/presentation/providers/stories_provider.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -95,6 +97,9 @@ void main() async {
             }
             return provider;
           },
+        ),
+        ChangeNotifierProvider(
+          create: (_) => StoriesProvider(sl<StoriesRepository>()),
         ),
       ],
       child: const MyApp(),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:aicc/core/constants/app_colors.dart';
+import '../../../../core/constants/app_colors.dart';
 
 class CoverLetterField extends StatefulWidget {
   final TextEditingController controller;
@@ -11,16 +11,13 @@ class CoverLetterField extends StatefulWidget {
   });
 
   @override
-  State<CoverLetterField> createState() =>
-      _CoverLetterFieldState();
+  State<CoverLetterField> createState() => _CoverLetterFieldState();
 }
 
-class _CoverLetterFieldState
-    extends State<CoverLetterField> {
+class _CoverLetterFieldState extends State<CoverLetterField> {
   @override
   void initState() {
     super.initState();
-
     widget.controller.addListener(_onTextChanged);
   }
 
@@ -38,108 +35,69 @@ class _CoverLetterFieldState
   Widget build(BuildContext context) {
     final length = widget.controller.text.length;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            ShaderMask(
-              shaderCallback: (bounds) =>
-                  const LinearGradient(
-                    colors: [
-                      Color(0xff20D5FF),
-                      Color(0xffCC3EFF),
-                    ],
-                  ).createShader(bounds),
-              child: const Icon(
-                Icons.edit_outlined,
+    return Container(
+      width: double.infinity,
+      height: 200,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.primary,
+          width: 1.2,
+        ),
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: TextField(
+              controller: widget.controller,
+              maxLines: null,
+              keyboardType: TextInputType.multiline,
+              style: const TextStyle(
+                fontSize: 15,
                 color: Colors.white,
-                size: 22,
+                height: 1.4,
+              ),
+              cursorColor: AppColors.primary,
+              decoration: const InputDecoration(
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+                border: InputBorder.none,
+                hintText:
+                    "Write a message , Why Your prefect for this role\n( 20 Characters )",
+                hintStyle: TextStyle(
+                  color: Color(0xFF9E9E9E),
+                  fontSize: 14,
+                  height: 1.4,
+                ),
               ),
             ),
-
-            const SizedBox(width: 10),
-
-            const Expanded(
-              child: Text(
-                "Cover Letter (Minimum 20 characters)",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
+          ),
+          if (length > 0)
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.8),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  "$length / 20",
+                  style: TextStyle(
+                    color: length >= 20
+                        ? const Color(0xFF10B981)
+                        : AppColors.primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
-          ],
-        ),
-
-        const SizedBox(height: 14),
-
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            gradient: const LinearGradient(
-              colors: [
-                Color(0xff20D5FF),
-                Color(0xffCC3EFF),
-              ],
-            ),
-          ),
-          padding: const EdgeInsets.all(1),
-
-          child: Container(
-            padding: const EdgeInsets.all(18),
-
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(17),
-            ),
-
-            child: Column(
-              children: [
-                TextField(
-                  controller: widget.controller,
-
-                  maxLines: 7,
-                  minLines: 7,
-
-                  style: const TextStyle(
-                    fontSize: 17,
-                    color: Colors.white,
-                  ),
-
-                  cursorColor: AppColors.primary,
-
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-
-                    hintText:
-                    "Pitch why you are the perfect candidate for this role...",
-
-                    hintStyle: TextStyle(
-                      color: AppColors.hint,
-                      fontSize: 17,
-                    ),
-                  ),
-                ),
-
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: Text(
-                    "$length / 20",
-                    style: TextStyle(
-                      color: length >= 20
-                          ? Colors.green
-                          : Colors.redAccent,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

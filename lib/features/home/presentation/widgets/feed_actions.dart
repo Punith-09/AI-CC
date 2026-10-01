@@ -44,8 +44,9 @@ class _FeedActionsState extends State<FeedActions> {
     final likesCount = widget.post.likesCount;
     final commentsCount = widget.post.commentsCount;
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
-    final iconColor = AppColors.black;
-    final countColor = AppColors.black;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iconColor =isDark?AppColors.white:AppColors.black;
+    final countColor = isDark?AppColors.white:AppColors.black;
 
     return Container(
       padding: const EdgeInsets.only(left: 6, top: 0, right: 14, bottom: 0),

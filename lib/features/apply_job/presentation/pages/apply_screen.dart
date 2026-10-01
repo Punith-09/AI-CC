@@ -27,29 +27,30 @@ class ApplyScreen extends StatefulWidget {
     this.application,
   });
 
-  bool get isEditMode =>
-      application != null;
+  bool get isEditMode => application != null;
 
   @override
-  State<ApplyScreen> createState() =>
-      _ApplyScreenState();
+  State<ApplyScreen> createState() => _ApplyScreenState();
 }
 
-class _ApplyScreenState
-    extends State<ApplyScreen> {
-  late final TextEditingController
-  _coverLetterController;
+class _ApplyScreenState extends State<ApplyScreen> {
+  late final TextEditingController _coverLetterController;
+  late final TextEditingController _nameController;
+  late final TextEditingController _categoryController;
 
   @override
   void initState() {
     super.initState();
 
-    _coverLetterController =
-        TextEditingController(
-          text:
-          widget.application?.coverLetter ??
-              '',
-        );
+    _coverLetterController = TextEditingController(
+      text: widget.application?.coverLetter ?? '',
+    );
+    _nameController = TextEditingController(
+      text: widget.application?.applicantName ?? '',
+    );
+    _categoryController = TextEditingController(
+      text: widget.application?.applicantCategory ?? '',
+    );
 
     // Fetch logged-in user profile if not yet loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -63,7 +64,8 @@ class _ApplyScreenState
   @override
   void dispose() {
     _coverLetterController.dispose();
-
+    _nameController.dispose();
+    _categoryController.dispose();
     super.dispose();
   }
 
@@ -85,8 +87,7 @@ class _ApplyScreenState
 
     return AuditionModel(
       id: application?.auditionId ?? '',
-      title: application != null &&
-              application.auditionTitle.isNotEmpty
+      title: application != null && application.auditionTitle.isNotEmpty
           ? application.auditionTitle
           : 'Audition',
       category: application?.applicantCategory ?? '',
@@ -104,10 +105,7 @@ class _ApplyScreenState
   // =========================================================
 
   String get _auditionId {
-    if (widget.application != null &&
-        widget.application!
-            .auditionId
-            .isNotEmpty) {
+    if (widget.application != null && widget.application!.auditionId.isNotEmpty) {
       return widget.application!.auditionId;
     }
 
@@ -119,18 +117,6 @@ class _ApplyScreenState
   // =========================================================
 
   String get _applicationId {
-    /*
-    IMPORTANT:
-
-    This MUST be:
-
-        application.id
-
-    NOT:
-
-        audition.id
-    */
-
     return widget.application?.id ?? '';
   }
 
@@ -139,20 +125,15 @@ class _ApplyScreenState
   // =========================================================
 
   Future<void> _submitApplication() async {
-    final coverLetter =
-    _coverLetterController.text.trim();
+    final coverLetter = _coverLetterController.text.trim();
 
     if (_auditionId.isEmpty) {
-      _showMessage(
-        'Audition ID is missing.',
-      );
+      _showMessage('Audition ID is missing.');
       return;
     }
 
     if (coverLetter.length < 20) {
-      _showMessage(
-        'Cover letter must contain at least 20 characters.',
-      );
+      _showMessage('Cover letter must contain at least 20 characters.');
       return;
     }
 
@@ -165,11 +146,9 @@ class _ApplyScreenState
       return;
     }
 
-    final provider =
-    context.read<ApplyJobProvider>();
+    final provider = context.read<ApplyJobProvider>();
 
-    final success =
-    await provider.submitApplication(
+    final success = await provider.submitApplication(
       auditionId: _auditionId,
       coverLetter: coverLetter,
     );
@@ -187,9 +166,7 @@ class _ApplyScreenState
       // Update local audition state immediately so the list/details
       // reflect the applied status without waiting for a server re-fetch.
       if (mounted) {
-        context
-            .read<AuditionsProvider>()
-            .markAuditionApplied(_auditionId);
+        context.read<AuditionsProvider>().markAuditionApplied(_auditionId);
       }
 
       _showMessage(
@@ -197,15 +174,8 @@ class _ApplyScreenState
         isSuccess: true,
       );
 
-      /*
-      Return true so the previous screen
-      knows that application state changed.
-      */
-
       await Future.delayed(
-        const Duration(
-          milliseconds: 500,
-        ),
+        const Duration(milliseconds: 500),
       );
 
       if (mounted) {
@@ -228,13 +198,11 @@ class _ApplyScreenState
         );
       } else {
         _showMessage(
-          provider.errorMessage ??
-              'Failed to submit application.',
+          provider.errorMessage ?? 'Failed to submit application.',
         );
       }
     }
   }
-
 
   // =========================================================
   // WITHDRAW
@@ -242,62 +210,47 @@ class _ApplyScreenState
 
   Future<void> _withdrawApplication() async {
     if (_applicationId.isEmpty) {
-      _showMessage(
-        'Application ID is missing.',
-      );
+      _showMessage('Application ID is missing.');
       return;
     }
 
-    /*
-    Show confirmation first.
-    */
-
-    final bool? confirmed =
-    await showDialog<bool>(
+    final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor:
-          AppColors.card,
+          backgroundColor: const Color(0xFF1E1E22),
           title: const Text(
             'Withdraw Application?',
             style: TextStyle(
               color: Colors.white,
-              fontWeight:
-              FontWeight.bold,
+              fontWeight: FontWeight.bold,
             ),
           ),
           content: const Text(
             'Your application will be withdrawn from this audition. The audition itself will not be deleted.',
             style: TextStyle(
-              color:
-              AppColors.greyText,
+              color: Color(0xFF9E9E9E),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(
-                  dialogContext,
-                ).pop(false);
+                Navigator.of(dialogContext).pop(false);
               },
               child: const Text(
                 'Cancel',
+                style: TextStyle(color: Colors.white70),
               ),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(
-                  dialogContext,
-                ).pop(true);
+                Navigator.of(dialogContext).pop(true);
               },
               child: const Text(
                 'Withdraw',
                 style: TextStyle(
-                  color:
-                  Colors.redAccent,
-                  fontWeight:
-                  FontWeight.bold,
+                  color: Colors.redAccent,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -306,16 +259,13 @@ class _ApplyScreenState
       },
     );
 
-    if (confirmed != true ||
-        !mounted) {
+    if (confirmed != true || !mounted) {
       return;
     }
 
-    final provider =
-    context.read<ApplyJobProvider>();
+    final provider = context.read<ApplyJobProvider>();
 
-    final success =
-    await provider.deleteApplication(
+    final success = await provider.deleteApplication(
       applicationId: _applicationId,
     );
 
@@ -324,11 +274,8 @@ class _ApplyScreenState
     }
 
     if (success) {
-      // Immediately reflect withdrawal in the auditions list / details screen.
       if (mounted) {
-        context
-            .read<AuditionsProvider>()
-            .markAuditionUnapplied(_auditionId);
+        context.read<AuditionsProvider>().markAuditionUnapplied(_auditionId);
         try {
           context.read<SubscriptionProvider>().revertAuditionApplied();
         } catch (_) {}
@@ -340,9 +287,7 @@ class _ApplyScreenState
       );
 
       await Future.delayed(
-        const Duration(
-          milliseconds: 400,
-        ),
+        const Duration(milliseconds: 400),
       );
 
       if (mounted) {
@@ -350,8 +295,7 @@ class _ApplyScreenState
       }
     } else {
       _showMessage(
-        provider.errorMessage ??
-            'Failed to withdraw application.',
+        provider.errorMessage ?? 'Failed to withdraw application.',
       );
     }
   }
@@ -361,26 +305,20 @@ class _ApplyScreenState
   // =========================================================
 
   void _showMessage(
-      String message, {
-        bool isSuccess = false,
-      }) {
+    String message, {
+    bool isSuccess = false,
+  }) {
     if (!mounted) {
       return;
     }
 
-    ScaffoldMessenger.of(context)
-        .hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor:
-        isSuccess
-            ? Colors.green
-            : Colors.redAccent,
-        duration:
-        const Duration(seconds: 3),
+        backgroundColor: isSuccess ? Colors.green : Colors.redAccent,
+        duration: const Duration(seconds: 3),
       ),
     );
   }
@@ -392,48 +330,23 @@ class _ApplyScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-      AppColors.background,
-
+      backgroundColor: Colors.black,
       body: SafeArea(
         child: Consumer<ApplyJobProvider>(
-          builder: (
-              context,
-              provider,
-              child,
-              ) {
+          builder: (context, provider, child) {
             return Column(
               children: [
                 // =================================================
                 // APP BAR
                 // =================================================
-
                 Padding(
-                  padding:
-                  const EdgeInsets.fromLTRB(
-                    20,
-                    20,
-                    20,
-                    10,
-                  ),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
                   child: ApplyAppBar(
-                    title:
-                    widget.isEditMode
-                        ? 'My Application'
-                        : 'Submit Application',
-
-                    /*
-                    WITHDRAW BUTTON
-
-                    This withdraws application.
-                    It does NOT delete audition.
-                    */
-
-                    onDelete:
-                    widget.isEditMode
+                    title: widget.isEditMode ? 'My Application' : 'Application',
+                    onDelete: widget.isEditMode
                         ? provider.isDeleting
-                        ? null
-                        : _withdrawApplication
+                            ? null
+                            : _withdrawApplication
                         : null,
                   ),
                 ),
@@ -441,43 +354,29 @@ class _ApplyScreenState
                 // =================================================
                 // CONTENT
                 // =================================================
-
                 Expanded(
                   child: SingleChildScrollView(
-                    padding:
-                    const EdgeInsets.fromLTRB(
-                      20,
-                      10,
-                      20,
-                      30,
-                    ),
-
+                    padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
                     child: Column(
-                      crossAxisAlignment:
-                      CrossAxisAlignment.start,
-
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // =========================================
                         // AUDITION INFO
                         // =========================================
-
                         AuditionInfoCard(
                           audition: _audition,
                         ),
 
-                        const SizedBox(
-                          height: 28,
-                        ),
+                        const SizedBox(height: 16),
 
                         // =========================================
-                        // NAME
+                        // NAME & CATEGORY FIELDS
                         // =========================================
-
                         Consumer<ProfileProvider>(
                           builder: (context, profileProvider, _) {
                             final profile = profileProvider.currentProfile;
 
-                            // Resolve name: prefer profile, then application, then empty
+                            // Resolve name: prefer profile, then application
                             final displayName = profile?.name.isNotEmpty == true
                                 ? profile!.name
                                 : (widget.application?.applicantName.isNotEmpty == true
@@ -493,62 +392,53 @@ class _ApplyScreenState
                                         ? _audition.category
                                         : ''));
 
+                            if (_nameController.text.isEmpty && displayName.isNotEmpty) {
+                              _nameController.text = displayName;
+                            }
+                            if (_categoryController.text.isEmpty && displayCategory.isNotEmpty) {
+                              _categoryController.text = displayCategory;
+                            }
+
                             return Column(
                               children: [
-                                _buildReadOnlyField(
-                                  title: 'Your Full Name',
-                                  value: profileProvider.isLoading && profile == null
-                                      ? 'Loading...'
-                                      : displayName,
-                                  icon: Icons.person_outline,
+                                _buildInputField(
+                                  controller: _nameController,
+                                  hintText: 'Your Full Name',
                                 ),
-
-                                const SizedBox(height: 25),
-
-                                // =========================================
-                                // CATEGORY
-                                // =========================================
-
-                                _buildReadOnlyField(
-                                  title: 'Your Bio Category',
-                                  value: profileProvider.isLoading && profile == null
-                                      ? 'Loading...'
-                                      : displayCategory,
-                                  icon: Icons.person_outline,
+                                const SizedBox(height: 14),
+                                _buildInputField(
+                                  controller: _categoryController,
+                                  hintText: 'Your Bio Category',
                                 ),
                               ],
                             );
                           },
                         ),
 
-                        // =========================================
-                        // COVER LETTER
-                        // =========================================
+                        const SizedBox(height: 14),
 
+                        // =========================================
+                        // COVER LETTER / MESSAGE
+                        // =========================================
                         CoverLetterField(
                           controller: _coverLetterController,
                         ),
 
-                        const SizedBox(
-                          height: 30,
-                        ),
+                        const SizedBox(height: 24),
 
                         // =========================================
-                        // BUTTON
+                        // APPLY NOW BUTTON
                         // =========================================
-
                         if (!widget.isEditMode)
                           SubmitButton(
-                            onPressed:
-                            _submitApplication,
-                            isLoading:
-                            provider.isLoading,
-                            label:
-                            'Submit Application',
+                            onPressed: _submitApplication,
+                            isLoading: provider.isLoading,
+                            label: 'Apply Now',
                           ),
 
-                        if (widget.isEditMode)
-                          _buildViewOnlyHint(),
+                        if (widget.isEditMode) _buildViewOnlyHint(),
+
+                        const SizedBox(height: 16),
                       ],
                     ),
                   ),
@@ -562,86 +452,56 @@ class _ApplyScreenState
   }
 
   // =========================================================
-  // READ ONLY FIELD
+  // INPUT FIELD (FIGMA OUTLINED STYLE)
   // =========================================================
 
-  Widget _buildReadOnlyField({
-    required String title,
-    required String value,
-    required IconData icon,
+  Widget _buildInputField({
+    required TextEditingController controller,
+    required String hintText,
   }) {
-    return Column(
-      crossAxisAlignment:
-      CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            ShaderMask(
-              shaderCallback: (bounds) =>
-                  const LinearGradient(
-                    colors: [
-                      Color(0xff20D5FF),
-                      Color(0xffCC3EFF),
-                    ],
-                  ).createShader(bounds),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 22,
-              ),
-            ),
-
-            const SizedBox(
-              width: 10,
-            ),
-
-            Expanded(
-              child: Text(
-                title,
-                style:
-                const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight:
-                  FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
+    return TextField(
+      controller: controller,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 15,
+        fontWeight: FontWeight.w400,
+      ),
+      cursorColor: AppColors.primary,
+      decoration: InputDecoration(
+        hintText: hintText,
+        hintStyle: const TextStyle(
+          color: Color(0xFF9E9E9E),
+          fontSize: 15,
+          fontWeight: FontWeight.w400,
         ),
-
-        const SizedBox(
-          height: 14,
+        filled: true,
+        fillColor: Colors.black,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 16,
         ),
-
-        Container(
-          width: double.infinity,
-          padding:
-          const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 18,
-          ),
-          decoration:
-          BoxDecoration(
-            color:
-            AppColors.card,
-            borderRadius:
-            BorderRadius.circular(16),
-            border: Border.all(
-              color:
-              AppColors.border,
-            ),
-          ),
-          child: Text(
-            value,
-            style:
-            const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-            ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: AppColors.primary,
+            width: 1.2,
           ),
         ),
-      ],
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: AppColors.primary,
+            width: 1.2,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: AppColors.primary,
+            width: 1.5,
+          ),
+        ),
+      ),
     );
   }
 
@@ -654,10 +514,10 @@ class _ApplyScreenState
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(14),
+        color: Colors.green.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.green.withOpacity(0.3),
+          color: Colors.green.withValues(alpha: 0.4),
         ),
       ),
       child: const Row(
@@ -671,7 +531,7 @@ class _ApplyScreenState
             child: Text(
               'Your application has been submitted successfully.',
               style: TextStyle(
-                color: Colors.white70,
+                color: Colors.white,
                 fontSize: 14,
               ),
             ),

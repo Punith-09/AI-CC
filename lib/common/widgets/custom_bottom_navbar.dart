@@ -42,6 +42,7 @@ class CustomBottomNavbar extends StatelessWidget {
 
     return SizedBox(
       height: 82,
+
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.topCenter,
@@ -133,7 +134,7 @@ class CustomBottomNavbar extends StatelessWidget {
                 height: 58,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.buttonPrimary,
+                  color: AppColors.primary,
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.buttonPrimary.withValues(alpha: 0.35),

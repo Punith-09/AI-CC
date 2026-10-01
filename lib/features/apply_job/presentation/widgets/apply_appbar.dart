@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/app_colors.dart';
-
 class ApplyAppBar extends StatelessWidget {
   final VoidCallback? onDelete;
   final String title;
@@ -10,7 +8,7 @@ class ApplyAppBar extends StatelessWidget {
   const ApplyAppBar({
     super.key,
     this.onDelete,
-    this.title = 'Submit Application',
+    this.title = 'Application',
   });
 
   @override
@@ -33,7 +31,7 @@ class ApplyAppBar extends StatelessWidget {
             padding: EdgeInsets.all(8),
             child: Icon(
               Icons.arrow_back_ios_new,
-              color: AppColors.greyText,
+              color: Colors.white,
               size: 20,
             ),
           ),

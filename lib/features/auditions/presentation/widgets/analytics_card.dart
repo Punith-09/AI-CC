@@ -1,6 +1,7 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 import '../../../../core/routes/app_routes.dart';
 
 class AnalyticsCard extends StatelessWidget {
@@ -15,208 +16,198 @@ class AnalyticsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      height: 185,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xff4B1D8A),
-            Color(0xff2C0C55),
-          ],
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+          width: 1,
         ),
-      ),
-      child: Stack(
-        children: [
-
-          /// Decorative AI Icon
-          Positioned(
-            right: -10,
-            top: -10,
-            child: Icon(
-              Icons.auto_awesome,
-              size: 110,
-              color: Colors.white.withOpacity(.08),
-            ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Background Image from assets
+            Image.asset(
+              'assets/images/audition.png',
+              fit: BoxFit.cover,
+              alignment: Alignment.centerRight,
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: const Color(0xFF1C1309),
+              ),
+            ),
 
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-
-              Text(
-                "AUDITION ANALYSIS",
-                style: TextStyle(
-                  color: Colors.white.withOpacity(.7),
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
-                  fontSize: 12,
+            // Dark gradient overlay to keep text and stats sharp and readable
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.black.withValues(alpha: 0.90),
+                    Colors.black.withValues(alpha: 0.65),
+                    Colors.black.withValues(alpha: 0.20),
+                  ],
+                  stops: const [0.0, 0.55, 1.0],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
                 ),
               ),
+            ),
 
-              const SizedBox(height: 12),
-
-              const Text(
-                "Protagonist:\nShadow of Mumbai",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                  height: 1.2,
-                ),
-              ),
-
-              const SizedBox(height: 25),
-
-              Row(
+            // Card Content
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        context.push(AppRoutes.appliedAuditions);
-                      },
-                      child: analyticsItem(
-                        icon: Icons.people_alt_outlined,
-                        value: appliedCount.toString(),
-                        title: "Applied",
-                        iconColor: Colors.amber,
+                  // Top Title Header
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Audition Analysis",
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.72),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.3,
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 5),
+                      const Text(
+                        "Protagonist:\nShadow of Mumbai",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
                   ),
 
-                  const SizedBox(width: 12),
+                  // Bottom 3 Stats Row
+                  Row(
+                    children: [
+                      // 1. Applied
+                      Expanded(
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            context.push(AppRoutes.appliedAuditions);
+                          },
+                          child: _buildStatItem(
+                            icon: LucideIcons.users,
+                            value: appliedCount.toString(),
+                            label: "Applied",
+                          ),
+                        ),
+                      ),
 
-                  Expanded(
-                    child: analyticsItem(
-                      icon: Icons.trending_up,
-                      value: "12",
-                      title: "Top Fits",
-                      iconColor: Colors.pinkAccent,
-                    ),
-                  ),
+                      // Divider 1
+                      _buildDivider(),
 
-                  const SizedBox(width: 12),
+                      // 2. Top Fits
+                      Expanded(
+                        child: _buildStatItem(
+                          icon: LucideIcons.trendingUp,
+                          value: "12",
+                          label: "Top fits",
+                        ),
+                      ),
 
-                  Expanded(
-                    child: analyticsItem(
-                      icon: Icons.work_outline,
-                      value: "84%",
-                      title: "Avg. Match",
-                      iconColor: Colors.amber,
-                    ),
+                      // Divider 2
+                      _buildDivider(),
+
+                      // 3. Avg Match
+                      Expanded(
+                        child: _buildStatItem(
+                          icon: LucideIcons.check,
+                          value: "84%",
+                          label: "Avg Match",
+                          iconColor: const Color(0xFFFF9500),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
-        ],
-      ),
-
-    );
-  }
-
-  Widget analyticsItem({
-    required IconData icon,
-    required String value,
-    required String title,
-    required Color iconColor,
-  }) {
-    return Container(
-      height: 110,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(.10),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: Colors.white.withOpacity(.08),
+            ),
+          ],
         ),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-
-          Icon(
-            icon,
-            color: iconColor,
-            size: 24,
-          ),
-
-          const SizedBox(height: 10),
-
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 4),
-
-          Text(
-            title,
-            style: TextStyle(
-              color: Colors.white.withOpacity(.75),
-              fontSize: 13,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
-  Widget statCard(
-      IconData icon,
-      String value,
-      String title,
-      Color iconColor,
-      bool outlined,
-      ) {
+  Widget _buildDivider() {
     return Container(
-      height: 118,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(.10),
-        borderRadius: BorderRadius.circular(18),
-        border: outlined
-            ? Border.all(
-          color: Colors.white24,
-        )
-            : null,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
+      width: 1,
+      height: 38,
+      margin: const EdgeInsets.symmetric(horizontal: 6),
+      color: const Color(0xFF8B6425).withValues(alpha: 0.45),
+    );
+  }
 
-          Icon(
+  Widget _buildStatItem({
+    required IconData icon,
+    required String value,
+    required String label,
+    Color? iconColor,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Circular Icon Container
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.1),
+              width: 1,
+            ),
+          ),
+          child: Icon(
             icon,
-            color: iconColor,
-            size: 24,
+            size: 16,
+            color: iconColor ?? Colors.white.withValues(alpha: 0.85),
           ),
+        ),
+        const SizedBox(height: 6),
 
-          const SizedBox(height: 12),
-
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-            ),
+        // Stat Number
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
           ),
+        ),
+        const SizedBox(height: 2),
 
-          const SizedBox(height: 4),
-
-          Text(
-            title,
-            style: TextStyle(
-              color: Colors.white.withOpacity(.65),
-              fontSize: 15,
-            ),
+        // Stat Label
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.70),
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

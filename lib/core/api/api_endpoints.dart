@@ -2,10 +2,10 @@ class ApiEndpoints {
   ApiEndpoints._();
 
   static String get baseUrl {
-    return 'http://localhost:3000';
+    // return 'http://localhost:3000';
     // return 'http://10.0.2.2:3000r';
     // return 'https://casting-be.onrender.com';
-    // return 'https://country-december-conservative-housewares.trycloudflare.com';
+    return 'https://powerpoint-goal-calendars-offers.trycloudflare.com';
   }
 
   static const String login = '/auth/login';
@@ -55,4 +55,9 @@ class ApiEndpoints {
   static const String paymentCheckout = "/payments/checkout";
   static const String paymentVerify = "/payments/verify";
   static const String subscriptionsMe = "/subscriptions/me";
+
+  static const String stories = "/stories";
+  static const String storiesFeed = "/stories/feed";
+  static String storyView(String id) => "/stories/$id/views";
+  static String deleteStory(String id) => "/stories/$id";
 }

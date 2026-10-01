@@ -37,6 +37,7 @@ import '../../features/post/presentation/pages/upload_photo_screen.dart';
 import '../../features/post/presentation/pages/upload_video_screen.dart';
 import '../../features/explore/presentation/pages/explore_profile_screen.dart';
 import '../../features/subscription/presentation/pages/subscription_screen.dart';
+import '../../features/stories/presentation/pages/story_upload_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: AppRoutes.splash,
@@ -178,6 +179,14 @@ final GoRouter appRouter = GoRouter(
         }
         return const Scaffold(body: Center(child: Text('Media not found')));
       },
+    ),
+
+    // =========================================================
+    // STORY UPLOAD SCREEN
+    // =========================================================
+    GoRoute(
+      path: AppRoutes.storyUpload,
+      builder: (_, __) => const StoryUploadScreen(),
     ),
 
     // =========================================================
