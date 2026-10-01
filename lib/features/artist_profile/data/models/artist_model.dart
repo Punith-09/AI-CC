@@ -17,6 +17,7 @@ class ArtistModel {
   final double rating;
   final int awards;
   final bool following;
+  final String followingCount;
 
   final String experience;
   final String languages;
@@ -34,6 +35,7 @@ class ArtistModel {
   final int age;
   final List<String> skills;
   final List<String> preferredLanguages;
+  final String trkCode;
 
   const ArtistModel({
     this.id = '',
@@ -49,6 +51,7 @@ class ArtistModel {
     required this.rating,
     required this.awards,
     this.following = false,
+    this.followingCount = '0',
     required this.experience,
     required this.languages,
     this.portfolio = const [],
@@ -63,6 +66,7 @@ class ArtistModel {
     this.age = 0,
     this.skills = const [],
     this.preferredLanguages = const [],
+    this.trkCode = '',
   });
 
   /// GET /users/{id} nests city, experience, languages, etc. under `details`.
@@ -141,6 +145,7 @@ class ArtistModel {
         data['awards'] ?? data['awardsCount'] ?? data['awards_count'] ?? data['achievements'],
       ),
       following: data['following'] == true || json['following'] == true || data['isFollowing'] == true,
+      followingCount: _followingCountValue(data, rawJson: json),
       experience: _stringValue(
         data['experience'],
       ),
@@ -174,6 +179,7 @@ class ArtistModel {
       preferredLanguages: _listValue(
         data['preferredLanguage'] ?? data['preferredLanguages'] ?? json['preferredLanguage'],
       ),
+      trkCode: _stringValue(data['trkCode'] ?? data['trk_code'] ?? json['trkCode'] ?? json['trk_code']),
     );
   }
 
@@ -209,6 +215,7 @@ class ArtistModel {
     double? rating,
     int? awards,
     bool? following,
+    String? followingCount,
     String? experience,
     String? languages,
     List<PortfolioModel>? portfolio,
@@ -223,6 +230,7 @@ class ArtistModel {
     int? age,
     List<String>? skills,
     List<String>? preferredLanguages,
+    String? trkCode,
   }) {
     return ArtistModel(
       id: id ?? this.id,
@@ -238,6 +246,7 @@ class ArtistModel {
       rating: rating ?? this.rating,
       awards: awards ?? this.awards,
       following: following ?? this.following,
+      followingCount: followingCount ?? this.followingCount,
       experience: experience ?? this.experience,
       languages: languages ?? this.languages,
       portfolio: portfolio ?? this.portfolio,
@@ -252,11 +261,52 @@ class ArtistModel {
       age: age ?? this.age,
       skills: skills ?? this.skills,
       preferredLanguages: preferredLanguages ?? this.preferredLanguages,
+      trkCode: trkCode ?? this.trkCode,
     );
   }
 
   static String followersValueFromMap(Map<String, dynamic> data, {Map<String, dynamic>? rawJson}) {
     return _followersValue(data, rawJson: rawJson);
+  }
+
+  static String _followingCountValue(Map<String, dynamic> data, {Map<String, dynamic>? rawJson}) {
+    dynamic val = data['followingCount'] ??
+        data['following_count'] ??
+        data['followingTotal'] ??
+        data['stats']?['following'] ??
+        data['counts']?['following'] ??
+        rawJson?['followingCount'] ??
+        rawJson?['following_count'] ??
+        rawJson?['details']?['following'] ??
+        rawJson?['details']?['followingCount'];
+
+    if (val == null) {
+        // If data['following'] is an int/string count, grab it
+        if (data['following'] is int || data['following'] is num || (data['following'] is String && int.tryParse(data['following'].toString()) != null)) {
+             return data['following'].toString();
+        }
+        return '0';
+    }
+
+    if (val is int) return val.toString();
+    if (val is num) return val.toInt().toString();
+
+    if (val is List) {
+      return val.length.toString();
+    }
+
+    if (val is String) {
+      final trimmed = val.trim();
+      if (trimmed.isEmpty) return '0';
+      final parsedInt = int.tryParse(trimmed);
+      if (parsedInt != null) return parsedInt.toString();
+      if (trimmed.contains(',')) {
+        return trimmed.split(',').where((s) => s.trim().isNotEmpty).length.toString();
+      }
+      return trimmed;
+    }
+
+    return val.toString();
   }
 
   static String _followersValue(Map<String, dynamic> data, {Map<String, dynamic>? rawJson}) {
@@ -495,6 +545,7 @@ class ArtistModel {
       'age': age,
       'skills': skills,
       'preferredLanguage': preferredLanguages,
+      'trkCode': trkCode,
     };
   }
 }

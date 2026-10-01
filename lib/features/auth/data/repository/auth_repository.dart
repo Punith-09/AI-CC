@@ -23,6 +23,10 @@ abstract class AuthRepository {
   Future<void> logout();
 
   bool isUserLoggedIn();
+
+  Future<void> forgotPassword(String email);
+
+  Future<void> resetPassword(String token, String newPassword);
 }
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -261,5 +265,19 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   bool isUserLoggedIn() {
     return _localStorage.hasToken();
+  }
+
+  // ============================
+  // FORGOT PASSWORD
+  // ============================
+
+  @override
+  Future<void> forgotPassword(String email) async {
+    return _remoteDataSource.forgotPassword(email);
+  }
+
+  @override
+  Future<void> resetPassword(String token, String newPassword) async {
+    return _remoteDataSource.resetPassword(token, newPassword);
   }
 }

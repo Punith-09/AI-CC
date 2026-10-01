@@ -10,10 +10,21 @@ import '../../data/models/register_request.dart';
 
 // ── Validation helpers ────────────────────────────────────────────────────────
 bool _isValidEmail(String email) {
-  final emailRegex = RegExp(
-    r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$',
-  );
-  return emailRegex.hasMatch(email);
+  // Only @gmail.com addresses are accepted
+  final cleanEmail = email.trim().toLowerCase();
+  if (!cleanEmail.endsWith('@gmail.com')) {
+    return false;
+  }
+  
+  // Ensure the portion before @gmail.com is not empty
+  final prefix = cleanEmail.substring(0, cleanEmail.length - 10);
+  if (prefix.isEmpty) {
+    return false;
+  }
+
+  // Ensure prefix contains valid characters
+  final prefixRegex = RegExp(r'^[a-z0-9._%+-]+$');
+  return prefixRegex.hasMatch(prefix);
 }
 
 bool _isValidMobile(String mobile) {
@@ -74,7 +85,7 @@ class _SignupScreenState extends State<SignupScreen> {
     if (!_isValidEmail(email)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please enter a valid email address'),
+          content: Text('Please enter a valid Gmail address (e.g. example@gmail.com)'),
         ),
       );
       return;

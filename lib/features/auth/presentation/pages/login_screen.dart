@@ -318,7 +318,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   padding: const EdgeInsets.only(right: 6),
                                   child: GestureDetector(
                                     onTap: () {
-                                      // Optional forgot password action
+                                      context.push(AppRoutes.forgotPassword);
                                     },
                                     child: Text(
                                       'Forgot Password?',
