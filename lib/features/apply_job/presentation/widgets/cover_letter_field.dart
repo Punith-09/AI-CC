@@ -68,6 +68,7 @@ class _CoverLetterFieldState extends State<CoverLetterField> {
                     "Write a message , Why Your prefect for this role\n( 20 Characters )",
                 hintStyle: TextStyle(
                   color: Color(0xFF9E9E9E),
+                  backgroundColor: AppColors.black,
                   fontSize: 14,
                   height: 1.4,
                 ),

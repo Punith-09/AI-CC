@@ -40,7 +40,7 @@ import '../../features/subscription/presentation/pages/subscription_screen.dart'
 import '../../features/stories/presentation/pages/story_upload_screen.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: AppRoutes.splash,
+  initialLocation: AppRoutes.welcome,
   redirect: (context, state) {
     final isLoggedIn = LocalStorage.instance.hasToken();
     final location = state.uri.toString();
