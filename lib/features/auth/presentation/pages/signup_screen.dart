@@ -8,6 +8,19 @@ import '../../../../core/routes/app_routes.dart';
 import '../providers/auth_provider.dart';
 import '../../data/models/register_request.dart';
 
+// ── Validation helpers ────────────────────────────────────────────────────────
+bool _isValidEmail(String email) {
+  final emailRegex = RegExp(
+    r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$',
+  );
+  return emailRegex.hasMatch(email);
+}
+
+bool _isValidMobile(String mobile) {
+  final mobileRegex = RegExp(r'^[0-9]{10}$');
+  return mobileRegex.hasMatch(mobile);
+}
+
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
 
@@ -40,6 +53,7 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Future<void> _handleSignup() async {
+    // ── Required field check ──────────────────────────────────────────────────
     if (_selectedRole == null ||
         _usernameController.text.isEmpty ||
         _emailController.text.isEmpty ||
@@ -55,6 +69,35 @@ class _SignupScreenState extends State<SignupScreen> {
       return;
     }
 
+    // ── Email validation ──────────────────────────────────────────────────────
+    final email = _emailController.text.trim();
+    if (!_isValidEmail(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid email address'),
+        ),
+      );
+      return;
+    }
+
+    // ── Mobile validation ─────────────────────────────────────────────────────
+    final mobile = _mobileController.text.trim();
+    if (!_isValidMobile(mobile)) {
+      String mobileError;
+      if (mobile.contains(RegExp(r'[a-zA-Z]'))) {
+        mobileError = 'Mobile number must contain digits only';
+      } else if (mobile.length < 10) {
+        mobileError = 'Mobile number must be exactly 10 digits';
+      } else {
+        mobileError = 'Mobile number must be exactly 10 digits';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(mobileError)),
+      );
+      return;
+    }
+
+    // ── Terms check ───────────────────────────────────────────────────────────
     if (!_agreedToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -66,10 +109,10 @@ class _SignupScreenState extends State<SignupScreen> {
 
     final request = RegisterRequest(
       username: _usernameController.text.trim(),
-      email: _emailController.text.trim(),
+      email: email,
       password: _passwordController.text,
       role: _selectedRole!.toLowerCase(),
-      mobile: _mobileController.text.trim(),
+      mobile: mobile,
       age: int.tryParse(_ageController.text.trim()) ?? 0,
       gender: _selectedGender!,
     );
@@ -230,6 +273,11 @@ class _SignupScreenState extends State<SignupScreen> {
                               hint: 'Mobile Number',
                               controller: _mobileController,
                               keyboardType: TextInputType.phone,
+                              maxLength: 10,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(10),
+                              ],
                             ),
 
                             const SizedBox(height: 16),
@@ -423,12 +471,16 @@ class _SignupScreenState extends State<SignupScreen> {
     bool obscureText = false,
     bool isPassword = false,
     TextInputType keyboardType = TextInputType.text,
+    int? maxLength,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return TextField(
       controller: controller,
       obscureText: isPassword ? !_isPasswordVisible : obscureText,
       keyboardType: keyboardType,
       textInputAction: TextInputAction.next,
+      maxLength: maxLength,
+      inputFormatters: inputFormatters,
       style: GoogleFonts.inter(
         fontSize: 12,
         fontWeight: FontWeight.w500,
@@ -436,6 +488,8 @@ class _SignupScreenState extends State<SignupScreen> {
       ),
       decoration: InputDecoration(
         hintText: hint,
+        // hide the counter label that maxLength shows by default
+        counterText: '',
         hintStyle: GoogleFonts.inter(
           fontSize: 12,
           fontWeight: FontWeight.w400,

@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import '../../../../core/routes/app_routes.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -14,14 +13,6 @@ class WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return
-    // AnnotatedRegion handles SystemUI changes properly without direct method invocation in build
-    // return AnnotatedRegion<SystemUiOverlayStyle>(
-      // value: const SystemUiOverlayStyle(
-      //   statusBarColor: Colors.white,
-      //   statusBarIconBrightness: Brightness.dark,
-      //   systemNavigationBarColor: Colors.white,
-      //   systemNavigationBarIconBrightness: Brightness.dark,
-      // ),
        Scaffold(
         backgroundColor: AppColors.black,
         body: SafeArea(
