@@ -142,6 +142,12 @@ class AuditionsProvider extends ChangeNotifier {
           createdByMe: a.createdByMe,
           phone: a.phone,
           email: a.email,
+          applicants: a.applicants,
+          auditionDate: a.auditionDate,
+          age: a.age,
+          gender: a.gender,
+          experience: a.experience,
+          skills: a.skills,
         );
       }
       return a;
@@ -167,6 +173,12 @@ class AuditionsProvider extends ChangeNotifier {
         createdByMe: a.createdByMe,
         phone: a.phone,
         email: a.email,
+        applicants: a.applicants,
+        auditionDate: a.auditionDate,
+        age: a.age,
+        gender: a.gender,
+        experience: a.experience,
+        skills: a.skills,
       );
     }
 
@@ -194,6 +206,12 @@ class AuditionsProvider extends ChangeNotifier {
           createdByMe: a.createdByMe,
           phone: a.phone,
           email: a.email,
+          applicants: a.applicants,
+          auditionDate: a.auditionDate,
+          age: a.age,
+          gender: a.gender,
+          experience: a.experience,
+          skills: a.skills,
         );
       }
       return a;
@@ -219,6 +237,12 @@ class AuditionsProvider extends ChangeNotifier {
         createdByMe: a.createdByMe,
         phone: a.phone,
         email: a.email,
+        applicants: a.applicants,
+        auditionDate: a.auditionDate,
+        age: a.age,
+        gender: a.gender,
+        experience: a.experience,
+        skills: a.skills,
       );
     }
 

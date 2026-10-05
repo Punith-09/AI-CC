@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../common/widgets/app_background.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../data/models/audition_model.dart';
 import '../providers/auditions_provider.dart';
@@ -25,21 +22,36 @@ class AuditionDetails extends StatefulWidget {
 }
 
 class _AuditionDetailsState extends State<AuditionDetails> {
+  static const Color _primaryOrange = Color(0xFFDC8B20);
+  static const Color _cardBg = Color(0xFF1B1B1F);
+  static const Color _labelGrey = Color(0xFF8E8E93);
+  static const Color _bodyGrey = Color(0xFF9E9E9E);
+
   static final AuditionModel _defaultAudition = const AuditionModel(
     id: "1",
-    title: "Music Video Backup Dancer",
-    category: "Dancer",
-    role: "Hip Hop Choreography Crew",
-    language: "N/A",
-    pay: "₹15,000",
-    location: "Bangalore",
-    deadline: "2026-11-20",
+    title: "Female Lead - Short Film",
+    category: "Short Film",
+    role: "Acting",
+    language: "Telugu",
+    pay: "₹ 15,000",
+    location: "Hyderabad, Telangana",
+    deadline: "10 Oct 2026",
+    auditionDate: "12 Oct 2026",
+    age: "20 - 28 years",
+    gender: "Female",
+    experience: "0 - 2 years",
+    skills: "Acting, expressions, dialogue delivery",
     description:
-        "High energy, urban hip hop back-up dancers needed for a prominent music label's latest pop single.",
+        "We are looking for a female actor for the lead role in an upcoming short film. Candidates should be comfortable with dialogue delivery and expressive acting.",
     director: "Pulse Studios",
     phone: "+91 98765 43210",
     email: "producer@email.com",
   );
+
+  static const List<String> _monthNames = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  ];
 
   @override
   void initState() {
@@ -55,28 +67,266 @@ class _AuditionDetailsState extends State<AuditionDetails> {
     }
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  // ── Formatters & Derivations ──────────────────────────────────────────────
+
+  String _formatDate(String dateStr) {
+    if (dateStr.isEmpty) return 'N/A';
+    final trimmed = dateStr.trim();
+    try {
+      if (trimmed.contains('-')) {
+        final parts = trimmed.split('-');
+        if (parts.length == 3 && parts[0].length == 4) {
+          final year = int.parse(parts[0]);
+          final month = int.parse(parts[1]);
+          final day = int.parse(parts[2].split('T').first.split(' ').first);
+          if (month >= 1 && month <= 12) {
+            return '$day ${_monthNames[month - 1]} $year';
+          }
+        } else if (parts.length == 3 && parts[2].length == 4) {
+          final day = int.parse(parts[0]);
+          final month = int.parse(parts[1]);
+          final year = int.parse(parts[2].split('T').first.split(' ').first);
+          if (month >= 1 && month <= 12) {
+            return '$day ${_monthNames[month - 1]} $year';
+          }
+        }
+      }
+      final dt = DateTime.tryParse(trimmed);
+      if (dt != null) {
+        return '${dt.day} ${_monthNames[dt.month - 1]} ${dt.year}';
+      }
+    } catch (_) {}
+    return trimmed;
+  }
+
+  String _deriveAuditionDate(String auditionDate, String deadline) {
+    if (auditionDate.isNotEmpty) {
+      return _formatDate(auditionDate);
+    }
+    if (deadline.isNotEmpty) {
+      try {
+        final trimmed = deadline.trim();
+        DateTime? dt;
+        if (trimmed.contains('-')) {
+          final parts = trimmed.split('-');
+          if (parts.length == 3 && parts[0].length == 4) {
+            dt = DateTime.tryParse(trimmed.split('T').first);
+          } else if (parts.length == 3 && parts[2].length == 4) {
+            final day = int.parse(parts[0]);
+            final month = int.parse(parts[1]);
+            final year = int.parse(parts[2].split('T').first.split(' ').first);
+            dt = DateTime(year, month, day);
+          }
+        } else {
+          dt = DateTime.tryParse(trimmed);
+        }
+        if (dt != null) {
+          final audDt = dt.add(const Duration(days: 2));
+          return '${audDt.day} ${_monthNames[audDt.month - 1]} ${audDt.year}';
+        }
+      } catch (_) {}
+    }
+    return '12 Oct 2026';
+  }
+
+  String _formatPay(String payStr) {
+    if (payStr.isEmpty) return '₹ 15,000';
+    final trimmed = payStr.trim();
+    if (trimmed.startsWith('₹')) {
+      if (trimmed.length > 1 && trimmed[1] != ' ') {
+        return '₹ ${trimmed.substring(1)}';
+      }
+      return trimmed;
+    }
+    return '₹ $trimmed';
+  }
+
+  String _deriveAge(AuditionModel item) {
+    if (item.age.isNotEmpty) return item.age;
+    final role = item.role;
+    final desc = item.description;
+    final regExp = RegExp(r'(\d{2})\s*[-–]\s*(\d{2})');
+    final match = regExp.firstMatch(role) ?? regExp.firstMatch(desc);
+    if (match != null) {
+      return '${match.group(1)} - ${match.group(2)} years';
+    }
+    return '20 - 28 years';
+  }
+
+  String _deriveGender(AuditionModel item) {
+    if (item.gender.isNotEmpty) return item.gender;
+    final text = '${item.role} ${item.title} ${item.description}'.toLowerCase();
+    if (text.contains('female') || text.contains('actress') || text.contains('woman') || text.contains('girl')) {
+      return 'Female';
+    }
+    if (text.contains('male') || text.contains('actor') || text.contains('man') || text.contains('boy') || text.contains('hero')) {
+      return 'Male';
+    }
+    return 'Female';
+  }
+
+  String _deriveExperience(AuditionModel item) {
+    if (item.experience.isNotEmpty) return item.experience;
+    final text = '${item.role} ${item.description}'.toLowerCase();
+    final regExp = RegExp(r'(\d+)\s*[-–]\s*(\d+)\s*years?');
+    final match = regExp.firstMatch(text);
+    if (match != null) {
+      return '${match.group(1)} - ${match.group(2)} years';
+    }
+    return '0 - 2 years';
+  }
+
+  String _deriveLanguage(AuditionModel item) {
+    if (item.language.isNotEmpty && item.language != 'N/A') {
+      return item.language;
+    }
+    return 'Telugu';
+  }
+
+  String _deriveSkills(AuditionModel item) {
+    if (item.skills.isNotEmpty) return item.skills;
+    if (item.category.toLowerCase().contains('dance')) {
+      return 'Dance, expressions, rhythm';
+    }
+    return 'Acting, expressions, dialogue delivery';
+  }
+
+  String _getDisplayTitle(AuditionModel item) {
+    if (item.title.isNotEmpty) {
+      if (item.category.isNotEmpty &&
+          !item.title.toLowerCase().contains(item.category.toLowerCase()) &&
+          !item.title.contains('-')) {
+        return "${item.title} - ${item.category}";
+      }
+      return item.title;
+    }
+    if (item.role.isNotEmpty && item.category.isNotEmpty) {
+      return "${item.role} - ${item.category}";
+    }
+    return item.role.isNotEmpty ? item.role : "Audition Details";
+  }
+
+  String _getDisplaySubtitle(AuditionModel item) {
+    final category = item.category.isNotEmpty ? item.category : "Short Film";
+    String rolePart = "Acting";
+    if (item.role.isNotEmpty) {
+      final cleanRole = item.role.split('(').first.trim();
+      if (cleanRole.isNotEmpty && cleanRole.toLowerCase() != category.toLowerCase()) {
+        rolePart = cleanRole;
+      }
+    }
+    return "$category  |  $rolePart";
+  }
+
+  // ── UI Components ─────────────────────────────────────────────────────────
+
+  Widget _buildSectionHeader(String title) {
+    return Row(
+      children: [
+        Container(
+          width: 3.5,
+          height: 20,
+          decoration: BoxDecoration(
+            color: _primaryOrange,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            letterSpacing: -0.2,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatItem({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 18, color: const Color(0xFFE2A03F)),
-          const SizedBox(width: 10),
+          Icon(
+            icon,
+            size: 20,
+            color: _primaryOrange,
+          ),
+          const SizedBox(height: 6),
           Text(
             label,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              color: Color(0xFFB0B6C4),
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+              color: _labelGrey,
+              fontSize: 11,
+              fontWeight: FontWeight.w400,
             ),
           ),
-          const Spacer(),
+          const SizedBox(height: 6),
           Text(
-            value.isNotEmpty ? value : "N/A",
+            value,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 14,
+              fontSize: 11.5,
               fontWeight: FontWeight.w600,
+              height: 1.25,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return VerticalDivider(
+      color: _primaryOrange.withValues(alpha: 0.35),
+      thickness: 1,
+      width: 1,
+      indent: 6,
+      endIndent: 6,
+    );
+  }
+
+  Widget _buildRequirementRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 115,
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: _labelGrey,
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                height: 1.3,
+              ),
             ),
           ),
         ],
@@ -96,7 +346,7 @@ class _AuditionDetailsState extends State<AuditionDetails> {
         break;
       case 'PENDING':
       default:
-        statusColor = Colors.amberAccent;
+        statusColor = _primaryOrange;
         break;
     }
 
@@ -108,10 +358,10 @@ class _AuditionDetailsState extends State<AuditionDetails> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF143E4D).withValues(alpha: 0.75),
+        color: _cardBg,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.12),
+          color: Colors.white.withValues(alpha: 0.08),
           width: 1,
         ),
       ),
@@ -122,11 +372,11 @@ class _AuditionDetailsState extends State<AuditionDetails> {
             children: [
               CircleAvatar(
                 radius: 20,
-                backgroundColor: const Color(0xFF8B5CF6).withValues(alpha: 0.25),
+                backgroundColor: _primaryOrange.withValues(alpha: 0.2),
                 child: Text(
                   applicant.name.isNotEmpty ? applicant.name[0].toUpperCase() : 'A',
                   style: const TextStyle(
-                    color: Color(0xFFC4B5FD),
+                    color: _primaryOrange,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -150,7 +400,7 @@ class _AuditionDetailsState extends State<AuditionDetails> {
                       Text(
                         'Applied on $dateStr',
                         style: const TextStyle(
-                          color: Color(0xFF8B9CB0),
+                          color: _labelGrey,
                           fontSize: 12,
                         ),
                       ),
@@ -162,16 +412,16 @@ class _AuditionDetailsState extends State<AuditionDetails> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.2),
+                    color: _primaryOrange.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.5),
+                      color: _primaryOrange.withValues(alpha: 0.4),
                     ),
                   ),
                   child: Text(
                     applicant.category,
                     style: const TextStyle(
-                      color: Color(0xFFD8B4FE),
+                      color: _primaryOrange,
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                     ),
@@ -203,7 +453,7 @@ class _AuditionDetailsState extends State<AuditionDetails> {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.25),
+                color: Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Column(
@@ -212,7 +462,7 @@ class _AuditionDetailsState extends State<AuditionDetails> {
                   const Text(
                     "Cover Letter:",
                     style: TextStyle(
-                      color: Color(0xFFB0B6C4),
+                      color: _labelGrey,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -227,17 +477,6 @@ class _AuditionDetailsState extends State<AuditionDetails> {
                     ),
                   ),
                 ],
-              ),
-            ),
-          ],
-          if (applicant.details.isNotEmpty && applicant.details != applicant.coverLetter) ...[
-            const SizedBox(height: 8),
-            Text(
-              applicant.details,
-              style: const TextStyle(
-                color: Color(0xFFB0B6C4),
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
               ),
             ),
           ],
@@ -256,251 +495,233 @@ class _AuditionDetailsState extends State<AuditionDetails> {
     final isMyAudition = item.createdByMe ||
         auditionsProvider.myPostedAuditions.any((a) => a.id == item.id);
 
+    final displayTitle = _getDisplayTitle(item);
+    final displaySubtitle = _getDisplaySubtitle(item);
+    final displayLocation = item.location.isNotEmpty ? item.location : "Hyderabad,\nTelangana";
+    final displayPay = _formatPay(item.pay);
+    final displayDeadline = _formatDate(item.deadline.isNotEmpty ? item.deadline : "10 Oct 2026");
+    final displayAuditionDate = _deriveAuditionDate(item.auditionDate, item.deadline);
+    final displayAge = _deriveAge(item);
+    final displayGender = _deriveGender(item);
+    final displayExperience = _deriveExperience(item);
+    final displayLanguage = _deriveLanguage(item);
+    final displaySkills = _deriveSkills(item);
+    final displayDescription = item.description.isNotEmpty
+        ? item.description
+        : "We are looking for a female actor for the lead role in an upcoming short film. Candidates should be comfortable with dialogue delivery and expressive acting.";
+
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: AppBackground(
-        child: SafeArea(
-          child: Column(
-            children: [
-              /// Top Bar Header
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Row(
-                  children: [
-                    TextButton.icon(
-                      onPressed: () {
-                        if (Navigator.of(context).canPop()) {
-                          context.pop();
-                        } else {
-                          context.go(AppRoutes.auditions);
-                        }
-                      },
-                      icon: const Icon(
-                        LucideIcons.arrowLeft,
-                        color: AppColors.white,
-                        size: 20,
-                      ),
-                      label: const Text(
-                        "Back",
-                        style: TextStyle(
-                          color: AppColors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Column(
+          children: [
+            /// Sleek Back Button Row
+            Padding(
+              padding: const EdgeInsets.only(left: 12, top: 4, bottom: 4),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      if (Navigator.of(context).canPop()) {
+                        context.pop();
+                      } else {
+                        context.go(AppRoutes.auditions);
+                      }
+                    },
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: Colors.white,
+                      size: 20,
                     ),
-                    const Expanded(
-                      child: Text(
-                        "Audition Details",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: AppColors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 80),
-                  ],
-                ),
+                    splashRadius: 20,
+                    tooltip: 'Back',
+                  ),
+                ],
               ),
+            ),
 
-              if (isLoading)
-                const Expanded(
-                  child: Center(
-                    child: CircularProgressIndicator(color: Colors.white),
-                  ),
-                )
-              else if (errorMessage != null && auditionsProvider.selectedAudition == null)
-                Expanded(
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            errorMessage,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.redAccent, fontSize: 16),
+            if (isLoading)
+              const Expanded(
+                child: Center(
+                  child: CircularProgressIndicator(color: _primaryOrange),
+                ),
+              )
+            else if (errorMessage != null && auditionsProvider.selectedAudition == null)
+              Expanded(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          errorMessage,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.redAccent, fontSize: 16),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _primaryOrange,
+                            foregroundColor: Colors.white,
                           ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () {
-                              final targetId = widget.auditionId ?? widget.audition?.id;
-                              if (targetId != null) {
-                                context.read<AuditionsProvider>().fetchAuditionById(targetId);
-                              }
-                            },
-                            child: const Text("Retry"),
-                          ),
-                        ],
-                      ),
+                          onPressed: () {
+                            final targetId = widget.auditionId ?? widget.audition?.id;
+                            if (targetId != null) {
+                              context.read<AuditionsProvider>().fetchAuditionById(targetId);
+                            }
+                          },
+                          child: const Text("Retry"),
+                        ),
+                      ],
                     ),
                   ),
-                )
-              else
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 12),
+                ),
+              )
+            else
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 8),
 
-                        /// Category Pill
-                        if (item.category.isNotEmpty)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF8B5CF6).withValues(alpha: 0.18),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: const Color(0xFF8B5CF6).withValues(alpha: 0.5),
-                              ),
-                            ),
-                            child: Text(
-                              item.category,
-                              style: const TextStyle(
-                                color: Color(0xFFC4B5FD),
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
+                      /// Title
+                      Text(
+                        displayTitle,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
 
-                        const SizedBox(height: 12),
+                      const SizedBox(height: 6),
 
-                        /// Title
-                        Text(
-                          item.title,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                      /// Subtitle: Category  |  Role
+                      Text(
+                        displaySubtitle,
+                        style: const TextStyle(
+                          color: _primaryOrange,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+
+                      const SizedBox(height: 22),
+
+                      /// 4-Column Card (Location | Pay | Deadline | Audition Date)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 6),
+                        decoration: BoxDecoration(
+                          color: _cardBg,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.08),
+                            width: 1,
                           ),
                         ),
-
-                        const SizedBox(height: 4),
-
-                        /// Role
-                        if (item.role.isNotEmpty)
-                          Text(
-                            item.role,
-                            style: const TextStyle(
-                              color: Color(0xFFCBD5E1),
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-
-                        const SizedBox(height: 4),
-
-                        /// Posted by
-                        Text(
-                          item.effectiveContact != 'N/A'
-                              ? "Posted by ${item.effectiveContact}"
-                              : (item.createdAt.isNotEmpty
-                                  ? "Posted on ${item.createdAt.split('T').first}"
-                                  : "Recently posted"),
-                          style: const TextStyle(
-                            color: Color(0xFF8B9CB0),
-                            fontSize: 13,
-                          ),
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        /// Info Card (Location, Pay, Deadline, Language)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF143E4D).withValues(alpha: 0.75),
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.12),
-                              width: 1,
-                            ),
-                          ),
-                          child: Column(
+                        child: IntrinsicHeight(
+                          child: Row(
                             children: [
-                              _buildInfoRow(Icons.location_on_outlined, "Location", item.location),
-                              const Divider(color: Colors.white12, height: 1),
-                              _buildInfoRow(Icons.currency_rupee, "Pay", item.pay),
-                              const Divider(color: Colors.white12, height: 1),
-                              _buildInfoRow(Icons.calendar_today_outlined, "Deadline", item.deadline),
-                              const Divider(color: Colors.white12, height: 1),
-                              _buildInfoRow(Icons.videocam_outlined, "Language", item.language),
+                              Expanded(
+                                child: _buildStatItem(
+                                  icon: Icons.location_on_outlined,
+                                  label: "Location",
+                                  value: displayLocation,
+                                ),
+                              ),
+                              _buildDivider(),
+                              Expanded(
+                                child: _buildStatItem(
+                                  icon: Icons.currency_rupee,
+                                  label: "Pay",
+                                  value: displayPay,
+                                ),
+                              ),
+                              _buildDivider(),
+                              Expanded(
+                                child: _buildStatItem(
+                                  icon: Icons.calendar_today_outlined,
+                                  label: "Deadline",
+                                  value: displayDeadline,
+                                ),
+                              ),
+                              _buildDivider(),
+                              Expanded(
+                                child: _buildStatItem(
+                                  icon: Icons.calendar_month_outlined,
+                                  label: "Audition Date",
+                                  value: displayAuditionDate,
+                                ),
+                              ),
                             ],
                           ),
                         ),
+                      ),
 
-                        const SizedBox(height: 24),
+                      const SizedBox(height: 28),
 
-                        /// Description Section
-                        const Text(
-                          "Description",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      /// About the Audition Section
+                      _buildSectionHeader("About the Audition"),
+                      const SizedBox(height: 12),
+                      Text(
+                        displayDescription,
+                        style: const TextStyle(
+                          color: _bodyGrey,
+                          fontSize: 13.5,
+                          height: 1.55,
+                          fontWeight: FontWeight.w400,
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          item.description.isNotEmpty
-                              ? item.description
-                              : "No description provided.",
-                          style: const TextStyle(
-                            color: Color(0xFFCBD5E1),
-                            fontSize: 14,
-                            height: 1.6,
-                          ),
-                        ),
+                      ),
 
+                      const SizedBox(height: 28),
+
+                      /// Role Requirements Section
+                      _buildSectionHeader("Role Requirements"),
+                      const SizedBox(height: 16),
+                      _buildRequirementRow("Age", displayAge),
+                      _buildRequirementRow("Gender", displayGender),
+                      _buildRequirementRow("Experience", displayExperience),
+                      _buildRequirementRow("Language", displayLanguage),
+                      _buildRequirementRow("Skills", displaySkills),
+
+                      /// Show applicants section if this audition was created by the user or has applicants
+                      if (isMyAudition || item.applicants.isNotEmpty) ...[
                         const SizedBox(height: 28),
-
-                        /// Applicants Section
-                        Text(
-                          "Applicants (${item.applicantsCount})",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
+                        _buildSectionHeader("Applicants (${item.applicantsCount})"),
+                        const SizedBox(height: 14),
                         if (item.applicants.isEmpty)
                           const Padding(
                             padding: EdgeInsets.symmetric(vertical: 8),
                             child: Text(
                               "No applicants yet.",
                               style: TextStyle(
-                                color: Color(0xFF8B9CB0),
+                                color: _labelGrey,
                                 fontSize: 14,
                               ),
                             ),
                           )
                         else
-                          ...item.applicants.map((applicant) => _buildApplicantCard(applicant)),
-
-                        const SizedBox(height: 40),
+                          ...item.applicants.map((a) => _buildApplicantCard(a)),
                       ],
-                    ),
+
+                      const SizedBox(height: 30),
+                    ],
                   ),
                 ),
+              ),
 
-              /// Show apply bar only if it's NOT posted by the current user
-              if (!isMyAudition) ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-                  child: BottomActionBar(audition: item),
-                ),
-                const SizedBox(height: 10),
-              ],
-            ],
-          ),
+            /// Bottom Apply Bar (shown only if not created by me)
+            if (!isMyAudition)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                child: BottomActionBar(audition: item),
+              ),
+          ],
         ),
       ),
     );

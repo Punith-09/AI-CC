@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import 'package:aicc/core/constants/app_colors.dart';
-
 import '../../../../core/routes/app_routes.dart';
 import '../../../apply_job/presentation/providers/apply_job_provider.dart';
 import '../../../subscription/presentation/providers/subscription_provider.dart';
@@ -28,116 +26,59 @@ class BottomActionBar extends StatelessWidget {
         (audition != null &&
             applyProvider.getApplicationForAudition(audition!.id) != null);
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    const primaryColor = Color(0xFFDC8B20);
+    const appliedColor = Color(0xFF27AE60);
 
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: ElevatedButton(
+        onPressed: hasApplied
+            ? null
+            : () {
+                final subProvider = context.read<SubscriptionProvider>();
+                if (!subProvider.canApplyAudition) {
+                  LimitUpgradeDialog.show(
+                    context,
+                    type: LimitType.auditionApplication,
+                  );
+                  return;
+                }
+                if (onApply != null) {
+                  onApply!();
+                } else {
+                  context.push(AppRoutes.applyJob, extra: audition);
+                }
+              },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: hasApplied ? appliedColor : primaryColor,
+          disabledBackgroundColor: appliedColor,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          padding: EdgeInsets.zero,
+        ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Expanded(
-              child: SizedBox(
-                height: 48,
-                child: OutlinedButton(
-                  onPressed: () {
-                    context.go(AppRoutes.auditions);
-                  },
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: isDark ? AppColors.darkSurface : const Color(0xFFF1F5F9),
-                    side: BorderSide(
-                      color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
-                      width: 1.2,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Not Interested",
-                        style: TextStyle(
-                          color: isDark ? AppColors.darkText : AppColors.lightText,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.arrow_forward,
-                        size: 18,
-                        color: isDark ? AppColors.darkText : AppColors.lightText,
-                      ),
-                    ],
-                  ),
-                ),
+            if (hasApplied) ...[
+              const Icon(
+                Icons.check_circle_outline_rounded,
+                size: 20,
+                color: Colors.white,
+              ),
+              const SizedBox(width: 8),
+            ],
+            Text(
+              hasApplied ? "Applied" : "Apply Now",
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.2,
               ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Container(
-                height: 55,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: hasApplied
-                        ? const [Color(0xFF1B4D3E), Color(0xFF27AE60)]
-                        : AppColors.BtnGradient,
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: ElevatedButton(
-                  // Disabled when already applied
-                  onPressed: hasApplied
-                      ? null
-                      : () {
-                          final subProvider = context.read<SubscriptionProvider>();
-                          if (!subProvider.canApplyAudition) {
-                            LimitUpgradeDialog.show(
-                              context,
-                              type: LimitType.auditionApplication,
-                            );
-                            return;
-                          }
-                          if (onApply != null) {
-                            onApply!();
-                          } else {
-                            context.push(AppRoutes.applyJob, extra: audition);
-                          }
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    disabledBackgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (hasApplied) ...
-                        const [
-                          Icon(
-                            Icons.check_circle_outline_rounded,
-                            size: 18,
-                            color: Colors.white,
-                          ),
-                          SizedBox(width: 6),
-                        ],
-                      Text(
-                        hasApplied ? "APPLIED" : "APPLY NOW",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            )
           ],
         ),
       ),

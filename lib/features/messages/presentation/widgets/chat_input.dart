@@ -23,8 +23,8 @@ class _ChatInputState extends State<ChatInput> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final containerBg = isDark ? AppColors.darkCard : Colors.white;
     final borderTopColor = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
-    final inputFieldBg = isDark ? AppColors.darkTextField : const Color(0xFFF8FAFC);
-    final inputBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final inputFieldBg = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final inputBorder = isDark ? AppColors.primary : const Color(0xFFE2E8F0);
     final textColor = isDark ? AppColors.darkText : const Color(0xFF111827);
     final hintColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8);
     final attachIconColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
@@ -72,16 +72,16 @@ class _ChatInputState extends State<ChatInput> {
 
             Row(
               children: [
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(Icons.attach_file, color: attachIconColor),
-                ),
+                // IconButton(
+                //   onPressed: () {},
+                //   icon: Icon(Icons.attach_file, color: attachIconColor),
+                // ),
 
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
                       color: inputFieldBg,
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(30),
                       border: Border.all(color: inputBorder),
                     ),
                     child: TextField(
@@ -144,19 +144,19 @@ class _ChatInputState extends State<ChatInput> {
                   ),
                 ),
 
-                const SizedBox(width: 6),
+                // const SizedBox(width: 6),
 
-                Container(
-                  decoration: BoxDecoration(
-                    color: micBg,
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: micBorder),
-                  ),
-                  child: IconButton(
-                    onPressed: () {},
-                    icon: Icon(Icons.mic_none, color: micIconColor, size: 20),
-                  ),
-                ),
+                // Container(
+                //   decoration: BoxDecoration(
+                //     color: micBg,
+                //     borderRadius: BorderRadius.circular(24),
+                //     border: Border.all(color: micBorder),
+                //   ),
+                //   child: IconButton(
+                //     onPressed: () {},
+                //     icon: Icon(Icons.mic_none, color: micIconColor, size: 20),
+                //   ),
+                // ),
               ],
             ),
           ],

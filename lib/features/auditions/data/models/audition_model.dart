@@ -67,6 +67,11 @@ class AuditionModel {
   final String phone;
   final String email;
   final List<ApplicantModel> applicants;
+  final String auditionDate;
+  final String age;
+  final String gender;
+  final String experience;
+  final String skills;
 
   const AuditionModel({
     this.id = '',
@@ -87,6 +92,11 @@ class AuditionModel {
     this.phone = '',
     this.email = '',
     this.applicants = const [],
+    this.auditionDate = '',
+    this.age = '',
+    this.gender = '',
+    this.experience = '',
+    this.skills = '',
   });
 
   int get applicantsCount => applicants.length;
@@ -126,6 +136,11 @@ class AuditionModel {
       phone: json['phone'] as String? ?? '',
       email: json['email'] as String? ?? '',
       applicants: parsedApplicants,
+      auditionDate: (json['auditionDate'] ?? json['audition_date'] ?? json['date']) as String? ?? '',
+      age: json['age'] as String? ?? '',
+      gender: json['gender'] as String? ?? '',
+      experience: json['experience'] as String? ?? '',
+      skills: json['skills'] as String? ?? '',
     );
   }
 
@@ -148,5 +163,10 @@ class AuditionModel {
         'phone': phone,
         'email': email,
         'applicants': applicants.map((e) => e.toJson()).toList(),
+        'auditionDate': auditionDate,
+        'age': age,
+        'gender': gender,
+        'experience': experience,
+        'skills': skills,
       };
 }
