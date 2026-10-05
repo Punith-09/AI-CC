@@ -2,10 +2,10 @@ class ApiEndpoints {
   ApiEndpoints._();
 
   static String get baseUrl {
-    // return 'http://localhost:3000';
+    return 'http://localhost:3000';
     // return 'http://10.0.2.2:3000';
     // return 'https://casting-be.onrender.com';
-    return 'https://connectors-teaching-premiere-distributor.trycloudflare.com';
+    // return 'https://existing-sorted-watson-firm.trycloudflare.com';
   }
 
   static const String login = '/auth/login';

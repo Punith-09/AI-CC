@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:aicc/core/api/api_endpoints.dart';
 import 'package:aicc/core/di/injection_container.dart';
 import 'package:aicc/core/network/dio_client.dart';
+import 'package:aicc/core/storage/local_storage.dart';
 import 'package:aicc/features/artist_profile/data/models/artist_model.dart';
 import 'package:aicc/features/artist_profile/data/models/portfolio_model.dart';
 import 'package:aicc/features/artist_profile/data/repository/profile_repository.dart';
@@ -10,7 +11,44 @@ import 'package:aicc/features/subscription/presentation/providers/subscription_p
 class ProfileProvider with ChangeNotifier {
   final ProfileRepository _repository;
 
-  ProfileProvider(this._repository);
+  ProfileProvider(this._repository) {
+    _loadPersistedFollows();
+  }
+
+  final Set<String> _followingUserIds = {};
+  final Set<String> _followLoadingUserIds = {};
+
+  Set<String> get followingUserIds => Set.unmodifiable(_followingUserIds);
+
+  void _loadPersistedFollows() {
+    try {
+      final saved = LocalStorage.instance.getFollowingUserIds();
+      if (saved.isNotEmpty) {
+        _followingUserIds.addAll(saved);
+      }
+    } catch (_) {}
+  }
+
+  bool isFollowing(String? userId) {
+    if (userId == null || userId.isEmpty) return false;
+    return _followingUserIds.contains(userId);
+  }
+
+  bool isFollowLoading(String? userId) {
+    if (userId == null || userId.isEmpty) return false;
+    return _followLoadingUserIds.contains(userId);
+  }
+
+  void recordFollowing(String userId, bool following) {
+    if (userId.isEmpty) return;
+    final changed = following
+        ? _followingUserIds.add(userId)
+        : _followingUserIds.remove(userId);
+    if (changed) {
+      LocalStorage.instance.saveFollowingUserIds(_followingUserIds);
+      notifyListeners();
+    }
+  }
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -98,6 +136,14 @@ class ProfileProvider with ChangeNotifier {
         _myActivePlan = _currentProfile!.plan;
       }
       if (_currentProfile?.id != null && _currentProfile!.id.isNotEmpty) {
+        final serverFollowing = int.tryParse(_currentProfile!.followingCount) ?? 0;
+        final actualFollowing = serverFollowing > _followingUserIds.length
+            ? serverFollowing
+            : _followingUserIds.length;
+        _currentProfile = _currentProfile!.copyWith(
+          followingCount: actualFollowing.toString(),
+        );
+
         final fetchedMedia = await _repository.getUserMedia(_currentProfile!.id);
         final combined = <PortfolioModel>[];
         if (_currentProfile?.portfolio.isNotEmpty == true) {
@@ -128,6 +174,18 @@ class ProfileProvider with ChangeNotifier {
 
     try {
       _viewedProfile = await _repository.getUserProfile(id);
+      if (_viewedProfile != null) {
+        if (_viewedProfile!.following) {
+          _followingUserIds.add(id);
+          LocalStorage.instance.saveFollowingUserIds(_followingUserIds);
+        } else if (_followingUserIds.contains(id)) {
+          final currentCount = int.tryParse(_viewedProfile!.followers) ?? 0;
+          _viewedProfile = _viewedProfile!.copyWith(
+            following: true,
+            followers: (currentCount > 0 ? currentCount : 1).toString(),
+          );
+        }
+      }
       final combined = <PortfolioModel>[];
       if (_viewedProfile?.portfolio.isNotEmpty == true) {
         combined.addAll(_viewedProfile!.portfolio);
@@ -151,35 +209,116 @@ class ProfileProvider with ChangeNotifier {
     }
   }
 
-  Future<void> followUser(String id) async {
-    final previous = _viewedProfile;
-    if (_viewedProfile != null && _viewedProfile!.id == id) {
-      final currentFollowing = _viewedProfile!.following;
-      final currentCount = int.tryParse(_viewedProfile!.followers) ?? 0;
-      final updatedCount = currentFollowing
-          ? (currentCount > 0 ? currentCount - 1 : 0)
-          : currentCount + 1;
-
-      _viewedProfile = _viewedProfile!.copyWith(
-        following: !currentFollowing,
-        followers: updatedCount.toString(),
-      );
-      notifyListeners();
+  Future<bool> toggleFollowUser(String userId, {String? userName}) async {
+    if (userId.isEmpty || _followLoadingUserIds.contains(userId)) {
+      return isFollowing(userId);
     }
 
+    _followLoadingUserIds.add(userId);
+    notifyListeners();
+
+    final bool willFollow = !_followingUserIds.contains(userId);
+
+    // Optimistically update follow set
+    if (willFollow) {
+      _followingUserIds.add(userId);
+    } else {
+      _followingUserIds.remove(userId);
+    }
+    LocalStorage.instance.saveFollowingUserIds(_followingUserIds);
+
+    // Update target viewed profile if currently viewed
+    if (_viewedProfile != null && _viewedProfile!.id == userId) {
+      final currentCount = int.tryParse(_viewedProfile!.followers) ?? 0;
+      final newCount = willFollow
+          ? currentCount + 1
+          : (currentCount > 0 ? currentCount - 1 : 0);
+      _viewedProfile = _viewedProfile!.copyWith(
+        following: willFollow,
+        followers: newCount.toString(),
+      );
+    }
+
+    // Update logged-in user profile (my following count)
+    if (_currentProfile != null) {
+      final myFollowing = int.tryParse(_currentProfile!.followingCount) ?? 0;
+      final newMyFollowing = willFollow
+          ? myFollowing + 1
+          : (myFollowing > 0 ? myFollowing - 1 : 0);
+      _currentProfile = _currentProfile!.copyWith(
+        followingCount: newMyFollowing.toString(),
+      );
+    }
+
+    notifyListeners();
+
     try {
-      await _repository.followUser(id);
-    } catch (e) {
-      if (_viewedProfile != null && _viewedProfile!.id == id) {
-        _viewedProfile = previous;
-        _error = e.toString();
+      final serverResult = await _repository.followUser(userId);
+      if (serverResult != null && serverResult != willFollow) {
+        if (serverResult) {
+          _followingUserIds.add(userId);
+        } else {
+          _followingUserIds.remove(userId);
+        }
+        LocalStorage.instance.saveFollowingUserIds(_followingUserIds);
+
+        if (_viewedProfile != null && _viewedProfile!.id == userId) {
+          _viewedProfile = _viewedProfile!.copyWith(following: serverResult);
+        }
         notifyListeners();
       }
+      return _followingUserIds.contains(userId);
+    } catch (e) {
+      // Revert optimistic updates
+      if (willFollow) {
+        _followingUserIds.remove(userId);
+      } else {
+        _followingUserIds.add(userId);
+      }
+      LocalStorage.instance.saveFollowingUserIds(_followingUserIds);
+
+      if (_viewedProfile != null && _viewedProfile!.id == userId) {
+        final currentCount = int.tryParse(_viewedProfile!.followers) ?? 0;
+        final revertedCount = willFollow
+            ? (currentCount > 0 ? currentCount - 1 : 0)
+            : currentCount + 1;
+        _viewedProfile = _viewedProfile!.copyWith(
+          following: !willFollow,
+          followers: revertedCount.toString(),
+        );
+      }
+
+      if (_currentProfile != null) {
+        final myFollowing = int.tryParse(_currentProfile!.followingCount) ?? 0;
+        final revertedMyFollowing = willFollow
+            ? (myFollowing > 0 ? myFollowing - 1 : 0)
+            : myFollowing + 1;
+        _currentProfile = _currentProfile!.copyWith(
+          followingCount: revertedMyFollowing.toString(),
+        );
+      }
+
+      _error = e.toString();
       rethrow;
+    } finally {
+      _followLoadingUserIds.remove(userId);
+      notifyListeners();
     }
   }
 
+  Future<void> followUser(String id) async {
+    await toggleFollowUser(id);
+  }
+
   void syncFollowStatus(String id, {required bool following}) {
+    if (id.isEmpty) return;
+    if (following) {
+      _followingUserIds.add(id);
+    } else {
+      _followingUserIds.remove(id);
+    }
+    LocalStorage.instance.saveFollowingUserIds(_followingUserIds);
+
     if (_viewedProfile != null && _viewedProfile!.id == id) {
       if (_viewedProfile!.following != following) {
         final currentCount = int.tryParse(_viewedProfile!.followers) ?? 0;
@@ -190,9 +329,20 @@ class ProfileProvider with ChangeNotifier {
           following: following,
           followers: updatedCount.toString(),
         );
-        notifyListeners();
       }
     }
+
+    if (_currentProfile != null) {
+      final myFollowing = int.tryParse(_currentProfile!.followingCount) ?? 0;
+      final newMyFollowing = following
+          ? myFollowing + 1
+          : (myFollowing > 0 ? myFollowing - 1 : 0);
+      _currentProfile = _currentProfile!.copyWith(
+        followingCount: newMyFollowing.toString(),
+      );
+    }
+
+    notifyListeners();
   }
 
   Future<void> updateProfile(Map<String, dynamic> data) async {

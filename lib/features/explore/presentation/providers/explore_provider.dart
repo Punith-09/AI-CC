@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:aicc/core/di/injection_container.dart';
 import 'package:aicc/core/storage/local_storage.dart';
+import 'package:aicc/features/artist_profile/presentation/providers/profile_provider.dart';
 import 'package:aicc/features/explore/data/models/talent_model.dart';
 import 'package:aicc/features/explore/data/repository/explore_repository.dart';
 
@@ -109,6 +111,15 @@ class ExploreProvider with ChangeNotifier {
       final withLocation =
           needsLocation ? await _attachLocations(filteredResults) : filteredResults;
       _talents = _applyLocationFilter(withLocation);
+
+      if (sl.isRegistered<ProfileProvider>()) {
+        final profileProvider = sl<ProfileProvider>();
+        for (final t in _talents) {
+          if (t.id.isNotEmpty && t.following) {
+            profileProvider.recordFollowing(t.id, true);
+          }
+        }
+      }
     } catch (e) {
       _error = e.toString().replaceAll('Exception:', '').trim();
     } finally {

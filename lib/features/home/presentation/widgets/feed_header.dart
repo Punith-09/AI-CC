@@ -8,6 +8,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../data/models/feed_post_model.dart';
+import '../../../artist_profile/presentation/providers/profile_provider.dart';
 import '../providers/home_feed_provider.dart';
 
 class FeedHeader extends StatelessWidget {
@@ -72,10 +73,10 @@ class FeedHeader extends StatelessWidget {
             post.creatorName.trim().toLowerCase() ==
                 currentUserName.trim().toLowerCase());
 
-    final feedProvider = context.watch<HomeFeedProvider>();
+    final profileProvider = context.watch<ProfileProvider>();
     final creatorId = post.creatorId ?? '';
-    final isFollowing = feedProvider.isFollowing(creatorId);
-    final isFollowLoading = feedProvider.isFollowLoading(creatorId);
+    final isFollowing = profileProvider.isFollowing(creatorId);
+    final isFollowLoading = profileProvider.isFollowLoading(creatorId);
 
     return Container(
       padding: const EdgeInsets.only(left: 16, top: 16, right: 16, bottom: 0),
@@ -177,7 +178,7 @@ class FeedHeader extends StatelessWidget {
                   : () async {
                       try {
                         final newFollowing =
-                            await feedProvider.toggleFollowUser(creatorId);
+                            await profileProvider.toggleFollowUser(creatorId, userName: post.creatorName);
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(

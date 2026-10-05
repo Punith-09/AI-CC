@@ -251,12 +251,10 @@ class _PostScreenState extends State<PostScreen> {
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? AppColors.primary
-                                : (isDark ? const Color(0xff1F1F27) : const Color(0xFFF1F5F9)),
+                                : (isDark?AppColors.darkCard:AppColors.lightCard),
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : (isDark ? borderColor : const Color(0xFFE2E8F0)),
+                              color: AppColors.primary,
                             ),
                           ),
                           child: Text(
@@ -357,7 +355,7 @@ class _PostScreenState extends State<PostScreen> {
                       color: Colors.grey.shade500,
                     ),
                     filled: true,
-                    fillColor: const Color(0xff1F1F27),
+                    fillColor: isDark?AppColors.darkCard:AppColors.lightCard,
                     contentPadding: const EdgeInsets.all(16),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
@@ -366,7 +364,7 @@ class _PostScreenState extends State<PostScreen> {
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: const BorderSide(
-                        color: Colors.deepPurpleAccent,
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
@@ -465,7 +463,7 @@ class _PostScreenState extends State<PostScreen> {
             : null,
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: isDark ? const Color(0xff1F1F27) : const Color(0xFFF8FAFC),
+        fillColor: isDark?AppColors.darkCard:AppColors.lightCard,
         contentPadding: EdgeInsets.symmetric(
           vertical: 16,
           horizontal: icon != null ? 0 : 16,

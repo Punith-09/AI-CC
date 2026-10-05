@@ -13,7 +13,7 @@ abstract class ProfileRemoteDataSource {
 
   Future<List<PortfolioModel>> getUserMedia(String userId);
 
-  Future<void> followUser(String id);
+  Future<bool?> followUser(String id);
 
   Future<ArtistModel> updateProfile(Map<String, dynamic> data);
 }
@@ -86,20 +86,26 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         var artist = ArtistModel.fromJson(data);
         if (artist.id.isNotEmpty) {
           _localStorage.saveUserId(artist.id);
+          try {
+            final publicProfile = await getUserProfile(artist.id);
+            artist = artist.copyWith(
+              followers: publicProfile.followers,
+              followingCount: publicProfile.followingCount,
+            );
+          } catch (_) {
+            if (artist.followers == '0' || artist.followers.isEmpty) {
+              final resolved = await _fetchFollowersCount(artist.id, userName: artist.name);
+              if (resolved != null && resolved != '0') {
+                artist = artist.copyWith(followers: resolved);
+              }
+            }
+          }
         }
         if (artist.name.isNotEmpty) {
           _localStorage.saveUserName(artist.name);
         }
         if (artist.profileImage.isNotEmpty) {
           _localStorage.saveUserProfilePhoto(artist.profileImage);
-        }
-
-        // If followers is 0 or empty, try discovering from API endpoints
-        if (artist.followers == '0' || artist.followers.isEmpty) {
-          final resolved = await _fetchFollowersCount(artist.id, userName: artist.name);
-          if (resolved != null && resolved != '0') {
-            artist = artist.copyWith(followers: resolved);
-          }
         }
 
         return artist;
@@ -332,7 +338,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   // ----------------------------------------------------------
 
   @override
-  Future<void> followUser(String id) async {
+  Future<bool?> followUser(String id) async {
     try {
       final response = await _dioClient.post(
         ApiEndpoints.followUser(id),
@@ -346,6 +352,12 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
           'Failed to follow user. Status code: ${response.statusCode}',
         );
       }
+
+      if (response.data is Map) {
+        final val = response.data['following'] ?? response.data['isFollowing'];
+        if (val is bool) return val;
+      }
+      return null;
     } on DioException catch (e) {
       throw Exception(
         e.response?.data?['message'] ?? e.message ?? 'Failed to follow user',

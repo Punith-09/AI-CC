@@ -156,11 +156,17 @@ class HomeFeedProvider extends ChangeNotifier {
 
   bool isFollowing(String? userId) {
     if (userId == null || userId.isEmpty) return false;
+    if (sl.isRegistered<ProfileProvider>()) {
+      return sl<ProfileProvider>().isFollowing(userId);
+    }
     return _followingUserIds.contains(userId);
   }
 
   bool isFollowLoading(String? userId) {
     if (userId == null || userId.isEmpty) return false;
+    if (sl.isRegistered<ProfileProvider>()) {
+      return sl<ProfileProvider>().isFollowLoading(userId);
+    }
     return _followLoadingUserIds.contains(userId);
   }
 
@@ -171,11 +177,21 @@ class HomeFeedProvider extends ChangeNotifier {
     } else {
       _followingUserIds.remove(userId);
     }
+    if (sl.isRegistered<ProfileProvider>()) {
+      sl<ProfileProvider>().recordFollowing(userId, following);
+    }
     notifyListeners();
   }
 
   Future<bool> toggleFollowUser(String userId) async {
-    if (userId.isEmpty || _followLoadingUserIds.contains(userId)) {
+    if (userId.isEmpty) return false;
+    if (sl.isRegistered<ProfileProvider>()) {
+      final res = await sl<ProfileProvider>().toggleFollowUser(userId);
+      notifyListeners();
+      return res;
+    }
+
+    if (_followLoadingUserIds.contains(userId)) {
       return _followingUserIds.contains(userId);
     }
 
@@ -194,10 +210,6 @@ class HomeFeedProvider extends ChangeNotifier {
       }
       _followLoadingUserIds.remove(userId);
       notifyListeners();
-
-      if (sl.isRegistered<ProfileProvider>()) {
-        sl<ProfileProvider>().syncFollowStatus(userId, following: isNowFollowing);
-      }
 
       return isNowFollowing;
     } catch (e) {

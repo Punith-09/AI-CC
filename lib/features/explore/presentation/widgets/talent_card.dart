@@ -1,8 +1,10 @@
 import 'package:aicc/core/api/api_endpoints.dart';
+import 'package:aicc/features/artist_profile/presentation/providers/profile_provider.dart';
 import 'package:aicc/features/explore/data/models/talent_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routes/app_routes.dart';
@@ -109,7 +111,7 @@ class TalentCard extends StatelessWidget {
             const SizedBox(width: 12),
 
             // ── Follow Button ───────────────────────────────────────
-            _FollowButton(isFollowing: isFollowing, talentId: talent.id),
+            _FollowButton(talentId: talent.id, talentName: talent.name),
           ],
         ),
       ),
@@ -155,52 +157,58 @@ class TalentCard extends StatelessWidget {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Follow Button — stateful so it can toggle locally
+// Follow Button — backed by ProfileProvider for global synchronization
 // ──────────────────────────────────────────────────────────────────────────────
-class _FollowButton extends StatefulWidget {
-  final bool isFollowing;
+class _FollowButton extends StatelessWidget {
   final String talentId;
+  final String talentName;
 
-  const _FollowButton({required this.isFollowing, required this.talentId});
-
-  @override
-  State<_FollowButton> createState() => _FollowButtonState();
-}
-
-class _FollowButtonState extends State<_FollowButton> {
-  late bool _following;
-
-  @override
-  void initState() {
-    super.initState();
-    _following = widget.isFollowing;
-  }
+  const _FollowButton({required this.talentId, required this.talentName});
 
   @override
   Widget build(BuildContext context) {
+    final profileProvider = context.watch<ProfileProvider>();
+    final isFollowing = profileProvider.isFollowing(talentId);
+    final isFollowLoading = profileProvider.isFollowLoading(talentId);
+
     return GestureDetector(
-      onTap: () => setState(() => _following = !_following),
+      onTap: isFollowLoading || talentId.isEmpty
+          ? null
+          : () async {
+              try {
+                await profileProvider.toggleFollowUser(talentId, userName: talentName);
+              } catch (_) {}
+            },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeInOut,
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
         decoration: BoxDecoration(
-          color: _following ? Colors.transparent : AppColors.primary,
+          color: isFollowing ? Colors.transparent : AppColors.primary,
           borderRadius: BorderRadius.circular(22),
           border: Border.all(
             color: AppColors.primary,
             width: 1.5,
           ),
         ),
-        child: Text(
-          _following ? 'Following' : 'Follow',
-          style: GoogleFonts.poppins(
-            color: _following ? AppColors.primary : Colors.white,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.2,
-          ),
-        ),
+        child: isFollowLoading
+            ? const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(
+                  strokeWidth: 1.8,
+                  color: Colors.white,
+                ),
+              )
+            : Text(
+                isFollowing ? 'Following' : 'Follow',
+                style: GoogleFonts.poppins(
+                  color: isFollowing ? AppColors.primary : Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.2,
+                ),
+              ),
       ),
     );
   }

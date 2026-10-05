@@ -270,4 +270,18 @@ class LocalStorage {
   Future<void> saveLastReadMessages(Map<String, String> map) async {
     await _prefs?.setString(_keyLastReadMessages, jsonEncode(map));
   }
+
+  // =========================================================
+  // FOLLOWED USERS PERSISTENCE
+  // =========================================================
+
+  static const String _keyFollowingUserIds = 'following_user_ids';
+
+  Set<String> getFollowingUserIds() {
+    return (_prefs?.getStringList(_keyFollowingUserIds) ?? []).toSet();
+  }
+
+  Future<void> saveFollowingUserIds(Set<String> ids) async {
+    await _prefs?.setStringList(_keyFollowingUserIds, ids.toList());
+  }
 }

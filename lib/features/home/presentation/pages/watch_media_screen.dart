@@ -57,10 +57,6 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   bool _isLoadingComments = true;
   bool _isPostingComment = false;
 
-  // Follow State
-  bool _isFollowing = false;
-  bool _isFollowLoading = false;
-
   @override
   void initState() {
     super.initState();
@@ -79,30 +75,19 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   void _initFollowStatus() {
     final creatorId = _post.creatorId;
     if (creatorId != null && creatorId.isNotEmpty) {
-      try {
-        final viewed = context.read<ProfileProvider>().viewedProfile;
-        if (viewed != null && viewed.id == creatorId) {
-          _isFollowing = viewed.following;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        final profileProvider = context.read<ProfileProvider>();
+        if (!profileProvider.isFollowing(creatorId)) {
+          try {
+            final profile = await sl<ProfileRepository>().getUserProfile(creatorId);
+            if (profile.following) {
+              profileProvider.recordFollowing(creatorId, true);
+            }
+          } catch (_) {}
         }
-      } catch (_) {}
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _checkFollowStatus();
       });
     }
-  }
-
-  Future<void> _checkFollowStatus() async {
-    final creatorId = _post.creatorId;
-    if (creatorId == null || creatorId.isEmpty) return;
-
-    try {
-      final profile = await sl<ProfileRepository>().getUserProfile(creatorId);
-      if (mounted) {
-        setState(() {
-          _isFollowing = profile.following;
-        });
-      }
-    } catch (_) {}
   }
 
   @override
@@ -378,25 +363,23 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   }
 
   Future<void> _toggleFollow() async {
-    if (_post.creatorId == null || _post.creatorId!.isEmpty || _isFollowLoading) return;
-    setState(() => _isFollowLoading = true);
+    final creatorId = _post.creatorId;
+    if (creatorId == null || creatorId.isEmpty) return;
 
-    final creatorId = _post.creatorId!;
+    final profileProvider = context.read<ProfileProvider>();
+    if (profileProvider.isFollowLoading(creatorId)) return;
+
     try {
-      await sl<ProfileRepository>().followUser(creatorId);
-      final newFollowing = !_isFollowing;
+      final isNowFollowing = await profileProvider.toggleFollowUser(
+        creatorId,
+        userName: _post.creatorName,
+      );
       if (mounted) {
-        setState(() {
-          _isFollowing = newFollowing;
-          _isFollowLoading = false;
-        });
-        try {
-          context.read<ProfileProvider>().syncFollowStatus(creatorId, following: newFollowing);
-        } catch (_) {}
-
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_isFollowing ? 'Following ${_post.creatorName}' : 'Unfollowed ${_post.creatorName}'),
+            content: Text(isNowFollowing
+                ? 'Following ${_post.creatorName}'
+                : 'Unfollowed ${_post.creatorName}'),
             duration: const Duration(seconds: 2),
             backgroundColor: AppColors.primary,
           ),
@@ -404,7 +387,6 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isFollowLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Failed to update follow status. Please try again.'),
@@ -503,27 +485,30 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
 
     return Scaffold(
-      backgroundColor: isDesktop ? const Color(0xFFF8FAFC) : Colors.white,
+      backgroundColor: isDark
+          ? AppColors.darkScaffold
+          : (isDesktop ? const Color(0xFFF8FAFC) : Colors.white),
       resizeToAvoidBottomInset: true,
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
             // Top Bar
-            _buildTopBar(isDesktop: isDesktop),
+            _buildTopBar(isDesktop: isDesktop, isDark: isDark),
 
             // Body (Desktop 2-column or Mobile single-column)
             Expanded(
               child: isDesktop
-                  ? _buildDesktopLayout()
-                  : _buildMobileLayout(),
+                  ? _buildDesktopLayout(isDark: isDark)
+                  : _buildMobileLayout(isDark: isDark),
             ),
 
             // Fixed bottom comment bar on Mobile
-            if (!isDesktop) _buildBottomCommentBar(isDesktop: false),
+            if (!isDesktop) _buildBottomCommentBar(isDesktop: false, isDark: isDark),
           ],
         ),
       ),
@@ -534,7 +519,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   // DESKTOP LAYOUT (2 Columns)
   // =========================================================
 
-  Widget _buildDesktopLayout() {
+  Widget _buildDesktopLayout({required bool isDark}) {
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1240),
@@ -557,7 +542,9 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                         borderRadius: BorderRadius.circular(16),
                         child: Container(
                           decoration: BoxDecoration(
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            border: Border.all(
+                              color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+                            ),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: _buildMediaSection(isDesktop: true),
@@ -569,12 +556,14 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: isDark ? AppColors.darkCard : Colors.white,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          border: Border.all(
+                            color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.03),
+                              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
                               blurRadius: 10,
                               offset: const Offset(0, 2),
                             ),
@@ -583,11 +572,11 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildTitleAndDescription(isDesktop: true),
+                            _buildTitleAndDescription(isDesktop: true, isDark: isDark),
                             const SizedBox(height: 16),
-                            _buildStatsRow(),
+                            _buildStatsRow(isDark: isDark),
                             const SizedBox(height: 12),
-                            _buildActionButtonsRow(),
+                            _buildActionButtonsRow(isDark: isDark),
                           ],
                         ),
                       ),
@@ -605,12 +594,14 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                 child: Container(
                   height: MediaQuery.of(context).size.height - 130,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isDark ? AppColors.darkCard : Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(
+                      color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
+                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -621,10 +612,13 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                       // Creator Header Card
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                        child: _buildCreatorRow(isDesktop: true),
+                        child: _buildCreatorRow(isDesktop: true, isDark: isDark),
                       ),
 
-                      const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                      Divider(
+                        height: 1,
+                        color: isDark ? AppColors.darkDivider : const Color(0xFFE2E8F0),
+                      ),
 
                       // Comments List Header & Body
                       Padding(
@@ -634,7 +628,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                             Text(
                               'Comments (${_comments.length})',
                               style: GoogleFonts.poppins(
-                                color: const Color(0xFF111827),
+                                color: isDark ? AppColors.darkText : const Color(0xFF111827),
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -656,20 +650,23 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                                 ),
                               )
                             : _comments.isEmpty
-                                ? _buildEmptyComments()
+                                ? _buildEmptyComments(isDark: isDark)
                                 : ListView.separated(
                                     controller: _desktopCommentsScrollController,
                                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                     itemCount: _comments.length,
-                                    separatorBuilder: (_, index) => const Divider(height: 18, color: Color(0xFFF1F5F9)),
+                                    separatorBuilder: (_, index) => Divider(
+                                      height: 18,
+                                      color: isDark ? AppColors.darkDivider : const Color(0xFFF1F5F9),
+                                    ),
                                     itemBuilder: (context, index) {
-                                      return _buildCommentTile(_comments[index]);
+                                      return _buildCommentTile(_comments[index], isDark: isDark);
                                     },
                                   ),
                       ),
 
                       // Fixed Bottom Comment Input inside Right Card
-                      _buildBottomCommentBar(isDesktop: true),
+                      _buildBottomCommentBar(isDesktop: true, isDark: isDark),
                     ],
                   ),
                 ),
@@ -685,7 +682,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   // MOBILE LAYOUT (Single Column)
   // =========================================================
 
-  Widget _buildMobileLayout() {
+  Widget _buildMobileLayout({required bool isDark}) {
     return SingleChildScrollView(
       controller: _scrollController,
       physics: const BouncingScrollPhysics(),
@@ -698,29 +695,33 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
           const SizedBox(height: 14),
 
           // 2. Creator Info & Follow / Message Buttons
-          _buildCreatorRow(isDesktop: false),
+          _buildCreatorRow(isDesktop: false, isDark: isDark),
 
           const SizedBox(height: 14),
 
           // 3. Post Title & Description
-          _buildTitleAndDescription(isDesktop: false),
+          _buildTitleAndDescription(isDesktop: false, isDark: isDark),
 
           const SizedBox(height: 14),
 
           // 4. Views & Likes Stat Row
-          _buildStatsRow(),
+          _buildStatsRow(isDark: isDark),
 
           const SizedBox(height: 10),
 
           // 5. Action Buttons (Like, Comment, Share)
-          _buildActionButtonsRow(),
+          _buildActionButtonsRow(isDark: isDark),
 
           const SizedBox(height: 8),
 
-          const Divider(color: Color(0xFFE5E7EB), height: 16, thickness: 1),
+          Divider(
+            color: isDark ? AppColors.darkDivider : const Color(0xFFE5E7EB),
+            height: 16,
+            thickness: 1,
+          ),
 
           // 6. Comments Header & List
-          _buildCommentsSection(isDesktop: false),
+          _buildCommentsSection(isDesktop: false, isDark: isDark),
 
           const SizedBox(height: 30),
         ],
@@ -732,16 +733,19 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   // TOP BAR
   // =========================================================
 
-  Widget _buildTopBar({required bool isDesktop}) {
+  Widget _buildTopBar({required bool isDesktop, required bool isDark}) {
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: isDesktop ? 24 : 16,
         vertical: 12,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard : Colors.white,
         border: Border(
-          bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+          bottom: BorderSide(
+            color: isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
+            width: 1,
+          ),
         ),
       ),
       child: Row(
@@ -761,16 +765,16 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.arrow_back,
-                    color: Color(0xFF111827),
+                    color: isDark ? AppColors.darkText : const Color(0xFF111827),
                     size: 20,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     isDesktop ? 'Back to Feed' : 'Back',
                     style: GoogleFonts.poppins(
-                      color: const Color(0xFF111827),
+                      color: isDark ? AppColors.darkText : const Color(0xFF111827),
                       fontSize: 14.5,
                       fontWeight: FontWeight.w600,
                     ),
@@ -788,7 +792,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                 child: Text(
                   _post.isVideo ? 'Watch Video' : 'View Photo',
                   style: GoogleFonts.poppins(
-                    color: const Color(0xFF111827),
+                    color: isDark ? AppColors.darkText : const Color(0xFF111827),
                     fontSize: 16.5,
                     fontWeight: FontWeight.w700,
                   ),
@@ -980,7 +984,16 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   // CREATOR ROW
   // =========================================================
 
-  Widget _buildCreatorRow({required bool isDesktop}) {
+  Widget _buildCreatorRow({required bool isDesktop, required bool isDark}) {
+    final profileProvider = context.watch<ProfileProvider>();
+    final creatorId = _post.creatorId;
+    final isFollowing = (creatorId != null && creatorId.isNotEmpty)
+        ? profileProvider.isFollowing(creatorId)
+        : false;
+    final isFollowLoading = (creatorId != null && creatorId.isNotEmpty)
+        ? profileProvider.isFollowLoading(creatorId)
+        : false;
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: isDesktop ? 0 : 16),
       child: Row(
@@ -1013,7 +1026,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                           style: GoogleFonts.poppins(
                             fontSize: 15.5,
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF111827),
+                            color: isDark ? AppColors.darkText : const Color(0xFF111827),
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -1031,7 +1044,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                         : (_post.isVideo ? 'Actor' : 'Artist'),
                     style: GoogleFonts.poppins(
                       fontSize: 12.5,
-                      color: const Color(0xFF64748B),
+                      color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
                       fontWeight: FontWeight.w400,
                     ),
                   ),
@@ -1049,24 +1062,29 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
                 decoration: BoxDecoration(
-                  color: _isFollowing
-                      ? const Color(0xFFF1F5F9)
+                  color: isFollowing
+                      ? (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9))
                       : AppColors.buttonPrimary,
                   borderRadius: BorderRadius.circular(20),
-                  border: _isFollowing
-                      ? Border.all(color: const Color(0xFFCBD5E1), width: 1)
+                  border: isFollowing
+                      ? Border.all(
+                          color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                          width: 1,
+                        )
                       : null,
                 ),
-                child: _isFollowLoading
+                child: isFollowLoading
                     ? const SizedBox(
                         width: 14,
                         height: 14,
                         child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                       )
                     : Text(
-                        _isFollowing ? 'Following' : 'Follow',
+                        isFollowing ? 'Following' : 'Follow',
                         style: GoogleFonts.poppins(
-                          color: _isFollowing ? const Color(0xFF334155) : Colors.white,
+                          color: isFollowing
+                              ? (isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155))
+                              : Colors.white,
                           fontSize: 12.5,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1082,14 +1100,17 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? AppColors.darkSurface : Colors.white,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFCBD5E1), width: 1),
+                  border: Border.all(
+                    color: isDark ? AppColors.darkBorder : const Color(0xFFCBD5E1),
+                    width: 1,
+                  ),
                 ),
                 child: Text(
                   'Message',
                   style: GoogleFonts.poppins(
-                    color: const Color(0xFF1E293B),
+                    color: isDark ? AppColors.darkText : const Color(0xFF1E293B),
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
                   ),
@@ -1106,7 +1127,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   // TITLE & DESCRIPTION
   // =========================================================
 
-  Widget _buildTitleAndDescription({required bool isDesktop}) {
+  Widget _buildTitleAndDescription({required bool isDesktop, required bool isDark}) {
     final title = _post.title;
     final desc = _post.description;
 
@@ -1121,7 +1142,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
               style: GoogleFonts.poppins(
                 fontSize: isDesktop ? 18 : 16,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF111827),
+                color: isDark ? AppColors.darkText : const Color(0xFF111827),
               ),
             ),
           if (desc.isNotEmpty) ...[
@@ -1130,7 +1151,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
               desc,
               style: GoogleFonts.poppins(
                 fontSize: 14,
-                color: const Color(0xFF4B5563),
+                color: isDark ? AppColors.darkTextSecondary : const Color(0xFF4B5563),
                 height: 1.45,
               ),
             ),
@@ -1144,12 +1165,16 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   // STATS ROW (VIEWS & LIKES)
   // =========================================================
 
-  Widget _buildStatsRow() {
+  Widget _buildStatsRow({required bool isDark}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
-          const Divider(color: Color(0xFFE5E7EB), height: 1, thickness: 1),
+          Divider(
+            color: isDark ? AppColors.darkDivider : const Color(0xFFE5E7EB),
+            height: 1,
+            thickness: 1,
+          ),
           const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1157,16 +1182,16 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
               // Views count
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     LucideIcons.eye,
                     size: 16,
-                    color: Color(0xFF64748B),
+                    color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
                   ),
                   const SizedBox(width: 6),
                   Text(
                     '${_post.viewsCount} views',
                     style: GoogleFonts.poppins(
-                      color: const Color(0xFF64748B),
+                      color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                     ),
@@ -1189,7 +1214,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                       '${_post.likesCount} likes',
                       key: ValueKey(_post.likesCount),
                       style: GoogleFonts.poppins(
-                        color: const Color(0xFF1F2937),
+                        color: isDark ? AppColors.darkText : const Color(0xFF1F2937),
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1208,8 +1233,9 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   // ACTION BUTTONS ROW (LIKE, COMMENT, SHARE)
   // =========================================================
 
-  Widget _buildActionButtonsRow() {
+  Widget _buildActionButtonsRow({required bool isDark}) {
     final isLiked = _post.liked;
+    final actionColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF4B5563);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1231,7 +1257,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                     child: Icon(
                       isLiked ? Icons.favorite : Icons.favorite_border,
                       key: ValueKey(isLiked),
-                      color: isLiked ? const Color(0xFFE11D48) : const Color(0xFF4B5563),
+                      color: isLiked ? const Color(0xFFE11D48) : actionColor,
                       size: 22,
                     ),
                   ),
@@ -1239,7 +1265,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                   Text(
                     'Like',
                     style: GoogleFonts.poppins(
-                      color: isLiked ? const Color(0xFFE11D48) : const Color(0xFF4B5563),
+                      color: isLiked ? const Color(0xFFE11D48) : actionColor,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -1267,16 +1293,16 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     LucideIcons.messageSquare,
-                    color: Color(0xFF4B5563),
+                    color: actionColor,
                     size: 22,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Comment',
                     style: GoogleFonts.poppins(
-                      color: const Color(0xFF4B5563),
+                      color: actionColor,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -1302,16 +1328,16 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     LucideIcons.share2,
-                    color: Color(0xFF4B5563),
+                    color: actionColor,
                     size: 22,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Share',
                     style: GoogleFonts.poppins(
-                      color: const Color(0xFF4B5563),
+                      color: actionColor,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -1329,7 +1355,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   // COMMENTS SECTION (Mobile)
   // =========================================================
 
-  Widget _buildCommentsSection({required bool isDesktop}) {
+  Widget _buildCommentsSection({required bool isDesktop, required bool isDark}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -1339,7 +1365,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
           Text(
             'Comments (${_comments.length})',
             style: GoogleFonts.poppins(
-              color: const Color(0xFF111827),
+              color: isDark ? AppColors.darkText : const Color(0xFF111827),
               fontSize: 16,
               fontWeight: FontWeight.w700,
             ),
@@ -1363,15 +1389,18 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
               ),
             )
           else if (_comments.isEmpty)
-            _buildEmptyComments()
+            _buildEmptyComments(isDark: isDark)
           else
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _comments.length,
-              separatorBuilder: (_, index) => const Divider(height: 16, color: Color(0xFFF1F5F9)),
+              separatorBuilder: (_, index) => Divider(
+                height: 16,
+                color: isDark ? AppColors.darkDivider : const Color(0xFFF1F5F9),
+              ),
               itemBuilder: (context, index) {
-                return _buildCommentTile(_comments[index]);
+                return _buildCommentTile(_comments[index], isDark: isDark);
               },
             ),
         ],
@@ -1379,7 +1408,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
     );
   }
 
-  Widget _buildEmptyComments() {
+  Widget _buildEmptyComments({required bool isDark}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 28),
       child: Center(
@@ -1387,14 +1416,14 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
           children: [
             Icon(
               LucideIcons.messageSquareDashed,
-              color: const Color(0xFF94A3B8),
+              color: isDark ? Colors.white30 : const Color(0xFF94A3B8),
               size: 38,
             ),
             const SizedBox(height: 10),
             Text(
               'No comments yet.',
               style: GoogleFonts.poppins(
-                color: const Color(0xFF64748B),
+                color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -1403,7 +1432,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
             Text(
               'Be the first to share your thoughts!',
               style: GoogleFonts.poppins(
-                color: const Color(0xFF94A3B8),
+                color: isDark ? AppColors.darkTextSecondary.withValues(alpha: 0.6) : const Color(0xFF94A3B8),
                 fontSize: 12,
               ),
             ),
@@ -1413,7 +1442,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
     );
   }
 
-  Widget _buildCommentTile(CommentModel comment) {
+  Widget _buildCommentTile(CommentModel comment, {required bool isDark}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1433,7 +1462,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                   Text(
                     comment.username,
                     style: GoogleFonts.poppins(
-                      color: const Color(0xFF111827),
+                      color: isDark ? AppColors.darkText : const Color(0xFF111827),
                       fontSize: 13.5,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1442,7 +1471,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                   Text(
                     comment.timeAgo,
                     style: GoogleFonts.poppins(
-                      color: const Color(0xFF94A3B8),
+                      color: isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8),
                       fontSize: 11,
                     ),
                   ),
@@ -1452,7 +1481,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
               Text(
                 comment.comment,
                 style: GoogleFonts.poppins(
-                  color: const Color(0xFF334155),
+                  color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
                   fontSize: 13,
                   height: 1.35,
                 ),
@@ -1477,7 +1506,9 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
           icon: Icon(
             comment.isLiked ? Icons.favorite : Icons.favorite_border,
             size: 16,
-            color: comment.isLiked ? const Color(0xFFE11D48) : const Color(0xFFCBD5E1),
+            color: comment.isLiked
+                ? const Color(0xFFE11D48)
+                : (isDark ? Colors.white30 : const Color(0xFFCBD5E1)),
           ),
         ),
       ],
@@ -1488,7 +1519,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   // BOTTOM COMMENT BAR
   // =========================================================
 
-  Widget _buildBottomCommentBar({required bool isDesktop}) {
+  Widget _buildBottomCommentBar({required bool isDesktop, required bool isDark}) {
     return Container(
       padding: EdgeInsets.only(
         left: 16,
@@ -1497,10 +1528,10 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
         bottom: isDesktop ? 12 : MediaQuery.of(context).padding.bottom + 10,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? AppColors.darkCard : Colors.white,
         border: Border(
           top: BorderSide(
-            color: const Color(0xFFE5E7EB),
+            color: isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
             width: isDesktop ? 1 : 0.8,
           ),
         ),
@@ -1520,17 +1551,17 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
               controller: _commentController,
               focusNode: _commentFocusNode,
               style: GoogleFonts.poppins(
-                color: const Color(0xFF111827),
+                color: isDark ? AppColors.darkText : const Color(0xFF111827),
                 fontSize: 14,
               ),
               decoration: InputDecoration(
                 hintText: 'Add a comment...',
                 hintStyle: GoogleFonts.poppins(
-                  color: const Color(0xFF94A3B8),
+                  color: isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8),
                   fontSize: 14,
                 ),
                 filled: true,
-                fillColor: const Color(0xFFF8FAFC),
+                fillColor: isDark ? AppColors.darkSurface : const Color(0xFFF8FAFC),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
@@ -1541,8 +1572,8 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
-                  borderSide: const BorderSide(
-                    color: Color(0xFFE2E8F0),
+                  borderSide: BorderSide(
+                    color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
                     width: 1,
                   ),
                 ),

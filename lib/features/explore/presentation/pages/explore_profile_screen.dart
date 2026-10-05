@@ -348,18 +348,23 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
                                        const SizedBox(height: 20),
                                        Row(
                                          children: [
-                                           Expanded(
-                                             child: _ActionButton(
-                                               label: (profile?.following ?? false)
-                                                   ? 'Following'
-                                                   : 'Follow',
-                                               isPrimary: true,
-                                               isActive: profile?.following ?? false,
-                                               onTap: () async {
-                                                 await provider
-                                                     .followUser(widget.userId);
-                                               },
-                                             ),
+                                           Builder(
+                                             builder: (context) {
+                                               final isFollowing = provider.isFollowing(widget.userId);
+                                               return Expanded(
+                                                 child: _ActionButton(
+                                                   label: isFollowing ? 'Following' : 'Follow',
+                                                   isPrimary: true,
+                                                   isActive: isFollowing,
+                                                   onTap: () async {
+                                                     await provider.toggleFollowUser(
+                                                       widget.userId,
+                                                       userName: profile?.name,
+                                                     );
+                                                   },
+                                                 ),
+                                               );
+                                             },
                                            ),
                                            const SizedBox(width: 12),
                                            Expanded(
