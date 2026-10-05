@@ -696,12 +696,38 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
       String? photoUrl;
       if (photoRes.data is Map) {
         final map = Map<String, dynamic>.from(photoRes.data as Map);
-        photoUrl = map['url'] as String? ?? (map['data'] is Map ? map['data']['url'] as String? : null);
+        photoUrl = map['url'] as String? ??
+            map['path'] as String? ??
+            map['file'] as String? ??
+            map['imageUrl'] as String? ??
+            map['photoUrl'] as String? ??
+            map['location'] as String? ??
+            map['link'] as String? ??
+            (map['data'] is Map
+                ? (map['data']['url'] ??
+                        map['data']['path'] ??
+                        map['data']['file'] ??
+                        map['data']['imageUrl'] ??
+                        map['data']['location'])
+                    ?.toString()
+                : null);
       }
 
       if (photoUrl != null && photoUrl.isNotEmpty) {
         if (!mounted) return;
-        await context.read<ProfileProvider>().updateProfile({'profilePhoto': photoUrl});
+
+        // Optimistically update local profile photo
+        context.read<ProfileProvider>().updateProfilePhotoLocally(photoUrl);
+
+        // Update profile on backend with all possible key names for max compatibility
+        await context.read<ProfileProvider>().updateProfile({
+          'profilePhoto': photoUrl,
+          'profile_image': photoUrl,
+          'profileImage': photoUrl,
+          'pic': photoUrl,
+          'avatar': photoUrl,
+        });
+
         if (!mounted) return;
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -712,7 +738,7 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
           ),
         );
       } else {
-        throw Exception('No URL returned from upload');
+        throw Exception('No valid image URL returned from upload');
       }
     } catch (e) {
       if (!mounted) return;
@@ -829,9 +855,12 @@ class _ProfileAvatar extends StatelessWidget {
           ),
           child: ClipOval(
             child: isNetwork
-                ? Image.network(cleanUrl,
+                ? Image.network(
+                    cleanUrl,
+                    key: ValueKey(cleanUrl),
                     fit: BoxFit.cover,
-                    errorBuilder: (_, e, s) => buildFallback())
+                    errorBuilder: (_, e, s) => buildFallback(),
+                  )
                 : buildFallback(),
           ),
         ),

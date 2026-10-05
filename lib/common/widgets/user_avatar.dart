@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/api/api_endpoints.dart';
 import '../../core/constants/app_colors.dart';
 
 class UserAvatar extends StatelessWidget {
@@ -20,7 +21,8 @@ class UserAvatar extends StatelessWidget {
   /// Check if the image URL is empty, invalid, or a known generic/placeholder URL.
   static bool isGenericPlaceholder(String? url) {
     if (url == null || url.trim().isEmpty) return true;
-    final lower = url.toLowerCase().trim();
+    final formatted = ApiEndpoints.formatMediaUrl(url.trim());
+    final lower = formatted.toLowerCase();
     if (!lower.startsWith('http://') && !lower.startsWith('https://')) {
       return true;
     }
@@ -63,8 +65,8 @@ class UserAvatar extends StatelessWidget {
       );
     }
 
-    final cleanUrl = imageUrl?.trim();
-    if (isGenericPlaceholder(cleanUrl)) {
+    final formattedUrl = imageUrl != null ? ApiEndpoints.formatMediaUrl(imageUrl!) : '';
+    if (isGenericPlaceholder(formattedUrl)) {
       return buildInitials();
     }
 
@@ -74,7 +76,8 @@ class UserAvatar extends StatelessWidget {
         height: radius * 2,
         color: effectiveBg,
         child: Image.network(
-          cleanUrl!,
+          formattedUrl,
+          key: ValueKey(formattedUrl),
           width: radius * 2,
           height: radius * 2,
           fit: BoxFit.cover,

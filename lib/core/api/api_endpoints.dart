@@ -39,14 +39,17 @@ class ApiEndpoints {
   static String videoComments(String id) => "/videos/$id/comments";
   static String likeComment(String commentId) => "/videos/comments/$commentId/like";
 
-  // Rewrites any localhost:3000 URLs returned by the backend to the tunnel URL.
+  // Rewrites any relative URLs or localhost:3000 URLs returned by the backend to the base URL.
   static String formatMediaUrl(String url) {
     if (url.isEmpty) return url;
-    if (url.startsWith('/')) return '$baseUrl$url';
-    if (url.startsWith('http://localhost:3000')) {
-      return url.replaceFirst('http://localhost:3000', baseUrl);
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      if (url.startsWith('http://localhost:3000')) {
+        return url.replaceFirst('http://localhost:3000', baseUrl);
+      }
+      return url;
     }
-    return url;
+    if (url.startsWith('/')) return '$baseUrl$url';
+    return '$baseUrl/$url';
   }
 
   static const String chats = "/chats";

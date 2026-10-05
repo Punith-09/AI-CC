@@ -55,6 +55,7 @@ class ArtistAvatar extends StatelessWidget {
             child: isNetwork
                 ? Image.network(
                     cleanUrl,
+                    key: ValueKey(cleanUrl),
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => buildFallback(),
                   )
