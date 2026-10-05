@@ -1,17 +1,23 @@
+import 'dart:io';
 import 'package:aicc/common/widgets/app_background.dart';
+import 'package:aicc/core/api/api_endpoints.dart';
 import 'package:aicc/core/constants/app_colors.dart';
+import 'package:aicc/core/network/dio_client.dart';
 import 'package:aicc/core/responsive/responsive_breakpoints.dart';
 import 'package:aicc/core/routes/app_routes.dart';
 import 'package:aicc/core/theme/theme_provider.dart';
 import 'package:aicc/features/artist_profile/data/models/artist_model.dart';
 import 'package:aicc/features/artist_profile/data/models/portfolio_model.dart';
 import 'package:aicc/features/artist_profile/presentation/widgets/portfolio_card.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../presentation/providers/profile_provider.dart';
-import 'package:aicc/core/api/api_endpoints.dart';
 
 class ArtistProfileScreen extends StatefulWidget {
   final String? userId;
@@ -283,7 +289,6 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
     final postsCount = profile?.projects ?? 0;
     final followersCount = profile?.followers ?? '0';
     final followingCount = profile?.followingCount ?? '0';
-    const viewsCount = '43';
 
     return NestedScrollView(
       headerSliverBuilder: (context, innerBoxIsScrolled) => [
@@ -301,11 +306,12 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
                       horizontal: 16, vertical: 8),
                   child: Row(
                     children: [
-                      // Avatar
+                      // Avatar with camera edit overlay
                       _ProfileAvatar(
                         profileImage: profile?.profileImage,
                         name: profile?.name,
                         isDark: isDark,
+                        onCameraTap: () => _pickAndUploadProfilePhoto(context),
                       ),
                       const SizedBox(width: 16),
                       // Name + badge + location
@@ -508,11 +514,6 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
                           value: followingCount.padLeft(2, '0'),
                           label: 'Following',
                           isDark: isDark),
-                      const SizedBox(width: 8),
-                      _StatBox(
-                          value: viewsCount,
-                          label: 'Views',
-                          isDark: isDark),
                     ],
                   ),
                 ),
@@ -647,6 +648,83 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
       ),
     );
   }
+
+  /// Picks an image from gallery and uploads it as the profile photo.
+  Future<void> _pickAndUploadProfilePhoto(BuildContext context) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile == null) return;
+    if (!mounted) return;
+
+    // Show uploading indicator via SnackBar
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(
+          children: [
+            SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(width: 12),
+            Text('Uploading photo...'),
+          ],
+        ),
+        duration: Duration(seconds: 10),
+        backgroundColor: Color(0xFF1A1A1A),
+      ),
+    );
+
+    try {
+      final dioClient = GetIt.instance<DioClient>();
+      MultipartFile multipartFile;
+      if (kIsWeb) {
+        final bytes = await pickedFile.readAsBytes();
+        multipartFile = MultipartFile.fromBytes(bytes, filename: pickedFile.name);
+      } else {
+        multipartFile = await MultipartFile.fromFile(
+          pickedFile.path,
+          filename: pickedFile.name,
+        );
+      }
+      final formData = FormData.fromMap({'file': multipartFile});
+      final photoRes = await dioClient.post(ApiEndpoints.mediaUpload, data: formData);
+
+      String? photoUrl;
+      if (photoRes.data is Map) {
+        final map = Map<String, dynamic>.from(photoRes.data as Map);
+        photoUrl = map['url'] as String? ?? (map['data'] is Map ? map['data']['url'] as String? : null);
+      }
+
+      if (photoUrl != null && photoUrl.isNotEmpty) {
+        if (!mounted) return;
+        await context.read<ProfileProvider>().updateProfile({'profilePhoto': photoUrl});
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile photo updated!'),
+            backgroundColor: AppColors.success,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      } else {
+        throw Exception('No URL returned from upload');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to upload photo: $e'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+    }
+  }
 }
 
 // ── Toggle Switch Widget ──────────────────────────────────────────────────────
@@ -702,9 +780,14 @@ class _ProfileAvatar extends StatelessWidget {
   final String? profileImage;
   final String? name;
   final bool isDark;
+  final VoidCallback? onCameraTap;
 
-  const _ProfileAvatar(
-      {this.profileImage, this.name, required this.isDark});
+  const _ProfileAvatar({
+    this.profileImage,
+    this.name,
+    required this.isDark,
+    this.onCameraTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -727,27 +810,65 @@ class _ProfileAvatar extends StatelessWidget {
           ),
         );
 
-    return Container(
-      width: 80,
-      height: 80,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: AppColors.primary, width: 2.5),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 12,
-            spreadRadius: 1,
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.primary, width: 2.5),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                blurRadius: 12,
+                spreadRadius: 1,
+              ),
+            ],
           ),
-        ],
-      ),
-      child: ClipOval(
-        child: isNetwork
-            ? Image.network(cleanUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, e, s) => buildFallback())
-            : buildFallback(),
-      ),
+          child: ClipOval(
+            child: isNetwork
+                ? Image.network(cleanUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, e, s) => buildFallback())
+                : buildFallback(),
+          ),
+        ),
+        // Camera icon badge
+        if (onCameraTap != null)
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: GestureDetector(
+              onTap: onCameraTap,
+              child: Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF0D0D0D) : Colors.white,
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.4),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.camera_alt,
+                  color: Colors.black,
+                  size: 13,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
