@@ -12,6 +12,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/theme/theme_provider.dart';
 import '../../../artist_profile/data/models/artist_model.dart';
 
 class ExploreProfileScreen extends StatefulWidget {
@@ -257,6 +258,7 @@ class _ProfileInfoRow extends StatelessWidget {
     final role = profile?.roles.isNotEmpty == true
         ? profile!.roles.first.toLowerCase()
         : 'artist';
+    final isDark = context.read<ThemeProvider>().isDarkMode;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -275,7 +277,7 @@ class _ProfileInfoRow extends StatelessWidget {
                 style: GoogleFonts.poppins(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: isDark? AppColors.white:AppColors.black,
                 ),
               ),
               const SizedBox(height: 4),
@@ -303,10 +305,10 @@ class _ProfileInfoRow extends StatelessWidget {
               // Location
               Row(
                 children: [
-                  const Icon(
+                   Icon(
                     Icons.location_on_outlined,
                     size: 14,
-                    color: Colors.white60,
+                    color: AppColors.primary,
                   ),
                   const SizedBox(width: 3),
                   Flexible(
@@ -314,7 +316,7 @@ class _ProfileInfoRow extends StatelessWidget {
                       location,
                       style: GoogleFonts.poppins(
                         fontSize: 13,
-                        color: Colors.white60,
+                        color:isDark?AppColors.white:AppColors.black,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -420,15 +422,17 @@ class _StatBox extends StatelessWidget {
   final String value;
   final String label;
 
+
   const _StatBox({required this.value, required this.label});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.read<ThemeProvider>().isDarkMode;
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
+          color: isDark? Color(0xFF1A1A1A):AppColors.white,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
@@ -436,7 +440,7 @@ class _StatBox extends StatelessWidget {
             Text(
               value,
               style: GoogleFonts.poppins(
-                color: Colors.white,
+                color: isDark? AppColors.white:AppColors.black,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -445,7 +449,7 @@ class _StatBox extends StatelessWidget {
             Text(
               label,
               style: GoogleFonts.poppins(
-                color: Colors.white60,
+                color: isDark? AppColors.white:AppColors.black ,
                 fontSize: 11,
               ),
             ),
@@ -511,20 +515,20 @@ class _InfoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.read<ThemeProvider>().isDarkMode;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: isDark? Color(0xFF1A1A1A):AppColors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
-        ),
+        border: Border.all(color: AppColors.primary),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
+              border: Border.all(color: AppColors.primary),
               color: AppColors.primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
@@ -539,7 +543,7 @@ class _InfoTile extends StatelessWidget {
                   title,
                   style: GoogleFonts.poppins(
                     fontSize: 11,
-                    color: Colors.white54,
+                    color:  isDark? AppColors.white:AppColors.black,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -550,7 +554,7 @@ class _InfoTile extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: isDark? AppColors.white:AppColors.black,
                   ),
                 ),
               ],

@@ -252,10 +252,10 @@ class FeedHeader extends StatelessWidget {
             const SizedBox(width: 8),
           ],
 
-          Icon(
-            Icons.more_vert,
-            color: iconColor,
-          ),
+          // Icon(
+          //   Icons.more_vert,
+          //   color: iconColor,
+          // ),
         ],
       ),
     );

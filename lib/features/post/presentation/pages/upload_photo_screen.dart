@@ -701,16 +701,18 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F323D) : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(14),
+        // color: isDark ?AppColors.darkCard:AppColors.lightCard,
+        color: AppColors.black,
+        borderRadius: BorderRadius.circular(30),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
+          color: isDark ? AppColors.hint:AppColors.black,
         ),
       ),
       child: TextField(
         controller: controller,
         style: GoogleFonts.poppins(
           color: isDark ? Colors.white : AppColors.lightText,
+          // backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
           fontSize: 14.5,
         ),
         decoration: InputDecoration(

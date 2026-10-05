@@ -53,20 +53,20 @@ class _ChatInputState extends State<ChatInput> {
           mainAxisSize: MainAxisSize.min,
           children: [
             /// Quick Actions
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _QuickActionChip(icon: Icons.folder_open, title: "Portfolio", isDark: isDark),
-                  const SizedBox(width: 8),
-                  _QuickActionChip(icon: Icons.calendar_today, title: "Schedule", isDark: isDark),
-                  const SizedBox(width: 8),
-                  _QuickActionChip(icon: Icons.person_outline, title: "Profile", isDark: isDark),
-                  const SizedBox(width: 8),
-                  _QuickActionChip(icon: Icons.video_camera_back_outlined, title: "Audition", isDark: isDark),
-                ],
-              ),
-            ),
+            // SingleChildScrollView(
+            //   scrollDirection: Axis.horizontal,
+            //   child: Row(
+            //     children: [
+            //       _QuickActionChip(icon: Icons.folder_open, title: "Portfolio", isDark: isDark),
+            //       const SizedBox(width: 8),
+            //       _QuickActionChip(icon: Icons.calendar_today, title: "Schedule", isDark: isDark),
+            //       const SizedBox(width: 8),
+            //       _QuickActionChip(icon: Icons.person_outline, title: "Profile", isDark: isDark),
+            //       const SizedBox(width: 8),
+            //       _QuickActionChip(icon: Icons.video_camera_back_outlined, title: "Audition", isDark: isDark),
+            //     ],
+            //   ),
+            // ),
 
             const SizedBox(height: 12),
 
@@ -81,8 +81,8 @@ class _ChatInputState extends State<ChatInput> {
                   child: Container(
                     decoration: BoxDecoration(
                       color: inputFieldBg,
-                      borderRadius: BorderRadius.circular(30),
-                      border: Border.all(color: inputBorder),
+                      borderRadius: BorderRadius.circular(5),
+                      border: Border.all(color: AppColors.primary),
                     ),
                     child: TextField(
                       controller: widget.controller,
@@ -102,13 +102,13 @@ class _ChatInputState extends State<ChatInput> {
                           horizontal: 16,
                           vertical: 12,
                         ),
-                        suffixIcon: IconButton(
-                          onPressed: () {},
-                          icon: Icon(
-                            Icons.emoji_emotions_outlined,
-                            color: hintColor,
-                          ),
-                        ),
+                        // suffixIcon: IconButton(
+                        //   onPressed: () {},
+                        //   icon: Icon(
+                        //     Icons.emoji_emotions_outlined,
+                        //     color: hintColor,
+                        //   ),
+                        // ),
                       ),
                     ),
                   ),

@@ -704,19 +704,12 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
               margin: const EdgeInsets.only(right: 10),
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
               decoration: BoxDecoration(
-                gradient: isSelected
-                    ? const LinearGradient(
-                        colors: [Color(0xFF8E3CF7), Color(0xFF6B21A8)],
-                      )
-                    : null,
                 color: isSelected
-                    ? null
-                    : (isDark ? const Color(0xFF0F323D) : const Color(0xFFF1F5F9)),
+                    ? AppColors.primary
+                    : (isDark ? AppColors.black : AppColors.white),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: isSelected
-                      ? const Color(0xFF8E3CF7)
-                      : (isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFE2E8F0)),
+                  color:AppColors.primary,
                 ),
                 boxShadow: isSelected
                     ? [

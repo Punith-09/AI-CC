@@ -217,14 +217,14 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Icon(Icons.photo_camera_outlined, color: iconColor),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 15),
-            child: Icon(Icons.more_vert, color: iconColor),
-          ),
+          // Padding(
+          //   padding: const EdgeInsets.symmetric(horizontal: 10),
+          //   child: Icon(Icons.photo_camera_outlined, color: iconColor),
+          // ),
+          // Padding(
+          //   padding: const EdgeInsets.only(right: 15),
+          //   child: Icon(Icons.more_vert, color: iconColor),
+          // ),
         ],
       ),
 

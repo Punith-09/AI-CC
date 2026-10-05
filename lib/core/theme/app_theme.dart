@@ -311,7 +311,7 @@ class AppTheme {
 
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: AppColors.darkTextField,
+      fillColor: AppColors.darkCard,
       contentPadding: const EdgeInsets.symmetric(
         horizontal: 18,
         vertical: 16,

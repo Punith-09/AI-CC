@@ -204,26 +204,26 @@ class _MessagesScreenState extends State<MessagesScreen> {
           ),
 
           // Compose icon
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: AppColors.buttonPrimary,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.buttonPrimary.withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: const Icon(
-              LucideIcons.penSquare,
-              color: Colors.white,
-              size: 18,
-            ),
-          ),
+          // Container(
+          //   width: 38,
+          //   height: 38,
+          //   decoration: BoxDecoration(
+          //     color: AppColors.buttonPrimary,
+          //     borderRadius: BorderRadius.circular(10),
+          //     boxShadow: [
+          //       BoxShadow(
+          //         color: AppColors.buttonPrimary.withValues(alpha: 0.3),
+          //         blurRadius: 8,
+          //         offset: const Offset(0, 2),
+          //       ),
+          //     ],
+          //   ),
+          //   child: const Icon(
+          //     LucideIcons.penSquare,
+          //     color: Colors.white,
+          //     size: 18,
+          //   ),
+          // ),
         ],
       ),
     );

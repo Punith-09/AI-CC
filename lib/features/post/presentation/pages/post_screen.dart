@@ -348,18 +348,21 @@ class _PostScreenState extends State<PostScreen> {
                 TextField(
                   controller: _descController,
                   maxLines: 5,
-                  style: const TextStyle(color: Colors.white),
+                  style:  TextStyle(
+                      color: isDark?AppColors.white:AppColors.black
+                  ),
                   decoration: InputDecoration(
+
                     hintText: 'Describe the role and requirements...',
                     hintStyle: TextStyle(
-                      color: Colors.grey.shade500,
+                      color: AppColors.hint,
                     ),
                     filled: true,
                     fillColor: isDark?AppColors.darkCard:AppColors.lightCard,
                     contentPadding: const EdgeInsets.all(16),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(color: borderColor),
+                      borderSide: BorderSide(color: AppColors.primary),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
