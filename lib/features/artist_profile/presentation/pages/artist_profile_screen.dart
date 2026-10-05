@@ -28,7 +28,7 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.userId != null) {
         context.read<ProfileProvider>().fetchUserProfile(widget.userId!);
@@ -538,7 +538,6 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
                   tabs: const [
                     Tab(text: 'Gallery'),
                     Tab(text: 'Bio Data'),
-                    Tab(text: 'Projects'),
                   ],
                 ),
               ],
@@ -565,9 +564,6 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
               onLogout: _logout,
               onEditProfile: () => context.push(AppRoutes.editArtistProfile),
             ),
-
-            // ── Projects Tab ─────────────────────────────────────
-            _ProjectsTab(isDark: isDark),
           ],
         ),
       ),
@@ -1095,50 +1091,3 @@ class _BioField {
   int get hashCode => label.hashCode ^ value.hashCode;
 }
 
-// ── Projects Tab ──────────────────────────────────────────────────────────────
-class _ProjectsTab extends StatelessWidget {
-  final bool isDark;
-  const _ProjectsTab({required this.isDark});
-
-  @override
-  Widget build(BuildContext context) {
-    final subColor = isDark ? Colors.white54 : Colors.black54;
-
-    return Column(
-      children: [
-        // Add New Project button
-        Padding(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: OutlinedButton.icon(
-              onPressed: () {},
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: AppColors.primary),
-                foregroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              ),
-              icon: const Icon(Icons.add, size: 16),
-              label: const Text(
-                '+ Add New Project',
-                style: TextStyle(fontSize: 13),
-              ),
-            ),
-          ),
-        ),
-        Expanded(
-          child: Center(
-            child: Text(
-              'No projects added yet.',
-              style: TextStyle(color: subColor, fontSize: 14),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
