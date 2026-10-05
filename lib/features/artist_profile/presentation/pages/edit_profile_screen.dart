@@ -109,13 +109,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         String? photoUrl;
         if (photoRes.data is Map) {
           final map = Map<String, dynamic>.from(photoRes.data as Map);
-          photoUrl = map['url'] as String? ?? (map['data'] is Map ? map['data']['url'] as String? : null);
+          photoUrl = map['url'] as String? ??
+              map['path'] as String? ??
+              map['file'] as String? ??
+              map['imageUrl'] as String? ??
+              map['photoUrl'] as String? ??
+              map['location'] as String? ??
+              map['link'] as String? ??
+              (map['data'] is Map
+                  ? (map['data']['url'] ??
+                          map['data']['path'] ??
+                          map['data']['file'] ??
+                          map['data']['imageUrl'] ??
+                          map['data']['location'])
+                      ?.toString()
+                  : null);
         }
 
         if (photoUrl != null && photoUrl.isNotEmpty) {
           setState(() {
             _currentPhotoUrl = photoUrl;
           });
+          context.read<ProfileProvider>().updateProfilePhotoLocally(photoUrl);
         }
       } catch (e) {
         if (!mounted) return;
@@ -164,8 +179,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       'experience': _experienceController.text.trim(),
       'languages': _languagesController.text.trim(),
       'awards': _awardsCount,
-      if (_currentPhotoUrl != null && _currentPhotoUrl!.isNotEmpty)
+      if (_currentPhotoUrl != null && _currentPhotoUrl!.isNotEmpty) ...{
         'profilePhoto': _currentPhotoUrl,
+        'profile_image': _currentPhotoUrl,
+        'profileImage': _currentPhotoUrl,
+        'pic': _currentPhotoUrl,
+        'avatar': _currentPhotoUrl,
+      },
     };
     
     try {
@@ -377,7 +397,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                                       : FileImage(File(_selectedImage!.path))) as ImageProvider
                                                   : (_currentPhotoUrl != null && _currentPhotoUrl!.isNotEmpty)
                                                       ? NetworkImage(ApiEndpoints.formatMediaUrl(_currentPhotoUrl!))
-                                                      : const NetworkImage('https://i.pravatar.cc/150?img=11'), 
+                                                      : null,
+                                              child: (_selectedImage == null && (_currentPhotoUrl == null || _currentPhotoUrl!.isEmpty))
+                                                  ? Text(
+                                                      (_nameController.text.isNotEmpty ? _nameController.text[0] : 'U').toUpperCase(),
+                                                      style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+                                                    )
+                                                  : null,
                                             ),
                                     ),
                                     Positioned(

@@ -345,13 +345,47 @@ class ProfileProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Immediately updates the profile image URL in local state (optimistic).
+  /// Does NOT call the API — use [updateProfile] separately to persist.
+  void updateProfilePhotoLocally(String url) {
+    if (url.isEmpty) return;
+    if (_currentProfile != null) {
+      _currentProfile = _currentProfile!.copyWith(profileImage: url);
+      notifyListeners();
+    }
+  }
+
   Future<void> updateProfile(Map<String, dynamic> data) async {
+    final existingImageUrl = _currentProfile?.profileImage ?? '';
+    final requestedPhoto = (data['profilePhoto'] ??
+            data['profile_image'] ??
+            data['profileImage'] ??
+            data['pic'] ??
+            data['avatar'])
+        ?.toString();
+
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _currentProfile = await _repository.updateProfile(data);
+      final updated = await _repository.updateProfile(data);
+
+      String finalPhotoUrl = updated.profileImage;
+      if (finalPhotoUrl.isEmpty) {
+        if (requestedPhoto != null && requestedPhoto.isNotEmpty) {
+          finalPhotoUrl = requestedPhoto;
+        } else {
+          finalPhotoUrl = existingImageUrl;
+        }
+      }
+
+      _currentProfile = updated.copyWith(profileImage: finalPhotoUrl);
+      if (finalPhotoUrl.isNotEmpty) {
+        try {
+          LocalStorage.instance.saveUserProfilePhoto(finalPhotoUrl);
+        } catch (_) {}
+      }
     } catch (e) {
       _error = e.toString();
       rethrow;

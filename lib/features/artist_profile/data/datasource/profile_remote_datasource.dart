@@ -379,21 +379,31 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print('==============================');
-        print('UPDATE PROFILE API RESPONSE');
-        print(response.data);
-        print('==============================');
-
         final responseData = _extractData(response.data);
-        return ArtistModel.fromJson(responseData);
+        var artist = ArtistModel.fromJson(responseData);
+
+        final passedPhoto = (data['profilePhoto'] ??
+                data['profile_image'] ??
+                data['profileImage'] ??
+                data['pic'] ??
+                data['avatar'])
+            ?.toString();
+        if (artist.profileImage.isEmpty && passedPhoto != null && passedPhoto.isNotEmpty) {
+          artist = artist.copyWith(profileImage: passedPhoto);
+        }
+
+        if (artist.profileImage.isNotEmpty) {
+          _localStorage.saveUserProfilePhoto(artist.profileImage);
+        }
+
+        return artist;
       }
 
       throw Exception(
         'Failed to update profile. '
-            'Status code: ${response.statusCode}',
+        'Status code: ${response.statusCode}',
       );
     } on DioException catch (e) {
-      print('UPDATE PROFILE API ERROR: ${e.response?.data ?? e.message}');
       throw Exception(
         e.response?.data?['message'] ??
             e.response?.data?['error'] ??
