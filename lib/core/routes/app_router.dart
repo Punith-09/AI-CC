@@ -60,7 +60,7 @@ final GoRouter appRouter = GoRouter(
   routes: [
 
     GoRoute(path: AppRoutes.welcome, builder: (_, __) => const WelcomeScreen()),
-    GoRoute(path: AppRoutes.welcome, builder: (_, __) => const WelcomeScreen()),
+    GoRoute(path: AppRoutes.welcome  , builder: (_, __) => const WelcomeScreen()),
 
     GoRoute(path: AppRoutes.login, builder: (_, __) => const LoginScreen()),
     GoRoute(path: AppRoutes.signup, builder: (_, __) => const SignupScreen()),
