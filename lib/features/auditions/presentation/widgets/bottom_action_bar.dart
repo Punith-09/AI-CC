@@ -36,14 +36,15 @@ class BottomActionBar extends StatelessWidget {
         onPressed: hasApplied
             ? null
             : () {
-                final subProvider = context.read<SubscriptionProvider>();
-                if (!subProvider.canApplyAudition) {
-                  LimitUpgradeDialog.show(
-                    context,
-                    type: LimitType.auditionApplication,
-                  );
-                  return;
-                }
+                // TODO: Re-enable subscription canApplyAudition check when ready
+                // final subProvider = context.read<SubscriptionProvider>();
+                // if (!subProvider.canApplyAudition) {
+                //   LimitUpgradeDialog.show(
+                //     context,
+                //     type: LimitType.auditionApplication,
+                //   );
+                //   return;
+                // }
                 if (onApply != null) {
                   onApply!();
                 } else {

@@ -67,8 +67,9 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.forgotPassword,
       builder: (context, state) {
-        final token = state.uri.queryParameters['token'];
-        return ForgotPasswordScreen(token: token);
+        final token = state.uri.queryParameters['token'] ?? state.uri.queryParameters['otp'];
+        final email = state.uri.queryParameters['email'];
+        return ForgotPasswordScreen(token: token, initialEmail: email);
       },
     ),
 

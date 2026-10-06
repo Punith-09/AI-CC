@@ -312,29 +312,29 @@ class _LoginScreenState extends State<LoginScreen> {
                               // ----------------------------------------------------
                               // FORGOT PASSWORD?
                               // ----------------------------------------------------
-                              // Align(
-                              //   alignment: Alignment.centerRight,
-                              //   child: Padding(
-                              //     padding: const EdgeInsets.only(right: 6),
-                              //     child: GestureDetector(
-                              //       onTap: () {
-                              //         context.push(AppRoutes.forgotPassword);
-                              //       },
-                              //       child: Text(
-                              //         'Forgot Password?',
-                              //         style: GoogleFonts.inter(
-                              //           fontSize: 10,
-                              //           fontWeight: FontWeight.w400,
-                              //           color: Color(0xFFD39A4A),
-                              //           letterSpacing: 0,
-                              //           height: 1.0,
-                              //         ),
-                              //       ),
-                              //     ),
-                              //   ),
-                              // )
-                              //     .animate(delay: 600.ms)
-                              //     .fade(duration: 600.ms),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 6),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      context.push(AppRoutes.forgotPassword);
+                                    },
+                                    child: Text(
+                                      'Forgot Password?',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: const Color(0xFFD39A4A),
+                                        letterSpacing: 0,
+                                        height: 1.0,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                                  .animate(delay: 600.ms)
+                                  .fade(duration: 600.ms),
 
                               // Push Login button towards bottom
                               const Spacer(),

@@ -190,13 +190,13 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> resetPassword(String token, String newPassword) async {
+  Future<bool> resetPassword(String token, String newPassword, {String? email, String? otp}) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      await _authRepository.resetPassword(token, newPassword);
+      await _authRepository.resetPassword(token, newPassword, email: email, otp: otp);
       _isLoading = false;
       notifyListeners();
       return true;

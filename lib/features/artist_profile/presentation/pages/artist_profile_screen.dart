@@ -311,6 +311,7 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
                   padding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 8),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Avatar with camera edit overlay
                       _ProfileAvatar(
@@ -385,6 +386,8 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
                       ),
                       // 3-dot Menu
                       PopupMenuButton<String>(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                         icon: Icon(
                           Icons.more_vert,
                           color: AppColors.primary,
@@ -491,7 +494,6 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
                           style: TextStyle(
                             color: AppColors.primary,
                             fontSize: 10,
-                            decoration: TextDecoration.underline,
                           ),
                         ),
                       ),

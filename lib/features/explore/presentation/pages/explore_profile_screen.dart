@@ -570,7 +570,7 @@ class _InfoTile extends StatelessWidget {
 // ──────────────────────────────────────────────────────────────
 // Action Buttons Row (Follow / Message) – matches first screen
 // ──────────────────────────────────────────────────────────────
-class _ActionButtonsRow extends StatelessWidget {
+class _ActionButtonsRow extends StatefulWidget {
   final String userId;
   final ArtistModel? profile;
   final ProfileProvider provider;
@@ -582,8 +582,67 @@ class _ActionButtonsRow extends StatelessWidget {
   });
 
   @override
+  State<_ActionButtonsRow> createState() => _ActionButtonsRowState();
+}
+
+class _ActionButtonsRowState extends State<_ActionButtonsRow> {
+  bool _isStartingChat = false;
+
+  Future<void> _handleMessageTap() async {
+    if (_isStartingChat) return;
+    setState(() {
+      _isStartingChat = true;
+    });
+
+    try {
+      final messenger = ScaffoldMessenger.of(context);
+      final router = GoRouter.of(context);
+      final chat = await context
+          .read<MessagesProvider>()
+          .startChat(widget.userId);
+
+      if (!mounted) return;
+
+      if (chat != null) {
+        final enrichedChat = chat.copyWith(
+          participantId: widget.userId,
+          participantName: (chat.participantName.isNotEmpty)
+              ? chat.participantName
+              : (widget.profile?.name ?? ''),
+          participantAvatar: (chat.participantAvatar.isNotEmpty)
+              ? chat.participantAvatar
+              : (widget.profile?.profileImage ?? ''),
+          participantRole: (chat.participantRole.isNotEmpty)
+              ? chat.participantRole
+              : (widget.profile?.roles.isNotEmpty == true
+                  ? widget.profile!.roles.first
+                  : 'Artist'),
+        );
+        router.push(
+          AppRoutes.chat,
+          extra: enrichedChat,
+        );
+      } else {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Could not start chat. Please try again.'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } catch (_) {
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isStartingChat = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isFollowing = provider.isFollowing(userId);
+    final isFollowing = widget.provider.isFollowing(widget.userId);
 
     return Row(
       children: [
@@ -591,9 +650,9 @@ class _ActionButtonsRow extends StatelessWidget {
         Expanded(
           child: GestureDetector(
             onTap: () async {
-              await provider.toggleFollowUser(
-                userId,
-                userName: profile?.name,
+              await widget.provider.toggleFollowUser(
+                widget.userId,
+                userName: widget.profile?.name,
               );
             },
             child: Container(
@@ -642,40 +701,7 @@ class _ActionButtonsRow extends StatelessWidget {
         // Message button – dark, matching first screen secondary action
         Expanded(
           child: GestureDetector(
-            onTap: () async {
-              final messenger = ScaffoldMessenger.of(context);
-              final router = GoRouter.of(context);
-              final chat = await context
-                  .read<MessagesProvider>()
-                  .startChat(userId);
-              if (chat != null) {
-                final enrichedChat = chat.copyWith(
-                  participantId: userId,
-                  participantName: (chat.participantName.isNotEmpty)
-                      ? chat.participantName
-                      : (profile?.name ?? ''),
-                  participantAvatar: (chat.participantAvatar.isNotEmpty)
-                      ? chat.participantAvatar
-                      : (profile?.profileImage ?? ''),
-                  participantRole: (chat.participantRole.isNotEmpty)
-                      ? chat.participantRole
-                      : (profile?.roles.isNotEmpty == true
-                          ? profile!.roles.first
-                          : 'Artist'),
-                );
-                router.push(
-                  AppRoutes.chat,
-                  extra: enrichedChat,
-                );
-              } else {
-                messenger.showSnackBar(
-                  const SnackBar(
-                    content: Text('Could not start chat. Please try again.'),
-                    backgroundColor: Colors.redAccent,
-                  ),
-                );
-              }
-            },
+            onTap: _isStartingChat ? null : _handleMessageTap,
             child: Container(
               height: 48,
               decoration: BoxDecoration(
@@ -686,14 +712,23 @@ class _ActionButtonsRow extends StatelessWidget {
                 ),
               ),
               child: Center(
-                child: Text(
-                  'Message',
-                  style: GoogleFonts.poppins(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
+                child: _isStartingChat
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primary,
+                        ),
+                      )
+                    : Text(
+                        'Message',
+                        style: GoogleFonts.poppins(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
             ),
           ),

@@ -190,13 +190,13 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
       return;
     }
 
-    final subProvider = context.read<SubscriptionProvider>();
-    if (!subProvider.canComment) {
-      LimitUpgradeDialog.show(context, type: LimitType.comment);
-      return;
-    }
-
-    subProvider.recordCommentUsed();
+    // TODO: Re-enable subscription canComment check when ready
+    // final subProvider = context.read<SubscriptionProvider>();
+    // if (!subProvider.canComment) {
+    //   LimitUpgradeDialog.show(context, type: LimitType.comment);
+    //   return;
+    // }
+    // subProvider.recordCommentUsed();
 
     setState(() {
       _isPosting = true;
@@ -257,25 +257,26 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
           _isPosting = false;
         });
 
-        final sub = context.read<SubscriptionProvider>();
-        final errStr = e.toString().toLowerCase();
-        if (errStr.contains('limit') ||
-            errStr.contains('quota') ||
-            errStr.contains('upgrade') ||
-            errStr.contains('429') ||
-            errStr.contains('403')) {
-          sub.markLimitReached(LimitType.comment);
-          LimitUpgradeDialog.show(context, type: LimitType.comment);
-        } else {
-          sub.revertCommentUsed();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to post comment: $e'),
-              backgroundColor: AppColors.danger,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
+        // TODO: Re-enable subscription revert/limit logic when ready
+        // final sub = context.read<SubscriptionProvider>();
+        // final errStr = e.toString().toLowerCase();
+        // if (errStr.contains('limit') ||
+        //     errStr.contains('quota') ||
+        //     errStr.contains('upgrade') ||
+        //     errStr.contains('429') ||
+        //     errStr.contains('403')) {
+        //   sub.markLimitReached(LimitType.comment);
+        //   LimitUpgradeDialog.show(context, type: LimitType.comment);
+        // } else {
+        //   sub.revertCommentUsed();
+        //   ScaffoldMessenger.of(context).showSnackBar(
+        //     SnackBar(
+        //       content: Text('Failed to post comment: $e'),
+        //       backgroundColor: AppColors.danger,
+        //       behavior: SnackBarBehavior.floating,
+        //     ),
+        //   );
+        // }
       }
     }
   }
@@ -568,45 +569,46 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Consumer<SubscriptionProvider>(
-            builder: (context, subProvider, _) {
-              final remaining = subProvider.remainingToday.comments;
-              final total = subProvider.limits.commentsPerDay;
-              final plan = subProvider.planLabel;
-              return Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20, bottom: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "$remaining of $total comments left today ($plan)",
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: remaining <= 0
-                            ? const Color(0xFFF59E0B)
-                            : (isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
-                        fontWeight: remaining <= 0 ? FontWeight.bold : FontWeight.normal,
-                      ),
-                    ),
-                    if (remaining <= 5 && !subProvider.activePlan.contains('max'))
-                      GestureDetector(
-                        onTap: () {
-                          context.push(AppRoutes.subscription);
-                        },
-                        child: const Text(
-                          "Upgrade for more",
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Color(0xFF1CC8FF),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              );
-            },
-          ),
+      // TODO: Re-enable subscription quota display when ready
+      // Consumer<SubscriptionProvider>(
+      //   builder: (context, subProvider, _) {
+      //     final remaining = subProvider.remainingToday.comments;
+      //     final total = subProvider.limits.commentsPerDay;
+      //     final plan = subProvider.planLabel;
+      //     return Padding(
+      //       padding: const EdgeInsets.only(left: 20, right: 20, bottom: 4),
+      //       child: Row(
+      //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      //         children: [
+      //           Text(
+      //             "$remaining of $total comments left today ($plan)",
+      //             style: TextStyle(
+      //               fontSize: 11,
+      //               color: remaining <= 0
+      //                   ? const Color(0xFFF59E0B)
+      //                   : (isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
+      //               fontWeight: remaining <= 0 ? FontWeight.bold : FontWeight.normal,
+      //             ),
+      //           ),
+      //           if (remaining <= 5 && !subProvider.activePlan.contains('max'))
+      //             GestureDetector(
+      //               onTap: () {
+      //                 context.push(AppRoutes.subscription);
+      //               },
+      //               child: const Text(
+      //                 "Upgrade for more",
+      //                 style: TextStyle(
+      //                   fontSize: 11,
+      //                   color: Color(0xFF1CC8FF),
+      //                   fontWeight: FontWeight.bold,
+      //                 ),
+      //               ),
+      //             ),
+      //         ],
+      //       ),
+      //     );
+      //   },
+      // ),
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 2, 14, 12),
             child: Row(

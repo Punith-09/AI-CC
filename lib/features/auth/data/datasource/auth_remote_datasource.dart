@@ -16,13 +16,11 @@ abstract class AuthRemoteDataSource {
     RegisterRequest request,
   );
 
-
-
   Future<LoginResponse> loginWithGoogle(String idToken);
 
   Future<void> forgotPassword(String email);
 
-  Future<void> resetPassword(String token, String newPassword);
+  Future<void> resetPassword(String token, String newPassword, {String? email, String? otp});
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -199,20 +197,26 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       if (msg != null && msg.isNotEmpty) {
         throw Exception(msg);
       }
-      throw Exception('Failed to send reset email. Please text your connection and try again.');
+      final statusCode = e.response?.statusCode;
+      if (statusCode == 404 || statusCode == 400) {
+        throw Exception('Email ID not found in database. Please check your email or sign up.');
+      }
+      throw Exception('Failed to send reset email. Please check your connection and try again.');
     } catch (e) {
       rethrow;
     }
   }
 
   @override
-  Future<void> resetPassword(String token, String newPassword) async {
+  Future<void> resetPassword(String token, String newPassword, {String? email, String? otp}) async {
     try {
       await _dioClient.post(
         ApiEndpoints.resetPassword,
         data: {
           'token': token,
+          'otp': otp ?? token,
           'newPassword': newPassword,
+          if (email != null && email.isNotEmpty) 'email': email,
         },
       );
     } on DioException catch (e) {
@@ -220,7 +224,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       if (msg != null && msg.isNotEmpty) {
         throw Exception(msg);
       }
-      throw Exception('Failed to reset password. Token might be invalid or expired.');
+      throw Exception('Failed to reset password. OTP/Token might be invalid or expired.');
     } catch (e) {
       rethrow;
     }

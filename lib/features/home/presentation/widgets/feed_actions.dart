@@ -58,11 +58,12 @@ class _FeedActionsState extends State<FeedActions> {
             children: [
               IconButton(
                 onPressed: () {
-                  final subProvider = context.read<SubscriptionProvider>();
-                  if (!isLiked && !subProvider.canLike) {
-                    LimitUpgradeDialog.show(context, type: LimitType.like);
-                    return;
-                  }
+                  // TODO: Re-enable subscription canLike check when ready
+                  // final subProvider = context.read<SubscriptionProvider>();
+                  // if (!isLiked && !subProvider.canLike) {
+                  //   LimitUpgradeDialog.show(context, type: LimitType.like);
+                  //   return;
+                  // }
                   context.read<HomeFeedProvider>().toggleLike(
                     widget.post.id,
                     context: context,
