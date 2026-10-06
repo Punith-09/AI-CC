@@ -10,7 +10,7 @@ import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:aicc/core/network/dio_client.dart';
 import 'package:aicc/core/api/api_endpoints.dart';
-import 'package:aicc/core/utils/location_data.dart';
+
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -23,13 +23,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
 
   late TextEditingController _nameController;
-  late TextEditingController _experienceController;
+  late TextEditingController _surnameController;
+  late TextEditingController _emailController;
+  late TextEditingController _mobileController;
+  late TextEditingController _stateController;
+  late TextEditingController _cityController;
   late TextEditingController _languagesController;
-  int _awardsCount = 0;
-
-  String? _country;
-  String? _state;
-  String? _city;
+  late TextEditingController _qualificationController;
 
   String? _currentPhotoUrl;
   XFile? _selectedImage;
@@ -39,43 +39,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void initState() {
     super.initState();
     final profile = context.read<ProfileProvider>().currentProfile;
-    
-    _nameController = TextEditingController(text: profile?.name ?? '');
-    
-    final rawCountry = profile?.country.trim();
-    if (rawCountry != null && rawCountry.isNotEmpty && LocationData.statesByCountry.containsKey(rawCountry)) {
-      _country = rawCountry;
-    }
-    
-    final rawState = profile?.state.trim();
-    if (rawState != null && rawState.isNotEmpty) {
-      _state = rawState;
-      if (_country == null) {
-        for (var entry in LocationData.statesByCountry.entries) {
-          if (entry.value.contains(_state)) {
-            _country = entry.key;
-            break;
-          }
-        }
-      }
-    }
-    
-    final rawCity = profile?.city.trim();
-    if (rawCity != null && rawCity.isNotEmpty) {
-      _city = rawCity;
-    }
 
-    _experienceController = TextEditingController(text: profile?.experience ?? '');
+    // Split name into first name and surname
+    final fullName = profile?.name ?? '';
+    final nameParts = fullName.split(' ');
+    _nameController = TextEditingController(text: nameParts.isNotEmpty ? nameParts[0] : '');
+    _surnameController = TextEditingController(text: nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '');
+
+    _emailController = TextEditingController(text: profile?.email ?? '');
+    _mobileController = TextEditingController(text: profile?.mobile ?? '');
+    _stateController = TextEditingController(text: profile?.state ?? '');
+    _cityController = TextEditingController(text: profile?.city ?? '');
     _languagesController = TextEditingController(text: profile?.languages ?? '');
-    _awardsCount = profile?.awards ?? 0;
+    _qualificationController = TextEditingController(text: profile?.experience ?? '');
     _currentPhotoUrl = profile?.profileImage;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _experienceController.dispose();
+    _surnameController.dispose();
+    _emailController.dispose();
+    _mobileController.dispose();
+    _stateController.dispose();
+    _cityController.dispose();
     _languagesController.dispose();
+    _qualificationController.dispose();
     super.dispose();
   }
 
@@ -96,8 +85,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           multipartFile = MultipartFile.fromBytes(bytes, filename: pickedFile.name);
         } else {
           multipartFile = await MultipartFile.fromFile(
-            pickedFile.path, 
-            filename: pickedFile.name
+            pickedFile.path,
+            filename: pickedFile.name,
           );
         }
         final formData = FormData.fromMap({
@@ -105,7 +94,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         });
 
         final photoRes = await dioClient.post(ApiEndpoints.mediaUpload, data: formData);
-        
+
         String? photoUrl;
         if (photoRes.data is Map) {
           final map = Map<String, dynamic>.from(photoRes.data as Map);
@@ -150,35 +139,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_country == null || _country!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a Country', style: TextStyle(color: Colors.white)), backgroundColor: AppColors.danger),
-      );
-      return;
-    }
-    if (_state == null || _state!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a State', style: TextStyle(color: Colors.white)), backgroundColor: AppColors.danger),
-      );
-      return;
-    }
-    if (_city == null || _city!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a City', style: TextStyle(color: Colors.white)), backgroundColor: AppColors.danger),
-      );
-      return;
-    }
-    
     final provider = context.read<ProfileProvider>();
+    final fullName = '${_nameController.text.trim()} ${_surnameController.text.trim()}'.trim();
 
     final data = {
-      'fullName': _nameController.text.trim(),
-      'country': _country ?? '',
-      'city': _country != null && _state != null ? (_city ?? '') : '',
-      'state': _country != null ? (_state ?? '') : '',
-      'experience': _experienceController.text.trim(),
+      'fullName': fullName,
+      'email': _emailController.text.trim(),
+      'mobile': _mobileController.text.trim(),
+      'state': _stateController.text.trim(),
+      'city': _cityController.text.trim(),
       'languages': _languagesController.text.trim(),
-      'awards': _awardsCount,
+      'experience': _qualificationController.text.trim(),
       if (_currentPhotoUrl != null && _currentPhotoUrl!.isNotEmpty) ...{
         'profilePhoto': _currentPhotoUrl,
         'profile_image': _currentPhotoUrl,
@@ -187,7 +158,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'avatar': _currentPhotoUrl,
       },
     };
-    
+
     try {
       await provider.updateProfile(data);
       if (!mounted) return;
@@ -209,362 +180,204 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  Widget _buildSectionLabel(IconData icon, String title, {bool isOptional = false}) {
+  // ─── Simple label above each field ─────────────────────────────
+  Widget _buildLabel(String title) {
+    final textColor = AppColors.getText(context);
     return Padding(
-      padding: const EdgeInsets.only(top: 24.0, bottom: 12.0),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: AppColors.textField,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: AppColors.white, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            title,
-            style: const TextStyle(
-              color: AppColors.white,
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          if (isOptional) ...[
-            const SizedBox(width: 8),
-            const Text(
-              '(Optional)',
-              style: TextStyle(
-                color: AppColors.hint,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTextField(TextEditingController controller, {Widget? prefixIcon, Widget? suffixIcon, TextInputType? keyboardType, String? Function(String?)? validator}) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: AppColors.BtnGradient),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.all(1.5),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(10.5),
-        ),
-        child: TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          style: const TextStyle(color: AppColors.white, fontSize: 14),
-          validator: validator,
-          decoration: InputDecoration(
-            prefixIcon: prefixIcon,
-            prefixIconConstraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-            suffixIcon: suffixIcon,
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          ),
+      padding: const EdgeInsets.only(top: 20.0, bottom: 8.0),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
   }
 
-  Widget _buildDropdown({
-    required String? value,
-    required List<String> items,
+  // ─── Underline-style text field matching the mockup ────────────
+  Widget _buildUnderlineField({
+    required TextEditingController controller,
     required String hint,
-    required ValueChanged<String?>? onChanged,
+    TextInputType? keyboardType,
+    bool readOnly = false,
+    String? Function(String?)? validator,
   }) {
-    final cleanValue = (value != null && value.trim().isNotEmpty) ? value.trim() : null;
-    List<String> effectiveItems = items
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toSet()
-        .toList();
-    if (cleanValue != null && !effectiveItems.contains(cleanValue)) {
-      effectiveItems.insert(0, cleanValue);
-    }
-
-    final selectedValue = (cleanValue != null && effectiveItems.contains(cleanValue)) ? cleanValue : null;
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: AppColors.BtnGradient),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.all(1.5),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(10.5),
+    final textColor = AppColors.getText(context);
+    final hintColor = AppColors.getTextSecondary(context);
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      readOnly: readOnly,
+      style: TextStyle(color: textColor, fontSize: 14),
+      validator: validator,
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: hintColor, fontSize: 14),
+        filled: false,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+        enabledBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: AppColors.primary, width: 1),
         ),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-            value: selectedValue,
-            isExpanded: true,
-            hint: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(hint, style: TextStyle(color: AppColors.white.withOpacity(0.5), fontSize: 14)),
-            ),
-            dropdownColor: AppColors.background,
-            icon: const Padding(
-              padding: EdgeInsets.only(right: 16),
-              child: Icon(Icons.keyboard_arrow_down, color: AppColors.white, size: 20),
-            ),
-            items: effectiveItems.isEmpty
-                ? null
-                : effectiveItems.map((item) {
-                    return DropdownMenuItem<String>(
-                      value: item,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(item, style: const TextStyle(color: AppColors.white, fontSize: 14)),
-                      ),
-                    );
-                  }).toList(),
-            onChanged: effectiveItems.isEmpty ? null : onChanged,
-          ),
+        focusedBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+        ),
+        errorBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: AppColors.danger, width: 1),
+        ),
+        focusedErrorBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: AppColors.danger, width: 1.5),
         ),
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
     final isLoading = context.watch<ProfileProvider>().isLoading;
-    
+
+    final appBarTextColor = AppColors.getText(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Edit Profile', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+        title: Text(
+          'Edit Profile',
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: appBarTextColor),
+        ),
         backgroundColor: Colors.transparent,
-        foregroundColor: AppColors.white,
+        foregroundColor: appBarTextColor,
         elevation: 0,
         centerTitle: true,
       ),
       body: AppBackground(
         child: SafeArea(
-          child: isLoading 
+          child: isLoading
               ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
               : SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
                   child: Form(
                     key: _formKey,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Avatar Section
+                        // ── Profile Photo ──────────────────────────
                         Center(
                           child: GestureDetector(
                             onTap: _isUploadingPhoto ? null : _pickProfilePhoto,
-                            child: Column(
-                              children: [
-                                Stack(
-                                  alignment: Alignment.bottomRight,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(3),
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        gradient: const LinearGradient(colors: AppColors.BtnGradient),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: AppColors.primary.withOpacity(0.2),
-                                            blurRadius: 20,
-                                            spreadRadius: 2,
-                                          ),
-                                        ],
-                                      ),
-                                      child: _isUploadingPhoto
-                                          ? const CircleAvatar(
-                                              radius: 54,
-                                              backgroundColor: AppColors.textField,
-                                              child: CircularProgressIndicator(color: AppColors.primary),
-                                            )
-                                          : CircleAvatar(
-                                              radius: 54,
-                                              backgroundColor: AppColors.textField,
-                                              backgroundImage: _selectedImage != null
-                                                  ? (kIsWeb 
-                                                      ? NetworkImage(_selectedImage!.path) 
-                                                      : FileImage(File(_selectedImage!.path))) as ImageProvider
-                                                  : (_currentPhotoUrl != null && _currentPhotoUrl!.isNotEmpty)
-                                                      ? NetworkImage(ApiEndpoints.formatMediaUrl(_currentPhotoUrl!))
-                                                      : null,
-                                              child: (_selectedImage == null && (_currentPhotoUrl == null || _currentPhotoUrl!.isEmpty))
-                                                  ? Text(
-                                                      (_nameController.text.isNotEmpty ? _nameController.text[0] : 'U').toUpperCase(),
-                                                      style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
-                                                    )
-                                                  : null,
-                                            ),
-                                    ),
-                                    Positioned(
-                                      bottom: 0,
-                                      right: 4,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: const BoxDecoration(
-                                          color: AppColors.purple,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const Icon(Icons.camera_alt, color: AppColors.white, size: 16),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                ShaderMask(
-                                  shaderCallback: (bounds) => const LinearGradient(
-                                    colors: AppColors.BtnGradient,
-                                  ).createShader(bounds),
-                                  child: Text(
-                                    _isUploadingPhoto ? 'Uploading...' : 'Change Photo',
-                                    style: const TextStyle(
-                                      color: AppColors.white,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                    ),
+                            child: _isUploadingPhoto
+                                ? const CircleAvatar(
+                                    radius: 48,
+                                    backgroundColor: AppColors.textField,
+                                    child: CircularProgressIndicator(color: AppColors.primary),
+                                  )
+                                : CircleAvatar(
+                                    radius: 48,
+                                    backgroundColor: AppColors.textField,
+                                    backgroundImage: _selectedImage != null
+                                        ? (kIsWeb
+                                            ? NetworkImage(_selectedImage!.path)
+                                            : FileImage(File(_selectedImage!.path))) as ImageProvider
+                                        : (_currentPhotoUrl != null && _currentPhotoUrl!.isNotEmpty)
+                                            ? NetworkImage(ApiEndpoints.formatMediaUrl(_currentPhotoUrl!))
+                                            : null,
+                                    child: (_selectedImage == null && (_currentPhotoUrl == null || _currentPhotoUrl!.isEmpty))
+                                        ? Text(
+                                            (_nameController.text.isNotEmpty ? _nameController.text[0] : 'U').toUpperCase(),
+                                            style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                                          )
+                                        : null,
                                   ),
-                                ),
-                              ],
-                            ),
                           ),
                         ),
-                        
-                        _buildSectionLabel(Icons.person_outline, 'Full Name'),
-                        _buildTextField(
-                          _nameController,
-                          validator: (val) => val == null || val.trim().isEmpty ? 'Please enter your full name' : null,
+                        const SizedBox(height: 24),
+
+                        // ── Name ─────────────────────────────────
+                        _buildLabel('Name'),
+                        _buildUnderlineField(
+                          controller: _nameController,
+                          hint: 'Enter your Name',
+                          validator: (val) => val == null || val.trim().isEmpty ? 'Please enter your name' : null,
                         ),
 
-                        _buildSectionLabel(Icons.domain, 'Country'),
-                        _buildDropdown(
-                          value: _country,
-                          items: LocationData.statesByCountry.keys.toList(),
-                          hint: 'Select Country',
-                          onChanged: (v) {
-                            setState(() {
-                              _country = v;
-                              _state = null;
-                              _city = null;
-                            });
-                          },
+                        // ── Surname ──────────────────────────────
+                        _buildLabel('Surname'),
+                        _buildUnderlineField(
+                          controller: _surnameController,
+                          hint: 'Enter your Surname',
                         ),
 
-                        _buildSectionLabel(Icons.location_on_outlined, 'State'),
-                        _buildDropdown(
-                          value: _state,
-                          items: _country != null ? (LocationData.statesByCountry[_country] ?? []) : [],
-                          hint: _country != null ? 'Select State' : 'Select Country first',
-                          onChanged: _country != null ? (v) {
-                            setState(() {
-                              _state = v;
-                              _city = null;
-                            });
-                          } : null,
+                        // ── Email Id ─────────────────────────────
+                        _buildLabel('Email Id'),
+                        _buildUnderlineField(
+                          controller: _emailController,
+                          hint: 'Enter your mail',
+                          keyboardType: TextInputType.emailAddress,
                         ),
 
-                        _buildSectionLabel(Icons.location_city, 'City'),
-                        _buildDropdown(
-                          value: _city,
-                          items: _state != null ? (LocationData.citiesByState[_state] ?? []) : [],
-                          hint: _state != null ? 'Select City' : 'Select State first',
-                          onChanged: _state != null ? (v) {
-                            setState(() {
-                              _city = v;
-                            });
-                          } : null,
+                        // ── Mobile Number ────────────────────────
+                        _buildLabel('Mobile Number'),
+                        _buildUnderlineField(
+                          controller: _mobileController,
+                          hint: '+91 89898 88989',
+                          keyboardType: TextInputType.phone,
                         ),
 
-                        _buildSectionLabel(Icons.work_outline, 'Experience'),
-                        _buildTextField(
-                          _experienceController,
-                          validator: (val) => val == null || val.trim().isEmpty ? 'Please enter your experience' : null,
+                        // ── Present State ────────────────────────
+                        _buildLabel('Present State'),
+                        _buildUnderlineField(
+                          controller: _stateController,
+                          hint: 'Telangana',
                         ),
 
-                        _buildSectionLabel(Icons.language, 'Languages Known'),
-                        _buildTextField(
-                          _languagesController,
-                          validator: (val) => val == null || val.trim().isEmpty ? 'Please enter languages known' : null,
+                        // ── Present City ─────────────────────────
+                        _buildLabel('Present City'),
+                        _buildUnderlineField(
+                          controller: _cityController,
+                          hint: 'Hyderabad',
                         ),
 
-                        _buildSectionLabel(Icons.emoji_events_outlined, 'Awards Count'),
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(colors: AppColors.BtnGradient),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          padding: const EdgeInsets.all(1.5),
+                        // ── Languages ────────────────────────────
+                        _buildLabel('Languages'),
+                        _buildUnderlineField(
+                          controller: _languagesController,
+                          hint: 'English, Telugu, Tamil',
+                        ),
+
+                        // ── Qualification ────────────────────────
+                        _buildLabel('Qualification'),
+                        _buildUnderlineField(
+                          controller: _qualificationController,
+                          hint: 'Btech',
+                        ),
+
+                        const SizedBox(height: 36),
+
+                        // ── Save Changes Button ──────────────────
+                        SizedBox(
+                          width: double.infinity,
                           child: Container(
                             decoration: BoxDecoration(
-                              color: AppColors.background,
-                              borderRadius: BorderRadius.circular(10.5),
+                              gradient: const LinearGradient(colors: AppColors.BtnGradient),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text('Awards', style: TextStyle(color: AppColors.white, fontSize: 14)),
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.remove, color: AppColors.white),
-                                      onPressed: () {
-                                        if (_awardsCount > 0) setState(() => _awardsCount--);
-                                      },
-                                    ),
-                                    SizedBox(
-                                      width: 30,
-                                      child: Text(
-                                        '$_awardsCount',
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(color: AppColors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.add, color: AppColors.white),
-                                      onPressed: () {
-                                        setState(() => _awardsCount++);
-                                      },
-                                    ),
-                                  ],
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                shadowColor: Colors.transparent,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        
-                        const SizedBox(height: 32),
-
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(colors: AppColors.BtnGradient),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
                               ),
-                            ),
-                            onPressed: _saveProfile,
-                            child: const Text(
-                              'Save Changes',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.white,
+                              onPressed: _saveProfile,
+                              child: const Text(
+                                'Save Changes',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.white,
+                                ),
                               ),
                             ),
                           ),

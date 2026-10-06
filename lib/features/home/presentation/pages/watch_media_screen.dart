@@ -215,13 +215,13 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
     final text = _commentController.text.trim();
     if (text.isEmpty || _isPostingComment || _post.id.isEmpty) return;
 
-    final subProvider = context.read<SubscriptionProvider>();
-    if (!subProvider.canComment) {
-      LimitUpgradeDialog.show(context, type: LimitType.comment);
-      return;
-    }
-
-    subProvider.recordCommentUsed();
+    // TODO: Re-enable subscription canComment check when ready
+    // final subProvider = context.read<SubscriptionProvider>();
+    // if (!subProvider.canComment) {
+    //   LimitUpgradeDialog.show(context, type: LimitType.comment);
+    //   return;
+    // }
+    // subProvider.recordCommentUsed();
 
     setState(() => _isPostingComment = true);
     _commentController.clear();
@@ -243,18 +243,19 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isPostingComment = false);
-        final sub = context.read<SubscriptionProvider>();
-        final errStr = e.toString().toLowerCase();
-        if (errStr.contains('limit') ||
-            errStr.contains('quota') ||
-            errStr.contains('upgrade') ||
-            errStr.contains('429') ||
-            errStr.contains('403')) {
-          sub.markLimitReached(LimitType.comment);
-          LimitUpgradeDialog.show(context, type: LimitType.comment);
-        } else {
-          sub.revertCommentUsed();
-        }
+        // TODO: Re-enable subscription revert/limit logic when ready
+        // final sub = context.read<SubscriptionProvider>();
+        // final errStr = e.toString().toLowerCase();
+        // if (errStr.contains('limit') ||
+        //     errStr.contains('quota') ||
+        //     errStr.contains('upgrade') ||
+        //     errStr.contains('429') ||
+        //     errStr.contains('403')) {
+        //   sub.markLimitReached(LimitType.comment);
+        //   LimitUpgradeDialog.show(context, type: LimitType.comment);
+        // } else {
+        //   sub.revertCommentUsed();
+        // }
       }
     }
   }
@@ -269,14 +270,15 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
     final originalPost = _post;
     final isLiked = !_post.liked;
 
-    if (isLiked) {
-      final subProvider = context.read<SubscriptionProvider>();
-      if (!subProvider.canLike) {
-        LimitUpgradeDialog.show(context, type: LimitType.like);
-        return;
-      }
-      subProvider.recordLikeUsed();
-    }
+    // TODO: Re-enable subscription canLike check when ready
+    // if (isLiked) {
+    //   final subProvider = context.read<SubscriptionProvider>();
+    //   if (!subProvider.canLike) {
+    //     LimitUpgradeDialog.show(context, type: LimitType.like);
+    //     return;
+    //   }
+    //   subProvider.recordLikeUsed();
+    // }
 
     final likesCount = isLiked
         ? _post.likesCount + 1
@@ -343,20 +345,21 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
           );
         } catch (_) {}
 
-        if (isLiked) {
-          final sub = context.read<SubscriptionProvider>();
-          final errStr = e.toString().toLowerCase();
-          if (errStr.contains('limit') ||
-              errStr.contains('quota') ||
-              errStr.contains('upgrade') ||
-              errStr.contains('429') ||
-              errStr.contains('403')) {
-            sub.markLimitReached(LimitType.like);
-            LimitUpgradeDialog.show(context, type: LimitType.like);
-          } else {
-            sub.revertLikeUsed();
-          }
-        }
+        // TODO: Re-enable subscription revert/limit logic when ready
+        // if (isLiked) {
+        //   final sub = context.read<SubscriptionProvider>();
+        //   final errStr = e.toString().toLowerCase();
+        //   if (errStr.contains('limit') ||
+        //       errStr.contains('quota') ||
+        //       errStr.contains('upgrade') ||
+        //       errStr.contains('429') ||
+        //       errStr.contains('403')) {
+        //     sub.markLimitReached(LimitType.like);
+        //     LimitUpgradeDialog.show(context, type: LimitType.like);
+        //   } else {
+        //     sub.revertLikeUsed();
+        //   }
+        // }
       }
     }
   }
@@ -397,29 +400,41 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
     }
   }
 
+  bool _isMessagingCreator = false;
+
   Future<void> _messageCreator() async {
+    if (_isMessagingCreator) return;
     final targetId = _post.creatorId;
     if (targetId == null || targetId.isEmpty) return;
 
-    final messenger = ScaffoldMessenger.of(context);
-    final router = GoRouter.of(context);
+    setState(() => _isMessagingCreator = true);
+    try {
+      final messenger = ScaffoldMessenger.of(context);
+      final router = GoRouter.of(context);
 
-    final chat = await context.read<MessagesProvider>().startChat(targetId);
-    if (chat != null) {
-      final enrichedChat = chat.copyWith(
-        participantId: targetId,
-        participantName: chat.participantName.isNotEmpty ? chat.participantName : _post.creatorName,
-        participantAvatar: chat.participantAvatar.isNotEmpty ? chat.participantAvatar : (_post.creatorPic ?? ''),
-        participantRole: chat.participantRole.isNotEmpty ? chat.participantRole : (_post.creatorCategory ?? 'Artist'),
-      );
-      router.push(AppRoutes.chat, extra: enrichedChat);
-    } else {
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Could not open chat. Please try again.'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      final chat = await context.read<MessagesProvider>().startChat(targetId);
+      if (!mounted) return;
+
+      if (chat != null) {
+        final enrichedChat = chat.copyWith(
+          participantId: targetId,
+          participantName: chat.participantName.isNotEmpty ? chat.participantName : _post.creatorName,
+          participantAvatar: chat.participantAvatar.isNotEmpty ? chat.participantAvatar : (_post.creatorPic ?? ''),
+          participantRole: chat.participantRole.isNotEmpty ? chat.participantRole : (_post.creatorCategory ?? 'Artist'),
+        );
+        router.push(AppRoutes.chat, extra: enrichedChat);
+      } else {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Could not open chat. Please try again.'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isMessagingCreator = false);
+      }
     }
   }
 

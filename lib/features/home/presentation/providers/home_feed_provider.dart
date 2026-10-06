@@ -81,17 +81,18 @@ class HomeFeedProvider extends ChangeNotifier {
     final originalPost = _posts[index];
     final bool newLiked = !originalPost.liked;
 
+    // TODO: Re-enable subscription quota checks for likes when ready
     // If liking (not unliking), check quota
-    if (newLiked && sl.isRegistered<SubscriptionProvider>()) {
-      final sub = sl<SubscriptionProvider>();
-      if (!sub.canLike) {
-        if (context != null && context.mounted) {
-          LimitUpgradeDialog.show(context, type: LimitType.like);
-        }
-        return;
-      }
-      sub.recordLikeUsed();
-    }
+    // if (newLiked && sl.isRegistered<SubscriptionProvider>()) {
+    //   final sub = sl<SubscriptionProvider>();
+    //   if (!sub.canLike) {
+    //     if (context != null && context.mounted) {
+    //       LimitUpgradeDialog.show(context, type: LimitType.like);
+    //     }
+    //     return;
+    //   }
+    //   sub.recordLikeUsed();
+    // }
 
     final int newLikesCount = newLiked
         ? originalPost.likesCount + 1
@@ -131,22 +132,23 @@ class HomeFeedProvider extends ChangeNotifier {
       _posts[index] = originalPost;
       notifyListeners();
 
-      if (newLiked && sl.isRegistered<SubscriptionProvider>()) {
-        final sub = sl<SubscriptionProvider>();
-        final errStr = e.toString().toLowerCase();
-        if (errStr.contains('limit') ||
-            errStr.contains('quota') ||
-            errStr.contains('upgrade') ||
-            errStr.contains('429') ||
-            errStr.contains('403')) {
-          sub.markLimitReached(LimitType.like);
-          if (context != null && context.mounted) {
-            LimitUpgradeDialog.show(context, type: LimitType.like);
-          }
-        } else {
-          sub.revertLikeUsed();
-        }
-      }
+      // TODO: Re-enable subscription revert/limit logic when ready
+      // if (newLiked && sl.isRegistered<SubscriptionProvider>()) {
+      //   final sub = sl<SubscriptionProvider>();
+      //   final errStr = e.toString().toLowerCase();
+      //   if (errStr.contains('limit') ||
+      //       errStr.contains('quota') ||
+      //       errStr.contains('upgrade') ||
+      //       errStr.contains('429') ||
+      //       errStr.contains('403')) {
+      //     sub.markLimitReached(LimitType.like);
+      //     if (context != null && context.mounted) {
+      //       LimitUpgradeDialog.show(context, type: LimitType.like);
+      //     }
+      //   } else {
+      //     sub.revertLikeUsed();
+      //   }
+      // }
     }
   }
 

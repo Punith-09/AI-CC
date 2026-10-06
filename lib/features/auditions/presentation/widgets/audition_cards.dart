@@ -59,14 +59,15 @@ class AuditionCards extends StatelessWidget {
           // Apply Now (disabled when already applied)
           // -----------------------------------------------
           onApply: () {
-            final subProvider = context.read<SubscriptionProvider>();
-            if (!subProvider.canApplyAudition) {
-              LimitUpgradeDialog.show(
-                context,
-                type: LimitType.auditionApplication,
-              );
-              return;
-            }
+            // TODO: Re-enable subscription canApplyAudition check when ready
+            // final subProvider = context.read<SubscriptionProvider>();
+            // if (!subProvider.canApplyAudition) {
+            //   LimitUpgradeDialog.show(
+            //     context,
+            //     type: LimitType.auditionApplication,
+            //   );
+            //   return;
+            // }
             context.push(
               AppRoutes.applyJob,
               extra: audition,
@@ -191,9 +192,10 @@ class AuditionCards extends StatelessWidget {
       context
           .read<AuditionsProvider>()
           .markAuditionUnapplied(audition.id);
-      try {
-        context.read<SubscriptionProvider>().revertAuditionApplied();
-      } catch (_) {}
+      // TODO: Re-enable subscription revertAuditionApplied when ready
+      // try {
+      //   context.read<SubscriptionProvider>().revertAuditionApplied();
+      // } catch (_) {}
     }
 
     ScaffoldMessenger.of(context).showSnackBar(

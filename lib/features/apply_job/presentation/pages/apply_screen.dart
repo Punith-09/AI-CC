@@ -132,19 +132,25 @@ class _ApplyScreenState extends State<ApplyScreen> {
       return;
     }
 
-    if (coverLetter.length < 20) {
-      _showMessage('Cover letter must contain at least 20 characters.');
+    if (coverLetter.isEmpty) {
+      _showMessage('Please enter a description.');
       return;
     }
 
-    final subProvider = context.read<SubscriptionProvider>();
-    if (!subProvider.canApplyAudition) {
-      LimitUpgradeDialog.show(
-        context,
-        type: LimitType.auditionApplication,
-      );
+    if (coverLetter.length > 20) {
+      _showMessage('Description must not exceed 20 characters.');
       return;
     }
+
+    // TODO: Re-enable subscription canApplyAudition check when ready
+    // final subProvider = context.read<SubscriptionProvider>();
+    // if (!subProvider.canApplyAudition) {
+    //   LimitUpgradeDialog.show(
+    //     context,
+    //     type: LimitType.auditionApplication,
+    //   );
+    //   return;
+    // }
 
     final provider = context.read<ApplyJobProvider>();
 
@@ -158,10 +164,10 @@ class _ApplyScreenState extends State<ApplyScreen> {
     }
 
     if (success) {
-      // Decrement audition applications counter
-      try {
-        context.read<SubscriptionProvider>().recordAuditionApplied();
-      } catch (_) {}
+      // TODO: Re-enable subscription recordAuditionApplied when ready
+      // try {
+      //   context.read<SubscriptionProvider>().recordAuditionApplied();
+      // } catch (_) {}
 
       // Update local audition state immediately so the list/details
       // reflect the applied status without waiting for a server re-fetch.
@@ -188,14 +194,16 @@ class _ApplyScreenState extends State<ApplyScreen> {
           err.contains('upgrade') ||
           err.contains('plan') ||
           err.contains('reached')) {
-        try {
-          context.read<SubscriptionProvider>().markLimitReached(LimitType.auditionApplication);
-        } catch (_) {}
-        LimitUpgradeDialog.show(
-          context,
-          type: LimitType.auditionApplication,
-          customMessage: provider.errorMessage,
-        );
+        // TODO: Re-enable subscription markLimitReached when ready
+        // try {
+        //   context.read<SubscriptionProvider>().markLimitReached(LimitType.auditionApplication);
+        // } catch (_) {}
+        // LimitUpgradeDialog.show(
+        //   context,
+        //   type: LimitType.auditionApplication,
+        //   customMessage: provider.errorMessage,
+        // );
+        _showMessage(provider.errorMessage ?? 'Failed to submit application.');
       } else {
         _showMessage(
           provider.errorMessage ?? 'Failed to submit application.',
@@ -276,9 +284,10 @@ class _ApplyScreenState extends State<ApplyScreen> {
     if (success) {
       if (mounted) {
         context.read<AuditionsProvider>().markAuditionUnapplied(_auditionId);
-        try {
-          context.read<SubscriptionProvider>().revertAuditionApplied();
-        } catch (_) {}
+        // TODO: Re-enable subscription revertAuditionApplied when ready
+        // try {
+        //   context.read<SubscriptionProvider>().revertAuditionApplied();
+        // } catch (_) {}
       }
 
       _showMessage(
