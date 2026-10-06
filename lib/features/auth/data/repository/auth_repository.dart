@@ -24,7 +24,7 @@ abstract class AuthRepository {
 
   Future<void> forgotPassword(String email);
 
-  Future<void> resetPassword(String token, String newPassword);
+  Future<void> resetPassword(String token, String newPassword, {String? email, String? otp});
 }
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -177,7 +177,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
 
-  
+
 
   // ============================
   // GOOGLE LOGIN
@@ -275,7 +275,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> resetPassword(String token, String newPassword) async {
-    return _remoteDataSource.resetPassword(token, newPassword);
+  Future<void> resetPassword(String token, String newPassword, {String? email, String? otp}) async {
+    return _remoteDataSource.resetPassword(token, newPassword, email: email, otp: otp);
   }
 }
