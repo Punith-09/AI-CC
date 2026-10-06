@@ -50,10 +50,11 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
       );
 
       if (pickedFile != null) {
-        final bytes = await pickedFile.readAsBytes();
         setState(() {
           _selectedVideo = pickedFile;
-          _videoBytes = bytes;
+          // On native we rely on filePath, so avoid loading the full video
+          // into RAM here — bytes are only needed as a web fallback.
+          _videoBytes = null;
 
           if (_titleController.text.trim().isEmpty) {
             final rawName = pickedFile.name;
@@ -76,7 +77,8 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
             final file = result.files.first;
             setState(() {
               _selectedVideo = XFile(file.path ?? file.name, name: file.name);
-              _videoBytes = file.bytes;
+              // On web there is no file path, so we keep bytes as the fallback.
+              _videoBytes = kIsWeb ? file.bytes : null;
               if (_titleController.text.trim().isEmpty) {
                 final rawName = file.name;
                 final dotIndex = rawName.lastIndexOf('.');
@@ -253,6 +255,7 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
   @override
   Widget build(BuildContext context) {
     final isUploading = context.watch<VideosProvider>().isUploading;
+    final uploadProgress = context.watch<VideosProvider>().uploadProgress;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -306,7 +309,7 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
                       const SizedBox(height: 32),
 
                       // Upload Button
-                      _buildUploadButton(isUploading),
+                      _buildUploadButton(isUploading, uploadProgress),
 
                       const SizedBox(height: 24),
                     ],
@@ -841,10 +844,10 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
     );
   }
 
-  Widget _buildUploadButton(bool isUploading) {
+  Widget _buildUploadButton(bool isUploading, double uploadProgress) {
     return SizedBox(
       width: double.infinity,
-      height: 54,
+      height: isUploading ? 64 : 54,
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
@@ -869,13 +872,33 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
           ),
           onPressed: isUploading ? null : _handleUpload,
           child: isUploading
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2.5,
-                  ),
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Progress bar
+                    SizedBox(
+                      height: 4,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: uploadProgress > 0 ? uploadProgress : null,
+                          backgroundColor: Colors.white24,
+                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      uploadProgress > 0
+                          ? 'Uploading… ${(uploadProgress * 100).toStringAsFixed(0)}%'
+                          : 'Preparing…',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 )
               : Text(
                   'Upload Video',

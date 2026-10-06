@@ -324,12 +324,14 @@ class DioClient {
         dynamic data,
         Map<String, dynamic>? queryParameters,
         Options? options,
+        void Function(int sent, int total)? onSendProgress,
       }) async {
     return await _dio.post(
       path,
       data: data,
       queryParameters: queryParameters,
       options: options,
+      onSendProgress: onSendProgress,
     );
   }
 

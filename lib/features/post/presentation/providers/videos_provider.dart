@@ -11,10 +11,12 @@ class VideosProvider extends ChangeNotifier {
   bool _isUploading = false;
   String? _errorMessage;
   VideoModel? _uploadedVideo;
+  double _uploadProgress = 0.0;
 
   bool get isUploading => _isUploading;
   String? get errorMessage => _errorMessage;
   VideoModel? get uploadedVideo => _uploadedVideo;
+  double get uploadProgress => _uploadProgress;
 
   Future<bool> uploadVideo({
     required String title,
@@ -26,6 +28,7 @@ class VideosProvider extends ChangeNotifier {
   }) async {
     _isUploading = true;
     _errorMessage = null;
+    _uploadProgress = 0.0;
     notifyListeners();
 
     try {
@@ -36,14 +39,20 @@ class VideosProvider extends ChangeNotifier {
         fileName: fileName,
         filePath: filePath,
         fileBytes: fileBytes,
+        onProgress: (progress) {
+          _uploadProgress = progress;
+          notifyListeners();
+        },
       );
       _uploadedVideo = video;
+      _uploadProgress = 1.0;
       _isUploading = false;
       notifyListeners();
       return true;
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception:', '').trim();
       _isUploading = false;
+      _uploadProgress = 0.0;
       notifyListeners();
       return false;
     }
@@ -53,5 +62,6 @@ class VideosProvider extends ChangeNotifier {
     _isUploading = false;
     _errorMessage = null;
     _uploadedVideo = null;
+    _uploadProgress = 0.0;
   }
 }

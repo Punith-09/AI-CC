@@ -4,7 +4,7 @@ class ApiEndpoints {
   static String get baseUrl {
     // return 'http://localhost:3000';
     // return 'http://10.0.2.2:3000';
-    return 'https://casting-be.vercel.app/';
+    return 'https://casting-be-1.onrender.com/';
     // return 'https://enrolled-plastic-sub-minerals.trycloudflare.com';
   }
 

@@ -11,6 +11,7 @@ abstract class VideosRepository {
     required String fileName,
     String? filePath,
     Uint8List? fileBytes,
+    void Function(double progress)? onProgress,
   });
 }
 
@@ -27,6 +28,7 @@ class VideosRepositoryImpl implements VideosRepository {
     required String fileName,
     String? filePath,
     Uint8List? fileBytes,
+    void Function(double progress)? onProgress,
   }) async {
     return await _remoteDataSource.uploadVideo(
       title: title,
@@ -35,6 +37,7 @@ class VideosRepositoryImpl implements VideosRepository {
       fileName: fileName,
       filePath: filePath,
       fileBytes: fileBytes,
+      onProgress: onProgress,
     );
   }
 }
