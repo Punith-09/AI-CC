@@ -5,7 +5,7 @@ class ApiEndpoints {
     // return 'http://localhost:3000';
     // return 'http://10.0.2.2:3000';
     return 'https://casting-be.vercel.app/';
-    // return 'https://healthy-moderator-insurance-auckland.trycloudflare.com';
+    // return 'https://enrolled-plastic-sub-minerals.trycloudflare.com';
   }
 
   static const String login = '/auth/login';
