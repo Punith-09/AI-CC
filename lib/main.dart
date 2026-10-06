@@ -20,11 +20,8 @@ import 'features/post/data/datasource/videos_remote_datasource.dart';
 import 'features/post/data/repository/videos_repository.dart';
 import 'features/post/presentation/providers/videos_provider.dart';
 
-import 'features/explore/data/repository/explore_repository.dart';
 import 'features/explore/presentation/providers/explore_provider.dart';
-import 'features/artist_profile/data/repository/profile_repository.dart';
 import 'features/artist_profile/presentation/providers/profile_provider.dart';
-import 'features/home/data/repository/home_repository.dart';
 import 'features/home/presentation/providers/home_feed_provider.dart';
 import 'features/apply_job/data/repository/apply_job_repository.dart';
 import 'features/apply_job/presentation/providers/apply_job_provider.dart';
@@ -65,13 +62,13 @@ void main() async {
           create: (_) => AuthProvider(sl<AuthRepository>()),
         ),
         ChangeNotifierProvider(
-          create: (_) => ExploreProvider(sl<ExploreRepository>()),
+          create: (_) => sl<ExploreProvider>(),
         ),
         ChangeNotifierProvider(
-          create: (_) => ProfileProvider(sl<ProfileRepository>()),
+          create: (_) => sl<ProfileProvider>(),
         ),
         ChangeNotifierProvider(
-          create: (_) => HomeFeedProvider(sl<HomeRepository>()),
+          create: (_) => sl<HomeFeedProvider>(),
         ),
         ChangeNotifierProvider(
           create: (_) => AuditionsProvider(auditionsRepository),

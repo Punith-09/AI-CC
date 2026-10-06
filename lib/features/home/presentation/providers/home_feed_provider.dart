@@ -238,5 +238,16 @@ class HomeFeedProvider extends ChangeNotifier {
     _posts[index] = _posts[index].copyWith(commentsCount: count);
     notifyListeners();
   }
+
+  /// Clears all state when the user logs out, so the next logged-in user
+  /// starts with a clean feed and follow state.
+  void clear() {
+    _posts = [];
+    _isLoading = false;
+    _errorMessage = null;
+    _followingUserIds.clear();
+    _followLoadingUserIds.clear();
+    notifyListeners();
+  }
 }
 

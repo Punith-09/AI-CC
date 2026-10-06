@@ -78,14 +78,13 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
         final profileProvider = context.read<ProfileProvider>();
-        if (!profileProvider.isFollowing(creatorId)) {
-          try {
-            final profile = await sl<ProfileRepository>().getUserProfile(creatorId);
-            if (profile.following) {
-              profileProvider.recordFollowing(creatorId, true);
-            }
-          } catch (_) {}
-        }
+        // Skip if a follow toggle is already in-flight
+        if (profileProvider.isFollowLoading(creatorId)) return;
+        try {
+          final profile = await sl<ProfileRepository>().getUserProfile(creatorId);
+          if (!mounted) return;
+          profileProvider.recordFollowing(creatorId, profile.following);
+        } catch (_) {}
       });
     }
   }

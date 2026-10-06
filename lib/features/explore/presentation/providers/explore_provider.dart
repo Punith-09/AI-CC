@@ -114,9 +114,16 @@ class ExploreProvider with ChangeNotifier {
 
       if (sl.isRegistered<ProfileProvider>()) {
         final profileProvider = sl<ProfileProvider>();
-        for (final t in _talents) {
-          if (t.id.isNotEmpty && t.following) {
-            profileProvider.recordFollowing(t.id, true);
+        for (int i = 0; i < _talents.length; i++) {
+          final t = _talents[i];
+          if (t.id.isNotEmpty) {
+            if (t.explicitFollowing != null) {
+              if (!profileProvider.isFollowLoading(t.id)) {
+                profileProvider.recordFollowing(t.id, t.explicitFollowing!);
+              }
+            } else if (profileProvider.isFollowing(t.id)) {
+              _talents[i] = t.copyWith(following: true);
+            }
           }
         }
       }
@@ -169,6 +176,20 @@ class ExploreProvider with ChangeNotifier {
     return talents
         .where((talent) => talent.matchesLocation(_selectedLocation))
         .toList();
+  }
+
+  /// Clears state when the user logs out so the next user sees a fresh list.
+  void clearForLogout() {
+    _talents = [];
+    _locationByUserId.clear();
+    _searchQuery = '';
+    _selectedCategory = '';
+    _selectedLocation = 'Anywhere';
+    _isLoading = false;
+    _error = null;
+    _debounce?.cancel();
+    _debounce = null;
+    notifyListeners();
   }
 
   @override

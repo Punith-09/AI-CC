@@ -11,6 +11,7 @@ class TalentModel {
   final int followers;
   final int videosCount;
   final bool following;
+  final bool? explicitFollowing;
   final int matchPercent;
   final String city;
   final String state;
@@ -26,6 +27,7 @@ class TalentModel {
     this.followers = 0,
     this.videosCount = 0,
     this.following = false,
+    this.explicitFollowing,
     this.matchPercent = 0,
     this.city = '',
     this.state = '',
@@ -71,6 +73,7 @@ class TalentModel {
     String? city,
     String? state,
     String? country,
+    bool? following,
   }) {
     return TalentModel(
       id: id,
@@ -81,7 +84,8 @@ class TalentModel {
       handle: handle,
       followers: followers,
       videosCount: videosCount,
-      following: following,
+      following: following ?? this.following,
+      explicitFollowing: explicitFollowing,
       matchPercent: matchPercent,
       city: city ?? this.city,
       state: state ?? this.state,
@@ -123,6 +127,14 @@ class TalentModel {
       if (parts.length > 1) locationState = parts.sublist(1).join(', ');
     }
 
+    final bool? explicitFollowing = (data['following'] is bool)
+        ? data['following'] as bool
+        : (data['isFollowing'] is bool
+            ? data['isFollowing'] as bool
+            : (json['following'] is bool
+                ? json['following'] as bool
+                : (json['isFollowing'] is bool ? json['isFollowing'] as bool : null)));
+
     return TalentModel(
       id: parseString(data['id'] ?? data['_id']),
       name: parseString(data['name'] ?? data['fullName']),
@@ -132,7 +144,8 @@ class TalentModel {
       handle: parseString(data['handle']),
       followers: parseInt(data['followers']),
       videosCount: parseInt(data['videosCount']),
-      following: data['following'] == true,
+      following: explicitFollowing == true,
+      explicitFollowing: explicitFollowing,
       matchPercent: parseInt(
         data['match'] ?? data['matchPercentage'] ?? data['matchPercent'],
       ),

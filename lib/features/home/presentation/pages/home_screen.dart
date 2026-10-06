@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../../messages/presentation/providers/messages_provider.dart';
 import '../../../stories/presentation/providers/stories_provider.dart';
+import '../../../artist_profile/presentation/providers/profile_provider.dart';
 import '../providers/home_feed_provider.dart';
 import '../widgets/feed_card.dart';
 import '../widgets/home_appbar.dart';
@@ -27,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context.read<HomeFeedProvider>().fetchFeed();
       context.read<MessagesProvider>().fetchChats(silent: true);
       context.read<StoriesProvider>().fetchStories(silent: true);
+      context.read<ProfileProvider>().fetchMyProfile();
     });
   }
 

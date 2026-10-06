@@ -20,13 +20,28 @@ class ProfileProvider with ChangeNotifier {
 
   Set<String> get followingUserIds => Set.unmodifiable(_followingUserIds);
 
-  void _loadPersistedFollows() {
+  void _loadPersistedFollows([String? userId]) {
     try {
-      final saved = LocalStorage.instance.getFollowingUserIds();
+      final saved = LocalStorage.instance.getFollowingUserIds(userId);
+      _followingUserIds.clear();
       if (saved.isNotEmpty) {
         _followingUserIds.addAll(saved);
       }
     } catch (_) {}
+  }
+
+  void loadPersistedFollowsForUser([String? userId]) {
+    _loadPersistedFollows(userId);
+    notifyListeners();
+  }
+
+  String? get _loggedInUserId {
+    if (_currentProfile?.id.isNotEmpty == true) return _currentProfile!.id;
+    try {
+      return LocalStorage.instance.getUserId();
+    } catch (_) {
+      return null;
+    }
   }
 
   bool isFollowing(String? userId) {
@@ -45,7 +60,7 @@ class ProfileProvider with ChangeNotifier {
         ? _followingUserIds.add(userId)
         : _followingUserIds.remove(userId);
     if (changed) {
-      LocalStorage.instance.saveFollowingUserIds(_followingUserIds);
+      LocalStorage.instance.saveFollowingUserIds(_followingUserIds, _loggedInUserId);
       notifyListeners();
     }
   }
@@ -136,6 +151,17 @@ class ProfileProvider with ChangeNotifier {
         _myActivePlan = _currentProfile!.plan;
       }
       if (_currentProfile?.id != null && _currentProfile!.id.isNotEmpty) {
+        // Load persisted follows for this specific logged-in user
+        final saved = LocalStorage.instance.getFollowingUserIds(_currentProfile!.id);
+        _followingUserIds.clear();
+        if (saved.isNotEmpty) {
+          _followingUserIds.addAll(saved);
+        }
+        if (_currentProfile!.followingIds.isNotEmpty) {
+          _followingUserIds.addAll(_currentProfile!.followingIds);
+          LocalStorage.instance.saveFollowingUserIds(_followingUserIds, _currentProfile!.id);
+        }
+
         final serverFollowing = int.tryParse(_currentProfile!.followingCount) ?? 0;
         final actualFollowing = serverFollowing > _followingUserIds.length
             ? serverFollowing
@@ -177,13 +203,13 @@ class ProfileProvider with ChangeNotifier {
       if (_viewedProfile != null) {
         if (_viewedProfile!.following) {
           _followingUserIds.add(id);
-          LocalStorage.instance.saveFollowingUserIds(_followingUserIds);
-        } else if (_followingUserIds.contains(id)) {
-          final currentCount = int.tryParse(_viewedProfile!.followers) ?? 0;
-          _viewedProfile = _viewedProfile!.copyWith(
-            following: true,
-            followers: (currentCount > 0 ? currentCount : 1).toString(),
-          );
+          LocalStorage.instance.saveFollowingUserIds(_followingUserIds, _loggedInUserId);
+        } else if (!_followLoadingUserIds.contains(id)) {
+          // If server says not following and no toggle is in-flight, ensure local set matches
+          if (_followingUserIds.contains(id)) {
+            _followingUserIds.remove(id);
+            LocalStorage.instance.saveFollowingUserIds(_followingUserIds, _loggedInUserId);
+          }
         }
       }
       final combined = <PortfolioModel>[];
@@ -225,7 +251,7 @@ class ProfileProvider with ChangeNotifier {
     } else {
       _followingUserIds.remove(userId);
     }
-    LocalStorage.instance.saveFollowingUserIds(_followingUserIds);
+    LocalStorage.instance.saveFollowingUserIds(_followingUserIds, _loggedInUserId);
 
     // Update target viewed profile if currently viewed
     if (_viewedProfile != null && _viewedProfile!.id == userId) {
@@ -260,7 +286,7 @@ class ProfileProvider with ChangeNotifier {
         } else {
           _followingUserIds.remove(userId);
         }
-        LocalStorage.instance.saveFollowingUserIds(_followingUserIds);
+        LocalStorage.instance.saveFollowingUserIds(_followingUserIds, _loggedInUserId);
 
         if (_viewedProfile != null && _viewedProfile!.id == userId) {
           _viewedProfile = _viewedProfile!.copyWith(following: serverResult);
@@ -275,7 +301,7 @@ class ProfileProvider with ChangeNotifier {
       } else {
         _followingUserIds.add(userId);
       }
-      LocalStorage.instance.saveFollowingUserIds(_followingUserIds);
+      LocalStorage.instance.saveFollowingUserIds(_followingUserIds, _loggedInUserId);
 
       if (_viewedProfile != null && _viewedProfile!.id == userId) {
         final currentCount = int.tryParse(_viewedProfile!.followers) ?? 0;
@@ -317,7 +343,7 @@ class ProfileProvider with ChangeNotifier {
     } else {
       _followingUserIds.remove(id);
     }
-    LocalStorage.instance.saveFollowingUserIds(_followingUserIds);
+    LocalStorage.instance.saveFollowingUserIds(_followingUserIds, _loggedInUserId);
 
     if (_viewedProfile != null && _viewedProfile!.id == id) {
       if (_viewedProfile!.following != following) {
@@ -396,6 +422,8 @@ class ProfileProvider with ChangeNotifier {
   }
 
   void clear() {
+    _followingUserIds.clear();
+    _followLoadingUserIds.clear();
     _currentProfile = null;
     _viewedProfile = null;
     _myActivePlan = null;

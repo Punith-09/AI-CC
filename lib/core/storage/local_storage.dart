@@ -197,15 +197,23 @@ class LocalStorage {
   }
 
   Future<void> clearAll() async {
-    await _prefs!.remove(_keyToken);
-    await _prefs!.remove(_keyUserEmail);
-    await _prefs!.remove(_keyUserName);
-    await _prefs!.remove(_keyUserId);
-    await _prefs!.remove(_keyUserProfilePhoto);
-    await _prefs!.remove(_keyUserRole);
-    await _prefs!.remove(_keyUserMobile);
-    await _prefs!.remove(_keyUserTrkCode);
-    await _prefs!.remove(_keyUserJson);
+    final uid = getUserId();
+    if (uid != null && uid.trim().isNotEmpty) {
+      await _prefs?.remove('${_keyFollowingUserIds}_${uid.trim()}');
+    }
+    await _prefs?.remove(_keyFollowingUserIds);
+    await _prefs?.remove(_keyToken);
+    await _prefs?.remove(_keyUserEmail);
+    await _prefs?.remove(_keyUserName);
+    await _prefs?.remove(_keyUserId);
+    await _prefs?.remove(_keyUserProfilePhoto);
+    await _prefs?.remove(_keyUserRole);
+    await _prefs?.remove(_keyUserMobile);
+    await _prefs?.remove(_keyUserTrkCode);
+    await _prefs?.remove(_keyUserJson);
+    await _prefs?.remove(_keyReadChatIds);
+    await _prefs?.remove(_keyUnreadChatIds);
+    await _prefs?.remove(_keyLastReadMessages);
   }
 
   static const String _keyRegisteredPhones = 'registered_phone_numbers';
@@ -272,16 +280,45 @@ class LocalStorage {
   }
 
   // =========================================================
-  // FOLLOWED USERS PERSISTENCE
+  // FOLLOWED USERS PERSISTENCE (SCOPED PER USER ID)
   // =========================================================
 
   static const String _keyFollowingUserIds = 'following_user_ids';
 
-  Set<String> getFollowingUserIds() {
-    return (_prefs?.getStringList(_keyFollowingUserIds) ?? []).toSet();
+  String _userFollowingKey([String? userId]) {
+    final uid = (userId != null && userId.trim().isNotEmpty) ? userId.trim() : getUserId();
+    if (uid != null && uid.trim().isNotEmpty) {
+      return '${_keyFollowingUserIds}_${uid.trim()}';
+    }
+    return _keyFollowingUserIds;
   }
 
-  Future<void> saveFollowingUserIds(Set<String> ids) async {
-    await _prefs?.setStringList(_keyFollowingUserIds, ids.toList());
+  Set<String> getFollowingUserIds([String? userId]) {
+    final uid = (userId != null && userId.trim().isNotEmpty) ? userId.trim() : getUserId();
+    if (uid == null || uid.trim().isEmpty) {
+      return {};
+    }
+    final key = _userFollowingKey(uid);
+    final userSpecific = _prefs?.getStringList(key);
+    if (userSpecific != null) {
+      return userSpecific.toSet();
+    }
+    // Prevent cross-user data leakage: do NOT fallback to global key
+    return {};
+  }
+
+  Future<void> saveFollowingUserIds(Set<String> ids, [String? userId]) async {
+    final uid = (userId != null && userId.trim().isNotEmpty) ? userId.trim() : getUserId();
+    if (uid != null && uid.trim().isNotEmpty) {
+      await _prefs?.setStringList(_userFollowingKey(uid), ids.toList());
+    }
+  }
+
+  Future<void> clearFollowingUserIds([String? userId]) async {
+    final uid = (userId != null && userId.trim().isNotEmpty) ? userId.trim() : getUserId();
+    if (uid != null && uid.trim().isNotEmpty) {
+      await _prefs?.remove(_userFollowingKey(uid));
+    }
+    await _prefs?.remove(_keyFollowingUserIds);
   }
 }

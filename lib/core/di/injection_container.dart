@@ -20,6 +20,9 @@ import '../../features/subscription/data/datasource/subscription_remote_datasour
 import '../../features/subscription/presentation/providers/subscription_provider.dart';
 import '../../features/stories/data/datasource/stories_remote_datasource.dart';
 import '../../features/stories/data/repository/stories_repository.dart';
+import '../../features/artist_profile/presentation/providers/profile_provider.dart';
+import '../../features/explore/presentation/providers/explore_provider.dart';
+import '../../features/home/presentation/providers/home_feed_provider.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -167,6 +170,29 @@ Future<void> initDependencies() async {
     sl.registerLazySingleton<StoriesRepository>(
       () => StoriesRepositoryImpl(
         sl<StoriesRemoteDataSource>(),
+      ),
+    );
+  }
+
+  // Cross-feature shared Providers
+  if (!sl.isRegistered<ProfileProvider>()) {
+    sl.registerLazySingleton<ProfileProvider>(
+      () => ProfileProvider(
+        sl<ProfileRepository>(),
+      ),
+    );
+  }
+  if (!sl.isRegistered<ExploreProvider>()) {
+    sl.registerLazySingleton<ExploreProvider>(
+      () => ExploreProvider(
+        sl<ExploreRepository>(),
+      ),
+    );
+  }
+  if (!sl.isRegistered<HomeFeedProvider>()) {
+    sl.registerLazySingleton<HomeFeedProvider>(
+      () => HomeFeedProvider(
+        sl<HomeRepository>(),
       ),
     );
   }

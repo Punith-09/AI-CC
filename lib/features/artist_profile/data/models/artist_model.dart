@@ -18,6 +18,7 @@ class ArtistModel {
   final int awards;
   final bool following;
   final String followingCount;
+  final List<String> followingIds;
 
   final String experience;
   final String languages;
@@ -52,6 +53,7 @@ class ArtistModel {
     required this.awards,
     this.following = false,
     this.followingCount = '0',
+    this.followingIds = const [],
     required this.experience,
     required this.languages,
     this.portfolio = const [],
@@ -146,6 +148,7 @@ class ArtistModel {
       ),
       following: data['following'] == true || json['following'] == true || data['isFollowing'] == true,
       followingCount: _followingCountValue(data, rawJson: json),
+      followingIds: _extractFollowingIds(data, rawJson: json),
       experience: _stringValue(
         data['experience'],
       ),
@@ -216,6 +219,7 @@ class ArtistModel {
     int? awards,
     bool? following,
     String? followingCount,
+    List<String>? followingIds,
     String? experience,
     String? languages,
     List<PortfolioModel>? portfolio,
@@ -247,6 +251,7 @@ class ArtistModel {
       awards: awards ?? this.awards,
       following: following ?? this.following,
       followingCount: followingCount ?? this.followingCount,
+      followingIds: followingIds ?? this.followingIds,
       experience: experience ?? this.experience,
       languages: languages ?? this.languages,
       portfolio: portfolio ?? this.portfolio,
@@ -307,6 +312,31 @@ class ArtistModel {
     }
 
     return val.toString();
+  }
+
+  static List<String> _extractFollowingIds(Map<String, dynamic> data, {Map<String, dynamic>? rawJson}) {
+    final raw = data['following'] ??
+        rawJson?['following'] ??
+        data['followingIds'] ??
+        data['following_ids'] ??
+        data['followingUsers'] ??
+        data['following_users'] ??
+        rawJson?['details']?['following'];
+    if (raw is List) {
+      final result = <String>[];
+      for (final item in raw) {
+        if (item is String && item.trim().isNotEmpty) {
+          result.add(item.trim());
+        } else if (item is Map) {
+          final id = (item['_id'] ?? item['id'] ?? item['userId'])?.toString();
+          if (id != null && id.trim().isNotEmpty) {
+            result.add(id.trim());
+          }
+        }
+      }
+      return result;
+    }
+    return const [];
   }
 
   static String _followersValue(Map<String, dynamic> data, {Map<String, dynamic>? rawJson}) {
@@ -533,6 +563,7 @@ class ArtistModel {
       'rating': rating,
       'awards': awards,
       'following': following,
+      'following_ids': followingIds,
       'experience': experience,
       'languages': languages,
       'portfolio': portfolio.map((e) => e.toJson()).toList(),

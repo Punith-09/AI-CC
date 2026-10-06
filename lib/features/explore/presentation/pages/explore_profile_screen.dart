@@ -434,6 +434,7 @@ class _StatBox extends StatelessWidget {
         decoration: BoxDecoration(
           color: isDark? Color(0xFF1A1A1A):AppColors.white,
           borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.primary)
         ),
         child: Column(
           children: [
@@ -528,7 +529,7 @@ class _InfoTile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              border: Border.all(color: AppColors.primary),
+              // border: Border.all(color: AppColors.primary),
               color: AppColors.primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),

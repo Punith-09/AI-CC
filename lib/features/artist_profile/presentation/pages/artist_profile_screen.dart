@@ -18,6 +18,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../presentation/providers/profile_provider.dart';
+import '../../../home/presentation/providers/home_feed_provider.dart';
+import '../../../explore/presentation/providers/explore_provider.dart';
 
 class ArtistProfileScreen extends StatefulWidget {
   final String? userId;
@@ -55,6 +57,8 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
     final isDark = context.read<ThemeProvider>().isDarkMode;
     final authProvider = context.read<AuthProvider>();
     final profileProvider = context.read<ProfileProvider>();
+    final homeFeedProvider = context.read<HomeFeedProvider>();
+    final exploreProvider = context.read<ExploreProvider>();
     final router = GoRouter.of(context);
 
     // ── Confirmation dialog ─────────────────────────────────
@@ -191,6 +195,8 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
     try {
       await authProvider.logout();
       profileProvider.clear();
+      homeFeedProvider.clear();
+      exploreProvider.clearForLogout();
     } catch (e) {
       debugPrint('Logout error: $e');
     } finally {
