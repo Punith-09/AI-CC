@@ -216,7 +216,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.white,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -346,17 +346,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           style: GoogleFonts.inter(
             fontSize: 12,
             fontWeight: FontWeight.w500,
-            color: AppColors.white,
+            color: AppColors.black,
           ),
           decoration: InputDecoration(
+
             hintText: 'Email / Phone Number / TRK ID',
             hintStyle: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w400,
               color: AppColors.hint,
+
             ),
+
             filled: true,
-            fillColor: AppColors.black,
+            fillColor: AppColors.white,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 22,
               vertical: 14,
@@ -424,7 +427,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           style: GoogleFonts.inter(
             fontSize: 12,
             fontWeight: FontWeight.w500,
-            color: AppColors.white,
+            color: AppColors.black,
           ),
           decoration: InputDecoration(
             hintText: 'OTP',
@@ -434,7 +437,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               color: AppColors.hint,
             ),
             filled: true,
-            fillColor: AppColors.black,
+            fillColor: AppColors.white,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 22,
               vertical: 14,
@@ -491,17 +494,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: isNewPasswordEnabled ? AppColors.white : AppColors.hint,
+                color: isNewPasswordEnabled ? AppColors.black : AppColors.hint,
               ),
               decoration: InputDecoration(
                 hintText: isNewPasswordEnabled ? 'New Password' : 'New Password (enter OTP first)',
                 hintStyle: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w400,
-                  color: isNewPasswordEnabled ? AppColors.hint : AppColors.hint.withValues(alpha: 0.5),
+                  color: isNewPasswordEnabled ? AppColors.hint : AppColors.hint,
                 ),
                 filled: true,
-                fillColor: isNewPasswordEnabled ? AppColors.black : AppColors.black.withValues(alpha: 0.4),
+                fillColor: isNewPasswordEnabled ? AppColors.white : AppColors.white,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 22,
                   vertical: 14,
@@ -512,7 +515,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         ? Icons.visibility_outlined
                         : Icons.visibility_off_outlined,
                     color: isNewPasswordEnabled
-                        ? const Color(0xFF94A3B8)
+                        ? AppColors.black
                         : AppColors.hint.withValues(alpha: 0.3),
                     size: 18,
                   ),
@@ -529,8 +532,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   borderRadius: BorderRadius.circular(30),
                   borderSide: BorderSide(
                     color: isNewPasswordEnabled
-                        ? AppColors.white
-                        : AppColors.white.withValues(alpha: 0.3),
+                        ? AppColors.hint
+                        : AppColors.hint.withValues(alpha: 0.3),
                     width: 1.2,
                   ),
                 ),
@@ -538,15 +541,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   borderRadius: BorderRadius.circular(30),
                   borderSide: BorderSide(
                     color: isNewPasswordEnabled
-                        ? AppColors.white
-                        : AppColors.white.withValues(alpha: 0.3),
+                        ? AppColors.hint
+                        : AppColors.hint.withValues(alpha: 0.3),
                     width: 1.2,
                   ),
                 ),
                 disabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
                   borderSide: BorderSide(
-                    color: AppColors.white.withValues(alpha: 0.2),
+                    color: AppColors.hint.withValues(alpha: 0.2),
                     width: 1.2,
                   ),
                 ),
@@ -584,7 +587,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     }
                   },
             style: OutlinedButton.styleFrom(
-              backgroundColor: AppColors.black,
+              backgroundColor: AppColors.white,
               foregroundColor: AppColors.primary,
               side: const BorderSide(
                 color: AppColors.primary,

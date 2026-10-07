@@ -92,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.white,
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -192,7 +192,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: GoogleFonts.inter(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
-                                  color:AppColors.white,
+                                  color:AppColors.black,
 
                                 ),
                                 decoration: InputDecoration(
@@ -201,11 +201,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                     fontSize: 12,
                                     fontWeight: FontWeight.w400,
                                     color: AppColors.hint,
-                                    backgroundColor: AppColors.black
+                                    // backgroundColor: AppColors.black
 
                                   ),
                                   filled: true,
-                                  fillColor: AppColors.black,
+                                  fillColor: AppColors.white,
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 22,
                                     vertical: 14,
@@ -213,14 +213,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(30),
                                     borderSide: const BorderSide(
-                                      color: AppColors.white,
+                                      color: AppColors.hint,
                                       width: 1.2,
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(30),
                                     borderSide: const BorderSide(
-                                      color: AppColors.white,
+                                      color: AppColors.hint,
                                       width: 1.2,
                                     ),
                                   ),
@@ -250,7 +250,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: GoogleFonts.inter(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
-                                  color: AppColors.white,
+                                  color: AppColors.black,
                                 ),
                                 decoration: InputDecoration(
                                   hintText: 'Password',
@@ -258,10 +258,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                     fontSize: 12,
                                     fontWeight: FontWeight.w400,
                                     color: AppColors.hint,
-                                    backgroundColor: AppColors.black
+                                    // backgroundColor: AppColors.black
                                   ),
                                   filled: true,
-                                  fillColor: Colors.black,
+                                  fillColor: Colors.white,
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 22,
                                     vertical: 14,
@@ -284,14 +284,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(30),
                                     borderSide: const BorderSide(
-                                      color: AppColors.white,
+                                      color: AppColors.hint,
                                       width: 1.2,
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(30),
                                     borderSide: const BorderSide(
-                                      color: AppColors.white,
+                                      color: AppColors.hint,
                                       width: 1.2,
                                     ),
                                   ),
@@ -351,7 +351,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ? null
                                       : _handleLogin,
                                   style: OutlinedButton.styleFrom(
-                                    backgroundColor: AppColors.black,
+                                    backgroundColor: AppColors.white,
                                     foregroundColor: AppColors.primary,
                                     side: const BorderSide(
                                       color: AppColors.primary,
@@ -403,7 +403,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       style: GoogleFonts.inter(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w400,
-                                        color: AppColors.hint.withValues(alpha: 0.75),
+                                        color: AppColors.black.withValues(alpha: 0.75),
                                       ),
                                       children: [
                                         TextSpan(

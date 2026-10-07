@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../data/models/video_model.dart';
@@ -50,7 +51,18 @@ class VideosProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception:', '').trim();
+      if (e is DioException && e.response?.data != null) {
+        final resData = e.response!.data;
+        if (resData is Map && resData['message'] != null) {
+          _errorMessage = resData['message'].toString();
+        } else if (resData is Map && resData['error'] != null) {
+          _errorMessage = resData['error'].toString();
+        } else {
+          _errorMessage = e.message ?? e.toString();
+        }
+      } else {
+        _errorMessage = e.toString().replaceAll('Exception:', '').trim();
+      }
       _isUploading = false;
       _uploadProgress = 0.0;
       notifyListeners();

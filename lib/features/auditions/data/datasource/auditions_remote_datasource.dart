@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/audition_model.dart';
@@ -8,6 +9,7 @@ abstract class AuditionsRemoteDataSource {
   Future<List<AuditionModel>> getMyPostedAuditions();
   Future<AuditionModel> getAuditionById(String id);
   Future<AuditionModel> createAudition(CreateAuditionRequest request);
+  Future<bool> deleteAudition(String id);
 }
 
 class AuditionsRemoteDataSourceImpl implements AuditionsRemoteDataSource {
@@ -73,6 +75,29 @@ class AuditionsRemoteDataSourceImpl implements AuditionsRemoteDataSource {
       return AuditionModel.fromJson(response.data as Map<String, dynamic>);
     } else {
       throw Exception('Invalid server response format for create audition');
+    }
+  }
+
+  @override
+  Future<bool> deleteAudition(String id) async {
+    try {
+      final response = await _dioClient.delete(
+        ApiEndpoints.deleteAudition(id),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        if (response.data is Map<String, dynamic>) {
+          return (response.data as Map<String, dynamic>)['deleted'] == true;
+        }
+        return true;
+      }
+      return false;
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data?['message'] ?? e.message ?? 'Failed to delete audition',
+      );
+    } catch (e) {
+      throw Exception('Failed to delete audition: $e');
     }
   }
 }

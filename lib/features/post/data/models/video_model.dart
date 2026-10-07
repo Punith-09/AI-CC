@@ -71,6 +71,7 @@ class VideoModel {
 
     return VideoModel(
       id: json['id'] as String? ?? json['_id'] as String? ?? '',
+      category: json['category'] as String?,
       creatorId: json['creatorId'] as String? ??
           json['userId'] as String? ??
           json['user_id'] as String? ??

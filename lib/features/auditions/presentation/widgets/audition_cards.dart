@@ -6,8 +6,6 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../apply_job/presentation/providers/apply_job_provider.dart';
 import '../../data/models/audition_model.dart';
 import '../../presentation/providers/auditions_provider.dart';
-import '../../../subscription/presentation/providers/subscription_provider.dart';
-import '../../../subscription/presentation/widgets/limit_upgrade_dialog.dart';
 import 'audition_card.dart';
 
 class AuditionCards extends StatelessWidget {

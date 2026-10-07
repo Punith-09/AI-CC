@@ -23,6 +23,8 @@ class AuditionsProvider extends ChangeNotifier {
   bool _isCreateLoading = false;
   String? _createErrorMessage;
 
+  String? _deletingAuditionId;
+
   List<AuditionModel> get auditions => _auditions;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -37,6 +39,9 @@ class AuditionsProvider extends ChangeNotifier {
 
   bool get isCreateLoading => _isCreateLoading;
   String? get createErrorMessage => _createErrorMessage;
+
+  String? get deletingAuditionId => _deletingAuditionId;
+  bool isDeleting(String id) => _deletingAuditionId == id;
 
   Future<void> fetchAuditions({String? category}) async {
     _isLoading = true;
@@ -107,6 +112,29 @@ class AuditionsProvider extends ChangeNotifier {
       _createErrorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
       return false;
+    }
+  }
+
+  Future<bool> deleteAudition(String id) async {
+    _deletingAuditionId = id;
+    notifyListeners();
+
+    try {
+      final success = await _auditionsRepository.deleteAudition(id);
+      if (success) {
+        _myPostedAuditions.removeWhere((a) => a.id == id);
+        _auditions.removeWhere((a) => a.id == id);
+        if (_selectedAudition?.id == id) {
+          _selectedAudition = null;
+        }
+      }
+      _deletingAuditionId = null;
+      notifyListeners();
+      return success;
+    } catch (e) {
+      _deletingAuditionId = null;
+      notifyListeners();
+      rethrow;
     }
   }
 

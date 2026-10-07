@@ -50,11 +50,17 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
       );
 
       if (pickedFile != null) {
+        Uint8List? bytes;
+        if (kIsWeb) {
+          try {
+            bytes = await pickedFile.readAsBytes();
+          } catch (_) {}
+        }
         setState(() {
           _selectedVideo = pickedFile;
           // On native we rely on filePath, so avoid loading the full video
           // into RAM here — bytes are only needed as a web fallback.
-          _videoBytes = null;
+          _videoBytes = bytes;
 
           if (_titleController.text.trim().isEmpty) {
             final rawName = pickedFile.name;
@@ -211,13 +217,20 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
     final description = _descriptionController.text.trim();
     final videosProvider = context.read<VideosProvider>();
 
+    Uint8List? fileBytes = _videoBytes;
+    if (fileBytes == null && kIsWeb && _selectedVideo != null) {
+      try {
+        fileBytes = await _selectedVideo!.readAsBytes();
+      } catch (_) {}
+    }
+
     final success = await videosProvider.uploadVideo(
       title: title,
       category: _selectedCategory,
       description: description,
       fileName: _selectedVideo?.name ?? 'video.mp4',
       filePath: _selectedVideo?.path,
-      fileBytes: _videoBytes,
+      fileBytes: fileBytes,
     );
 
     if (!mounted) return;

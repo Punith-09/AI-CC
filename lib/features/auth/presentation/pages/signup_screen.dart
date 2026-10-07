@@ -160,9 +160,9 @@ class _SignupScreenState extends State<SignupScreen> {
         systemNavigationBarIconBrightness: Brightness.light,
       ),
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.white,
         appBar: AppBar(
-          backgroundColor: AppColors.background,
+          backgroundColor: AppColors.white,
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: AppColors.white),
@@ -326,11 +326,11 @@ class _SignupScreenState extends State<SignupScreen> {
                                   child: Checkbox(
                                     value: _agreedToTerms,
                                     activeColor: AppColors.primary,
-                                    checkColor: AppColors.black,
+                                    checkColor: AppColors.white,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(4),
                                     ),
-                                    side: const BorderSide(color: AppColors.white),
+                                    side: const BorderSide(color: AppColors.black),
                                     onChanged: (val) {
                                       setState(() {
                                         _agreedToTerms = val ?? false;
@@ -344,7 +344,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                     text: TextSpan(
                                       text: 'I Agree to the ',
                                       style: GoogleFonts.sora(
-                                        color: AppColors.white,
+                                        color: AppColors.black,
                                         fontSize: 12,
                                       ),
                                       children: [
@@ -357,7 +357,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                         ),
                                         const TextSpan(
                                           text: ' And ',
-                                          style: TextStyle(color: AppColors.white),
+                                          style: TextStyle(color: AppColors.black),
                                         ),
                                         TextSpan(
                                           text: 'Privacy Policy',
@@ -388,7 +388,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                         ? null
                                         : _handleSignup,
                                     style: OutlinedButton.styleFrom(
-                                      backgroundColor: AppColors.black,
+                                      backgroundColor: AppColors.white,
                                       foregroundColor: AppColors.primary,
                                       side: const BorderSide(
                                         color: AppColors.primary,
@@ -444,7 +444,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                     style: GoogleFonts.inter(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w400,
-                                      color: AppColors.hint.withValues(alpha: 0.75),
+                                      color: AppColors.black.withValues(alpha: 0.75),
                                     ),
                                     children: [
                                       TextSpan(
@@ -495,7 +495,7 @@ class _SignupScreenState extends State<SignupScreen> {
       style: GoogleFonts.inter(
         fontSize: 12,
         fontWeight: FontWeight.w500,
-        color: AppColors.white,
+        color: AppColors.black,
       ),
       decoration: InputDecoration(
         hintText: hint,
@@ -505,10 +505,10 @@ class _SignupScreenState extends State<SignupScreen> {
           fontSize: 12,
           fontWeight: FontWeight.w400,
           color: AppColors.hint,
-          backgroundColor: AppColors.black,
+          // backgroundColor: AppColors.black,
         ),
         filled: true,
-        fillColor: AppColors.black,
+        fillColor: AppColors.white,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 22,
           vertical: 14,
@@ -533,14 +533,14 @@ class _SignupScreenState extends State<SignupScreen> {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
           borderSide: const BorderSide(
-            color: AppColors.white,
+            color: AppColors.hint,
             width: 1.2,
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
           borderSide: const BorderSide(
-            color: AppColors.white,
+            color: AppColors.hint,
             width: 1.2,
           ),
         ),
@@ -571,7 +571,7 @@ class _SignupScreenState extends State<SignupScreen> {
             child: Text(
               label,
               style: GoogleFonts.inter(
-                color: AppColors.white,
+                color: AppColors.black,
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
@@ -580,9 +580,9 @@ class _SignupScreenState extends State<SignupScreen> {
         ],
         Container(
           decoration: BoxDecoration(
-            color: AppColors.black,
+            color: AppColors.white,
             borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: borderGrey, width: 1.2),
+            border: Border.all(color: AppColors.hint, width: 1.2),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 2),
           child: DropdownButtonHideUnderline(
@@ -600,7 +600,7 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
               icon: const Icon(
                 Icons.keyboard_arrow_down,
-                color: AppColors.white,
+                color: AppColors.black,
                 size: 20,
               ),
               items: items.map((String item) {

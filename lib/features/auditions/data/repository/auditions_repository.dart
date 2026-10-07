@@ -7,6 +7,7 @@ abstract class AuditionsRepository {
   Future<List<AuditionModel>> getMyPostedAuditions();
   Future<AuditionModel> getAuditionById(String id);
   Future<AuditionModel> createAudition(CreateAuditionRequest request);
+  Future<bool> deleteAudition(String id);
 }
 
 class AuditionsRepositoryImpl implements AuditionsRepository {
@@ -32,5 +33,10 @@ class AuditionsRepositoryImpl implements AuditionsRepository {
   @override
   Future<AuditionModel> createAudition(CreateAuditionRequest request) async {
     return await _remoteDataSource.createAudition(request);
+  }
+
+  @override
+  Future<bool> deleteAudition(String id) async {
+    return await _remoteDataSource.deleteAudition(id);
   }
 }

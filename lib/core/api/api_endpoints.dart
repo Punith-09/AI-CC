@@ -22,6 +22,7 @@ class ApiEndpoints {
   static const String auditions = "/auditions";
   static const String myPostedAuditions = "/auditions/my-posted";
   static String auditionDetail(String id) => "/auditions/$id";
+  static String deleteAudition(String id) => "/auditions/$id";
   static String applyAudition(String id) => "/auditions/$id/apply";
 
   static const String myApplications = "/applications/me";
