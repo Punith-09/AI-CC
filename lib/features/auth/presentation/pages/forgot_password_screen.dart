@@ -20,101 +20,74 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  late final TextEditingController _identifierController;
-  late final TextEditingController _otpController;
+  late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
+  late final TextEditingController _confirmPasswordController;
 
   bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
   bool _isSuccess = false;
-  bool _isOtpSent = false;
-  bool _isSendingOtp = false;
+  bool _isSendingRequest = false;
+
+  bool get _isTokenPresent => widget.token != null && widget.token!.trim().isNotEmpty;
 
   @override
   void initState() {
     super.initState();
-    _identifierController = TextEditingController(text: widget.initialEmail ?? '');
-    _otpController = TextEditingController(text: widget.token ?? '');
+    _emailController = TextEditingController(text: widget.initialEmail ?? '');
     _passwordController = TextEditingController();
-
-    if (widget.token != null && widget.token!.isNotEmpty) {
-      _isOtpSent = true;
-    }
-
-    _otpController.addListener(_onOtpChanged);
-  }
-
-  void _onOtpChanged() {
-    if (mounted) {
-      setState(() {});
-    }
+    _confirmPasswordController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _otpController.removeListener(_onOtpChanged);
-    _identifierController.dispose();
-    _otpController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  // Step 1: Check database and send OTP / link
-  Future<void> _handleSendOtp() async {
-    final identifier = _identifierController.text.trim();
-    if (identifier.isEmpty) {
+  Future<void> _handleSendResetLink() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
       _showSnackBar('Please enter your Email / Phone Number / TRK ID.', true);
       return;
     }
 
     setState(() {
-      _isSendingOtp = true;
+      _isSendingRequest = true;
     });
 
     final authProvider = context.read<AuthProvider>();
-    final success = await authProvider.forgotPassword(identifier);
+    final success = await authProvider.forgotPassword(email);
 
     if (!mounted) return;
 
     setState(() {
-      _isSendingOtp = false;
+      _isSendingRequest = false;
     });
 
     if (success) {
-      setState(() {
-        _isOtpSent = true;
-      });
       _showSnackBar(
-        'A password reset OTP / link has been sent to your email. Please check your inbox.',
+        'If an account exists with this email address, a password reset link has been sent.',
         false,
       );
     } else {
       final errorMsg = authProvider.errorMessage ??
-          'Email ID not found in database. Please check your email or sign up.';
+          'Failed to send reset link. Please try again.';
       _showAlertDialog(
-        title: 'Account Not Found',
+        title: 'Notice',
         message: errorMsg,
       );
     }
   }
 
-  // Step 2: Verify OTP and reset password in database
-  Future<void> _handleResetPassword() async {
-    final identifier = _identifierController.text.trim();
-    final otp = _otpController.text.trim();
+  Future<void> _handleUpdatePassword() async {
     final newPassword = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
 
-    if (identifier.isEmpty) {
-      _showSnackBar('Please enter your Email / Phone Number / TRK ID.', true);
-      return;
-    }
-
-    if (otp.isEmpty) {
-      _showSnackBar('Please enter the OTP sent to your email.', true);
-      return;
-    }
-
-    if (newPassword.isEmpty) {
-      _showSnackBar('Please enter a new password.', true);
+    if (newPassword.isEmpty || confirmPassword.isEmpty) {
+      _showSnackBar('Please fill in all password fields.', true);
       return;
     }
 
@@ -123,15 +96,27 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       return;
     }
 
+    if (newPassword != confirmPassword) {
+      _showSnackBar('Passwords do not match.', true);
+      return;
+    }
+
+    setState(() {
+      _isSendingRequest = true;
+    });
+
     final authProvider = context.read<AuthProvider>();
     final success = await authProvider.resetPassword(
-      otp,
+      widget.token!,
       newPassword,
-      email: identifier,
-      otp: otp,
+      otp: widget.token,
     );
 
     if (!mounted) return;
+
+    setState(() {
+      _isSendingRequest = false;
+    });
 
     if (success) {
       setState(() {
@@ -140,7 +125,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     } else {
       _showSnackBar(
         authProvider.errorMessage ??
-            'Failed to reset password. OTP might be invalid or expired.',
+            'Failed to reset password. The link might be invalid or expired.',
         true,
       );
     }
@@ -221,7 +206,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.white),
+            icon: const Icon(Icons.arrow_back, color: AppColors.black),
             onPressed: () {
               if (context.canPop()) {
                 context.pop();
@@ -266,9 +251,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Widget _buildFormView(AuthProvider authProvider) {
-    final isOtpEntered = _otpController.text.trim().isNotEmpty;
-    final isNewPasswordEnabled = isOtpEntered;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -317,10 +299,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         const SizedBox(height: 40),
 
         // ----------------------------------------------------
-        // TITLE: Forgot Password
+        // TITLE: Forgot Password / Reset Password
         // ----------------------------------------------------
         Text(
-          'Forgot Password',
+          _isTokenPresent ? 'Reset Password' : 'Forgot Password',
           textAlign: TextAlign.center,
           style: GoogleFonts.sora(
             fontSize: 20,
@@ -337,253 +319,218 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         const SizedBox(height: 32),
 
         // ----------------------------------------------------
-        // 1. IDENTIFIER INPUT (Email / Phone / TRK ID)
+        // INITIAL STEP: ENTER EMAIL
         // ----------------------------------------------------
-        TextField(
-          controller: _identifierController,
-          keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.next,
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: AppColors.black,
-          ),
-          decoration: InputDecoration(
-
-            hintText: 'Email / Phone Number / TRK ID',
-            hintStyle: GoogleFonts.inter(
+        if (!_isTokenPresent) ...[
+          TextField(
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _handleSendResetLink(),
+            style: GoogleFonts.inter(
               fontSize: 12,
-              fontWeight: FontWeight.w400,
-              color: AppColors.hint,
-
+              fontWeight: FontWeight.w500,
+              color: AppColors.black,
             ),
-
-            filled: true,
-            fillColor: AppColors.white,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 22,
-              vertical: 14,
-            ),
-            suffixIcon: _isSendingOtp
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: Padding(
-                      padding: EdgeInsets.all(12),
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                      ),
-                    ),
-                  )
-                : TextButton(
-                    onPressed: authProvider.isLoading || _isSendingOtp
-                        ? null
-                        : _handleSendOtp,
-                    child: Text(
-                      _isOtpSent ? 'Resend' : 'Send OTP',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30),
-              borderSide: const BorderSide(
-                color: AppColors.white,
-                width: 1.2,
-              ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30),
-              borderSide: const BorderSide(
-                color: AppColors.white,
-                width: 1.2,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30),
-              borderSide: const BorderSide(
-                color: AppColors.primary,
-                width: 1.4,
-              ),
-            ),
-          ),
-        )
-            .animate(delay: 450.ms)
-            .fade(duration: 600.ms),
-
-        const SizedBox(height: 16),
-
-        // ----------------------------------------------------
-        // 2. OTP INPUT
-        // ----------------------------------------------------
-        TextField(
-          controller: _otpController,
-          keyboardType: TextInputType.text,
-          textInputAction: TextInputAction.next,
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: AppColors.black,
-          ),
-          decoration: InputDecoration(
-            hintText: 'OTP',
-            hintStyle: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              color: AppColors.hint,
-            ),
-            filled: true,
-            fillColor: AppColors.white,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 22,
-              vertical: 14,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30),
-              borderSide: const BorderSide(
-                color: AppColors.white,
-                width: 1.2,
-              ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30),
-              borderSide: const BorderSide(
-                color: AppColors.white,
-                width: 1.2,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30),
-              borderSide: const BorderSide(
-                color: AppColors.primary,
-                width: 1.4,
-              ),
-            ),
-          ),
-        )
-            .animate(delay: 500.ms)
-            .fade(duration: 600.ms),
-
-        const SizedBox(height: 16),
-
-        // ----------------------------------------------------
-        // 3. NEW PASSWORD INPUT (Disabled until OTP is entered)
-        // ----------------------------------------------------
-        GestureDetector(
-          onTap: () {
-            if (!isNewPasswordEnabled) {
-              if (!_isOtpSent) {
-                _showSnackBar('Please enter your email and click "Send OTP" first.', true);
-              } else {
-                _showSnackBar('Please enter the OTP sent to your email to unlock password field.', true);
-              }
-            }
-          },
-          child: AbsorbPointer(
-            absorbing: !isNewPasswordEnabled,
-            child: TextField(
-              controller: _passwordController,
-              enabled: isNewPasswordEnabled,
-              obscureText: !_isPasswordVisible,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => isOtpEntered ? _handleResetPassword() : _handleSendOtp(),
-              style: GoogleFonts.inter(
+            decoration: InputDecoration(
+              hintText: 'Email / Phone Number / TRK ID',
+              hintStyle: GoogleFonts.inter(
                 fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: isNewPasswordEnabled ? AppColors.black : AppColors.hint,
+                fontWeight: FontWeight.w400,
+                color: AppColors.hint,
               ),
-              decoration: InputDecoration(
-                hintText: isNewPasswordEnabled ? 'New Password' : 'New Password (enter OTP first)',
-                hintStyle: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400,
-                  color: isNewPasswordEnabled ? AppColors.hint : AppColors.hint,
+              filled: true,
+              fillColor: AppColors.white,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 22,
+                vertical: 14,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: const BorderSide(
+                  color: AppColors.hint,
+                  width: 1.2,
                 ),
-                filled: true,
-                fillColor: isNewPasswordEnabled ? AppColors.white : AppColors.white,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 14,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: const BorderSide(
+                  color: AppColors.hint,
+                  width: 1.2,
                 ),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _isPasswordVisible
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                    color: isNewPasswordEnabled
-                        ? AppColors.black
-                        : AppColors.hint.withValues(alpha: 0.3),
-                    size: 18,
-                  ),
-                  splashRadius: 18,
-                  onPressed: isNewPasswordEnabled
-                      ? () {
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;
-                          });
-                        }
-                      : null,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide(
-                    color: isNewPasswordEnabled
-                        ? AppColors.hint
-                        : AppColors.hint.withValues(alpha: 0.3),
-                    width: 1.2,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide(
-                    color: isNewPasswordEnabled
-                        ? AppColors.hint
-                        : AppColors.hint.withValues(alpha: 0.3),
-                    width: 1.2,
-                  ),
-                ),
-                disabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide(
-                    color: AppColors.hint.withValues(alpha: 0.2),
-                    width: 1.2,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: const BorderSide(
-                    color: AppColors.primary,
-                    width: 1.4,
-                  ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 1.4,
                 ),
               ),
             ),
-          ),
-        )
-            .animate(delay: 550.ms)
-            .fade(duration: 600.ms),
+          )
+              .animate(delay: 450.ms)
+              .fade(duration: 600.ms),
+
+          const SizedBox(height: 20),
+          
+          Text(
+            'We will send a password reset link to your registered email address.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              color: AppColors.text,
+            ),
+          ).animate(delay: 500.ms).fade(duration: 600.ms),
+        ],
+
+        // ----------------------------------------------------
+        // SECOND STEP: ENTER NEW PASSWORD & CONFIRM
+        // ----------------------------------------------------
+        if (_isTokenPresent) ...[
+          TextField(
+            controller: _passwordController,
+            obscureText: !_isPasswordVisible,
+            textInputAction: TextInputAction.next,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.black,
+            ),
+            decoration: InputDecoration(
+              hintText: 'New Password',
+              hintStyle: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: AppColors.hint,
+              ),
+              filled: true,
+              fillColor: AppColors.white,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 22,
+                vertical: 14,
+              ),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _isPasswordVisible
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                  color: AppColors.black,
+                  size: 18,
+                ),
+                splashRadius: 18,
+                onPressed: () {
+                  setState(() {
+                    _isPasswordVisible = !_isPasswordVisible;
+                  });
+                },
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: const BorderSide(
+                  color: AppColors.hint,
+                  width: 1.2,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: const BorderSide(
+                  color: AppColors.hint,
+                  width: 1.2,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 1.4,
+                ),
+              ),
+            ),
+          ).animate(delay: 450.ms).fade(duration: 600.ms),
+          
+          const SizedBox(height: 16),
+          
+          TextField(
+            controller: _confirmPasswordController,
+            obscureText: !_isConfirmPasswordVisible,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _handleUpdatePassword(),
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.black,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Confirm New Password',
+              hintStyle: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: AppColors.hint,
+              ),
+              filled: true,
+              fillColor: AppColors.white,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 22,
+                vertical: 14,
+              ),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _isConfirmPasswordVisible
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                  color: AppColors.black,
+                  size: 18,
+                ),
+                splashRadius: 18,
+                onPressed: () {
+                  setState(() {
+                    _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                  });
+                },
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: const BorderSide(
+                  color: AppColors.hint,
+                  width: 1.2,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: const BorderSide(
+                  color: AppColors.hint,
+                  width: 1.2,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 1.4,
+                ),
+              ),
+            ),
+          ).animate(delay: 550.ms).fade(duration: 600.ms),
+        ],
 
         const Spacer(),
         const SizedBox(height: 60),
 
         // ----------------------------------------------------
-        // RESET PASSWORD / SEND OTP BUTTON
+        // PRIMARY BUTTON
         // ----------------------------------------------------
         SizedBox(
           width: double.infinity,
           height: 48,
           child: OutlinedButton(
-            onPressed: authProvider.isLoading || _isSendingOtp
+            onPressed: authProvider.isLoading || _isSendingRequest
                 ? null
                 : () {
-                    if (isOtpEntered) {
-                      _handleResetPassword();
+                    if (_isTokenPresent) {
+                      _handleUpdatePassword();
                     } else {
-                      _handleSendOtp();
+                      _handleSendResetLink();
                     }
                   },
             style: OutlinedButton.styleFrom(
@@ -598,7 +545,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ),
               elevation: 0,
             ),
-            child: authProvider.isLoading || _isSendingOtp
+            child: authProvider.isLoading || _isSendingRequest
                 ? const SizedBox(
                     width: 20,
                     height: 20,
@@ -610,7 +557,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                   )
                 : Text(
-                    isOtpEntered ? 'Reset Password' : 'Send OTP',
+                    _isTokenPresent ? 'Update Password' : 'Send Reset Link',
                     style: GoogleFonts.sora(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -649,11 +596,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ).animate().scale(delay: 200.ms, duration: 400.ms, curve: Curves.easeOutBack).fadeIn(),
         const SizedBox(height: 24),
         Text(
-          'Password Reset Successful',
+          'Your password has been reset successfully.',
+          textAlign: TextAlign.center,
           style: GoogleFonts.sora(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: AppColors.white,
+            color: AppColors.black,
           ),
         ).animate().fadeIn(delay: 400.ms),
         const SizedBox(height: 16),

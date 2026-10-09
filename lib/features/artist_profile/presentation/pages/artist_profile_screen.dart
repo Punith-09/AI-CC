@@ -489,11 +489,16 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
                       const SizedBox(height: 4),
                       Align(
                         alignment: Alignment.centerRight,
-                        child: Text(
-                          'Complete your profile',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 10,
+                        child: GestureDetector(
+                          onTap: () {
+                            context.push(AppRoutes.completeProfile);
+                          },
+                          child: Text(
+                            'Complete your profile',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 10,
+                            ),
                           ),
                         ),
                       ),

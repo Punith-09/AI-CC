@@ -13,6 +13,11 @@ class AppRoutes {
   static const String auditions = "/auditions";
   static const String artistProfile = "/artistProfile";
   static const String editArtistProfile = "/editArtistProfile";
+  static const String completeProfile = "/completeProfile";
+  static const String completeProfileStep2 = "/completeProfileStep2";
+  static const String completeProfileStep3 = "/completeProfileStep3";
+  static const String completeProfileStep4 = "/completeProfileStep4";
+  static const String completeProfileStep5 = "/completeProfileStep5";
   static const String exploreProfile = "/exploreProfile";
   static const String creatorProfile = "/creatorProfile";
 
