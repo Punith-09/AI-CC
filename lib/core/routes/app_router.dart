@@ -17,6 +17,11 @@ import '../../features/apply_job/presentation/pages/apply_screen.dart';
 import '../../features/apply_job/presentation/pages/applied_auditions_screen.dart';
 import '../../features/artist_profile/presentation/pages/artist_profile_screen.dart';
 import '../../features/artist_profile/presentation/pages/edit_profile_screen.dart';
+import '../../features/artist_profile/presentation/pages/complete_profile_screen.dart';
+import '../../features/artist_profile/presentation/pages/complete_profile_step2_screen.dart';
+import '../../features/artist_profile/presentation/pages/complete_profile_step3_screen.dart';
+import '../../features/artist_profile/presentation/pages/complete_profile_step4_screen.dart';
+import '../../features/artist_profile/presentation/pages/complete_profile_step5_screen.dart';
 import '../../features/auditions/data/models/audition_model.dart';
 import '../../features/auditions/presentation/pages/audition_details.dart';
 import '../../features/messages/data/models/chat_model.dart';
@@ -247,6 +252,46 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: AppRoutes.editArtistProfile,
           builder: (_, __) => const EditProfileScreen(),
+        ),
+
+        // -----------------------------------------------------
+        // COMPLETE ARTIST PROFILE
+        // -----------------------------------------------------
+        GoRoute(
+          path: AppRoutes.completeProfile,
+          builder: (_, __) => const CompleteProfileScreen(),
+        ),
+
+        // -----------------------------------------------------
+        // COMPLETE ARTIST PROFILE STEP 2
+        // -----------------------------------------------------
+        GoRoute(
+          path: AppRoutes.completeProfileStep2,
+          builder: (_, __) => const CompleteProfileStep2Screen(),
+        ),
+
+        // -----------------------------------------------------
+        // COMPLETE ARTIST PROFILE STEP 3
+        // -----------------------------------------------------
+        GoRoute(
+          path: AppRoutes.completeProfileStep3,
+          builder: (_, __) => const CompleteProfileStep3Screen(),
+        ),
+
+        // -----------------------------------------------------
+        // COMPLETE ARTIST PROFILE STEP 4
+        // -----------------------------------------------------
+        GoRoute(
+          path: AppRoutes.completeProfileStep4,
+          builder: (_, __) => const CompleteProfileStep4Screen(),
+        ),
+
+        // -----------------------------------------------------
+        // COMPLETE ARTIST PROFILE STEP 5
+        // -----------------------------------------------------
+        GoRoute(
+          path: AppRoutes.completeProfileStep5,
+          builder: (_, __) => const CompleteProfileStep5Screen(),
         ),
 
         // -----------------------------------------------------
