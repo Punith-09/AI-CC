@@ -589,7 +589,7 @@ class _SignupScreenState extends State<SignupScreen> {
             child: DropdownButton<String>(
               isExpanded: true,
               value: value,
-              dropdownColor: const Color(0xFF1E1E1E),
+              dropdownColor: AppColors.white,
               hint: Text(
                 hint,
                 style: GoogleFonts.inter(
@@ -611,7 +611,8 @@ class _SignupScreenState extends State<SignupScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.white,
+                      color: AppColors.black,
+                      // backgroundColor: AppColors.white
                     ),
                   ),
                 );

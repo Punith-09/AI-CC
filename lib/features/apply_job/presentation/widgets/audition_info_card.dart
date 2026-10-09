@@ -22,7 +22,7 @@ class AuditionInfoCard extends StatelessWidget {
   /// Optional callback for details.
   final VoidCallback? onViewDetails;
 
-  const AuditionInfoCard({
+  const   AuditionInfoCard({
     super.key,
     required this.audition,
     this.application,
@@ -38,16 +38,31 @@ class AuditionInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF141414) : Colors.white;
+    final cardBorder = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : const Color(0xFFE2E8F0);
+    const goldColor = Color(0xFFDC8B20);
+    final dateColor = isDark ? const Color(0xFFA37D42) : const Color(0xFF92400E);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF1B1B1F),
+        color: cardBg,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: const Color(0xFF2A2A2E),
-          width: 0.8,
+          color: cardBorder,
+          width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,13 +80,17 @@ class AuditionInfoCard extends StatelessWidget {
                   vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF261D13),
+                  color: isDark ? const Color(0xFF1F1A10) : const Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: goldColor.withValues(alpha: isDark ? 0.3 : 0.6),
+                    width: 0.8,
+                  ),
                 ),
                 child: Text(
                   audition.category.isNotEmpty ? audition.category : 'Film',
                   style: const TextStyle(
-                    color: Color(0xFFDC8B20),
+                    color: goldColor,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
@@ -82,17 +101,17 @@ class AuditionInfoCard extends StatelessWidget {
               if (audition.deadline.isNotEmpty)
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.calendar_today_outlined,
-                      size: 15,
-                      color: Color(0xFFDC8B20),
+                      size: 14,
+                      color: dateColor,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       audition.deadline,
-                      style: const TextStyle(
-                        color: Color(0xFFDC8B20),
-                        fontSize: 13,
+                      style: TextStyle(
+                        color: dateColor,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -108,8 +127,8 @@ class AuditionInfoCard extends StatelessWidget {
           // =====================================================
           Text(
             audition.title,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: isDark ? Colors.white : const Color(0xFF111827),
               fontSize: 18,
               fontWeight: FontWeight.bold,
               height: 1.25,
@@ -159,8 +178,8 @@ class AuditionInfoCard extends StatelessWidget {
                 : "No further description provided.",
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Color(0xFF8E8E93),
+            style: TextStyle(
+              color: isDark ? const Color(0xFF8E8E93) : const Color(0xFF4B5563),
               fontSize: 13,
               height: 1.4,
             ),
@@ -171,7 +190,7 @@ class AuditionInfoCard extends StatelessWidget {
           // =====================================================
           if (hasApplied) ...[
             const SizedBox(height: 16),
-            _buildAppliedSection(),
+            _buildAppliedSection(context),
           ] else if (onViewDetails != null || onApply != null) ...[
             const SizedBox(height: 16),
             _buildNotAppliedSection(),
@@ -185,7 +204,8 @@ class AuditionInfoCard extends StatelessWidget {
   // APPLIED SECTION
   // ===========================================================
 
-  Widget _buildAppliedSection() {
+  Widget _buildAppliedSection(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       children: [
         Container(
@@ -194,10 +214,10 @@ class AuditionInfoCard extends StatelessWidget {
             vertical: 12,
           ),
           decoration: BoxDecoration(
-            color: const Color(0xff073F36),
+            color: isDark ? const Color(0xff073F36) : const Color(0xFFECFDF5),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.green.withValues(alpha: 0.45),
+              color: Colors.green.withValues(alpha: isDark ? 0.45 : 0.3),
             ),
           ),
           child: Row(
@@ -208,11 +228,11 @@ class AuditionInfoCard extends StatelessWidget {
                 size: 24,
               ),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Text(
                   "You've applied · Manage your application",
                   style: TextStyle(
-                    color: Colors.green,
+                    color: isDark ? Colors.green : const Color(0xFF065F46),
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
@@ -319,28 +339,35 @@ class _InfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: 12,
         vertical: 6,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFF131316),
+        color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.06)
+              : const Color(0xFFE2E8F0),
+          width: 0.8,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             icon,
-            size: 14,
+            size: 13,
             color: const Color(0xFFDC8B20),
           ),
           const SizedBox(width: 5),
           Text(
             text,
-            style: const TextStyle(
-              color: Color(0xFFD1D1D6),
+            style: TextStyle(
+              color: isDark ? const Color(0xFFCCCCCC) : const Color(0xFF475569),
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),

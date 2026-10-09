@@ -1047,7 +1047,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
                       ),
                       if (_post.isVerified) ...[
                         const SizedBox(width: 4),
-                        const Icon(Icons.verified, size: 15, color: Color(0xFF0284C7)),
+                        // const Icon(Icons.verified, size: 15, color: Color(0xFF0284C7)),
                       ],
                     ],
                   ),
@@ -1327,39 +1327,39 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
           ),
 
           // Share Button
-          InkWell(
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Link copied to clipboard!'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            },
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    LucideIcons.share2,
-                    color: actionColor,
-                    size: 22,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Share',
-                    style: GoogleFonts.poppins(
-                      color: actionColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          // InkWell(
+          //   onTap: () {
+          //     ScaffoldMessenger.of(context).showSnackBar(
+          //       const SnackBar(
+          //         content: Text('Link copied to clipboard!'),
+          //         duration: Duration(seconds: 2),
+          //       ),
+          //     );
+          //   },
+          //   borderRadius: BorderRadius.circular(12),
+          //   child: Padding(
+          //     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          //     child: Column(
+          //       mainAxisSize: MainAxisSize.min,
+          //       children: [
+          //         Icon(
+          //           LucideIcons.share2,
+          //           color: actionColor,
+          //           size: 22,
+          //         ),
+          //         const SizedBox(height: 4),
+          //         Text(
+          //           'Share',
+          //           style: GoogleFonts.poppins(
+          //             color: actionColor,
+          //             fontSize: 12,
+          //             fontWeight: FontWeight.w500,
+          //           ),
+          //         ),
+          //       ],
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );

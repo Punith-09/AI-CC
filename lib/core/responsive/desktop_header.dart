@@ -64,85 +64,108 @@ class _DesktopHeaderState extends State<DesktopHeader> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // ── Brand / Logo ───────────────────────────────────────
+          // InkWell(
+          //   onTap: () => context.go(AppRoutes.home),
+          //   borderRadius: BorderRadius.circular(10),
+          //   child: Padding(
+          //     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          //     child: Row(
+          //       mainAxisSize: MainAxisSize.min,
+          //       children: [
+          //         Container(
+          //           width: 40,
+          //           height: 40,
+          //           decoration: BoxDecoration(
+          //             color: const Color(0xFF0F172A),
+          //             borderRadius: BorderRadius.circular(10),
+          //             boxShadow: [
+          //               BoxShadow(
+          //                 color: const Color(0xFF8E3CF7).withValues(alpha: 0.25),
+          //                 blurRadius: 10,
+          //                 offset: const Offset(0, 3),
+          //               ),
+          //             ],
+          //           ),
+          //           child: const Center(
+          //             child: Icon(
+          //               LucideIcons.clapperboard,
+          //               color: Color(0xFF4AD0FB),
+          //               size: 22,
+          //             ),
+          //           ),
+          //         ),
+          //         const SizedBox(width: 12),
+          //         Column(
+          //           mainAxisAlignment: MainAxisAlignment.center,
+          //           crossAxisAlignment: CrossAxisAlignment.start,
+          //           children: [
+          //             Row(
+          //               children: [
+          //                 Text(
+          //                   "AICC",
+          //                   style: GoogleFonts.poppins(
+          //                     color: isDark ? AppColors.darkText : const Color(0xFF0F172A),
+          //                     fontSize: 18,
+          //                     fontWeight: FontWeight.w800,
+          //                     letterSpacing: 0.5,
+          //                   ),
+          //                 ),
+          //                 const SizedBox(width: 4),
+          //                 Container(
+          //                   padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+          //                   decoration: BoxDecoration(
+          //                     color: const Color(0xFF8E3CF7).withValues(alpha: 0.12),
+          //                     borderRadius: BorderRadius.circular(4),
+          //                   ),
+          //                   child: Text(
+          //                     "CASTING",
+          //                     style: GoogleFonts.poppins(
+          //                       color: const Color(0xFF8E3CF7),
+          //                       fontSize: 9.5,
+          //                       fontWeight: FontWeight.w700,
+          //                       letterSpacing: 0.5,
+          //                     ),
+          //                   ),
+          //                 ),
+          //               ],
+          //             ),
+          //             Text(
+          //               "Auditions • Talent • Opportunities",
+          //               style: GoogleFonts.poppins(
+          //                 color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+          //                 fontSize: 10.5,
+          //                 fontWeight: FontWeight.w500,
+          //               ),
+          //             ),
+          //           ],
+          //         ),
+          //       ],
+          //     ),
+          //   ),
+          // ),
           InkWell(
-            onTap: () => context.go(AppRoutes.home),
-            borderRadius: BorderRadius.circular(10),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0F172A),
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF8E3CF7).withValues(alpha: 0.25),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        LucideIcons.clapperboard,
-                        color: Color(0xFF4AD0FB),
-                        size: 22,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            "AICC",
-                            style: GoogleFonts.poppins(
-                              color: isDark ? AppColors.darkText : const Color(0xFF0F172A),
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF8E3CF7).withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              "CASTING",
-                              style: GoogleFonts.poppins(
-                                color: const Color(0xFF8E3CF7),
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Text(
-                        "Auditions • Talent • Opportunities",
-                        style: GoogleFonts.poppins(
-                          color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+            onTap: (){
+              context.go("/home");
+            },
+            child: Row(
+              children: [
+                Image.asset(
+                  'assets/images/treekologo.png',
+                  width: 47,
+                  height: 38,
+                  fit: BoxFit.contain,
+                ),
+                SizedBox(width: 4),
+                Image.asset(
+                  'assets/images/TreeKo.png',
+                  width: 104,
+                  height: 34,
+                  fit: BoxFit.contain,
+                )
+              ],
             ),
           ),
+
 
           const SizedBox(width: 32),
 

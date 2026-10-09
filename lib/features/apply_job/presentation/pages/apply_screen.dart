@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../common/widgets/app_background.dart';
 import '../../../../core/constants/app_colors.dart';
 
 import '../../data/models/application_model.dart';
@@ -14,8 +17,6 @@ import '../widgets/submit_button.dart';
 import '../../../auditions/data/models/audition_model.dart';
 import '../../../auditions/presentation/providers/auditions_provider.dart';
 import '../../../artist_profile/presentation/providers/profile_provider.dart';
-import '../../../subscription/presentation/providers/subscription_provider.dart';
-import '../../../subscription/presentation/widgets/limit_upgrade_dialog.dart';
 
 class ApplyScreen extends StatefulWidget {
   final AuditionModel? audition;
@@ -225,19 +226,20 @@ class _ApplyScreenState extends State<ApplyScreen> {
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         return AlertDialog(
-          backgroundColor: const Color(0xFF1E1E22),
-          title: const Text(
+          backgroundColor: isDark ? const Color(0xFF1E1E22) : Colors.white,
+          title: Text(
             'Withdraw Application?',
-            style: TextStyle(
-              color: Colors.white,
+            style: GoogleFonts.poppins(
+              color: isDark ? Colors.white : AppColors.lightText,
               fontWeight: FontWeight.bold,
             ),
           ),
-          content: const Text(
+          content: Text(
             'Your application will be withdrawn from this audition. The audition itself will not be deleted.',
-            style: TextStyle(
-              color: Color(0xFF9E9E9E),
+            style: GoogleFonts.poppins(
+              color: isDark ? const Color(0xFF9E9E9E) : AppColors.lightTextSecondary,
             ),
           ),
           actions: [
@@ -245,9 +247,11 @@ class _ApplyScreenState extends State<ApplyScreen> {
               onPressed: () {
                 Navigator.of(dialogContext).pop(false);
               },
-              child: const Text(
+              child: Text(
                 'Cancel',
-                style: TextStyle(color: Colors.white70),
+                style: TextStyle(
+                  color: isDark ? Colors.white70 : AppColors.lightTextSecondary,
+                ),
               ),
             ),
             TextButton(
@@ -338,169 +342,187 @@ class _ApplyScreenState extends State<ApplyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Consumer<ApplyJobProvider>(
-          builder: (context, provider, child) {
-            return Column(
-              children: [
-                // =================================================
-                // APP BAR
-                // =================================================
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-                  child: ApplyAppBar(
-                    title: widget.isEditMode ? 'My Application' : 'Application',
-                    onDelete: widget.isEditMode
-                        ? provider.isDeleting
-                            ? null
-                            : _withdrawApplication
-                        : null,
-                  ),
-                ),
-
-                // =================================================
-                // CONTENT
-                // =================================================
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // =========================================
-                        // AUDITION INFO
-                        // =========================================
-                        AuditionInfoCard(
-                          audition: _audition,
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // =========================================
-                        // NAME & CATEGORY FIELDS
-                        // =========================================
-                        Consumer<ProfileProvider>(
-                          builder: (context, profileProvider, _) {
-                            final profile = profileProvider.currentProfile;
-
-                            // Resolve name: prefer profile, then application
-                            final displayName = profile?.name.isNotEmpty == true
-                                ? profile!.name
-                                : (widget.application?.applicantName.isNotEmpty == true
-                                    ? widget.application!.applicantName
-                                    : '');
-
-                            // Resolve category: prefer profile roles, then application, then audition
-                            final displayCategory = profile?.roles.isNotEmpty == true
-                                ? profile!.roles.join(', ')
-                                : (widget.application?.applicantCategory.isNotEmpty == true
-                                    ? widget.application!.applicantCategory
-                                    : (_audition.category.isNotEmpty
-                                        ? _audition.category
-                                        : ''));
-
-                            if (_nameController.text.isEmpty && displayName.isNotEmpty) {
-                              _nameController.text = displayName;
-                            }
-                            if (_categoryController.text.isEmpty && displayCategory.isNotEmpty) {
-                              _categoryController.text = displayCategory;
-                            }
-
-                            return Column(
-                              children: [
-                                _buildInputField(
-                                  controller: _nameController,
-                                  hintText: 'Your Full Name',
-                                ),
-                                const SizedBox(height: 14),
-                                _buildInputField(
-                                  controller: _categoryController,
-                                  hintText: 'Your Bio Category',
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-
-                        const SizedBox(height: 14),
-
-                        // =========================================
-                        // COVER LETTER / MESSAGE
-                        // =========================================
-                        CoverLetterField(
-                          controller: _coverLetterController,
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // =========================================
-                        // APPLY NOW BUTTON
-                        // =========================================
-                        if (!widget.isEditMode)
-                          SubmitButton(
-                            onPressed: _submitApplication,
-                            isLoading: provider.isLoading,
-                            label: 'Apply Now',
-                          ),
-
-                        if (widget.isEditMode) _buildViewOnlyHint(),
-
-                        const SizedBox(height: 16),
-                      ],
+    return AppBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Consumer<ApplyJobProvider>(
+            builder: (context, provider, child) {
+              return Column(
+                children: [
+                  // =================================================
+                  // APP BAR
+                  // =================================================
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+                    child: ApplyAppBar(
+                      title: widget.isEditMode ? 'My Application' : 'Application',
+                      onDelete: widget.isEditMode
+                          ? provider.isDeleting
+                              ? null
+                              : _withdrawApplication
+                          : null,
                     ),
                   ),
-                ),
-              ],
-            );
-          },
+
+                  // =================================================
+                  // CONTENT
+                  // =================================================
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // =========================================
+                          // AUDITION INFO
+                          // =========================================
+                          AuditionInfoCard(
+                            audition: _audition,
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // =========================================
+                          // NAME & CATEGORY FIELDS
+                          // =========================================
+                          Consumer<ProfileProvider>(
+                            builder: (context, profileProvider, _) {
+                              final profile = profileProvider.currentProfile;
+
+                              // Resolve name: prefer profile, then application
+                              final displayName = profile?.name.isNotEmpty == true
+                                  ? profile!.name
+                                  : (widget.application?.applicantName.isNotEmpty == true
+                                      ? widget.application!.applicantName
+                                      : '');
+
+                              // Resolve category: prefer profile roles, then application, then audition
+                              final displayCategory = profile?.roles.isNotEmpty == true
+                                  ? profile!.roles.join(', ')
+                                  : (widget.application?.applicantCategory.isNotEmpty == true
+                                      ? widget.application!.applicantCategory
+                                      : (_audition.category.isNotEmpty
+                                          ? _audition.category
+                                          : ''));
+
+                              if (_nameController.text.isEmpty && displayName.isNotEmpty) {
+                                _nameController.text = displayName;
+                              }
+                              if (_categoryController.text.isEmpty && displayCategory.isNotEmpty) {
+                                _categoryController.text = displayCategory;
+                              }
+
+                              return Column(
+                                children: [
+                                  _buildInputField(
+                                    controller: _nameController,
+                                    hintText: 'Your Full Name',
+                                    prefixIcon: LucideIcons.user,
+                                  ),
+                                  const SizedBox(height: 14),
+                                  _buildInputField(
+                                    controller: _categoryController,
+                                    hintText: 'Your Bio Category',
+                                    prefixIcon: LucideIcons.tag,
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+
+                          const SizedBox(height: 14),
+
+                          // =========================================
+                          // COVER LETTER / MESSAGE
+                          // =========================================
+                          CoverLetterField(
+                            controller: _coverLetterController,
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          // =========================================
+                          // APPLY NOW BUTTON
+                          // =========================================
+                          if (!widget.isEditMode)
+                            SubmitButton(
+                              onPressed: _submitApplication,
+                              isLoading: provider.isLoading,
+                              label: 'Apply Now',
+                            ),
+
+                          if (widget.isEditMode) _buildViewOnlyHint(),
+
+                          const SizedBox(height: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
   }
 
   // =========================================================
-  // INPUT FIELD (FIGMA OUTLINED STYLE)
+  // INPUT FIELD (THEME-AWARE OUTLINED STYLE)
   // =========================================================
 
   Widget _buildInputField({
     required TextEditingController controller,
     required String hintText,
+    IconData? prefixIcon,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF141414) : const Color(0xFFF8FAFC);
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : const Color(0xFFE2E8F0);
+
     return TextField(
       controller: controller,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 15,
+      style: GoogleFonts.poppins(
+        color: isDark ? Colors.white : AppColors.lightText,
+        fontSize: 14.5,
         fontWeight: FontWeight.w400,
       ),
       cursorColor: AppColors.primary,
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: const TextStyle(
-          color: Color(0xFF9E9E9E),
-          fontSize: 15,
+        hintStyle: GoogleFonts.poppins(
+          color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+          fontSize: 14,
           fontWeight: FontWeight.w400,
         ),
+        prefixIcon: prefixIcon != null
+            ? Icon(
+                prefixIcon,
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                size: 19,
+              )
+            : null,
         filled: true,
-        fillColor: Colors.black,
+        fillColor: bgColor,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,
           vertical: 16,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(
-            color: AppColors.primary,
-            width: 1.2,
+          borderSide: BorderSide(
+            color: borderColor,
+            width: 1.0,
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(
-            color: AppColors.primary,
-            width: 1.2,
+          borderSide: BorderSide(
+            color: borderColor,
+            width: 1.0,
           ),
         ),
         focusedBorder: OutlineInputBorder(
@@ -519,29 +541,33 @@ class _ApplyScreenState extends State<ApplyScreen> {
   // =========================================================
 
   Widget _buildViewOnlyHint() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.green.withValues(alpha: 0.12),
+        color: isDark
+            ? Colors.green.withValues(alpha: 0.12)
+            : const Color(0xFFECFDF5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.green.withValues(alpha: 0.4),
+          color: Colors.green.withValues(alpha: isDark ? 0.4 : 0.25),
         ),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.check_circle_outline,
             color: Colors.green,
           ),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               'Your application has been submitted successfully.',
-              style: TextStyle(
-                color: Colors.white,
+              style: GoogleFonts.poppins(
+                color: isDark ? Colors.white : const Color(0xFF065F46),
                 fontSize: 14,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),

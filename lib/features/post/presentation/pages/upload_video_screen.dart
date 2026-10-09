@@ -778,10 +778,10 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
     return Container(
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0F323D) : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
-        ),
+        borderRadius: BorderRadius.circular(30),
+        // border: Border.all(
+        //   color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
+        // ),
       ),
       child: TextField(
         controller: controller,
@@ -800,14 +800,17 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
             color: AppColors.primary.withValues(alpha: 0.8),
             size: 20,
           ),
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: AppColors.hint, width: 1.5),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: AppColors.hint, width: 1.5),
+          ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(
-              color: AppColors.primary,
-              width: 1.5,
-            ),
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
@@ -825,9 +828,9 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0F323D) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
-        ),
+        // border: Border.all(
+        //   color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
+        // ),
       ),
       child: TextField(
         controller: controller,
@@ -842,14 +845,17 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
             color: isDark ? AppColors.greyText.withValues(alpha: 0.7) : const Color(0xFF94A3B8),
             fontSize: 14,
           ),
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: AppColors.hint, width: 1.5),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: AppColors.hint, width: 1.5),
+          ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(
-              color: AppColors.primary,
-              width: 1.5,
-            ),
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
           ),
           contentPadding: const EdgeInsets.all(16),
         ),

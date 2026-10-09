@@ -1667,17 +1667,17 @@ class _AuditionDetailsState extends State<AuditionDetails> {
                                 ),
                               ),
 
-                              _buildDivider(),
+                              // _buildDivider(),
 
-                              Expanded(
-                                child: _buildStatItem(
-                                  icon: Icons
-                                      .calendar_month_outlined,
-                                  label: "Audition Date",
-                                  value:
-                                  displayAuditionDate,
-                                ),
-                              ),
+                              // Expanded(
+                              //   child: _buildStatItem(
+                              //     icon: Icons
+                              //         .calendar_month_outlined,
+                              //     label: "Audition Date",
+                              //     value:
+                              //     displayAuditionDate,
+                              //   ),
+                              // ),
                             ],
                           ),
                         ),
@@ -1711,36 +1711,36 @@ class _AuditionDetailsState extends State<AuditionDetails> {
                       // ROLE REQUIREMENTS
                       // -------------------------------------------------------
 
-                      _buildSectionHeader(
-                        "Role Requirements",
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      _buildRequirementRow(
-                        "Age",
-                        displayAge,
-                      ),
-
-                      _buildRequirementRow(
-                        "Gender",
-                        displayGender,
-                      ),
-
-                      _buildRequirementRow(
-                        "Experience",
-                        displayExperience,
-                      ),
-
-                      _buildRequirementRow(
-                        "Language",
-                        displayLanguage,
-                      ),
-
-                      _buildRequirementRow(
-                        "Skills",
-                        displaySkills,
-                      ),
+                      // _buildSectionHeader(
+                      //   "Role Requirements",
+                      // ),
+                      //
+                      // const SizedBox(height: 16),
+                      //
+                      // _buildRequirementRow(
+                      //   "Age",
+                      //   displayAge,
+                      // ),
+                      //
+                      // _buildRequirementRow(
+                      //   "Gender",
+                      //   displayGender,
+                      // ),
+                      //
+                      // _buildRequirementRow(
+                      //   "Experience",
+                      //   displayExperience,
+                      // ),
+                      //
+                      // _buildRequirementRow(
+                      //   "Language",
+                      //   displayLanguage,
+                      // ),
+                      //
+                      // _buildRequirementRow(
+                      //   "Skills",
+                      //   displaySkills,
+                      // ),
 
                       // -------------------------------------------------------
                       // APPLICANTS

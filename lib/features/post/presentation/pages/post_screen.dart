@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/theme/theme_provider.dart';
 import '../../../auditions/data/models/create_audition_request.dart';
 import '../../../auditions/presentation/providers/auditions_provider.dart';
 
@@ -54,6 +55,7 @@ class _PostScreenState extends State<PostScreen> {
   }
 
   Future<void> _selectDate() async {
+    final isDark = context.read<ThemeProvider>().isDarkMode;
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now().add(const Duration(days: 30)),
@@ -62,11 +64,11 @@ class _PostScreenState extends State<PostScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
+            colorScheme:  ColorScheme.dark(
               primary: Colors.deepPurpleAccent,
-              onPrimary: Colors.white,
-              surface: Color(0xff1F1F27),
-              onSurface: Colors.white,
+              onPrimary: isDark?Colors.white:AppColors.black,
+              surface: isDark?Color(0xff1F1F27):AppColors.white,
+              onSurface: isDark?Colors.white:AppColors.black,
             ),
           ),
           child: child!,

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../../../../core/constants/app_colors.dart';
 
 class ApplyAppBar extends StatelessWidget {
   final VoidCallback? onDelete;
@@ -13,6 +16,7 @@ class ApplyAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       children: [
         // =====================================================
@@ -20,18 +24,15 @@ class ApplyAppBar extends StatelessWidget {
         // =====================================================
 
         InkWell(
-          borderRadius:
-          BorderRadius.circular(30),
-
+          borderRadius: BorderRadius.circular(30),
           onTap: () {
             context.pop();
           },
-
-          child: const Padding(
-            padding: EdgeInsets.all(8),
+          child: Padding(
+            padding: const EdgeInsets.all(8),
             child: Icon(
               Icons.arrow_back_ios_new,
-              color: Colors.white,
+              color: isDark ? AppColors.white : AppColors.lightText,
               size: 20,
             ),
           ),
@@ -45,10 +46,10 @@ class ApplyAppBar extends StatelessWidget {
           child: Center(
             child: Text(
               title,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: isDark ? AppColors.white : AppColors.lightText,
               ),
             ),
           ),

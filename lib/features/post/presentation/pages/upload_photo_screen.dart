@@ -53,8 +53,12 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
           if (_titleController.text.trim().isEmpty) {
             final rawName = pickedFile.name;
             final dotIndex = rawName.lastIndexOf('.');
-            final cleanName = dotIndex != -1 ? rawName.substring(0, dotIndex) : rawName;
-            _titleController.text = cleanName.isNotEmpty ? cleanName : 'Headshot - Portfolio Pic';
+            final cleanName = dotIndex != -1
+                ? rawName.substring(0, dotIndex)
+                : rawName;
+            _titleController.text = cleanName.isNotEmpty
+                ? cleanName
+                : 'Headshot - Portfolio Pic';
           }
         });
       }
@@ -75,8 +79,12 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
               if (_titleController.text.trim().isEmpty) {
                 final rawName = file.name;
                 final dotIndex = rawName.lastIndexOf('.');
-                final cleanName = dotIndex != -1 ? rawName.substring(0, dotIndex) : rawName;
-                _titleController.text = cleanName.isNotEmpty ? cleanName : 'Headshot - Portfolio Pic';
+                final cleanName = dotIndex != -1
+                    ? rawName.substring(0, dotIndex)
+                    : rawName;
+                _titleController.text = cleanName.isNotEmpty
+                    ? cleanName
+                    : 'Headshot - Portfolio Pic';
               }
             });
             return;
@@ -85,7 +93,8 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
       }
 
       if (mounted) {
-        final isChannelError = e.toString().contains('channel-error') ||
+        final isChannelError =
+            e.toString().contains('channel-error') ||
             e.toString().contains('MissingPluginException');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -93,8 +102,8 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
               isChannelError
                   ? 'Please stop and restart the app (full rebuild) to enable Camera & native picker.'
                   : (source == ImageSource.camera
-                      ? 'Unable to access camera: $e'
-                      : 'Unable to pick image: $e'),
+                        ? 'Unable to access camera: $e'
+                        : 'Unable to pick image: $e'),
             ),
             backgroundColor: AppColors.danger,
             duration: const Duration(seconds: 4),
@@ -141,7 +150,10 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
                 ),
                 const SizedBox(height: 16),
                 ListTile(
-                  leading: const Icon(LucideIcons.folder, color: Color(0xFF8E3CF7)),
+                  leading: const Icon(
+                    LucideIcons.folder,
+                    color: Color(0xFF8E3CF7),
+                  ),
                   title: Text(
                     'Choose from Gallery',
                     style: GoogleFonts.poppins(color: textColor),
@@ -152,7 +164,10 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(LucideIcons.camera, color: Color(0xFFE940B7)),
+                  leading: const Icon(
+                    LucideIcons.camera,
+                    color: Color(0xFFE940B7),
+                  ),
                   title: Text(
                     'Take a Photo with Camera',
                     style: GoogleFonts.poppins(color: textColor),
@@ -250,7 +265,9 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkScaffold : AppColors.lightScaffold,
+      backgroundColor: isDark
+          ? AppColors.darkScaffold
+          : AppColors.lightScaffold,
       body: AppBackground(
         child: SafeArea(
           child: Column(
@@ -262,7 +279,10 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
               Expanded(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -377,10 +397,14 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 26),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF0F323D).withValues(alpha: 0.7) : const Color(0xFFF8FAFC),
+          color: isDark
+              ? const Color(0xFF0F323D).withValues(alpha: 0.7)
+              : const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(24),
         ),
-        child: _selectedImage == null ? _buildEmptyState() : _buildPreviewState(),
+        child: _selectedImage == null
+            ? _buildEmptyState()
+            : _buildPreviewState(),
       ),
     );
   }
@@ -426,20 +450,14 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
             _buildActionPill(
               label: 'Gallery',
               icon: LucideIcons.folder,
-              gradientColors: const [
-                Color(0xFF8E3CF7),
-                Color(0xFF6B21A8),
-              ],
+              gradientColors: const [Color(0xFF8E3CF7), Color(0xFF6B21A8)],
               onTap: () => _pickImage(ImageSource.gallery),
             ),
             const SizedBox(width: 14),
             _buildActionPill(
               label: 'Camera',
               icon: LucideIcons.camera,
-              gradientColors: const [
-                Color(0xFFE940B7),
-                Color(0xFFD9278E),
-              ],
+              gradientColors: const [Color(0xFFE940B7), Color(0xFFD9278E)],
               onTap: () => _pickImage(ImageSource.camera),
             ),
           ],
@@ -522,10 +540,17 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
             TextButton.icon(
               onPressed: _showChangeSourceSheet,
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              icon: const Icon(LucideIcons.refreshCw, size: 14, color: AppColors.primary),
+              icon: const Icon(
+                LucideIcons.refreshCw,
+                size: 14,
+                color: AppColors.primary,
+              ),
               label: Text(
                 'Change',
                 style: GoogleFonts.poppins(
@@ -599,7 +624,9 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
             height: 8,
             decoration: BoxDecoration(
               color: const Color(0xFF263244),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(5)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(5),
+              ),
               border: Border.all(
                 color: Colors.white.withValues(alpha: 0.18),
                 width: 1,
@@ -658,11 +685,7 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                color: Colors.white,
-                size: 17,
-              ),
+              Icon(icon, color: Colors.white, size: 17),
               const SizedBox(width: 8),
               Text(
                 label,
@@ -704,9 +727,7 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
         // color: isDark ?AppColors.darkCard:AppColors.lightCard,
         color: AppColors.black,
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(
-          color: isDark ? AppColors.hint:AppColors.black,
-        ),
+        // border: Border.all(color: isDark ? AppColors.hint : AppColors.hint),
       ),
       child: TextField(
         controller: controller,
@@ -718,7 +739,9 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: GoogleFonts.poppins(
-            color: isDark ? AppColors.greyText.withValues(alpha: 0.7) : const Color(0xFF94A3B8),
+            color: isDark
+                ? AppColors.greyText.withValues(alpha: 0.7)
+                : const Color(0xFF94A3B8),
             fontSize: 14,
           ),
           prefixIcon: Icon(
@@ -726,16 +749,22 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
             color: AppColors.primary.withValues(alpha: 0.8),
             size: 20,
           ),
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(
-              color: AppColors.primary,
-              width: 1.5,
-            ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: AppColors.hint, width: 1.5),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: AppColors.hint, width: 1.5),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
         ),
       ),
     );
@@ -750,10 +779,12 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
     return Container(
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0F323D) : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
-        ),
+        borderRadius: BorderRadius.circular(30),
+        // border: Border.all(
+        //   color: isDark
+        //       ? Colors.white.withValues(alpha: 0.08)
+        //       : const Color(0xFFE2E8F0),
+        // ),
       ),
       child: TextField(
         controller: controller,
@@ -765,17 +796,22 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: GoogleFonts.poppins(
-            color: isDark ? AppColors.greyText.withValues(alpha: 0.7) : const Color(0xFF94A3B8),
+            color: isDark
+                ? AppColors.greyText.withValues(alpha: 0.7)
+                : const Color(0xFF94A3B8),
             fontSize: 14,
           ),
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: AppColors.hint, width: 1.5),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: AppColors.hint, width: 1.5),
+          ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(
-              color: AppColors.primary,
-              width: 1.5,
-            ),
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
           ),
           contentPadding: const EdgeInsets.all(16),
         ),
@@ -790,9 +826,7 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          gradient: const LinearGradient(
-            colors: AppColors.BtnGradient,
-          ),
+          gradient: const LinearGradient(colors: AppColors.BtnGradient),
           boxShadow: [
             BoxShadow(
               color: AppColors.primary.withValues(alpha: 0.35),
