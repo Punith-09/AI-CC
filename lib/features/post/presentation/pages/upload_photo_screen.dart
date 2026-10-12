@@ -11,6 +11,10 @@ import 'package:provider/provider.dart';
 
 import '../../../../common/widgets/app_background.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../artist_profile/data/models/portfolio_model.dart';
+import '../../../artist_profile/presentation/providers/profile_provider.dart';
+import '../../../home/presentation/providers/home_feed_provider.dart';
 import '../providers/photos_provider.dart';
 
 class UploadPhotoScreen extends StatefulWidget {
@@ -230,6 +234,33 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
     if (!mounted) return;
 
     if (success) {
+      // 1. Immediately reflect newly uploaded photo in ProfileProvider gallery
+      final photo = photosProvider.uploadedPhoto;
+      if (photo != null) {
+        final portfolioItem = PortfolioModel(
+          id: photo.id,
+          image: photo.url,
+          title: photo.title,
+          description: photo.desc,
+          createdAt: photo.createdAt,
+          isVideo: false,
+        );
+        try {
+          context.read<ProfileProvider>().addPortfolioItem(portfolioItem);
+        } catch (_) {}
+      } else {
+        try {
+          context.read<ProfileProvider>().fetchMyProfile(silent: true);
+        } catch (_) {}
+      }
+
+      // 2. Also refresh home feed in background
+      try {
+        if (sl.isRegistered<HomeFeedProvider>()) {
+          sl<HomeFeedProvider>().refreshFeed();
+        }
+      } catch (_) {}
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Row(
@@ -245,7 +276,7 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
       );
 
       if (Navigator.of(context).canPop()) {
-        context.pop();
+        context.pop(true);
       }
     } else {
       final errorMsg = photosProvider.errorMessage ?? 'Failed to upload photo';

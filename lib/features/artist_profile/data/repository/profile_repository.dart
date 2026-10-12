@@ -1,6 +1,7 @@
 import 'package:aicc/features/artist_profile/data/datasource/profile_remote_datasource.dart';
 import 'package:aicc/features/artist_profile/data/models/artist_model.dart';
 import 'package:aicc/features/artist_profile/data/models/portfolio_model.dart';
+import 'package:aicc/features/artist_profile/data/models/profile_completion_model.dart';
 
 abstract class ProfileRepository {
   Future<ArtistModel> getProfileMe();
@@ -12,6 +13,9 @@ abstract class ProfileRepository {
   Future<bool?> followUser(String id);
 
   Future<ArtistModel> updateProfile(Map<String, dynamic> data);
+
+  Future<ProfileCompletionModel> getProfileCompletion();
+  Future<bool> deletePost({required String id, required bool isVideo});
 }
 
 class ProfileRepositoryImpl implements ProfileRepository {
@@ -42,5 +46,15 @@ class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Future<ArtistModel> updateProfile(Map<String, dynamic> data) {
     return remoteDataSource.updateProfile(data);
+  }
+
+  @override
+  Future<ProfileCompletionModel> getProfileCompletion() {
+    return remoteDataSource.getProfileCompletion();
+  }
+
+  @override
+  Future<bool> deletePost({required String id, required bool isVideo}) {
+    return remoteDataSource.deletePost(id: id, isVideo: isVideo);
   }
 }

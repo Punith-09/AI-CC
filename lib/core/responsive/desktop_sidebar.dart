@@ -3,8 +3,11 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import 'package:provider/provider.dart';
+
 import '../constants/app_colors.dart';
 import '../routes/app_routes.dart';
+import '../../features/artist_profile/presentation/providers/profile_provider.dart';
 import '../../features/create/presentation/widgets/create_bottom_sheet.dart';
 
 class DesktopSidebar extends StatelessWidget {
@@ -132,7 +135,12 @@ class DesktopSidebar extends StatelessWidget {
                   );
 
                   if (route != null && context.mounted) {
-                    context.push(route);
+                    final result = await context.push(route);
+                    if (result == true && context.mounted) {
+                      try {
+                        context.read<ProfileProvider>().fetchMyProfile(silent: true);
+                      } catch (_) {}
+                    }
                   }
                 },
                 style: ElevatedButton.styleFrom(

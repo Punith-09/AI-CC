@@ -4,46 +4,136 @@ import 'package:flutter/foundation.dart';
 class ApplicantModel {
   final String id;
   final String applicantId;
+  final String userId;
   final String name;
   final String category;
   final String status;
   final String appliedDate;
   final String coverLetter;
   final String details;
+  final String profilePicture;
 
   const ApplicantModel({
     this.id = '',
     this.applicantId = '',
+    this.userId = '',
     this.name = '',
     this.category = '',
     this.status = 'PENDING',
     this.appliedDate = '',
     this.coverLetter = '',
     this.details = '',
+    this.profilePicture = '',
   });
 
+  /// The resolved user ID to navigate to their profile
+  String get targetUserId {
+    if (userId.isNotEmpty) return userId;
+    if (applicantId.isNotEmpty) return applicantId;
+    return id;
+  }
+
   factory ApplicantModel.fromJson(Map<String, dynamic> json) {
+    String extractId(dynamic val) {
+      if (val == null) return '';
+      if (val is String) return val.trim();
+      if (val is Map) return (val['id'] ?? val['_id'] ?? '').toString().trim();
+      return val.toString().trim();
+    }
+
+    String parsedUserId = '';
+    if (json['userId'] != null) {
+      parsedUserId = extractId(json['userId']);
+    } else if (json['user_id'] != null) {
+      parsedUserId = extractId(json['user_id']);
+    } else if (json['user'] != null) {
+      parsedUserId = extractId(json['user']);
+    }
+
+    String parsedApplicantId = '';
+    if (json['applicantId'] != null) {
+      parsedApplicantId = extractId(json['applicantId']);
+    } else if (json['applicant_id'] != null) {
+      parsedApplicantId = extractId(json['applicant_id']);
+    } else if (json['applicant'] != null) {
+      parsedApplicantId = extractId(json['applicant']);
+    } else if (json['artistId'] != null) {
+      parsedApplicantId = extractId(json['artistId']);
+    }
+
+    final parsedId = (json['id'] ?? json['_id'] ?? '').toString().trim();
+
+    if (parsedUserId.isEmpty && parsedApplicantId.isNotEmpty) {
+      parsedUserId = parsedApplicantId;
+    } else if (parsedApplicantId.isEmpty && parsedUserId.isNotEmpty) {
+      parsedApplicantId = parsedUserId;
+    }
+
+    String parsedName = '';
+    if (json['name'] != null && json['name'].toString().trim().isNotEmpty) {
+      parsedName = json['name'].toString().trim();
+    } else if (json['applicantName'] != null && json['applicantName'].toString().trim().isNotEmpty) {
+      parsedName = json['applicantName'].toString().trim();
+    } else if (json['user'] is Map) {
+      final u = json['user'] as Map;
+      parsedName = (u['name'] ?? u['fullName'] ?? u['username'] ?? '').toString().trim();
+    } else if (json['applicant'] is Map) {
+      final a = json['applicant'] as Map;
+      parsedName = (a['name'] ?? a['fullName'] ?? a['username'] ?? '').toString().trim();
+    }
+    if (parsedName.isEmpty) {
+      parsedName = 'Applicant';
+    }
+
+    String parsedCategory = '';
+    if (json['category'] != null) {
+      parsedCategory = json['category'].toString().trim();
+    } else if (json['user'] is Map) {
+      final u = json['user'] as Map;
+      parsedCategory = (u['category'] ?? u['role'] ?? u['profession'] ?? '').toString().trim();
+    } else if (json['applicant'] is Map) {
+      final a = json['applicant'] as Map;
+      parsedCategory = (a['category'] ?? a['role'] ?? a['profession'] ?? '').toString().trim();
+    }
+
+    String parsedPicture = '';
+    if (json['profilePicture'] != null) {
+      parsedPicture = json['profilePicture'].toString().trim();
+    } else if (json['avatar'] != null) {
+      parsedPicture = json['avatar'].toString().trim();
+    } else if (json['user'] is Map) {
+      final u = json['user'] as Map;
+      parsedPicture = (u['profilePicture'] ?? u['avatar'] ?? u['image'] ?? u['photo'] ?? '').toString().trim();
+    } else if (json['applicant'] is Map) {
+      final a = json['applicant'] as Map;
+      parsedPicture = (a['profilePicture'] ?? a['avatar'] ?? a['image'] ?? a['photo'] ?? '').toString().trim();
+    }
+
     return ApplicantModel(
-      id: json['id'] as String? ?? '',
-      applicantId: json['applicantId'] as String? ?? '',
-      name: json['name'] as String? ?? json['applicantName'] as String? ?? 'Applicant',
-      category: json['category'] as String? ?? '',
-      status: json['status'] as String? ?? 'PENDING',
-      appliedDate: json['appliedDate'] as String? ?? '',
-      coverLetter: json['coverLetter'] as String? ?? '',
-      details: json['details'] as String? ?? '',
+      id: parsedId,
+      applicantId: parsedApplicantId,
+      userId: parsedUserId,
+      name: parsedName,
+      category: parsedCategory,
+      status: (json['status'] ?? 'PENDING').toString().trim(),
+      appliedDate: (json['appliedDate'] ?? json['applied_date'] ?? json['createdAt'] ?? json['created_at'] ?? '').toString().trim(),
+      coverLetter: (json['coverLetter'] ?? json['cover_letter'] ?? '').toString().trim(),
+      details: (json['details'] ?? '').toString().trim(),
+      profilePicture: parsedPicture,
     );
   }
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'applicantId': applicantId,
+        'userId': userId,
         'name': name,
         'category': category,
         'status': status,
         'appliedDate': appliedDate,
         'coverLetter': coverLetter,
         'details': details,
+        'profilePicture': profilePicture,
       };
 }
 

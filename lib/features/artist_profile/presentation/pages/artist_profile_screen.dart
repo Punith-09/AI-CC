@@ -1,10 +1,10 @@
-import 'dart:io';
 import 'package:aicc/common/widgets/app_background.dart';
 import 'package:aicc/core/api/api_endpoints.dart';
 import 'package:aicc/core/constants/app_colors.dart';
 import 'package:aicc/core/network/dio_client.dart';
 import 'package:aicc/core/responsive/responsive_breakpoints.dart';
 import 'package:aicc/core/routes/app_routes.dart';
+import 'package:aicc/core/storage/local_storage.dart';
 import 'package:aicc/core/theme/theme_provider.dart';
 import 'package:aicc/features/artist_profile/data/models/artist_model.dart';
 import 'package:aicc/features/artist_profile/data/models/portfolio_model.dart';
@@ -42,6 +42,7 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
         context.read<ProfileProvider>().fetchUserProfile(widget.userId!);
       } else {
         context.read<ProfileProvider>().fetchMyProfile();
+        context.read<ProfileProvider>().fetchProfileCompletion();
       }
     });
   }
@@ -226,8 +227,9 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
         final profile = widget.userId != null
             ? provider.viewedProfile
             : provider.currentProfile;
-        final mediaList =
+        final rawMedia =
             widget.userId != null ? provider.viewedMedia : provider.myMedia;
+        final mediaList = ProfileProvider.deduplicateMedia(rawMedia);
 
         return _buildProfileContent(
           context: context,
@@ -273,6 +275,10 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
     final subTextColor = isDark ? Colors.white60 : Colors.black54;
     final dividerColor = isDark ? Colors.white12 : Colors.black12;
 
+    final isOwner = widget.userId == null ||
+        widget.userId == profile?.id ||
+        widget.userId == LocalStorage.instance.getUserId();
+
     // Build name parts
     final fullName = profile?.name ?? '';
 
@@ -291,14 +297,29 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
         ? profile!.roles.first
         : 'audience';
 
-    // Stats
-    final postsCount = profile?.projects ?? 0;
+    // Stats: ensure count accurately reflects media list if server projects count lags
+    final postsCount = (profile?.projects != null && profile!.projects > mediaList.length)
+        ? profile.projects
+        : mediaList.length;
     final followersCount = profile?.followers ?? '0';
     final followingCount = profile?.followingCount ?? '0';
 
-    return NestedScrollView(
-      headerSliverBuilder: (context, innerBoxIsScrolled) => [
-        SliverToBoxAdapter(
+    return RefreshIndicator(
+      color: AppColors.primary,
+      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      onRefresh: () async {
+        if (widget.userId != null) {
+          await context.read<ProfileProvider>().fetchUserProfile(widget.userId!);
+        } else {
+          await Future.wait([
+            context.read<ProfileProvider>().fetchMyProfile(),
+            context.read<ProfileProvider>().fetchProfileCompletion(),
+          ]);
+        }
+      },
+      child: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) => [
+          SliverToBoxAdapter(
           child: Container(
             color: bgColor,
             child: Column(
@@ -452,61 +473,89 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
                 const SizedBox(height: 16),
 
                 // ── Profile Completion Bar ────────────────────────
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Profile Completion',
-                            style: TextStyle(
-                              color: subTextColor,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          Text(
-                            '95%',
-                            style: TextStyle(
-                              color: textColor,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      LinearProgressIndicator(
-                        value: 0.95,
-                        backgroundColor: isDark ? Colors.white12 : Colors.black12,
-                        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
-                        minHeight: 4,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                      const SizedBox(height: 4),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: GestureDetector(
-                          onTap: () {
-                            context.push(AppRoutes.completeProfile);
-                          },
-                          child: Text(
-                            'Complete your profile',
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontSize: 10,
-                            ),
+                Consumer<ProfileProvider>(
+                  builder: (context, profileProvider, _) {
+                    final completion = profileProvider.completion;
+                    final int percentage = completion?.percentage ?? 0;
+                    final bool isComplete = percentage >= 100;
+
+                    if (isComplete) {
+                      return const SizedBox.shrink();
+                    }
+
+                    final double progress =
+                        (percentage / 100.0).clamp(0.0, 1.0);
+
+                    return Padding(
+                      padding: const EdgeInsets.only(
+                          left: 16, right: 16, bottom: 16),
+                      child: InkWell(
+                        onTap: () async {
+                          final provider =
+                              context.read<ProfileProvider>();
+                          await context.push(AppRoutes.completeProfile);
+                          if (!mounted) return;
+                          provider.fetchMyProfile();
+                          provider.fetchProfileCompletion();
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Profile Completion',
+                                    style: TextStyle(
+                                      color: subTextColor,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  Text(
+                                    '$percentage%',
+                                    style: TextStyle(
+                                      color: textColor,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              LinearProgressIndicator(
+                                value: progress,
+                                backgroundColor:
+                                    isDark ? Colors.white12 : Colors.black12,
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                  AppColors.primary,
+                                ),
+                                minHeight: 4,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                              const SizedBox(height: 4),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  'Complete your profile',
+                                  style: TextStyle(
+                                    color: AppColors.primary,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
-
-                const SizedBox(height: 16),
 
                 // ── Stats Row ─────────────────────────────────────
                 Padding(
@@ -569,6 +618,7 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
               mediaList: mediaList,
               profile: profile,
               isDark: isDark,
+              onDelete: isOwner ? _handleDeletePost : null,
             ),
 
             // ── Bio Data Tab ─────────────────────────────────────
@@ -581,8 +631,9 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildErrorState(ProfileProvider provider, bool isDark) {
     final textColor = isDark ? AppColors.darkText : const Color(0xFF0F172A);
@@ -764,55 +815,194 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
       );
     }
   }
-}
 
-// ── Toggle Switch Widget ──────────────────────────────────────────────────────
-class _ThemeToggleSwitch extends StatelessWidget {
-  final bool isDark;
-  final VoidCallback onToggle;
+  /// Shows confirmation popup and deletes the selected post.
+  Future<void> _handleDeletePost(PortfolioModel item) async {
+    final isDark = context.read<ThemeProvider>().isDarkMode;
 
-  const _ThemeToggleSwitch({required this.isDark, required this.onToggle});
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        final bgColor = isDark ? const Color(0xFF1A1A1A) : Colors.white;
+        final textColor = isDark ? Colors.white : Colors.black87;
+        final subColor = isDark ? Colors.white60 : Colors.black54;
 
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onToggle,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        width: 52,
-        height: 28,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          color: isDark ? AppColors.primary : const Color(0xFFE5E7EB),
-        ),
-        child: Stack(
-          alignment: Alignment.center,
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Container(
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isDark ? Colors.white12 : const Color(0xFFE5E7EB),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.5 : 0.12),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppColors.danger.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.delete_outline_rounded,
+                    color: AppColors.primary,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Delete Post',
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Are you sure you want to delete this post? This action cannot be undone.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: subColor,
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(false),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: isDark ? Colors.white24 : const Color(0xFFCBD5E1),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            color: textColor,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: const Text(
+                          'Delete',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+    if (!mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Row(
           children: [
-            AnimatedAlign(
-              duration: const Duration(milliseconds: 300),
-              alignment:
-                  isDark ? Alignment.centerRight : Alignment.centerLeft,
-              child: Container(
-                width: 22,
-                height: 22,
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
-                  size: 13,
-                  color: isDark ? AppColors.primary : const Color(0xFFF59E0B),
-                ),
+            SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
               ),
             ),
+            SizedBox(width: 12),
+            Text('Deleting post...'),
           ],
         ),
+        duration: Duration(seconds: 10),
+        backgroundColor: Color(0xFF1A1A1A),
       ),
     );
+
+    try {
+      final success = await context.read<ProfileProvider>().deletePost(
+            id: item.id,
+            isVideo: item.isVideo,
+          );
+      if (!mounted) return;
+      messenger.hideCurrentSnackBar();
+      if (success) {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Post deleted successfully'),
+            backgroundColor: AppColors.success,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      } else {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Failed to delete post'),
+            backgroundColor: AppColors.danger,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      messenger.hideCurrentSnackBar();
+      final err = e.toString().replaceFirst('Exception: ', '');
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete post: $err'),
+          backgroundColor: AppColors.danger,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 }
+
+
 
 // ── Profile Avatar ────────────────────────────────────────────────────────────
 class _ProfileAvatar extends StatelessWidget {
@@ -968,50 +1158,67 @@ class _GalleryTab extends StatelessWidget {
   final List<PortfolioModel> mediaList;
   final ArtistModel? profile;
   final bool isDark;
+  final void Function(PortfolioModel item)? onDelete;
 
-  const _GalleryTab(
-      {required this.mediaList,
-      this.profile,
-      required this.isDark});
+  const _GalleryTab({
+    required this.mediaList,
+    this.profile,
+    required this.isDark,
+    this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
     if (mediaList.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.photo_library_outlined,
-              size: 48,
-              color: isDark ? Colors.white24 : Colors.black26,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'No posts yet',
-              style: TextStyle(
-                color: isDark ? Colors.white54 : Colors.black54,
-                fontSize: 15,
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.photo_library_outlined,
+                      size: 48,
+                      color: isDark ? Colors.white24 : Colors.black26,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No posts yet',
+                      style: TextStyle(
+                        color: isDark ? Colors.white54 : Colors.black54,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ],
-        ),
+          );
+        },
       );
     }
 
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+
     return GridView.builder(
-      padding: const EdgeInsets.all(8),
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 96),
       itemCount: mediaList.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 4,
-        mainAxisSpacing: 4,
-        childAspectRatio: 0.9,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: isDesktop ? 3 : 2,
+        crossAxisSpacing: 14,
+        mainAxisSpacing: 14,
+        childAspectRatio: isDesktop ? 0.88 : 0.82,
       ),
       itemBuilder: (context, index) {
         final item = mediaList[index];
         return PortfolioCard(
           item: item,
+          onDelete: onDelete != null ? () => onDelete!(item) : null,
           onTap: () {
             final post = item.toFeedPostModel(artist: profile);
             final enrichedPost = post.copyWith(

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 
 import 'package:aicc/core/api/api_endpoints.dart';
@@ -5,6 +6,8 @@ import 'package:aicc/core/network/dio_client.dart';
 import 'package:aicc/core/storage/local_storage.dart';
 import 'package:aicc/features/artist_profile/data/models/artist_model.dart';
 import 'package:aicc/features/artist_profile/data/models/portfolio_model.dart';
+import 'package:aicc/features/artist_profile/data/models/profile_completion_model.dart';
+import 'package:aicc/features/home/data/models/feed_post_model.dart';
 
 abstract class ProfileRemoteDataSource {
   Future<ArtistModel> getProfileMe();
@@ -16,6 +19,9 @@ abstract class ProfileRemoteDataSource {
   Future<bool?> followUser(String id);
 
   Future<ArtistModel> updateProfile(Map<String, dynamic> data);
+
+  Future<ProfileCompletionModel> getProfileCompletion();
+  Future<bool> deletePost({required String id, required bool isVideo});
 }
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
@@ -245,6 +251,21 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   @override
   Future<List<PortfolioModel>> getUserMedia(String userId) async {
     final List<PortfolioModel> media = [];
+    final Set<String> seenIds = {};
+    final Set<String> seenKeys = {};
+
+    String cleanKey(String? url) {
+      if (url == null || url.trim().isEmpty) return '';
+      String clean = url.split('?').first.split('#').first.trim().toLowerCase();
+      final uri = Uri.tryParse(clean);
+      if (uri != null && uri.path.isNotEmpty) {
+        clean = uri.path;
+      }
+      while (clean.startsWith('/')) {
+        clean = clean.substring(1);
+      }
+      return clean;
+    }
 
     try {
       final results = await Future.wait([
@@ -279,12 +300,24 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
           // Filter by artist userId or include if match
           if (url.isNotEmpty && (userId.isEmpty || cId == userId || cId.isEmpty)) {
+            final id = (item['id'] ?? item['_id'])?.toString() ?? '';
+            final key = cleanKey(url);
+
+            if (id.isNotEmpty && seenIds.contains(id)) continue;
+            if (key.isNotEmpty && seenKeys.contains(key)) continue;
+
             final model = PortfolioModel.fromJson(Map<String, dynamic>.from(item));
+            final isVid = FeedPostModel.isVideoMediaUrl(url);
+
             media.add(model.copyWith(
-              id: (item['id'] ?? item['_id'])?.toString() ?? model.id,
+              id: id.isNotEmpty ? id : model.id,
               image: url,
-              isVideo: false,
+              videoUrl: isVid ? url : null,
+              isVideo: isVid,
             ));
+
+            if (id.isNotEmpty) seenIds.add(id);
+            if (key.isNotEmpty) seenKeys.add(key);
           }
         }
       }
@@ -318,13 +351,28 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
               url;
 
           if (url.isNotEmpty && (userId.isEmpty || cId == userId || cId.isEmpty)) {
+            final id = (item['id'] ?? item['_id'])?.toString() ?? '';
+            final key = cleanKey(url);
+
+            // Deduplicate: if id or video url was already added, skip!
+            if (id.isNotEmpty && seenIds.contains(id)) continue;
+            if (key.isNotEmpty && seenKeys.contains(key)) continue;
+
             final model = PortfolioModel.fromJson(Map<String, dynamic>.from(item));
+            final isVid = FeedPostModel.isVideoMediaUrl(url) ||
+                ((item['is_video'] == true || item['isVideo'] == true) &&
+                    !FeedPostModel.isPhotoMediaUrl(url));
+
             media.add(model.copyWith(
-              id: (item['id'] ?? item['_id'])?.toString() ?? model.id,
-              image: thumb,
-              videoUrl: url,
-              isVideo: true,
+              id: id.isNotEmpty ? id : model.id,
+              image: thumb.isNotEmpty ? thumb : url,
+              videoUrl: isVid ? url : null,
+              isVideo: isVid,
             ));
+
+            if (id.isNotEmpty) seenIds.add(id);
+            if (key.isNotEmpty) seenKeys.add(key);
+            // Note: do not add thumbKey to seenKeys because all videos share the default thumbnail
           }
         }
       }
@@ -404,12 +452,79 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         'Status code: ${response.statusCode}',
       );
     } on DioException catch (e) {
+      if (kDebugMode) {
+        debugPrint('PATCH profileMe error: ${e.response?.statusCode} -> ${e.response?.data}');
+      }
       throw Exception(
         e.response?.data?['message'] ??
             e.response?.data?['error'] ??
             e.message ??
             'Failed to update profile',
       );
+    }
+  }
+
+  // ----------------------------------------------------------
+  // Get profile completion status
+  // ----------------------------------------------------------
+
+  @override
+  Future<ProfileCompletionModel> getProfileCompletion() async {
+    try {
+      final response = await _dioClient.get(
+        ApiEndpoints.profileCompletion,
+        options: _getOptions(),
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        final data = _extractData(response.data);
+        return ProfileCompletionModel.fromJson(data);
+      }
+      return const ProfileCompletionModel();
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('GET profileCompletion error: $e');
+      }
+      return const ProfileCompletionModel();
+    }
+  }
+
+  // ----------------------------------------------------------
+  // Delete photo or video post
+  // ----------------------------------------------------------
+
+  @override
+  Future<bool> deletePost({required String id, required bool isVideo}) async {
+    try {
+      final endpoint = isVideo ? ApiEndpoints.deleteVideo(id) : ApiEndpoints.deletePhoto(id);
+      final response = await _dioClient.delete(
+        endpoint,
+        options: _getOptions(),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return true;
+      }
+      return false;
+    } on DioException catch (e) {
+      // If photo deletion returns 404, fallback to video deletion endpoint or vice versa
+      if (e.response?.statusCode == 404) {
+        try {
+          final fallbackEndpoint = isVideo ? ApiEndpoints.deletePhoto(id) : ApiEndpoints.deleteVideo(id);
+          final fallbackResponse = await _dioClient.delete(
+            fallbackEndpoint,
+            options: _getOptions(),
+          );
+          if (fallbackResponse.statusCode == 200 || fallbackResponse.statusCode == 204) {
+            return true;
+          }
+        } catch (_) {}
+      }
+      throw Exception(
+        e.response?.data?['message'] ?? e.message ?? 'Failed to delete post',
+      );
+    } catch (e) {
+      rethrow;
     }
   }
 }

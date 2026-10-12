@@ -241,6 +241,15 @@ class HomeFeedProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Removes a deleted post from the feed
+  void removePost(String postId) {
+    final initialLen = _posts.length;
+    _posts.removeWhere((p) => p.id == postId);
+    if (_posts.length != initialLen) {
+      notifyListeners();
+    }
+  }
+
   /// Clears all state when the user logs out, so the next logged-in user
   /// starts with a clean feed and follow state.
   void clear() {

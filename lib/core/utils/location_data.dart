@@ -22,6 +22,25 @@ class LocationData {
     'United Kingdom': [
       'England', 'Northern Ireland', 'Scotland', 'Wales', 'Other'
     ],
+    'Canada': [
+      'Alberta', 'British Columbia', 'Manitoba', 'New Brunswick', 
+      'Newfoundland and Labrador', 'Nova Scotia', 'Ontario', 
+      'Prince Edward Island', 'Quebec', 'Saskatchewan', 
+      'Northwest Territories', 'Nunavut', 'Yukon', 'Other'
+    ],
+    'Australia': [
+      'New South Wales', 'Victoria', 'Queensland', 'Western Australia', 
+      'South Australia', 'Tasmania', 'Australian Capital Territory', 
+      'Northern Territory', 'Other'
+    ],
+    'United Arab Emirates': [
+      'Abu Dhabi', 'Dubai', 'Sharjah', 'Ajman', 
+      'Ras Al Khaimah', 'Fujairah', 'Umm Al Quwain', 'Other'
+    ],
+    'Singapore': [
+      'Central Region', 'East Region', 'North Region', 
+      'North-East Region', 'West Region', 'Other'
+    ],
     'Other': ['Other'],
   };
 
@@ -122,6 +141,65 @@ class LocationData {
     'Wales': ['Cardiff', 'Swansea', 'Newport', 'Other'],
     'Northern Ireland': ['Belfast', 'Derry', 'Lisburn', 'Other'],
     
+    // CANADA
+    'Ontario': ['Toronto', 'Ottawa', 'Mississauga', 'Brampton', 'Hamilton', 'London', 'Markham', 'Vaughan', 'Kitchener', 'Windsor', 'Other'],
+    'Quebec': ['Montreal', 'Quebec City', 'Laval', 'Gatineau', 'Longueuil', 'Sherbrooke', 'Other'],
+    'British Columbia': ['Vancouver', 'Victoria', 'Surrey', 'Burnaby', 'Richmond', 'Kelowna', 'Abbotsford', 'Other'],
+    'Alberta': ['Calgary', 'Edmonton', 'Red Deer', 'Lethbridge', 'Other'],
+    'Manitoba': ['Winnipeg', 'Brandon', 'Steinbach', 'Other'],
+    'Saskatchewan': ['Saskatoon', 'Regina', 'Prince Albert', 'Other'],
+    'Nova Scotia': ['Halifax', 'Dartmouth', 'Sydney', 'Other'],
+    'New Brunswick': ['Moncton', 'Saint John', 'Fredericton', 'Other'],
+    'Newfoundland and Labrador': ['St. John\'s', 'Corner Brook', 'Other'],
+    'Prince Edward Island': ['Charlottetown', 'Summerside', 'Other'],
+    'Northwest Territories': ['Yellowknife', 'Other'],
+    'Nunavut': ['Iqaluit', 'Other'],
+    'Yukon': ['Whitehorse', 'Other'],
+
+    // AUSTRALIA
+    'New South Wales': ['Sydney', 'Newcastle', 'Central Coast', 'Wollongong', 'Other'],
+    'Victoria': ['Melbourne', 'Geelong', 'Ballarat', 'Bendigo', 'Other'],
+    'Queensland': ['Brisbane', 'Gold Coast', 'Sunshine Coast', 'Townsville', 'Cairns', 'Other'],
+    'Western Australia': ['Perth', 'Mandurah', 'Bunbury', 'Other'],
+    'South Australia': ['Adelaide', 'Mount Gambier', 'Whyalla', 'Other'],
+    'Tasmania': ['Hobart', 'Launceston', 'Devonport', 'Other'],
+    'Australian Capital Territory': ['Canberra', 'Other'],
+    'Northern Territory': ['Darwin', 'Alice Springs', 'Other'],
+
+    // UNITED ARAB EMIRATES
+    'Dubai': ['Dubai', 'Deira', 'Jumeirah', 'Bur Dubai', 'Other'],
+    'Abu Dhabi': ['Abu Dhabi', 'Al Ain', 'Madinat Zayed', 'Other'],
+    'Sharjah': ['Sharjah', 'Khor Fakkan', 'Kalba', 'Other'],
+    'Ajman': ['Ajman', 'Other'],
+    'Ras Al Khaimah': ['Ras Al Khaimah', 'Other'],
+    'Fujairah': ['Fujairah', 'Dibba Al-Fujairah', 'Other'],
+    'Umm Al Quwain': ['Umm Al Quwain', 'Other'],
+
+    // SINGAPORE
+    'Central Region': ['Downtown Core', 'Marina South', 'Newton', 'Orchard', 'Outram', 'River Valley', 'Rochor', 'Singapore River', 'Other'],
+    'East Region': ['Bedok', 'Changi', 'Pasir Ris', 'Tampines', 'Paya Lebar', 'Other'],
+    'North Region': ['Woodlands', 'Yishun', 'Sembawang', 'Lim Chu Kang', 'Mandai', 'Other'],
+    'North-East Region': ['Ang Mo Kio', 'Hougang', 'Punggol', 'Sengkang', 'Serangoon', 'Other'],
+    'West Region': ['Bukit Batok', 'Bukit Panjang', 'Boon Lay', 'Clementi', 'Jurong East', 'Jurong West', 'Pioneer', 'Other'],
+
     'Other': ['Other'],
   };
+
+  static List<String> getCountries() {
+    return statesByCountry.keys.toList();
+  }
+
+  static List<String> getStatesForCountry(String? country) {
+    if (country == null || country.trim().isEmpty) {
+      return const [];
+    }
+    return statesByCountry[country] ?? const ['Other'];
+  }
+
+  static List<String> getCitiesForState(String? state) {
+    if (state == null || state.trim().isEmpty) {
+      return const [];
+    }
+    return citiesByState[state] ?? const ['Other'];
+  }
 }

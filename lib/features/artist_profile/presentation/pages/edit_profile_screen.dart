@@ -205,7 +205,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     String? Function(String?)? validator,
   }) {
     final textColor = AppColors.getText(context);
-    final hintColor = AppColors.getTextSecondary(context);
+    final hintColor = AppColors.hint;
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
@@ -349,6 +349,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         _buildUnderlineField(
                           controller: _qualificationController,
                           hint: 'Btech',
+
                         ),
 
                         const SizedBox(height: 36),

@@ -11,11 +11,13 @@ import 'portfolio_card.dart';
 class PortfolioGrid extends StatelessWidget {
   final List<PortfolioModel> items;
   final ArtistModel? profile;
+  final void Function(PortfolioModel item)? onDelete;
 
   const PortfolioGrid({
     super.key,
     required this.items,
     this.profile,
+    this.onDelete,
   });
 
   @override
@@ -85,6 +87,7 @@ class PortfolioGrid extends StatelessWidget {
         final item = items[index];
         return PortfolioCard(
           item: item,
+          onDelete: onDelete != null ? () => onDelete!(item) : null,
           onTap: () {
             final post = item.toFeedPostModel(artist: profile);
             final enrichedPost = post.copyWith(

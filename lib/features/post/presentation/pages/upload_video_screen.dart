@@ -10,6 +10,10 @@ import 'package:provider/provider.dart';
 
 import '../../../../common/widgets/app_background.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../artist_profile/data/models/portfolio_model.dart';
+import '../../../artist_profile/presentation/providers/profile_provider.dart';
+import '../../../home/presentation/providers/home_feed_provider.dart';
 import '../providers/videos_provider.dart';
 
 class UploadVideoScreen extends StatefulWidget {
@@ -236,6 +240,36 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
     if (!mounted) return;
 
     if (success) {
+      // 1. Immediately reflect newly uploaded video in ProfileProvider gallery
+      final video = videosProvider.uploadedVideo;
+      if (video != null) {
+        final portfolioItem = PortfolioModel(
+          id: video.id,
+          image: (video.thumb != null && video.thumb!.isNotEmpty)
+              ? video.thumb!
+              : video.url,
+          videoUrl: video.url,
+          title: video.title,
+          description: video.desc,
+          createdAt: video.createdAt,
+          isVideo: true,
+        );
+        try {
+          context.read<ProfileProvider>().addPortfolioItem(portfolioItem);
+        } catch (_) {}
+      } else {
+        try {
+          context.read<ProfileProvider>().fetchMyProfile(silent: true);
+        } catch (_) {}
+      }
+
+      // 2. Also refresh home feed in background
+      try {
+        if (sl.isRegistered<HomeFeedProvider>()) {
+          sl<HomeFeedProvider>().refreshFeed();
+        }
+      } catch (_) {}
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Row(
@@ -251,7 +285,7 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
       );
 
       if (Navigator.of(context).canPop()) {
-        context.pop();
+        context.pop(true);
       }
     } else {
       final errorMsg = videosProvider.errorMessage ?? 'Failed to upload video';
