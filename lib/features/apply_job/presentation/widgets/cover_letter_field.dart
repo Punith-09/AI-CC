@@ -108,6 +108,7 @@
 
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
 
@@ -125,18 +126,27 @@ class CoverLetterField extends StatefulWidget {
 
 class _CoverLetterFieldState extends State<CoverLetterField> {
   static const int _maxCharacters = 20;
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
-
     widget.controller.addListener(_onTextChanged);
+    _focusNode.addListener(_onFocusChanged);
   }
 
   @override
   void dispose() {
     widget.controller.removeListener(_onTextChanged);
+    _focusNode.removeListener(_onFocusChanged);
+    _focusNode.dispose();
     super.dispose();
+  }
+
+  void _onFocusChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _onTextChanged() {
@@ -148,21 +158,37 @@ class _CoverLetterFieldState extends State<CoverLetterField> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final int length = widget.controller.text.length;
     final bool hasText = length > 0;
     final bool isLimitReached = length >= _maxCharacters;
+    final bool isFocused = _focusNode.hasFocus;
+
+    final bgColor = isDark ? const Color(0xFF141414) : const Color(0xFFF8FAFC);
+    final borderColor = isFocused
+        ? AppColors.primary
+        : (isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0));
 
     return Container(
       width: double.infinity,
-      height: 200,
+      height: 190,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: bgColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.primary,
-          width: 1.2,
+          color: borderColor,
+          width: isFocused ? 1.5 : 1.0,
         ),
+        boxShadow: isFocused
+            ? [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
       ),
       child: Stack(
         children: [
@@ -170,6 +196,7 @@ class _CoverLetterFieldState extends State<CoverLetterField> {
           Positioned.fill(
             child: TextField(
               controller: widget.controller,
+              focusNode: _focusNode,
 
               // Prevent entering more than 20 characters.
               maxLength: _maxCharacters,
@@ -183,9 +210,9 @@ class _CoverLetterFieldState extends State<CoverLetterField> {
               textInputAction: TextInputAction.newline,
 
               // Typed text.
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 15,
+              style: GoogleFonts.poppins(
+                color: isDark ? Colors.white : AppColors.lightText,
+                fontSize: 14.5,
                 fontWeight: FontWeight.w400,
                 height: 1.4,
               ),
@@ -193,13 +220,10 @@ class _CoverLetterFieldState extends State<CoverLetterField> {
               cursorColor: AppColors.primary,
               cursorWidth: 2,
 
-              decoration: const InputDecoration(
-                // IMPORTANT:
-                // Force the TextField itself to be black.
+              decoration: InputDecoration(
                 filled: true,
-                fillColor: Colors.black,
+                fillColor: Colors.transparent,
 
-                // Remove Flutter's default underline/borders.
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
@@ -207,25 +231,22 @@ class _CoverLetterFieldState extends State<CoverLetterField> {
                 errorBorder: InputBorder.none,
                 focusedErrorBorder: InputBorder.none,
 
-                // Remove default internal padding.
                 contentPadding: EdgeInsets.zero,
                 isDense: true,
 
-                // Hint shown when the field is empty.
                 hintText:
-                "Write a message, Why You're perfect for this role\n"
+                    "Write a message, Why You're perfect for this role\n"
                     "(20 Characters)",
 
-                hintStyle: TextStyle(
-                  color: Color(0xFF9E9E9E),
+                hintStyle: GoogleFonts.poppins(
+                  color: isDark
+                      ? const Color(0xFF64748B)
+                      : const Color(0xFF94A3B8),
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
                   height: 1.4,
-
-                  // DO NOT add backgroundColor here.
                 ),
 
-                // Hide Flutter's built-in character counter.
                 counterText: '',
               ),
             ),
@@ -239,16 +260,24 @@ class _CoverLetterFieldState extends State<CoverLetterField> {
               child: IgnorePointer(
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
+                    horizontal: 9,
+                    vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.black,
+                    color: isDark
+                        ? const Color(0xFF1E1E1E)
+                        : const Color(0xFFE2E8F0),
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.06)
+                          : Colors.transparent,
+                      width: 0.8,
+                    ),
                   ),
                   child: Text(
                     '$length / $_maxCharacters',
-                    style: TextStyle(
+                    style: GoogleFonts.poppins(
                       color: isLimitReached
                           ? const Color(0xFF10B981)
                           : AppColors.primary,

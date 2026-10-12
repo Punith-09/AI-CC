@@ -18,10 +18,6 @@ import '../../features/apply_job/presentation/pages/applied_auditions_screen.dar
 import '../../features/artist_profile/presentation/pages/artist_profile_screen.dart';
 import '../../features/artist_profile/presentation/pages/edit_profile_screen.dart';
 import '../../features/artist_profile/presentation/pages/complete_profile_screen.dart';
-import '../../features/artist_profile/presentation/pages/complete_profile_step2_screen.dart';
-import '../../features/artist_profile/presentation/pages/complete_profile_step3_screen.dart';
-import '../../features/artist_profile/presentation/pages/complete_profile_step4_screen.dart';
-import '../../features/artist_profile/presentation/pages/complete_profile_step5_screen.dart';
 import '../../features/auditions/data/models/audition_model.dart';
 import '../../features/auditions/presentation/pages/audition_details.dart';
 import '../../features/messages/data/models/chat_model.dart';
@@ -267,7 +263,7 @@ final GoRouter appRouter = GoRouter(
         // -----------------------------------------------------
         GoRoute(
           path: AppRoutes.completeProfileStep2,
-          builder: (_, __) => const CompleteProfileStep2Screen(),
+          builder: (_, __) => const CompleteProfileScreen(initialStep: 1),
         ),
 
         // -----------------------------------------------------
@@ -275,7 +271,7 @@ final GoRouter appRouter = GoRouter(
         // -----------------------------------------------------
         GoRoute(
           path: AppRoutes.completeProfileStep3,
-          builder: (_, __) => const CompleteProfileStep3Screen(),
+          builder: (_, __) => const CompleteProfileScreen(initialStep: 2),
         ),
 
         // -----------------------------------------------------
@@ -283,7 +279,7 @@ final GoRouter appRouter = GoRouter(
         // -----------------------------------------------------
         GoRoute(
           path: AppRoutes.completeProfileStep4,
-          builder: (_, __) => const CompleteProfileStep4Screen(),
+          builder: (_, __) => const CompleteProfileScreen(initialStep: 3),
         ),
 
         // -----------------------------------------------------
@@ -291,7 +287,7 @@ final GoRouter appRouter = GoRouter(
         // -----------------------------------------------------
         GoRoute(
           path: AppRoutes.completeProfileStep5,
-          builder: (_, __) => const CompleteProfileStep5Screen(),
+          builder: (_, __) => const CompleteProfileScreen(initialStep: 4),
         ),
 
         // -----------------------------------------------------

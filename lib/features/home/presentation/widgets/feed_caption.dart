@@ -35,14 +35,14 @@ class FeedCaption extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "${post.likesCount} likes",
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 15,
-              color: likesTextColor,
-            ),
-          ),
+          // Text(
+          //   "${post.likesCount} likes",
+          //   style: TextStyle(
+          //     fontWeight: FontWeight.w600,
+          //     fontSize: 15,
+          //     color: likesTextColor,
+          //   ),
+          // ),
           const SizedBox(height: 8),
           RichText(
             text: TextSpan(
@@ -86,14 +86,14 @@ class FeedCaption extends StatelessWidget {
                 TextSpan(
                   text: captionText,
                 ),
-                if (post.hashtags != null && post.hashtags!.isNotEmpty) ...[
-                  TextSpan(
-                    text: " ${post.hashtags}",
-                    style: TextStyle(
-                      color: hashtagColor,
-                    ),
-                  ),
-                ],
+                // if (post.hashtags != null && post.hashtags!.isNotEmpty) ...[
+                //   TextSpan(
+                //     text: " ${post.hashtags}",
+                //     style: TextStyle(
+                //       color: hashtagColor,
+                //     ),
+                //   ),
+                // ],
               ],
             ),
           ),

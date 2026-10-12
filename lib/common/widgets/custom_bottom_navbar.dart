@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import 'package:provider/provider.dart';
+
 import '../../core/constants/app_colors.dart';
 import '../../core/routes/app_routes.dart';
+import '../../features/artist_profile/presentation/providers/profile_provider.dart';
 import '../../features/create/presentation/widgets/create_bottom_sheet.dart';
 
 class CustomBottomNavbar extends StatelessWidget {
@@ -126,7 +129,12 @@ class CustomBottomNavbar extends StatelessWidget {
                   },
                 );
                 if (route != null && context.mounted) {
-                  context.push(route);
+                  final result = await context.push(route);
+                  if (result == true && context.mounted) {
+                    try {
+                      context.read<ProfileProvider>().fetchMyProfile(silent: true);
+                    } catch (_) {}
+                  }
                 }
               },
               child: Container(

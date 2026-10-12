@@ -97,8 +97,9 @@ class _StoriesListState extends State<StoriesList> {
   }
 
   void _openViewer(BuildContext context, List<UserStoriesGroupModel> groups, int initialIndex) {
-    Navigator.of(context).push(
+    Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
+        fullscreenDialog: true,
         builder: (_) => StoryViewerScreen(
           groups: groups,
           initialGroupIndex: initialIndex,

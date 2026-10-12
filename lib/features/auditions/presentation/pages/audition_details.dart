@@ -737,8 +737,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/storage/local_storage.dart';
 import '../../../../core/theme/theme_provider.dart';
+import '../../../explore/presentation/providers/explore_provider.dart';
 import '../../data/models/audition_model.dart';
 import '../providers/auditions_provider.dart';
 import '../widgets/bottom_action_bar.dart';
@@ -1215,6 +1218,80 @@ class _AuditionDetailsState extends State<AuditionDetails> {
     );
   }
 
+  void _openApplicantProfile(ApplicantModel applicant) {
+    String targetId = applicant.targetUserId;
+    if (targetId.isEmpty) {
+      try {
+        final exploreProvider = context.read<ExploreProvider>();
+        final match = exploreProvider.talents.firstWhere(
+          (t) =>
+              t.name.trim().toLowerCase() ==
+              applicant.name.trim().toLowerCase(),
+        );
+        targetId = match.id;
+      } catch (_) {}
+    }
+
+    if (targetId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Applicant profile information is unavailable"),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    final currentUserId = LocalStorage.instance.getUserId();
+    if (currentUserId != null &&
+        currentUserId.isNotEmpty &&
+        targetId == currentUserId) {
+      context.push(AppRoutes.artistProfile);
+    } else {
+      context.push(AppRoutes.exploreProfile, extra: targetId);
+    }
+  }
+
+  Widget _buildApplicantAvatar(ApplicantModel applicant) {
+    final picUrl = applicant.profilePicture.trim();
+    final formattedPic =
+        picUrl.isNotEmpty ? ApiEndpoints.formatMediaUrl(picUrl) : '';
+    final hasValidPic = formattedPic.startsWith('http');
+
+    if (hasValidPic) {
+      return ClipOval(
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Image.network(
+            formattedPic,
+            width: 40,
+            height: 40,
+            fit: BoxFit.cover,
+            errorBuilder: (_, error, stackTrace) =>
+                _buildFallbackInitialAvatar(applicant),
+          ),
+        ),
+      );
+    }
+    return _buildFallbackInitialAvatar(applicant);
+  }
+
+  Widget _buildFallbackInitialAvatar(ApplicantModel applicant) {
+    return CircleAvatar(
+      radius: 20,
+      backgroundColor: _primaryOrange.withValues(alpha: 0.2),
+      child: Text(
+        applicant.name.isNotEmpty ? applicant.name[0].toUpperCase() : 'A',
+        style: const TextStyle(
+          color: _primaryOrange,
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+        ),
+      ),
+    );
+  }
+
   Widget _buildApplicantCard(
       ApplicantModel applicant,
       ) {
@@ -1242,7 +1319,6 @@ class _AuditionDetailsState extends State<AuditionDetails> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: _cardBg,
         borderRadius: BorderRadius.circular(16),
@@ -1251,143 +1327,147 @@ class _AuditionDetailsState extends State<AuditionDetails> {
           width: 1,
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor:
-                _primaryOrange.withValues(alpha: 0.2),
-                child: Text(
-                  applicant.name.isNotEmpty
-                      ? applicant.name[0].toUpperCase()
-                      : 'A',
-                  style: const TextStyle(
-                    color: _primaryOrange,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.start,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => _openApplicantProfile(applicant),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      applicant.name.isNotEmpty
-                          ? applicant.name
-                          : 'Applicant',
-                      style: TextStyle(
-                        color: _primaryText,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
+                    _buildApplicantAvatar(applicant),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  applicant.name.isNotEmpty
+                                      ? applicant.name
+                                      : 'Applicant',
+                                  style: TextStyle(
+                                    color: _primaryText,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 12,
+                                color: _labelGrey.withValues(alpha: 0.7),
+                              ),
+                            ],
+                          ),
+                          if (dateStr.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              'Applied on $dateStr',
+                              style: TextStyle(
+                                color: _labelGrey,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
-                    if (dateStr.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        'Applied on $dateStr',
-                        style: TextStyle(
-                          color: _labelGrey,
-                          fontSize: 12,
+                    if (applicant.category.isNotEmpty) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _primaryOrange.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: _primaryOrange.withValues(
+                              alpha: 0.4,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          applicant.category,
+                          style: const TextStyle(
+                            color: _primaryOrange,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
+                      const SizedBox(width: 8),
                     ],
-                  ],
-                ),
-              ),
-              if (applicant.category.isNotEmpty) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 9,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color:
-                    _primaryOrange.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: _primaryOrange.withValues(
-                        alpha: 0.4,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: statusColor.withValues(alpha: 0.6),
+                        ),
+                      ),
+                      child: Text(
+                        applicant.status,
+                        style: TextStyle(
+                          color: statusColor,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                  child: Text(
-                    applicant.category,
-                    style: const TextStyle(
-                      color: _primaryOrange,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                  ],
+                ),
+                if (applicant.coverLetter.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: _innerCardBg,
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-              ],
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color:
-                  statusColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color:
-                    statusColor.withValues(alpha: 0.6),
-                  ),
-                ),
-                child: Text(
-                  applicant.status,
-                  style: TextStyle(
-                    color: statusColor,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          if (applicant.coverLetter.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: _innerCardBg,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Column(
-                crossAxisAlignment:
-                CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Cover Letter:",
-                    style: TextStyle(
-                      color: _labelGrey,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    applicant.coverLetter,
-                    style: TextStyle(
-                      color: _primaryText,
-                      fontSize: 13,
-                      height: 1.4,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Cover Letter:",
+                          style: TextStyle(
+                            color: _labelGrey,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          applicant.coverLetter,
+                          style: TextStyle(
+                            color: _primaryText,
+                            fontSize: 13,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
-              ),
+              ],
             ),
-          ],
-        ],
+          ),
+        ),
       ),
     );
   }
@@ -1667,17 +1747,17 @@ class _AuditionDetailsState extends State<AuditionDetails> {
                                 ),
                               ),
 
-                              _buildDivider(),
+                              // _buildDivider(),
 
-                              Expanded(
-                                child: _buildStatItem(
-                                  icon: Icons
-                                      .calendar_month_outlined,
-                                  label: "Audition Date",
-                                  value:
-                                  displayAuditionDate,
-                                ),
-                              ),
+                              // Expanded(
+                              //   child: _buildStatItem(
+                              //     icon: Icons
+                              //         .calendar_month_outlined,
+                              //     label: "Audition Date",
+                              //     value:
+                              //     displayAuditionDate,
+                              //   ),
+                              // ),
                             ],
                           ),
                         ),
@@ -1711,36 +1791,36 @@ class _AuditionDetailsState extends State<AuditionDetails> {
                       // ROLE REQUIREMENTS
                       // -------------------------------------------------------
 
-                      _buildSectionHeader(
-                        "Role Requirements",
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      _buildRequirementRow(
-                        "Age",
-                        displayAge,
-                      ),
-
-                      _buildRequirementRow(
-                        "Gender",
-                        displayGender,
-                      ),
-
-                      _buildRequirementRow(
-                        "Experience",
-                        displayExperience,
-                      ),
-
-                      _buildRequirementRow(
-                        "Language",
-                        displayLanguage,
-                      ),
-
-                      _buildRequirementRow(
-                        "Skills",
-                        displaySkills,
-                      ),
+                      // _buildSectionHeader(
+                      //   "Role Requirements",
+                      // ),
+                      //
+                      // const SizedBox(height: 16),
+                      //
+                      // _buildRequirementRow(
+                      //   "Age",
+                      //   displayAge,
+                      // ),
+                      //
+                      // _buildRequirementRow(
+                      //   "Gender",
+                      //   displayGender,
+                      // ),
+                      //
+                      // _buildRequirementRow(
+                      //   "Experience",
+                      //   displayExperience,
+                      // ),
+                      //
+                      // _buildRequirementRow(
+                      //   "Language",
+                      //   displayLanguage,
+                      // ),
+                      //
+                      // _buildRequirementRow(
+                      //   "Skills",
+                      //   displaySkills,
+                      // ),
 
                       // -------------------------------------------------------
                       // APPLICANTS

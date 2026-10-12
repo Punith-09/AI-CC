@@ -16,6 +16,7 @@ class ApiEndpoints {
 
   static const String exploreUsers = '/users/explore';
   static const String profileMe = '/profile/me';
+  static const String profileCompletion = '/profile/me/completion';
 
   static String userProfile(String id) => '/users/$id';
   static String followUser(String id) => '/users/$id/follow';
@@ -36,6 +37,8 @@ class ApiEndpoints {
 
   static String likeVideo(String id) => "/videos/$id/like";
   static String likePhoto(String id) => "/photos/$id/like";
+  static String deletePhoto(String id) => "/photos/$id";
+  static String deleteVideo(String id) => "/videos/$id";
   static String viewVideo(String id) => "/videos/$id/view";
   static String videoComments(String id) => "/videos/$id/comments";
   static String likeComment(String commentId) => "/videos/comments/$commentId/like";

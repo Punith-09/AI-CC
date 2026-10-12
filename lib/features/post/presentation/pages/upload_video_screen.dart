@@ -10,6 +10,10 @@ import 'package:provider/provider.dart';
 
 import '../../../../common/widgets/app_background.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../artist_profile/data/models/portfolio_model.dart';
+import '../../../artist_profile/presentation/providers/profile_provider.dart';
+import '../../../home/presentation/providers/home_feed_provider.dart';
 import '../providers/videos_provider.dart';
 
 class UploadVideoScreen extends StatefulWidget {
@@ -236,6 +240,36 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
     if (!mounted) return;
 
     if (success) {
+      // 1. Immediately reflect newly uploaded video in ProfileProvider gallery
+      final video = videosProvider.uploadedVideo;
+      if (video != null) {
+        final portfolioItem = PortfolioModel(
+          id: video.id,
+          image: (video.thumb != null && video.thumb!.isNotEmpty)
+              ? video.thumb!
+              : video.url,
+          videoUrl: video.url,
+          title: video.title,
+          description: video.desc,
+          createdAt: video.createdAt,
+          isVideo: true,
+        );
+        try {
+          context.read<ProfileProvider>().addPortfolioItem(portfolioItem);
+        } catch (_) {}
+      } else {
+        try {
+          context.read<ProfileProvider>().fetchMyProfile(silent: true);
+        } catch (_) {}
+      }
+
+      // 2. Also refresh home feed in background
+      try {
+        if (sl.isRegistered<HomeFeedProvider>()) {
+          sl<HomeFeedProvider>().refreshFeed();
+        }
+      } catch (_) {}
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Row(
@@ -251,7 +285,7 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
       );
 
       if (Navigator.of(context).canPop()) {
-        context.pop();
+        context.pop(true);
       }
     } else {
       final errorMsg = videosProvider.errorMessage ?? 'Failed to upload video';
@@ -778,10 +812,10 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
     return Container(
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0F323D) : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
-        ),
+        borderRadius: BorderRadius.circular(30),
+        // border: Border.all(
+        //   color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
+        // ),
       ),
       child: TextField(
         controller: controller,
@@ -800,14 +834,17 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
             color: AppColors.primary.withValues(alpha: 0.8),
             size: 20,
           ),
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: AppColors.hint, width: 1.5),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: AppColors.hint, width: 1.5),
+          ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(
-              color: AppColors.primary,
-              width: 1.5,
-            ),
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
@@ -825,9 +862,9 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0F323D) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
-        ),
+        // border: Border.all(
+        //   color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
+        // ),
       ),
       child: TextField(
         controller: controller,
@@ -842,14 +879,17 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
             color: isDark ? AppColors.greyText.withValues(alpha: 0.7) : const Color(0xFF94A3B8),
             fontSize: 14,
           ),
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: AppColors.hint, width: 1.5),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: AppColors.hint, width: 1.5),
+          ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(
-              color: AppColors.primary,
-              width: 1.5,
-            ),
+            borderRadius: BorderRadius.circular(30),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
           ),
           contentPadding: const EdgeInsets.all(16),
         ),

@@ -422,7 +422,12 @@ class ArtistModel {
 
     for (final source in [data['portfolio'], data['photos'], data['videos'], data['posts']]) {
       for (final item in _portfolioValue(source)) {
-        if (item.image.isNotEmpty && seen.add(item.image)) {
+        final key = item.isVideo
+            ? (item.videoUrl != null && item.videoUrl!.isNotEmpty
+                ? item.videoUrl!
+                : (item.id.isNotEmpty ? item.id : item.image))
+            : (item.image.isNotEmpty ? item.image : item.id);
+        if (key.isNotEmpty && seen.add(key)) {
           items.add(item);
         }
       }
