@@ -50,7 +50,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> _handleSendResetLink() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
-      _showSnackBar('Please enter your Email / Phone Number / TRK ID.', true);
+      _showSnackBar('Please enter your email address.', true);
+      return;
+    }
+
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(email)) {
+      _showAlertDialog(
+        title: 'Invalid Email ID',
+        message: 'Please enter a valid email address.',
+      );
       return;
     }
 
@@ -69,14 +78,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     if (success) {
       _showSnackBar(
-        'If an account exists with this email address, a password reset link has been sent.',
+        'Password reset link has been sent to your email address.',
         false,
       );
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go(AppRoutes.login);
+      }
     } else {
       final errorMsg = authProvider.errorMessage ??
-          'Failed to send reset link. Please try again.';
+          'Invalid email ID. No account found with this email address.';
       _showAlertDialog(
-        title: 'Notice',
+        title: 'Invalid Email ID',
         message: errorMsg,
       );
     }

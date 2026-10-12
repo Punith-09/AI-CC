@@ -193,13 +193,22 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         data: {'email': email.trim()},
       );
     } on DioException catch (e) {
-      final msg = e.response?.data?['message']?.toString() ?? e.response?.data?['error']?.toString();
-      if (msg != null && msg.isNotEmpty) {
-        throw Exception(msg);
+      final responseData = e.response?.data;
+      if (responseData is Map) {
+        final rawMsg = responseData['message'] ?? responseData['error'];
+        String msg = '';
+        if (rawMsg is List) {
+          msg = rawMsg.join(', ');
+        } else if (rawMsg != null) {
+          msg = rawMsg.toString();
+        }
+        if (msg.isNotEmpty && !msg.toLowerCase().contains('internal server error')) {
+          throw Exception(msg);
+        }
       }
       final statusCode = e.response?.statusCode;
       if (statusCode == 404 || statusCode == 400) {
-        throw Exception('Email ID not found in database. Please check your email or sign up.');
+        throw Exception('Invalid email ID. No account found with this email address.');
       }
       throw Exception('Failed to send reset email. Please check your connection and try again.');
     } catch (e) {
