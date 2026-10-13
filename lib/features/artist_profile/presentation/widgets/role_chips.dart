@@ -10,7 +10,7 @@ class RoleChips extends StatelessWidget {
   Widget build(BuildContext context) {
     final displayRoles = (roles != null && roles!.isNotEmpty)
         ? roles!
-        : ["audience"];
+        : ["guest"];
 
     final colors = [
       const Color(0xff8A2BE2),
