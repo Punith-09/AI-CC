@@ -118,11 +118,15 @@ class _SignupScreenState extends State<SignupScreen> {
       return;
     }
 
+    // Map display label → backend value ('Guest' → 'audience', 'Artist' → 'artist')
+    final roleForBackend =
+        _selectedRole!.toLowerCase() == 'guest' ? 'audience' : _selectedRole!.toLowerCase();
+
     final request = RegisterRequest(
       username: _usernameController.text.trim(),
       email: email,
       password: _passwordController.text,
-      role: _selectedRole!.toLowerCase(),
+      role: roleForBackend,
       mobile: mobile,
       age: int.tryParse(_ageController.text.trim()) ?? 0,
       gender: _selectedGender!,
@@ -247,7 +251,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               label: 'Register As',
                               hint: 'Select Role',
                               value: _selectedRole,
-                              items: const ['Audience', 'Artist'],
+                              items: const ['Guest', 'Artist'],
                               onChanged: (val) {
                                 setState(() {
                                   _selectedRole = val;

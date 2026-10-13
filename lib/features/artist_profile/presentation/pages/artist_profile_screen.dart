@@ -292,10 +292,11 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
     }
     if (location.isEmpty) location = 'India';
 
-    // Role
-    final role = profile?.roles.isNotEmpty == true
+    // Map backend role value → display label ('audience' → 'guest')
+    final rawRole = profile?.roles.isNotEmpty == true
         ? profile!.roles.first
         : 'audience';
+    final role = rawRole.toLowerCase() == 'audience' ? 'guest' : rawRole;
 
     // Stats: ensure count accurately reflects media list if server projects count lags
     final postsCount = (profile?.projects != null && profile!.projects > mediaList.length)
