@@ -24,6 +24,8 @@ class _PostScreenState extends State<PostScreen> {
 
   final _titleController = TextEditingController();
   final _roleController = TextEditingController();
+  final _roleAgeMinController = TextEditingController();
+  final _roleAgeMaxController = TextEditingController();
   final _locationController = TextEditingController();
   final _payController = TextEditingController();
   final _deadlineController = TextEditingController();
@@ -31,6 +33,7 @@ class _PostScreenState extends State<PostScreen> {
   final _descController = TextEditingController();
 
   String _selectedCategory = 'Film';
+  String? _selectedGender; // null = Any
 
   final List<String> _categories = [
     'Film',
@@ -42,10 +45,14 @@ class _PostScreenState extends State<PostScreen> {
     'Model',
   ];
 
+  final List<String> _genders = ['Male', 'Female', 'Other'];
+
   @override
   void dispose() {
     _titleController.dispose();
     _roleController.dispose();
+    _roleAgeMinController.dispose();
+    _roleAgeMaxController.dispose();
     _locationController.dispose();
     _payController.dispose();
     _deadlineController.dispose();
@@ -64,11 +71,11 @@ class _PostScreenState extends State<PostScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme:  ColorScheme.dark(
+            colorScheme: ColorScheme.dark(
               primary: Colors.deepPurpleAccent,
-              onPrimary: isDark?Colors.white:AppColors.black,
-              surface: isDark?Color(0xff1F1F27):AppColors.white,
-              onSurface: isDark?Colors.white:AppColors.black,
+              onPrimary: isDark ? Colors.white : AppColors.black,
+              surface: isDark ? Color(0xff1F1F27) : AppColors.white,
+              onSurface: isDark ? Colors.white : AppColors.black,
             ),
           ),
           child: child!,
@@ -95,20 +102,26 @@ class _PostScreenState extends State<PostScreen> {
     final pay = _payController.text.trim();
     final deadline = _deadlineController.text.trim();
     final lang = _langController.text.trim();
+    final ageMinStr = _roleAgeMinController.text.trim();
+    final ageMaxStr = _roleAgeMaxController.text.trim();
 
     final request = CreateAuditionRequest(
       title: title,
       category: _selectedCategory,
       role: role,
+      roleAgeMin: ageMinStr.isEmpty ? null : int.tryParse(ageMinStr),
+      roleAgeMax: ageMaxStr.isEmpty ? null : int.tryParse(ageMaxStr),
+      roleGender: _selectedGender,
       location: location,
-      pay: pay,
+      pay: pay.isEmpty ? null : pay,
       deadline: deadline,
       lang: lang,
       desc: desc,
     );
 
-    final success =
-        await context.read<AuditionsProvider>().createAudition(request);
+    final success = await context.read<AuditionsProvider>().createAudition(
+      request,
+    );
 
     if (mounted) {
       if (success) {
@@ -120,8 +133,7 @@ class _PostScreenState extends State<PostScreen> {
         );
         context.go(AppRoutes.auditions);
       } else {
-        final errorMsg =
-            context.read<AuditionsProvider>().createErrorMessage;
+        final errorMsg = context.read<AuditionsProvider>().createErrorMessage;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMsg ?? 'Failed to post audition'),
@@ -139,7 +151,9 @@ class _PostScreenState extends State<PostScreen> {
     final textColor = isDark ? AppColors.white : AppColors.lightText;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkScaffold : AppColors.lightScaffold,
+      backgroundColor: isDark
+          ? AppColors.darkScaffold
+          : AppColors.lightScaffold,
       body: AppBackground(
         child: SafeArea(
           child: SingleChildScrollView(
@@ -232,18 +246,20 @@ class _PostScreenState extends State<PostScreen> {
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? AppColors.primary
-                                  : (isDark ? AppColors.darkCard : AppColors.lightCard),
+                                  : (isDark
+                                        ? AppColors.darkCard
+                                        : AppColors.lightCard),
                               borderRadius: BorderRadius.circular(24),
-                              border: Border.all(
-                                color: AppColors.primary,
-                              ),
+                              border: Border.all(color: AppColors.primary),
                             ),
                             child: Text(
                               cat,
                               style: TextStyle(
                                 color: isSelected
                                     ? Colors.white
-                                    : (isDark ? Colors.grey.shade400 : const Color(0xFF475569)),
+                                    : (isDark
+                                          ? Colors.grey.shade400
+                                          : const Color(0xFF475569)),
                                 fontSize: 13,
                                 fontWeight: isSelected
                                     ? FontWeight.w600
@@ -258,15 +274,116 @@ class _PostScreenState extends State<PostScreen> {
                   const SizedBox(height: 20),
 
                   // Role Seeking
-                  _buildLabel('Role Seeking'),
+                  _buildLabel('Role'),
                   const SizedBox(height: 8),
                   _buildInputField(
                     controller: _roleController,
-                    hint: 'Hero (Male, 25-35)',
+                    hint: 'e.g. Lead Performer, Hero',
                     icon: Icons.people_outline,
                     validator: (val) => val == null || val.trim().isEmpty
-                        ? 'Please enter role seeking'
+                        ? 'Please enter the role name'
                         : null,
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Age Range
+                  _buildLabel('Age Range', isRequired: false),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildInputField(
+                          controller: _roleAgeMinController,
+                          hint: 'Min (e.g. 20)',
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          validator: (val) {
+                            if (val == null || val.trim().isEmpty) return null;
+                            final v = int.tryParse(val.trim());
+                            if (v == null) return 'Invalid';
+                            final maxStr =
+                                _roleAgeMaxController.text.trim();
+                            if (maxStr.isNotEmpty) {
+                              final max = int.tryParse(maxStr);
+                              if (max != null && v > max) {
+                                return 'Min > Max';
+                              }
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildInputField(
+                          controller: _roleAgeMaxController,
+                          hint: 'Max (e.g. 35)',
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          validator: (val) {
+                            if (val == null || val.trim().isEmpty) return null;
+                            final v = int.tryParse(val.trim());
+                            if (v == null) return 'Invalid';
+                            return null;
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Gender
+                  _buildLabel('Gender', isRequired: false),
+                  const SizedBox(height: 10),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: _genders.map((g) {
+                        final isSelected = _selectedGender == g;
+                        return GestureDetector(
+                          onTap: () => setState(
+                            () => _selectedGender =
+                                _selectedGender == g ? null : g,
+                          ),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            margin: const EdgeInsets.only(right: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 9,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : (isDark
+                                      ? AppColors.darkCard
+                                      : AppColors.lightCard),
+                              borderRadius: BorderRadius.circular(24),
+                              border:
+                                  Border.all(color: AppColors.primary),
+                            ),
+                            child: Text(
+                              g,
+                              style: TextStyle(
+                                color: isSelected
+                                    ? Colors.white
+                                    : (isDark
+                                        ? Colors.grey.shade400
+                                        : const Color(0xFF475569)),
+                                fontSize: 13,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
                   ),
                   const SizedBox(height: 20),
 
@@ -284,7 +401,7 @@ class _PostScreenState extends State<PostScreen> {
                   const SizedBox(height: 20),
 
                   // Pay
-                  _buildLabel('Pay'),
+                  _buildLabel('Pay', isRequired: false),
                   const SizedBox(height: 8),
                   _buildInputField(
                     controller: _payController,
@@ -292,9 +409,7 @@ class _PostScreenState extends State<PostScreen> {
                     icon: Icons.currency_rupee,
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (val) => val == null || val.trim().isEmpty
-                        ? 'Please enter pay amount'
-                        : null,
+                    // Pay is optional — no validator required.
                   ),
                   const SizedBox(height: 20),
 
@@ -344,17 +459,23 @@ class _PostScreenState extends State<PostScreen> {
                   TextFormField(
                     controller: _descController,
                     maxLines: 5,
-                    style: TextStyle(color: isDark ? Colors.white : AppColors.lightText),
+                    style: TextStyle(
+                      color: isDark ? Colors.white : AppColors.lightText,
+                    ),
                     validator: (val) => val == null || val.trim().isEmpty
                         ? 'Please enter description'
                         : null,
                     decoration: InputDecoration(
                       hintText: 'Describe the role and requirements...',
                       hintStyle: TextStyle(
-                        color: isDark ? Colors.grey.shade500 : const Color(0xFF94A3B8),
+                        color: isDark
+                            ? Colors.grey.shade500
+                            : const Color(0xFF94A3B8),
                       ),
                       filled: true,
-                      fillColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+                      fillColor: isDark
+                          ? AppColors.darkCard
+                          : AppColors.lightCard,
                       contentPadding: const EdgeInsets.all(16),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -441,8 +562,9 @@ class _PostScreenState extends State<PostScreen> {
     );
   }
 
-  Widget _buildLabel(String text) {
+  Widget _buildLabel(String text, {bool isRequired = true}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return RichText(
       text: TextSpan(
         text: text,
@@ -451,15 +573,17 @@ class _PostScreenState extends State<PostScreen> {
           fontWeight: FontWeight.w600,
           fontSize: 14,
         ),
-        children: const [
-          TextSpan(
-            text: ' *',
-            style: TextStyle(
-              color: AppColors.danger,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
+        children: isRequired
+            ? const [
+                TextSpan(
+                  text: ' *',
+                  style: TextStyle(
+                    color: AppColors.danger,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ]
+            : [],
       ),
     );
   }
@@ -487,9 +611,15 @@ class _PostScreenState extends State<PostScreen> {
       style: TextStyle(color: isDark ? Colors.white : AppColors.lightText),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: isDark ? Colors.grey.shade500 : const Color(0xFF94A3B8)),
+        hintStyle: TextStyle(
+          color: isDark ? Colors.grey.shade500 : const Color(0xFF94A3B8),
+        ),
         prefixIcon: icon != null
-            ? Icon(icon, color: isDark ? Colors.grey : const Color(0xFF64748B), size: 20)
+            ? Icon(
+                icon,
+                color: isDark ? Colors.grey : const Color(0xFF64748B),
+                size: 20,
+              )
             : null,
         suffixIcon: suffixIcon,
         filled: true,

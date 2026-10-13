@@ -144,6 +144,9 @@ class AuditionModel {
   final String title;
   final String category;
   final String role;
+  final int? roleAgeMin;
+  final int? roleAgeMax;
+  final String roleGender;
   final String language;
   final String pay;
   final String location;
@@ -169,6 +172,9 @@ class AuditionModel {
     required this.title,
     required this.category,
     required this.role,
+    this.roleAgeMin,
+    this.roleAgeMax,
+    this.roleGender = '',
     required this.language,
     required this.pay,
     required this.location,
@@ -207,12 +213,22 @@ class AuditionModel {
       }
     }
 
+    int? parseIntField(dynamic val) {
+      if (val == null) return null;
+      if (val is int) return val;
+      final parsed = int.tryParse(val.toString());
+      return parsed;
+    }
+
     return AuditionModel(
       id: json['id'] as String? ?? '',
       creatorId: json['creatorId'] as String? ?? '',
       title: json['title'] as String? ?? '',
       category: json['category'] as String? ?? '',
       role: json['role'] as String? ?? '',
+      roleAgeMin: parseIntField(json['roleAgeMin']),
+      roleAgeMax: parseIntField(json['roleAgeMax']),
+      roleGender: json['roleGender'] as String? ?? '',
       language: (json['lang'] ?? json['language']) as String? ?? '',
       pay: json['pay'] as String? ?? '',
       location: json['location'] as String? ?? '',
@@ -240,6 +256,9 @@ class AuditionModel {
         'title': title,
         'category': category,
         'role': role,
+        'roleAgeMin': roleAgeMin,
+        'roleAgeMax': roleAgeMax,
+        'roleGender': roleGender,
         'lang': language,
         'pay': pay,
         'location': location,
