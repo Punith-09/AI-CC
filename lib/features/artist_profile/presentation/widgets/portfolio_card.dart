@@ -1,8 +1,9 @@
+import 'package:aicc/common/widgets/video_frame_thumbnail.dart';
 import 'package:aicc/core/api/api_endpoints.dart';
 import 'package:aicc/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
 
+import '../../../home/data/models/feed_post_model.dart';
 import '../../data/models/portfolio_model.dart';
 
 class PortfolioCard extends StatelessWidget {
@@ -51,7 +52,9 @@ class PortfolioCard extends StatelessWidget {
     // Resolve the video URL for thumbnail extraction
     String? videoThumbnailUrl;
     if (item.isVideo) {
-      final rawVideo = item.videoUrl ?? '';
+      final rawVideo = (item.videoUrl != null && item.videoUrl!.isNotEmpty)
+          ? item.videoUrl!
+          : (FeedPostModel.isVideoMediaUrl(item.image) ? item.image : '');
       videoThumbnailUrl = rawVideo.isNotEmpty
           ? ApiEndpoints.formatMediaUrl(rawVideo)
           : null;
@@ -70,7 +73,7 @@ class PortfolioCard extends StatelessWidget {
                 // ── Media layer ──────────────────────────────────────────
                 if (item.isVideo)
                   videoThumbnailUrl != null
-                      ? _VideoFrameThumbnail(
+                      ? VideoFrameThumbnail(
                           videoUrl: videoThumbnailUrl,
                           fallback: buildVideoDarkPlaceholder(),
                         )
@@ -193,76 +196,4 @@ class PortfolioCard extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Initialises a VideoPlayerController, seeks to t=0, renders the first frame,
-// then stays paused. Disposes the controller when removed from the tree.
-// Falls back to [fallback] while loading or on error.
-// ─────────────────────────────────────────────────────────────────────────────
-class _VideoFrameThumbnail extends StatefulWidget {
-  final String videoUrl;
-  final Widget fallback;
-
-  const _VideoFrameThumbnail({
-    required this.videoUrl,
-    required this.fallback,
-  });
-
-  @override
-  State<_VideoFrameThumbnail> createState() => _VideoFrameThumbnailState();
-}
-
-class _VideoFrameThumbnailState extends State<_VideoFrameThumbnail> {
-  VideoPlayerController? _controller;
-  bool _initialized = false;
-  bool _error = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _initController();
-  }
-
-  Future<void> _initController() async {
-    try {
-      final ctrl = VideoPlayerController.networkUrl(
-        Uri.parse(widget.videoUrl),
-      );
-      await ctrl.initialize();
-      await ctrl.seekTo(Duration.zero);
-      await ctrl.pause();
-      if (mounted) {
-        setState(() {
-          _controller = ctrl;
-          _initialized = true;
-        });
-      } else {
-        await ctrl.dispose();
-      }
-    } catch (_) {
-      if (mounted) setState(() => _error = true);
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_error) return widget.fallback;
-    if (!_initialized || _controller == null) return widget.fallback;
-
-    return FittedBox(
-      fit: BoxFit.cover,
-      clipBehavior: Clip.hardEdge,
-      child: SizedBox(
-        width: _controller!.value.size.width,
-        height: _controller!.value.size.height,
-        child: VideoPlayer(_controller!),
-      ),
-    );
-  }
-}
+

@@ -1,5 +1,5 @@
 import 'package:aicc/common/widgets/app_background.dart';
-import 'package:aicc/features/explore/data/datasource/category_data.dart';
+import 'package:aicc/core/constants/craft_constants.dart';
 import 'package:aicc/features/explore/presentation/providers/explore_provider.dart';
 import 'package:aicc/features/explore/presentation/widgets/explore_appbar.dart';
 import 'package:aicc/features/explore/presentation/widgets/talent_grid.dart';
@@ -20,7 +20,6 @@ class ExploreScreen extends StatefulWidget {
 
 class _ExploreScreenState extends State<ExploreScreen> {
   final TextEditingController _searchController = TextEditingController();
-  int _selectedCategoryIndex = 1; // 0 = filter icon, 1 = All, 2..n = categories
 
   @override
   void initState() {
@@ -36,15 +35,124 @@ class _ExploreScreenState extends State<ExploreScreen> {
     super.dispose();
   }
 
-  void _onCategoryTap(int index) {
-    setState(() => _selectedCategoryIndex = index);
-    final provider = context.read<ExploreProvider>();
-    if (index <= 1) {
-      // All
-      provider.onCategoryChanged('');
-    } else {
-      provider.onCategoryChanged(categories[index].title);
-    }
+  void _showCraftFilterBottomSheet(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF1C1C1E) : Colors.white;
+    final textColor = isDark ? AppColors.darkText : AppColors.lightText;
+    final borderColor = isDark ? const Color(0xFF2C2C2E) : const Color(0xFFE2E8F0);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Consumer<ExploreProvider>(
+          builder: (context, provider, _) {
+            final selected = provider.selectedCategory;
+
+            return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.75,
+              ),
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                border: Border(
+                  top: BorderSide(color: borderColor, width: 1),
+                  left: BorderSide(color: borderColor, width: 1),
+                  right: BorderSide(color: borderColor, width: 1),
+                ),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 12),
+                    // Drag Handle
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white24 : Colors.black12,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Filter by Craft',
+                            style: GoogleFonts.poppins(
+                              color: textColor,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          if (selected.isNotEmpty && selected != 'All')
+                            GestureDetector(
+                              onTap: () {
+                                provider.onCategoryChanged('');
+                                Navigator.pop(sheetContext);
+                              },
+                              child: Text(
+                                'Clear All',
+                                style: GoogleFonts.poppins(
+                                  color: AppColors.primary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Divider(height: 1, color: borderColor),
+
+                    // Craft List
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        children: [
+                          // "All Crafts" option
+                          _CraftOptionTile(
+                            title: 'All Crafts',
+                            isSelected: selected.isEmpty || selected == 'All',
+                            isDark: isDark,
+                            onTap: () {
+                              provider.onCategoryChanged('');
+                              Navigator.pop(sheetContext);
+                            },
+                          ),
+                          ...kFilmCrafts.map((craft) {
+                            final isSelected = selected.toLowerCase() == craft.toLowerCase();
+                            return _CraftOptionTile(
+                              title: craft,
+                              isSelected: isSelected,
+                              isDark: isDark,
+                              onTap: () {
+                                provider.onCategoryChanged(craft);
+                                Navigator.pop(sheetContext);
+                              },
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -81,30 +189,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
         const SizedBox(height: 18),
 
-        // ── Category tabs (text-based, underline for selected) ──
-        SizedBox(
-          height: 36,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: categories.length,
-            separatorBuilder: (context, index) =>
-                const SizedBox(width: 24),
-            itemBuilder: (_, i) {
-              // Skip the filter icon (index 0) — we hide it to match the mockup
-              if (i == 0) return const SizedBox.shrink();
-              return _CategoryTab(
-                category: categories[i],
-                isSelected: _selectedCategoryIndex == i,
-                isDark: isDark,
-                onTap: () => _onCategoryTap(i),
-              );
-            },
-          ),
-        ),
-
-        const SizedBox(height: 20),
-
         // ── Section Header: Top Matches Near You  📍 Select Location ──
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -122,75 +206,160 @@ class _ExploreScreenState extends State<ExploreScreen> {
               ),
               Consumer<ExploreProvider>(
                 builder: (context, provider, _) {
-                  return PopupMenuButton<String>(
-                    color: popupMenuColor,
-                    initialValue: provider.selectedLocation,
-                    onSelected: (String newValue) {
-                      provider.onLocationChanged(newValue);
-                    },
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: popupMenuBorder),
-                    ),
-                    itemBuilder: (BuildContext context) {
-                      return <String>[
-                        'Anywhere',
-                        'Mumbai',
-                        'Delhi',
-                        'Bangalore',
-                        'Hyderabad',
-                        'Chennai',
-                        'Pune',
-                        'Kolkata',
-                        'Ahmedabad',
-                        'Surat',
-                        'Jaipur',
-                        'Ranchi',
-                      ].map<PopupMenuItem<String>>((String value) {
-                        return PopupMenuItem<String>(
-                          value: value,
-                          child: Text(
-                            value,
-                            style: GoogleFonts.poppins(
-                              color: isDark ? AppColors.darkText : AppColors.lightText,
-                              fontSize: 14,
+                  final hasCraftFilter = provider.selectedCategory.isNotEmpty &&
+                      provider.selectedCategory != 'All';
+
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      PopupMenuButton<String>(
+                        color: popupMenuColor,
+                        initialValue: provider.selectedLocation,
+                        onSelected: (String newValue) {
+                          provider.onLocationChanged(newValue);
+                        },
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: popupMenuBorder),
+                        ),
+                        itemBuilder: (BuildContext context) {
+                          return <String>[
+                            'Anywhere',
+                            'Mumbai',
+                            'Delhi',
+                            'Bangalore',
+                            'Hyderabad',
+                            'Chennai',
+                            'Pune',
+                            'Kolkata',
+                            'Ahmedabad',
+                            'Surat',
+                            'Jaipur',
+                            'Ranchi',
+                          ].map<PopupMenuItem<String>>((String value) {
+                            return PopupMenuItem<String>(
+                              value: value,
+                              child: Text(
+                                value,
+                                style: GoogleFonts.poppins(
+                                  color: isDark ? AppColors.darkText : AppColors.lightText,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            );
+                          }).toList();
+                        },
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              LucideIcons.mapPin,
+                              color: AppColors.primary,
+                              size: 14,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              provider.selectedLocation.isEmpty
+                                  ? 'Select Location'
+                                  : provider.selectedLocation,
+                              style: GoogleFonts.poppins(
+                                color: AppColors.primary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 2),
+                            const Icon(
+                              Icons.arrow_drop_down,
+                              color: AppColors.primary,
+                              size: 16,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Filter icon to the right of anywhere dropdown
+                      GestureDetector(
+                        onTap: () => _showCraftFilterBottomSheet(context),
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: hasCraftFilter
+                                ? AppColors.primary.withValues(alpha: 0.16)
+                                : (isDark ? const Color(0xFF242426) : const Color(0xFFF1F5F9)),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: hasCraftFilter
+                                  ? AppColors.primary
+                                  : (isDark ? const Color(0xFF333336) : const Color(0xFFE2E8F0)),
+                              width: 1,
                             ),
                           ),
-                        );
-                      }).toList();
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          LucideIcons.mapPin,
-                          color: AppColors.primary,
-                          size: 14,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          provider.selectedLocation.isEmpty
-                              ? 'Select Location'
-                              : provider.selectedLocation,
-                          style: GoogleFonts.poppins(
-                            color: AppColors.primary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                          child: Icon(
+                            LucideIcons.slidersHorizontal,
+                            color: hasCraftFilter
+                                ? AppColors.primary
+                                : (isDark ? Colors.white70 : const Color(0xFF64748B)),
+                            size: 16,
                           ),
                         ),
-                        const SizedBox(width: 2),
-                        const Icon(
-                          Icons.arrow_drop_down,
-                          color: AppColors.primary,
-                          size: 16,
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   );
                 },
               ),
             ],
           ),
+        ),
+
+        // Active Craft Filter Chip
+        Consumer<ExploreProvider>(
+          builder: (context, provider, _) {
+            final hasCraftFilter = provider.selectedCategory.isNotEmpty &&
+                provider.selectedCategory != 'All';
+            if (!hasCraftFilter) return const SizedBox.shrink();
+
+            return Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          provider.selectedCategory,
+                          style: GoogleFonts.poppins(
+                            color: AppColors.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        GestureDetector(
+                          onTap: () => provider.onCategoryChanged(''),
+                          child: const Icon(
+                            Icons.close_rounded,
+                            size: 14,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
 
         const SizedBox(height: 12),
@@ -364,51 +533,61 @@ class _SearchBar extends StatelessWidget {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Category tab (text + underline indicator)
+// Craft option tile for filter bottom sheet
 // ──────────────────────────────────────────────────────────────────────────────
-class _CategoryTab extends StatelessWidget {
-  final ExploreCategory category;
+class _CraftOptionTile extends StatelessWidget {
+  final String title;
   final bool isSelected;
   final bool isDark;
   final VoidCallback onTap;
 
-  const _CategoryTab({
-    required this.category,
+  const _CraftOptionTile({
+    required this.title,
     required this.isSelected,
-    this.isDark = false,
+    required this.isDark,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final selectedColor = AppColors.primary;
-    final unselectedColor = isDark ? const Color(0xFF8A8A8E) : const Color(0xFF6B7280);
+    final textColor = isDark ? Colors.white : AppColors.lightText;
 
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            category.title,
-            style: GoogleFonts.poppins(
-              color: isSelected ? selectedColor : unselectedColor,
-              fontSize: 14,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        margin: const EdgeInsets.symmetric(vertical: 2),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary.withValues(alpha: 0.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: GoogleFonts.poppins(
+                  color: isSelected ? AppColors.primary : textColor,
+                  fontSize: 14,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                ),
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            height: 2,
-            width: isSelected ? 24 : 0,
-            decoration: BoxDecoration(
-              color: selectedColor,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        ],
+            if (isSelected)
+              const Icon(
+                Icons.check_circle_rounded,
+                color: AppColors.primary,
+                size: 20,
+              )
+            else
+              Icon(
+                Icons.circle_outlined,
+                color: isDark ? Colors.white24 : Colors.black12,
+                size: 20,
+              ),
+          ],
+        ),
       ),
     );
   }

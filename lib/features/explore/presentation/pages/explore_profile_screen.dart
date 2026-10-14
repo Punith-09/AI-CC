@@ -14,6 +14,8 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/theme/theme_provider.dart';
 import '../../../artist_profile/data/models/artist_model.dart';
+import '../../../home/data/models/feed_post_model.dart';
+import '../../../../common/widgets/video_frame_thumbnail.dart';
 
 class ExploreProfileScreen extends StatefulWidget {
   final String userId;
@@ -835,6 +837,16 @@ class _PortfolioItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String? videoThumbnailUrl;
+    if (media.isVideo) {
+      final rawVideo = (media.videoUrl != null && media.videoUrl!.isNotEmpty)
+          ? media.videoUrl!
+          : (FeedPostModel.isVideoMediaUrl(media.image) ? media.image : '');
+      videoThumbnailUrl = rawVideo.isNotEmpty
+          ? ApiEndpoints.formatMediaUrl(rawVideo)
+          : null;
+    }
+
     final formatted = ApiEndpoints.formatMediaUrl(media.image);
     final hasImage = formatted.startsWith('http');
 
@@ -854,14 +866,22 @@ class _PortfolioItemCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            hasImage
-                ? Image.network(
-                    formatted,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        _emptyThumbnail(),
-                  )
-                : _emptyThumbnail(),
+            if (media.isVideo)
+              videoThumbnailUrl != null
+                  ? VideoFrameThumbnail(
+                      videoUrl: videoThumbnailUrl,
+                      fallback: _emptyThumbnail(),
+                    )
+                  : _emptyThumbnail()
+            else if (hasImage)
+              Image.network(
+                formatted,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    _emptyThumbnail(),
+              )
+            else
+              _emptyThumbnail(),
 
             // Dark gradient overlay
             Container(

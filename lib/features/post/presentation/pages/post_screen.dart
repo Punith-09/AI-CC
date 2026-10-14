@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/craft_constants.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/theme_provider.dart';
 import '../../../auditions/data/models/create_audition_request.dart';
@@ -32,18 +33,10 @@ class _PostScreenState extends State<PostScreen> {
   final _langController = TextEditingController();
   final _descController = TextEditingController();
 
-  String _selectedCategory = 'Film';
+  String _selectedCategory = 'Production Executives';
   String? _selectedGender; // null = Any
 
-  final List<String> _categories = [
-    'Film',
-    'Ad',
-    'Dancer',
-    'TV',
-    'Actor',
-    'Singer',
-    'Model',
-  ];
+  final List<String> _categories = kFilmCrafts;
 
   final List<String> _genders = ['Male', 'Female', 'Other'];
 
