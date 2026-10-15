@@ -29,6 +29,58 @@ class AuditionCards extends StatelessWidget {
         'Looking for a talented actor to play the lead in an upcoming Indie sci-fi short film.',
   );
 
+  // ---------------------------------------------------------
+  // Direct apply (no form screen shown)
+  // ---------------------------------------------------------
+
+  Future<void> _applyDirectly(
+    BuildContext context,
+    AuditionModel audition,
+  ) async {
+    if (audition.id.isEmpty) return;
+
+    final applyProvider = context.read<ApplyJobProvider>();
+
+    // TODO: Re-enable subscription canApplyAudition check when ready
+    // final subProvider = context.read<SubscriptionProvider>();
+    // if (!subProvider.canApplyAudition) {
+    //   LimitUpgradeDialog.show(context, type: LimitType.auditionApplication);
+    //   return;
+    // }
+
+    final success = await applyProvider.submitApplication(
+      auditionId: audition.id,
+      coverLetter: ' ',
+    );
+
+    if (!context.mounted) return;
+
+    if (success) {
+      context.read<AuditionsProvider>().markAuditionApplied(audition.id);
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Application submitted successfully.'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
+        );
+    } else {
+      final err =
+          applyProvider.errorMessage ?? 'Failed to submit application.';
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(err),
+            backgroundColor: Colors.redAccent,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final list = (auditions != null && auditions!.isNotEmpty)
@@ -54,23 +106,9 @@ class AuditionCards extends StatelessWidget {
           ),
 
           // -----------------------------------------------
-          // Apply Now (disabled when already applied)
+          // Apply Now — directly calls API, no form screen
           // -----------------------------------------------
-          onApply: () {
-            // TODO: Re-enable subscription canApplyAudition check when ready
-            // final subProvider = context.read<SubscriptionProvider>();
-            // if (!subProvider.canApplyAudition) {
-            //   LimitUpgradeDialog.show(
-            //     context,
-            //     type: LimitType.auditionApplication,
-            //   );
-            //   return;
-            // }
-            context.push(
-              AppRoutes.applyJob,
-              extra: audition,
-            );
-          },
+          onApply: () => _applyDirectly(context, audition),
 
           // -----------------------------------------------
           // Delete application — calls DELETE /applications
