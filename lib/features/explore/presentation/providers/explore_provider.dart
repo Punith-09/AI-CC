@@ -103,6 +103,11 @@ class ExploreProvider with ChangeNotifier {
             return false;
           }
         }
+        if (_selectedCategory.isNotEmpty && _selectedCategory != 'All') {
+          if (!talent.matchesCategory(_selectedCategory)) {
+            return false;
+          }
+        }
         return true;
       }).toList();
 

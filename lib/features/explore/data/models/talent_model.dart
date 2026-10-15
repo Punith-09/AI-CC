@@ -65,6 +65,61 @@ class TalentModel {
     return fieldMatches(city) || fieldMatches(state);
   }
 
+  bool matchesCategory(String selected) {
+    final s = selected.trim().toLowerCase();
+    if (s.isEmpty || s == 'all') return true;
+
+    final cat = category.trim().toLowerCase();
+    final b = bio.trim().toLowerCase();
+    final h = handle.trim().toLowerCase();
+
+    // Direct match / contains
+    if (cat.isNotEmpty && (cat == s || cat.contains(s) || s.contains(cat))) {
+      return true;
+    }
+
+    // Comprehensive craft synonyms mapping
+    const synonyms = <String, List<String>>{
+      'acting': ['actor', 'actress', 'acting', 'artist', 'hero', 'heroine', 'cast'],
+      'dancing': ['dancer', 'dancing', 'dance', 'choreography', 'choreographer'],
+      'singing': ['singer', 'singing', 'vocalist', 'playback', 'song'],
+      'music': ['musician', 'music', 'composer', 'music director', 'bgm', 'score'],
+      'direction': ['director', 'direction', 'asst director', 'assistant director', 'ad', 'filmmaker'],
+      'cinematography': ['cinematographer', 'cinematography', 'dop', 'camera', 'cameraman'],
+      'editing': ['editor', 'editing', 'film editor', 'video editor'],
+      'stunts': ['stunt', 'stunts', 'action', 'fight', 'action director'],
+      'choreography': ['choreographer', 'choreography', 'dance master', 'dancer', 'dancing'],
+      'art direction': ['art director', 'art direction', 'production design', 'set designer', 'art'],
+      'costumes': ['costume', 'costumes', 'costume designer', 'stylist', 'wardrobe'],
+      'makeup': ['makeup', 'makeup artist', 'mua'],
+      'hair dressing': ['hair', 'hair stylist', 'hair dresser', 'hair dressing'],
+      'audiography': ['audiography', 'sound', 'sound design', 'sound recording', 'audio', 'sound editor'],
+      'production': ['production', 'producer', 'executive producer', 'line producer', 'production manager'],
+      'production executives': ['production executive', 'production executives', 'ep', 'line producer', 'producer'],
+      'outdoor units': ['outdoor units', 'outdoor unit', 'location team', 'equipment'],
+      'still photography': ['still photography', 'photographer', 'photo'],
+      'publicity': ['publicity', 'pr', 'public relations', 'promotion'],
+      'publicity design': ['publicity design', 'poster design', 'graphic designer', 'designer'],
+      'lyrics': ['lyricist', 'lyrics', 'song writer'],
+      'dialogues': ['dialogue', 'dialogues', 'dialogue writer', 'writer'],
+      'screenplay': ['screenplay', 'screenplay writer', 'writer', 'script'],
+      'story': ['story', 'story writer', 'writer'],
+    };
+
+    final syns = synonyms[s];
+    if (syns != null) {
+      for (final syn in syns) {
+        if (cat.contains(syn) || syn.contains(cat) || b.contains(syn) || h.contains(syn)) {
+          return true;
+        }
+      }
+    } else {
+      if (b.contains(s) || h.contains(s)) return true;
+    }
+
+    return false;
+  }
+
   static String _normalizePlace(String value) {
     return value.trim().toLowerCase().replaceAll(RegExp(r'[^a-z]'), '');
   }

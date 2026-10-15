@@ -7,6 +7,7 @@ import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/responsive/responsive_breakpoints.dart';
+import '../../../../common/widgets/video_frame_thumbnail.dart';
 import '../../data/models/feed_post_model.dart';
 import '../../data/repository/home_repository.dart';
 
@@ -497,6 +498,25 @@ class _FeedVideoPlayerState extends State<FeedVideoPlayer> {
   }
 
   Widget _buildThumbnail() {
+    final videoUrl = effectiveVideoUrl;
+    if (widget.post.isVideo && videoUrl.isNotEmpty) {
+      final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          VideoFrameThumbnail(
+            videoUrl: videoUrl,
+            fallback: _buildFallbackThumbnail(),
+            fit: isDesktop ? BoxFit.contain : BoxFit.cover,
+          ),
+          // Dark vignette overlay for contrast
+          Container(
+            color: Colors.black.withValues(alpha: 0.28),
+          ),
+        ],
+      );
+    }
+
     final thumb = effectiveThumbUrl;
     final isNetwork = thumb.startsWith('http');
 

@@ -12,6 +12,7 @@ import 'package:video_player/video_player.dart';
 
 import '../../../../common/widgets/app_background.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/theme_provider.dart';
 import '../providers/stories_provider.dart';
 
 class StoryUploadScreen extends StatefulWidget {
@@ -223,7 +224,7 @@ class _StoryUploadScreenState extends State<StoryUploadScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.close_rounded, color: Colors.white, size: 28),
+                      icon:  Icon(Icons.close_rounded, color: isDark?AppColors.white:AppColors.black, size: 28),
                       onPressed: isUploading ? null : () => context.pop(),
                     ),
                     Text(
@@ -231,7 +232,7 @@ class _StoryUploadScreenState extends State<StoryUploadScreen> {
                       style: GoogleFonts.poppins(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color:isDark?AppColors.white:AppColors.black,
                       ),
                     ),
                     if (_selectedFile != null || _mediaBytes != null)
@@ -253,10 +254,10 @@ class _StoryUploadScreenState extends State<StoryUploadScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text(
+                            :  Text(
                                 'Share',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: isDark?AppColors.white:AppColors.black,
                                   fontWeight: FontWeight.w700,
                                   fontSize: 14,
                                 ),
@@ -282,6 +283,7 @@ class _StoryUploadScreenState extends State<StoryUploadScreen> {
   }
 
   Widget _buildPickerPrompt(bool isDark) {
+    final isDark = context.read<ThemeProvider>().isDarkMode;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -320,7 +322,7 @@ class _StoryUploadScreenState extends State<StoryUploadScreen> {
             style: GoogleFonts.poppins(
               fontSize: 22,
               fontWeight: FontWeight.w700,
-              color: Colors.white,
+              color: isDark?AppColors.white:AppColors.black,
             ),
           ),
           const SizedBox(height: 8),
@@ -330,7 +332,7 @@ class _StoryUploadScreenState extends State<StoryUploadScreen> {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
-              color: Colors.white.withValues(alpha: 0.65),
+              color:isDark?AppColors.white:AppColors.black,
               height: 1.4,
             ),
           ),
@@ -379,8 +381,9 @@ class _StoryUploadScreenState extends State<StoryUploadScreen> {
     required String subtitle,
     required VoidCallback onTap,
   }) {
+    final isDark = context.read<ThemeProvider>().isDarkMode;
     return Material(
-      color: const Color(0xFF181818),
+      color: isDark?AppColors.black:AppColors.white,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
@@ -390,7 +393,8 @@ class _StoryUploadScreenState extends State<StoryUploadScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            // border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            border: Border.all(color:AppColors.hint),
           ),
           child: Row(
             children: [
@@ -410,10 +414,10 @@ class _StoryUploadScreenState extends State<StoryUploadScreen> {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style:  TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: isDark?AppColors.white:AppColors.black,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -421,7 +425,7 @@ class _StoryUploadScreenState extends State<StoryUploadScreen> {
                       subtitle,
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: AppColors.hint,
                       ),
                     ),
                   ],
@@ -621,7 +625,7 @@ class _StoryUploadScreenState extends State<StoryUploadScreen> {
                 ),
               ),
               child: isUploading
-                  ? const Row(
+                  ?  Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         SizedBox(
@@ -636,22 +640,22 @@ class _StoryUploadScreenState extends State<StoryUploadScreen> {
                         Text(
                           'Uploading Story...',
                           style: TextStyle(
-                            color: Colors.white,
+                            color:isDark?AppColors.white:AppColors.black,
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
                     )
-                  : const Row(
+                  :  Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(LucideIcons.send, color: Colors.white, size: 18),
+                        Icon(LucideIcons.send, color: isDark?AppColors.white:AppColors.black, size: 18),
                         SizedBox(width: 10),
                         Text(
                           'Share to Your Story',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: isDark?AppColors.white:AppColors.black,
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                           ),

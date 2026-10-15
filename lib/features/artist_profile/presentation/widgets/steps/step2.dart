@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/constants/craft_constants.dart';
 import 'profile_form_data.dart';
 import 'step_common_widgets.dart';
 
@@ -26,17 +27,7 @@ class _Step2ProfessionalProfileState
   final _formKey = GlobalKey<FormState>();
 
   final List<String> _categories = [
-    'Actor',
-    'Actress',
-    'Child Artist',
-    'Model',
-    'Singer',
-    'Influencer',
-    'Voice Artist',
-    'Anchor',
-    'Theatre Artist',
-    'Musician',
-    'Comedian',
+    ...kFilmCrafts,
     'Other',
   ];
 

@@ -8,6 +8,7 @@ import 'package:video_player/video_player.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../common/widgets/user_avatar.dart';
+import '../../../../common/widgets/video_frame_thumbnail.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
@@ -21,8 +22,6 @@ import '../../data/models/comment_model.dart';
 import '../../data/models/feed_post_model.dart';
 import '../../data/repository/home_repository.dart';
 import '../providers/home_feed_provider.dart';
-import '../../../subscription/presentation/providers/subscription_provider.dart';
-import '../../../subscription/presentation/widgets/limit_upgrade_dialog.dart';
 
 class WatchMediaScreen extends StatefulWidget {
   final FeedPostModel post;
@@ -1177,6 +1176,15 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   }
 
   Widget _buildThumbnail() {
+    if (_post.isVideo) {
+      final videoUrl = ApiEndpoints.formatMediaUrl(_post.mediaUrl);
+      if (videoUrl.isNotEmpty) {
+        return VideoFrameThumbnail(
+          videoUrl: videoUrl,
+          fallback: Container(color: const Color(0xFF15222E)),
+        );
+      }
+    }
     final thumbUrl = ApiEndpoints.formatMediaUrl(_post.thumbnailUrl ?? _post.mediaUrl);
     if (thumbUrl.startsWith('http')) {
       return CachedNetworkImage(
