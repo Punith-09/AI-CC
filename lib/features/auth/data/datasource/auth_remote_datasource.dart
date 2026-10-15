@@ -21,6 +21,14 @@ abstract class AuthRemoteDataSource {
   Future<void> forgotPassword(String email);
 
   Future<void> resetPassword(String token, String newPassword, {String? email, String? otp});
+
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+    required String confirmNewPassword,
+  });
+
+  Future<void> deleteAccount();
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -234,6 +242,113 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw Exception(msg);
       }
       throw Exception('Failed to reset password. OTP/Token might be invalid or expired.');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // ============================
+  // CHANGE PASSWORD
+  // ============================
+
+  @override
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+    required String confirmNewPassword,
+  }) async {
+    try {
+      print('');
+      print('========================================');
+      print('🔑 CHANGE PASSWORD API');
+      print('========================================');
+
+      await _dioClient.post(
+        ApiEndpoints.changePassword,
+        data: {
+          'oldPassword': oldPassword,
+          'newPassword': newPassword,
+          'confirmNewPassword': confirmNewPassword,
+        },
+      );
+
+      print('✅ PASSWORD CHANGED SUCCESSFULLY');
+      print('========================================');
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode;
+      final responseData = e.response?.data;
+
+      print('❌ CHANGE PASSWORD ERROR: status=$statusCode, data=$responseData');
+
+      if (responseData is Map) {
+        final rawMsg = responseData['message'] ?? responseData['error'] ?? responseData['detail'];
+        String msg = '';
+        if (rawMsg is List) {
+          msg = rawMsg.join(', ');
+        } else if (rawMsg != null) {
+          msg = rawMsg.toString();
+        }
+        if (msg.isNotEmpty && !msg.toLowerCase().contains('internal server error')) {
+          throw Exception(msg);
+        }
+      }
+
+      if (statusCode == 401) {
+        throw Exception('incorrect_old_password');
+      } else if (statusCode == 400) {
+        throw Exception('The new password confirmation does not match.');
+      }
+
+      throw Exception('Failed to change password. Please try again.');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // ============================
+  // DELETE ACCOUNT
+  // ============================
+
+  @override
+  Future<void> deleteAccount() async {
+    try {
+      print('');
+      print('========================================');
+      print('🗑️ DELETE ACCOUNT API');
+      print('URL: ${ApiEndpoints.deleteAccount}');
+      print('METHOD: DELETE');
+      print('========================================');
+
+      final response = await _dioClient.delete(
+        ApiEndpoints.deleteAccount,
+      );
+
+      print('✅ ACCOUNT DELETED. STATUS: ${response.statusCode}');
+      print('========================================');
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode;
+      final responseData = e.response?.data;
+
+      print('❌ DELETE ACCOUNT ERROR: status=$statusCode, data=$responseData');
+
+      if (responseData is Map) {
+        final rawMsg = responseData['message'] ?? responseData['error'] ?? responseData['detail'];
+        String msg = '';
+        if (rawMsg is List) {
+          msg = rawMsg.join(', ');
+        } else if (rawMsg != null) {
+          msg = rawMsg.toString();
+        }
+        if (msg.isNotEmpty && !msg.toLowerCase().contains('internal server error')) {
+          throw Exception(msg);
+        }
+      }
+
+      if (statusCode == 401) {
+        throw Exception('Authentication is required. Please log in and try again.');
+      }
+
+      throw Exception('Failed to delete account. Please try again.');
     } catch (e) {
       rethrow;
     }

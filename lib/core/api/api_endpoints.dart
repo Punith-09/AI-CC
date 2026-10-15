@@ -13,6 +13,8 @@ class ApiEndpoints {
   static const String googleLogin = '/auth/google';
   static const String forgotPassword = '/auth/forgot-password';
   static const String resetPassword = '/auth/reset-password';
+  static const String changePassword = '/auth/change-password';
+  static const String deleteAccount = '/auth/account';
 
   static const String exploreUsers = '/users/explore';
   static const String profileMe = '/profile/me';
