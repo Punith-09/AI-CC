@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../common/widgets/app_background.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/responsive/responsive_breakpoints.dart';
+import '../../../../core/services/branch_service.dart';
 import '../../../messages/presentation/providers/messages_provider.dart';
 import '../../../stories/presentation/providers/stories_provider.dart';
 import '../../../artist_profile/presentation/providers/profile_provider.dart';
@@ -25,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      BranchService.instance.handlePendingProfileIfAny(context);
       context.read<HomeFeedProvider>().fetchFeed();
       context.read<MessagesProvider>().fetchChats(silent: true);
       context.read<StoriesProvider>().fetchStories(silent: true);
@@ -187,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: 12,
+              horizontal: 0,
               vertical: 12,
             ),
             child: Column(

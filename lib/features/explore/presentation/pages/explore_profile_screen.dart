@@ -12,6 +12,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/services/branch_service.dart';
+
 import '../../../../core/theme/theme_provider.dart';
 import '../../../artist_profile/data/models/artist_model.dart';
 import '../../../home/data/models/feed_post_model.dart';
@@ -95,29 +97,57 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 10,
+                      vertical: 6,
                     ),
-                    child: GestureDetector(
-                      onTap: () => context.pop(),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            size: 16,
-                            color: AppColors.primary,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        GestureDetector(
+                          onTap: () => context.pop(),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.arrow_back_ios_new_rounded,
+                                size: 16,
+                                color: AppColors.primary,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Back',
+                                style: GoogleFonts.poppins(
+                                  color: AppColors.primary,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Back',
-                            style: GoogleFonts.poppins(
+                        ),
+                        if (profile != null)
+                          IconButton(
+                            icon: const Icon(
+                              Icons.reply_rounded,
                               color: AppColors.primary,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
+                              size: 24,
                             ),
+                            tooltip: 'Share Profile',
+                            onPressed: () {
+                              final profileId = widget.userId.isNotEmpty
+                                  ? widget.userId
+                                  : profile.id;
+                              BranchService.instance.shareProfile(
+                                context: context,
+                                profileId: profileId,
+                                name: profile.name,
+                                role: profile.roles.isNotEmpty
+                                    ? profile.roles.first
+                                    : null,
+                                imageUrl: profile.profileImage,
+                              );
+                            },
                           ),
-                        ],
-                      ),
+                      ],
                     ),
                   ),
 

@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/branch_service.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -55,7 +56,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final success = await context.read<AuthProvider>().login(identifier, password);
     if (success) {
       if (mounted) {
-        context.go(AppRoutes.home);
+        final navigatedToProfile =
+            await BranchService.instance.handlePendingProfileIfAny(context);
+        if (!navigatedToProfile && mounted) {
+          context.go(AppRoutes.home);
+        }
       }
     } else {
       if (mounted) {

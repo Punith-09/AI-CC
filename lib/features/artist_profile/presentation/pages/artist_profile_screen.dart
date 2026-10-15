@@ -16,6 +16,7 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/services/branch_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../presentation/providers/profile_provider.dart';
 import '../../../home/presentation/providers/home_feed_provider.dart';
@@ -424,8 +425,6 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
                         onSelected: (value) {
                           if (value == 'theme') {
                             themeProvider.toggleTheme();
-                          } else if (value == 'logout') {
-                            _logout();
                           }
                         },
                         itemBuilder: (context) => [
@@ -441,22 +440,6 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
                                 const SizedBox(width: 12),
                                 Text(
                                   'Theme',
-                                  style: TextStyle(
-                                    color: isDark ? Colors.white : Colors.black87,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'logout',
-                            child: Row(
-                              children: [
-                                Icon(Icons.logout, size: 18, color: AppColors.primary),
-                                const SizedBox(width: 12),
-                                Text(
-                                  'Logout',
                                   style: TextStyle(
                                     color: isDark ? Colors.white : Colors.black87,
                                     fontSize: 13,
@@ -579,6 +562,14 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
                           isDark: isDark),
                     ],
                   ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // ── Share Button ──────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _ShareButton(profile: profile),
                 ),
 
                 const SizedBox(height: 16),
@@ -1462,3 +1453,75 @@ class _BioField {
   int get hashCode => label.hashCode ^ value.hashCode;
 }
 
+// ── Share Button ──────────────────────────────────────────────────────────────
+class _ShareButton extends StatelessWidget {
+  final dynamic profile; // ArtistModel?
+
+  const _ShareButton({this.profile});
+
+  void _share(BuildContext context) {
+    final String profileId = (profile?.id != null && profile.id.toString().isNotEmpty)
+        ? profile.id.toString()
+        : (LocalStorage.instance.getUserId() ?? '');
+    final String name = profile?.name ?? 'an artist';
+    final String? role = (profile?.roles != null &&
+            profile.roles is List &&
+            (profile.roles as List).isNotEmpty)
+        ? (profile.roles as List).first.toString()
+        : null;
+    final String? imageUrl = profile?.profileImage;
+
+    BranchService.instance.shareProfile(
+      context: context,
+      profileId: profileId,
+      name: name,
+      role: role,
+      imageUrl: imageUrl,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.12)
+        : const Color(0xFFE2E8F0);
+
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: () => _share(context),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 13),
+          decoration: BoxDecoration(
+            border: Border.all(color: borderColor),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.reply_rounded, // forward/share arrow like the image
+                color: AppColors.primary,
+                size: 22,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Share',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

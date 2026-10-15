@@ -10,6 +10,8 @@ import '../responsive/responsive_breakpoints.dart';
 import '../responsive/desktop_shell.dart';
 
 import '../../common/widgets/custom_bottom_navbar.dart';
+import '../../common/widgets/app_sidebar.dart';
+import '../../core/utils/scaffold_key.dart';
 import '../../features/messages/presentation/providers/messages_provider.dart';
 
 import '../../features/apply_job/data/models/application_model.dart';
@@ -172,7 +174,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.exploreProfile,
       builder: (context, state) {
-        final userId = state.extra as String? ?? '';
+        final userId = (state.extra as String?) ??
+            state.uri.queryParameters['userId'] ??
+            state.uri.queryParameters['profile_id'] ??
+            '';
         return ExploreProfileScreen(userId: userId);
       },
     ),
@@ -380,10 +385,10 @@ class _MainScreenState extends State<MainScreen> {
     }
 
     return Scaffold(
+      key: mainScaffoldKey,
       extendBody: true,
-
+      drawer: const AppSidebar(),
       body: widget.child,
-
       bottomNavigationBar: CustomBottomNavbar(
         currentLocation: currentLocation,
 

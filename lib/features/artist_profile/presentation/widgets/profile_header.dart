@@ -7,8 +7,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/routes/app_routes.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../providers/profile_provider.dart';
 
 class ProfileHeader extends StatelessWidget {
   final String? coverImage;
@@ -114,19 +112,6 @@ class ProfileHeader extends StatelessWidget {
                       context.push(AppRoutes.editArtistProfile);
                     } else if (value == 'theme') {
                       context.read<ThemeProvider>().toggleTheme();
-                    } else if (value == 'logout') {
-                      try {
-                        final authProvider = context.read<AuthProvider>();
-                        final profileProvider = context.read<ProfileProvider>();
-                        await authProvider.logout();
-                        profileProvider.clear();
-                      } catch (e) {
-                        debugPrint('Logout error: $e');
-                      } finally {
-                        if (context.mounted) {
-                          context.go(AppRoutes.welcome);
-                        }
-                      }
                     }
                   },
                   itemBuilder: (context) => [
@@ -163,22 +148,6 @@ class ProfileHeader extends StatelessWidget {
                             'Edit',
                             style: TextStyle(
                               color: isDark ? AppColors.darkText : AppColors.black,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem<String>(
-                      value: 'logout',
-                      child: Row(
-                        children: [
-                          Icon(Icons.logout, size: 20, color: Colors.redAccent),
-                          SizedBox(width: 10),
-                          Text(
-                            'Logout',
-                            style: TextStyle(
-                              color: Colors.redAccent,
-                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],

@@ -1,10 +1,12 @@
 import "package:aicc/core/routes/app_routes.dart";
+import "package:aicc/core/utils/scaffold_key.dart";
 import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
 import "package:lucide_icons_flutter/lucide_icons.dart";
 import "package:provider/provider.dart";
 
 import "../../../../core/constants/app_colors.dart";
+import "../../../../core/theme/theme_provider.dart";
 import "../../../messages/presentation/providers/messages_provider.dart";
 // import "../../messages/presentation/providers/messages_provider.dart";
 
@@ -13,8 +15,9 @@ class HomeAppbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.read<ThemeProvider>().isDarkMode;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+      padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -38,7 +41,13 @@ class HomeAppbar extends StatelessWidget {
           //   ),
           // ),
           Row(
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
+              IconButton(
+            onPressed: () => mainScaffoldKey.currentState?.openDrawer(),
+            icon: Icon(LucideIcons.menu, color: isDark ? AppColors.white : AppColors.black, size: 26),
+          ),
+              // SizedBox(width: 4),
               Image.asset(
                 'assets/images/treekologo.png',
                 width: 47,
@@ -56,6 +65,13 @@ class HomeAppbar extends StatelessWidget {
           ),
           Row(
             children: [
+              IconButton(
+                onPressed: () {
+                  // context.push(AppRoutes.activity);
+                  context.push(AppRoutes.splash);
+                },
+                icon:  Icon(LucideIcons.bell, size: 26,color: isDark?AppColors.white:AppColors.black),
+              ),
               Consumer<MessagesProvider>(
                 builder: (_, provider, __) {
                   final unread = provider.totalUnreadCount;

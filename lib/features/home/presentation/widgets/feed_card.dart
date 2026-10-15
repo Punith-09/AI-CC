@@ -22,7 +22,7 @@ class FeedCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCard : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(0),
         border: Border.all(
           color: isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
           width: 1,

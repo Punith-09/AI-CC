@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/branch_service.dart';
 import '../providers/auth_provider.dart';
 import '../../data/models/register_request.dart';
 
@@ -142,7 +143,11 @@ class _SignupScreenState extends State<SignupScreen> {
           content: Text('Registration successful'),
         ),
       );
-      context.go(AppRoutes.home);
+      final navigatedToProfile =
+          await BranchService.instance.handlePendingProfileIfAny(context);
+      if (!navigatedToProfile && mounted) {
+        context.go(AppRoutes.home);
+      }
     } else {
       final errorMsg = context.read<AuthProvider>().errorMessage;
       ScaffoldMessenger.of(context).showSnackBar(

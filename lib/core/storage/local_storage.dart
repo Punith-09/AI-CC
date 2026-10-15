@@ -12,6 +12,7 @@ class LocalStorage {
   static const String _keyUserTrkCode = 'user_trk_code';
   static const String _keyUserJson = 'user_data';
   static const String _keyThemeMode = 'app_theme_mode';
+  static const String _keyPendingProfileId = 'pending_profile_id';
 
   static LocalStorage? _instance;
   static SharedPreferences? _prefs;
@@ -320,5 +321,35 @@ class LocalStorage {
       await _prefs?.remove(_userFollowingKey(uid));
     }
     await _prefs?.remove(_keyFollowingUserIds);
+  }
+
+  // =========================================================
+  // DEFERRED DEEP LINK PENDING DESTINATIONS
+  // =========================================================
+
+  Future<void> savePendingProfileId(String id) async {
+    await _prefs?.setString(_keyPendingProfileId, id);
+  }
+
+  String? getPendingProfileId() {
+    return _prefs?.getString(_keyPendingProfileId);
+  }
+
+  Future<void> clearPendingProfileId() async {
+    await _prefs?.remove(_keyPendingProfileId);
+  }
+
+  // =========================================================
+  // GOOGLE PLAY INSTALL REFERRER STATUS
+  // =========================================================
+
+  static const String _keyHasCheckedReferrer = 'has_checked_install_referrer';
+
+  bool hasCheckedInstallReferrer() {
+    return _prefs?.getBool(_keyHasCheckedReferrer) ?? false;
+  }
+
+  Future<void> setHasCheckedInstallReferrer(bool value) async {
+    await _prefs?.setBool(_keyHasCheckedReferrer, value);
   }
 }
