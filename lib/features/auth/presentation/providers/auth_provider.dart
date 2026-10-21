@@ -207,4 +207,62 @@ class AuthProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  // ============================
+  // CHANGE PASSWORD
+  // ============================
+
+  Future<bool> changePassword({
+    required String oldPassword,
+    required String newPassword,
+    required String confirmNewPassword,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _authRepository.changePassword(
+        oldPassword: oldPassword,
+        newPassword: newPassword,
+        confirmNewPassword: confirmNewPassword,
+      );
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      final raw = e.toString().replaceFirst('Exception: ', '').trim();
+      _errorMessage = raw;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // ============================
+  // DELETE ACCOUNT
+  // ============================
+
+  Future<bool> deleteAccount() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _authRepository.deleteAccount();
+      // Clear local session completely
+      _currentUser = null;
+      _clearUserSessionOnLogout();
+      await _authRepository.logout();
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      final raw = e.toString().replaceFirst('Exception: ', '').trim();
+      _errorMessage = raw;
+      notifyListeners();
+      return false;
+    }
+  }
 }

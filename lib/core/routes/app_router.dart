@@ -28,6 +28,8 @@ import '../../features/auth/presentation/pages/login_screen.dart';
 import '../../features/auth/presentation/pages/signup_screen.dart';
 import '../../features/auth/presentation/pages/forgot_password_screen.dart';
 import '../../features/auth/presentation/pages/welcome_screen.dart';
+import '../../features/auth/presentation/pages/change_password_screen.dart';
+import '../../features/auth/presentation/pages/delete_account_screen.dart';
 import '../../features/creator_profile/presentation/pages/creator_profile_screen.dart';
 import '../../features/explore/presentation/pages/explore_screen.dart';
 import '../../features/home/data/models/feed_post_model.dart';
@@ -74,6 +76,16 @@ final GoRouter appRouter = GoRouter(
         final email = state.uri.queryParameters['email'];
         return ForgotPasswordScreen(token: token, initialEmail: email);
       },
+    ),
+
+    GoRoute(
+      path: AppRoutes.changePassword,
+      builder: (_, __) => const ChangePasswordScreen(),
+    ),
+
+    GoRoute(
+      path: AppRoutes.deleteAccount,
+      builder: (_, __) => const DeleteAccountScreen(),
     ),
 
     GoRoute(

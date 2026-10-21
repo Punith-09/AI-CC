@@ -274,7 +274,7 @@ class AppSidebar extends StatelessWidget {
                     label: 'Change Password',
                     onTap: () {
                       Navigator.of(context).pop();
-                      context.go(AppRoutes.home);
+                      context.push(AppRoutes.changePassword);
                     },
                   ),
                   buildSectionItem(
@@ -306,7 +306,7 @@ class AppSidebar extends StatelessWidget {
                     labelColor: AppColors.danger,
                     onTap: () {
                       Navigator.of(context).pop();
-                      context.go(AppRoutes.home);
+                      context.push(AppRoutes.deleteAccount);
                     },
                   ),
                   buildSectionItem(
