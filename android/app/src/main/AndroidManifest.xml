@@ -29,13 +29,12 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
 
-            <!-- TreeKo Native URI Scheme (treeko://profile?id=...) -->
+            <!-- TreeKo Native URI Scheme (treeko://...) -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="treeko" android:host="profile" />
-                <data android:scheme="treeko" android:host="open" />
+                <data android:scheme="treeko" />
             </intent-filter>
 
             <!-- TreeKo Web App Links (https://treeko.in/profile/...) -->

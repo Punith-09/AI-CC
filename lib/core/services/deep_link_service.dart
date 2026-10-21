@@ -156,6 +156,17 @@ class DeepLinkService {
         }
       }
 
+      // 4. Fallback if host itself is profile ID (e.g. treeko://670e1234)
+      if (profileId == null || profileId.isEmpty) {
+        if (uri.scheme == 'treeko' &&
+            uri.host.isNotEmpty &&
+            uri.host != 'open' &&
+            uri.host != 'profile' &&
+            uri.host != 'users') {
+          profileId = uri.host;
+        }
+      }
+
       if (profileId != null && profileId.trim().isNotEmpty) {
         debugPrint('🌿 [DeepLink] Resolved profile ID from URI: $profileId');
         _routeToProfile(profileId.trim());
@@ -254,19 +265,24 @@ class DeepLinkService {
       return;
     }
 
-    final link = createProfileShareLink(
+    final playStoreLink = createProfileShareLink(
       profileId: cleanId,
       name: name,
       role: role,
       imageUrl: imageUrl,
     );
 
+    final appDirectLink = 'treeko://profile?id=$cleanId';
+
     final displayName = name.trim().isEmpty ? 'Artist' : name.trim();
     final roleText = (role != null && role.isNotEmpty) ? ' ($role)' : '';
 
     final text =
-        "Check out $displayName's$roleText profile on TreeKo! 🎬\n"
-        "Discover their portfolio, auditions, and creative work:\n$link";
+        "Check out $displayName's$roleText profile on TreeKo! 🎬\n\n"
+        "📱 Open in TreeKo App:\n"
+        "$appDirectLink\n\n"
+        "🌐 Install from Play Store:\n"
+        "$playStoreLink";
 
     await Share.share(
       text,
