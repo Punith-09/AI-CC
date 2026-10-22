@@ -44,6 +44,7 @@ import '../../features/post/presentation/pages/upload_video_screen.dart';
 import '../../features/explore/presentation/pages/explore_profile_screen.dart';
 import '../../features/subscription/presentation/pages/subscription_screen.dart';
 import '../../features/stories/presentation/pages/story_upload_screen.dart';
+import '../../features/live_stats/presentation/pages/live_stats_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: AppRoutes.welcome,
@@ -214,6 +215,14 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.storyUpload,
       builder: (_, __) => const StoryUploadScreen(),
+    ),
+
+    // =========================================================
+    // LIVE STATS SCREEN
+    // =========================================================
+    GoRoute(
+      path: AppRoutes.liveStats,
+      builder: (_, __) => const LiveStatsScreen(),
     ),
 
     // =========================================================

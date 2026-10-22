@@ -23,6 +23,8 @@ import '../../features/stories/data/repository/stories_repository.dart';
 import '../../features/artist_profile/presentation/providers/profile_provider.dart';
 import '../../features/explore/presentation/providers/explore_provider.dart';
 import '../../features/home/presentation/providers/home_feed_provider.dart';
+import '../../features/live_stats/data/datasource/live_stats_remote_datasource.dart';
+import '../../features/live_stats/presentation/providers/live_stats_provider.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -194,6 +196,18 @@ Future<void> initDependencies() async {
       () => HomeFeedProvider(
         sl<HomeRepository>(),
       ),
+    );
+  }
+
+  // Live Stats Feature
+  if (!sl.isRegistered<LiveStatsRemoteDataSource>()) {
+    sl.registerLazySingleton<LiveStatsRemoteDataSource>(
+      () => LiveStatsRemoteDataSourceImpl(sl<DioClient>()),
+    );
+  }
+  if (!sl.isRegistered<LiveStatsProvider>()) {
+    sl.registerLazySingleton<LiveStatsProvider>(
+      () => LiveStatsProvider(sl<LiveStatsRemoteDataSource>()),
     );
   }
 }
