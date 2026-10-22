@@ -73,4 +73,8 @@ class ApiEndpoints {
   static String deleteStory(String id) => "/stories/$id";
 
   static const String liveStats = "/stats";
+
+  // Notifications
+  static const String notifications = "/notifications";
+  static const String notificationsReadAll = "/notifications/read-all";
 }

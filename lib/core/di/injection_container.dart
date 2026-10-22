@@ -25,6 +25,9 @@ import '../../features/explore/presentation/providers/explore_provider.dart';
 import '../../features/home/presentation/providers/home_feed_provider.dart';
 import '../../features/live_stats/data/datasource/live_stats_remote_datasource.dart';
 import '../../features/live_stats/presentation/providers/live_stats_provider.dart';
+import '../../features/notifications/data/datasource/notifications_remote_datasource.dart';
+import '../../features/notifications/data/repository/notifications_repository.dart';
+import '../../features/notifications/presentation/providers/notifications_provider.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -208,6 +211,23 @@ Future<void> initDependencies() async {
   if (!sl.isRegistered<LiveStatsProvider>()) {
     sl.registerLazySingleton<LiveStatsProvider>(
       () => LiveStatsProvider(sl<LiveStatsRemoteDataSource>()),
+    );
+  }
+
+  // Notifications Feature
+  if (!sl.isRegistered<NotificationsRemoteDataSource>()) {
+    sl.registerLazySingleton<NotificationsRemoteDataSource>(
+      () => NotificationsRemoteDataSourceImpl(sl<DioClient>()),
+    );
+  }
+  if (!sl.isRegistered<NotificationsRepository>()) {
+    sl.registerLazySingleton<NotificationsRepository>(
+      () => NotificationsRepositoryImpl(sl<NotificationsRemoteDataSource>()),
+    );
+  }
+  if (!sl.isRegistered<NotificationsProvider>()) {
+    sl.registerLazySingleton<NotificationsProvider>(
+      () => NotificationsProvider(sl<NotificationsRepository>()),
     );
   }
 }

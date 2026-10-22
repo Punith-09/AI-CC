@@ -674,6 +674,7 @@ class _ActionButtonsRowState extends State<_ActionButtonsRow> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.read<ThemeProvider>().isDarkMode;
     final isFollowing = widget.provider.isFollowing(widget.userId);
 
     return Row(
@@ -699,7 +700,7 @@ class _ActionButtonsRowState extends State<_ActionButtonsRow> {
                         end: Alignment.bottomRight,
                       ),
                 color:
-                    isFollowing ? const Color(0xFF1A1A1A) : null,
+                    isFollowing ? AppColors.primary : null,
                 border: isFollowing
                     ? Border.all(
                         color: AppColors.primary.withValues(alpha: 0.5))
@@ -720,7 +721,7 @@ class _ActionButtonsRowState extends State<_ActionButtonsRow> {
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: isFollowing ? AppColors.primary : AppColors.white,
+                    color: isFollowing ? AppColors.black : AppColors.white,
                   ),
                 ),
               ),
@@ -738,9 +739,9 @@ class _ActionButtonsRowState extends State<_ActionButtonsRow> {
               height: 48,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
-                color: const Color(0xFF1A1A1A),
+                color:isDark?AppColors.black:AppColors.white,
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color:AppColors.primary,
                 ),
               ),
               child: Center(
@@ -758,7 +759,7 @@ class _ActionButtonsRowState extends State<_ActionButtonsRow> {
                         style: GoogleFonts.poppins(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color:isDark?AppColors.white:AppColors.black,
                         ),
                       ),
               ),
