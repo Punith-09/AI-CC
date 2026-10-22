@@ -282,7 +282,7 @@ class AppSidebar extends StatelessWidget {
                     label: 'Live Stats',
                     onTap: () {
                       Navigator.of(context).pop();
-                      context.go(AppRoutes.home);
+                      context.push(AppRoutes.liveStats);
                     },
                   ),
                 ],
