@@ -49,7 +49,7 @@ final GoRouter appRouter = GoRouter(
   initialLocation: AppRoutes.welcome,
   redirect: (context, state) {
     final isLoggedIn = LocalStorage.instance.hasToken();
-    final location = state.uri.toString();
+    final location = state.uri.path;
 
     final isAuthRoute =
         location == AppRoutes.welcome ||
@@ -62,10 +62,39 @@ final GoRouter appRouter = GoRouter(
     return null; // no redirect needed
   },
 
-  routes: [
+  errorBuilder: (context, state) {
+    debugPrint('🌿 [AppRouter] Handled route error for: ${state.uri}');
+    final id = state.uri.queryParameters['id'] ??
+        state.uri.queryParameters['profile_id'] ??
+        state.uri.queryParameters['deep_link_value'];
 
+    if (id != null && id.trim().isNotEmpty) {
+      return ExploreProfileScreen(userId: id.trim());
+    }
+
+    final isLoggedIn = LocalStorage.instance.hasToken();
+    return isLoggedIn ? const HomeScreen() : const WelcomeScreen();
+  },
+
+  routes: [
+    GoRoute(
+      path: '/',
+      redirect: (_, __) =>
+          LocalStorage.instance.hasToken() ? AppRoutes.home : AppRoutes.welcome,
+    ),
+    GoRoute(
+      path: '/profile',
+      builder: (context, state) {
+        final id = state.uri.queryParameters['id'] ??
+            state.uri.queryParameters['profile_id'] ??
+            state.uri.queryParameters['deep_link_value'];
+        if (id != null && id.trim().isNotEmpty) {
+          return ExploreProfileScreen(userId: id.trim());
+        }
+        return const HomeScreen();
+      },
+    ),
     GoRoute(path: AppRoutes.welcome, builder: (_, __) => const WelcomeScreen()),
-    GoRoute(path: AppRoutes.welcome  , builder: (_, __) => const WelcomeScreen()),
 
     GoRoute(path: AppRoutes.login, builder: (_, __) => const LoginScreen()),
     GoRoute(path: AppRoutes.signup, builder: (_, __) => const SignupScreen()),

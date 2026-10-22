@@ -14,20 +14,20 @@ void main() {
   });
 
   group('Native Deferred Deep Linking Flow Tests (100% Free)', () {
-    test('createProfileShareLink generates Google Play Store link carrying profile_id in referrer', () {
+    test('createProfileShareLink generates link carrying profile_id', () async {
       final service = DeepLinkService.instance;
       const testProfileId = 'user-artist-12345';
       const testName = 'John Director';
 
-      final link = service.createProfileShareLink(
+      final link = await service.createProfileShareLink(
         profileId: testProfileId,
         name: testName,
         role: 'Director',
       );
 
       expect(link, isNotEmpty);
-      expect(link, contains('play.google.com/store/apps/details?id=talentcasting.com'));
-      expect(link, contains('referrer=profile_id%3Duser-artist-12345'));
+      expect(link, contains('treeko.onelink.me/CEaN'));
+      expect(link, contains('deep_link_value=user-artist-12345'));
     });
 
     test('Not-installed / Unauthenticated flow: Pending profile ID is saved to LocalStorage', () async {

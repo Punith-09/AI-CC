@@ -41,6 +41,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.4"
+  appsflyer_sdk:
+    dependency: "direct main"
+    description:
+      name: appsflyer_sdk
+      sha256: "8e6d8f2597e4d9653e44ad3f9f89bc9fcec37f2429d3010ed50a12fe527b2a10"
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.0.2"
   archive:
     dependency: transitive
     description:
@@ -840,14 +848,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.6"
-  play_install_referrer:
-    dependency: "direct main"
-    description:
-      name: play_install_referrer
-      sha256: "7dd808236d35d15199d5e7a5b55488e4343c1b67c4694902d6b95196b22b19cd"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.5.0"
   plugin_platform_interface:
     dependency: transitive
     description:

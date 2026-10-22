@@ -124,29 +124,29 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
                             ],
                           ),
                         ),
-                        if (profile != null)
-                          IconButton(
-                            icon: const Icon(
-                              Icons.reply_rounded,
-                              color: AppColors.primary,
-                              size: 24,
-                            ),
-                            tooltip: 'Share Profile',
-                            onPressed: () {
-                              final profileId = widget.userId.isNotEmpty
-                                  ? widget.userId
-                                  : profile.id;
-                              BranchService.instance.shareProfile(
-                                context: context,
-                                profileId: profileId,
-                                name: profile.name,
-                                role: profile.roles.isNotEmpty
-                                    ? profile.roles.first
-                                    : null,
-                                imageUrl: profile.profileImage,
-                              );
-                            },
-                          ),
+                        // if (profile != null)
+                        //   IconButton(
+                        //     icon: const Icon(
+                        //       Icons.reply_rounded,
+                        //       color: AppColors.primary,
+                        //       size: 24,
+                        //     ),
+                        //     tooltip: 'Share Profile',
+                        //     onPressed: () {
+                        //       final profileId = widget.userId.isNotEmpty
+                        //           ? widget.userId
+                        //           : profile.id;
+                        //       BranchService.instance.shareProfile(
+                        //         context: context,
+                        //         profileId: profileId,
+                        //         name: profile.name,
+                        //         role: profile.roles.isNotEmpty
+                        //             ? profile.roles.first
+                        //             : null,
+                        //         imageUrl: profile.profileImage,
+                        //       );
+                        //     },
+                        //   ),
                       ],
                     ),
                   ),
@@ -720,7 +720,7 @@ class _ActionButtonsRowState extends State<_ActionButtonsRow> {
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: isFollowing ? AppColors.primary : Colors.black,
+                    color: isFollowing ? AppColors.primary : AppColors.white,
                   ),
                 ),
               ),

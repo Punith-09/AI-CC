@@ -344,6 +344,7 @@ class LocalStorage {
   // =========================================================
 
   static const String _keyHasCheckedReferrer = 'has_checked_install_referrer';
+  static const String _keyProcessedDeferredInstall = 'has_processed_deferred_install';
 
   bool hasCheckedInstallReferrer() {
     return _prefs?.getBool(_keyHasCheckedReferrer) ?? false;
@@ -351,5 +352,13 @@ class LocalStorage {
 
   Future<void> setHasCheckedInstallReferrer(bool value) async {
     await _prefs?.setBool(_keyHasCheckedReferrer, value);
+  }
+
+  bool hasProcessedDeferredInstall() {
+    return _prefs?.getBool(_keyProcessedDeferredInstall) ?? false;
+  }
+
+  Future<void> setHasProcessedDeferredInstall(bool value) async {
+    await _prefs?.setBool(_keyProcessedDeferredInstall, value);
   }
 }
