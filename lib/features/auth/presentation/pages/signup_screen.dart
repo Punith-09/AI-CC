@@ -92,6 +92,16 @@ class _SignupScreenState extends State<SignupScreen> {
       return;
     }
 
+    // ── Password length validation ────────────────────────────────────────────
+    if (_passwordController.text.length < 8) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Password must be at least 8 characters'),
+        ),
+      );
+      return;
+    }
+
     // ── Mobile validation ─────────────────────────────────────────────────────
     final mobile = _mobileController.text.trim();
     if (!_isValidMobile(mobile)) {
