@@ -65,6 +65,17 @@ final GoRouter appRouter = GoRouter(
 
   errorBuilder: (context, state) {
     debugPrint('🌿 [AppRouter] Handled route error for: ${state.uri}');
+    final uriStr = state.uri.toString().toLowerCase();
+    if (uriStr.contains('delete') && uriStr.contains('account')) {
+      return const DeleteAccountScreen();
+    }
+
+    if (uriStr.contains('reset') && uriStr.contains('password')) {
+      final token = state.uri.queryParameters['token'] ?? state.uri.queryParameters['otp'];
+      final email = state.uri.queryParameters['email'];
+      return ForgotPasswordScreen(token: token, initialEmail: email);
+    }
+
     final id = state.uri.queryParameters['id'] ??
         state.uri.queryParameters['profile_id'] ??
         state.uri.queryParameters['deep_link_value'];
@@ -93,6 +104,38 @@ final GoRouter appRouter = GoRouter(
           return ExploreProfileScreen(userId: id.trim());
         }
         return const HomeScreen();
+      },
+    ),
+    GoRoute(
+      path: '/delete-account',
+      redirect: (_, __) => AppRoutes.deleteAccount,
+    ),
+    GoRoute(
+      path: '/delete_account',
+      redirect: (_, __) => AppRoutes.deleteAccount,
+    ),
+    GoRoute(
+      path: '/auth/reset-password',
+      builder: (context, state) {
+        final token = state.uri.queryParameters['token'] ?? state.uri.queryParameters['otp'];
+        final email = state.uri.queryParameters['email'];
+        return ForgotPasswordScreen(token: token, initialEmail: email);
+      },
+    ),
+    GoRoute(
+      path: '/reset-password',
+      builder: (context, state) {
+        final token = state.uri.queryParameters['token'] ?? state.uri.queryParameters['otp'];
+        final email = state.uri.queryParameters['email'];
+        return ForgotPasswordScreen(token: token, initialEmail: email);
+      },
+    ),
+    GoRoute(
+      path: '/reset_password',
+      builder: (context, state) {
+        final token = state.uri.queryParameters['token'] ?? state.uri.queryParameters['otp'];
+        final email = state.uri.queryParameters['email'];
+        return ForgotPasswordScreen(token: token, initialEmail: email);
       },
     ),
     GoRoute(path: AppRoutes.welcome, builder: (_, __) => const WelcomeScreen()),

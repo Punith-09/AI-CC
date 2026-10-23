@@ -65,14 +65,22 @@ class DeepLinkService {
               await LocalStorage.instance.setHasProcessedDeferredInstall(true);
             }
 
-            final profileId = deepLink.deepLinkValue ??
+            final payload = deepLink.deepLinkValue ??
                 deepLink.getStringValue('profile_id') ??
                 deepLink.getStringValue('id') ??
                 deepLink.afSub1;
 
-            debugPrint('🌿 [AppsFlyer UDL] Found profileId: $profileId (isDeferred: ${deepLink.isDeferred})');
-            if (profileId != null && profileId.isNotEmpty) {
-              _routeToProfile(profileId);
+            final token = deepLink.getStringValue('token') ??
+                deepLink.getStringValue('otp') ??
+                deepLink.afSub2;
+            final email = deepLink.getStringValue('email') ??
+                deepLink.afSub3;
+
+            debugPrint('🌿 [AppsFlyer UDL] Found payload: $payload, token: $token (isDeferred: ${deepLink.isDeferred})');
+            if (payload != null && payload.isNotEmpty) {
+              _routeDestination(payload, token: token, email: email);
+            } else if (token != null && token.isNotEmpty) {
+              _routeToResetPassword(token: token, email: email);
             }
           }
         },
@@ -102,13 +110,21 @@ class DeepLinkService {
 
           await LocalStorage.instance.setHasProcessedDeferredInstall(true);
 
-          final profileId = data['deep_link_value']?.toString() ??
+          final payload = data['deep_link_value']?.toString() ??
               data['profile_id']?.toString() ??
               data['id']?.toString() ??
               data['af_sub1']?.toString();
 
-          if (profileId != null && profileId.isNotEmpty) {
-            _routeToProfile(profileId);
+          final token = data['token']?.toString() ??
+              data['otp']?.toString() ??
+              data['af_sub2']?.toString();
+          final email = data['email']?.toString() ??
+              data['af_sub3']?.toString();
+
+          if (payload != null && payload.isNotEmpty) {
+            _routeDestination(payload, token: token, email: email);
+          } else if (token != null && token.isNotEmpty) {
+            _routeToResetPassword(token: token, email: email);
           }
         },
         onConversionDataFail: (Map<String, dynamic> error) {
@@ -183,45 +199,162 @@ class DeepLinkService {
       }
       _lastIncomingUriString = uriString;
 
-      String? profileId;
+      // Check if URI specifically points to delete account
+      final uriLower = uri.toString().toLowerCase();
+      if (uriLower.contains('delete_account') ||
+          uriLower.contains('deleteaccount') ||
+          uriLower.contains('delete-account') ||
+          (uri.scheme == 'treeko' && uri.host.toLowerCase().contains('delete'))) {
+        debugPrint('🌿 [DeepLink] Resolved Delete Account route from URI');
+        _routeToDeleteAccount();
+        return;
+      }
+
+      // Check if URI specifically points to reset password
+      if (uriLower.contains('reset_password') ||
+          uriLower.contains('resetpassword') ||
+          uriLower.contains('reset-password') ||
+          uriLower.contains('forgotpassword') ||
+          uriLower.contains('forgot-password') ||
+          (uri.scheme == 'treeko' && uri.host.toLowerCase().contains('forgot'))) {
+        final token = uri.queryParameters['token'] ?? uri.queryParameters['otp'];
+        final email = uri.queryParameters['email'];
+        debugPrint('🌿 [DeepLink] Resolved Reset Password route from URI with token: $token');
+        _routeToResetPassword(token: token, email: email);
+        return;
+      }
+
+      String? payload;
+      final token = uri.queryParameters['token'] ?? uri.queryParameters['otp'];
+      final email = uri.queryParameters['email'];
 
       // 1. Query parameters (?id=... or ?profile_id=... or ?deep_link_value=...)
-      profileId = uri.queryParameters['deep_link_value'] ??
+      payload = uri.queryParameters['deep_link_value'] ??
           uri.queryParameters['profile_id'] ??
           uri.queryParameters['profileId'] ??
           uri.queryParameters['id'] ??
           uri.queryParameters['userId'] ??
           uri.queryParameters['af_sub1'];
 
-      // 2. Path segments (/profile/123 or /users/123)
-      if (profileId == null || profileId.isEmpty) {
+      // 2. Path segments (/profile/123 or /users/123 or /deleteAccount)
+      if (payload == null || payload.isEmpty) {
         final segments = uri.pathSegments;
         if (segments.length >= 2 &&
             (segments[0] == 'profile' || segments[0] == 'users')) {
-          profileId = segments[1];
+          payload = segments[1];
         } else if (segments.isNotEmpty &&
             (uri.host == 'profile' || uri.host == 'users')) {
-          profileId = segments[0];
+          payload = segments[0];
         }
       }
 
-      // 3. Fallback if host itself is profile ID (e.g. treeko://670e1234)
-      if (profileId == null || profileId.isEmpty) {
+      // 3. Fallback if host itself is payload (e.g. treeko://670e1234)
+      if (payload == null || payload.isEmpty) {
         if (uri.scheme == 'treeko' &&
             uri.host.isNotEmpty &&
             uri.host != 'open' &&
             uri.host != 'profile' &&
             uri.host != 'users') {
-          profileId = uri.host;
+          payload = uri.host;
         }
       }
 
-      if (profileId != null && profileId.trim().isNotEmpty) {
-        debugPrint('🌿 [DeepLink] Resolved profile ID from URI: $profileId');
-        _routeToProfile(profileId.trim());
+      if (payload != null && payload.trim().isNotEmpty) {
+        debugPrint('🌿 [DeepLink] Resolved payload from URI: $payload');
+        _routeDestination(payload.trim(), token: token, email: email);
+      } else if (token != null && token.trim().isNotEmpty) {
+        _routeToResetPassword(token: token.trim(), email: email?.trim());
       }
     } catch (e) {
       debugPrint('⚠️ [DeepLink] Error handling incoming URI: $e');
+    }
+  }
+
+  /// Routes to the intended deep link destination (Profile, Delete Account, Reset Password, etc.)
+  void _routeDestination(String destination, {String? token, String? email}) {
+    final clean = destination.trim();
+    if (clean.isEmpty) return;
+
+    final lower = clean.toLowerCase();
+    if (lower == 'delete_account' ||
+        lower == 'deleteaccount' ||
+        lower == 'delete-account' ||
+        lower == 'delete') {
+      _routeToDeleteAccount();
+      return;
+    }
+
+    if (lower == 'reset_password' ||
+        lower == 'resetpassword' ||
+        lower == 'reset-password' ||
+        lower == 'forgotpassword' ||
+        lower == 'forgot_password') {
+      _routeToResetPassword(token: token, email: email);
+      return;
+    }
+
+    // Default: artist profile ID
+    _routeToProfile(clean);
+  }
+
+  /// Routes to the Forgot / Reset Password screen with token and optional email.
+  void _routeToResetPassword({String? token, String? email}) {
+    final cleanToken = token?.trim();
+    final cleanEmail = email?.trim();
+    final cacheKey = 'reset_password_${cleanToken ?? ''}';
+
+    if (_lastRoutedProfileId == cacheKey &&
+        _lastRoutedTime != null &&
+        DateTime.now().difference(_lastRoutedTime!).inSeconds < 5) {
+      debugPrint('🌿 [DeepLink] Skipping duplicate reset_password route');
+      return;
+    }
+    _lastRoutedProfileId = cacheKey;
+    _lastRoutedTime = DateTime.now();
+
+    final query = <String, String>{};
+    if (cleanToken != null && cleanToken.isNotEmpty) query['token'] = cleanToken;
+    if (cleanEmail != null && cleanEmail.isNotEmpty) query['email'] = cleanEmail;
+
+    final uri = Uri(
+      path: AppRoutes.forgotPassword,
+      queryParameters: query.isEmpty ? null : query,
+    ).toString();
+
+    debugPrint('🌿 [DeepLink] Routing to reset password screen: $uri');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        appRouter.push(uri);
+      } catch (e) {
+        debugPrint('⚠️ Failed to route to reset password: $e');
+      }
+    });
+  }
+
+  /// Routes to the Delete Account screen or saves it as a deferred destination.
+  void _routeToDeleteAccount() {
+    if (_lastRoutedProfileId == 'delete_account' &&
+        _lastRoutedTime != null &&
+        DateTime.now().difference(_lastRoutedTime!).inSeconds < 5) {
+      debugPrint('🌿 [DeepLink] Skipping duplicate delete_account route');
+      return;
+    }
+    _lastRoutedProfileId = 'delete_account';
+    _lastRoutedTime = DateTime.now();
+
+    final bool isLoggedIn = LocalStorage.instance.hasToken();
+
+    if (isLoggedIn) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        try {
+          appRouter.push(AppRoutes.deleteAccount);
+        } catch (e) {
+          debugPrint('⚠️ Failed to route to delete account: $e');
+        }
+      });
+    } else {
+      debugPrint('🌿 User not signed in. Storing pending route: ${AppRoutes.deleteAccount}');
+      LocalStorage.instance.savePendingRoute(AppRoutes.deleteAccount);
     }
   }
 
@@ -258,10 +391,43 @@ class DeepLinkService {
     }
   }
 
-  /// Checks and navigates to any pending deferred profile after sign-in.
+  /// Checks and navigates to any pending deferred destination (Delete Account or Profile) after sign-in.
   /// Called after successful login, signup, or home screen loading.
   Future<bool> handlePendingProfileIfAny(BuildContext context) async {
     try {
+      // 1. Check pending route (e.g. Delete Account)
+      final pendingRoute = LocalStorage.instance.getPendingRoute();
+      if (pendingRoute != null && pendingRoute.trim().isNotEmpty) {
+        await LocalStorage.instance.clearPendingRoute();
+        debugPrint('🌿 Resuming deferred deep link to route: $pendingRoute');
+
+        if (context.mounted) {
+          if (pendingRoute == AppRoutes.deleteAccount) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Row(
+                  children: [
+                    Icon(Icons.delete_outline_rounded, color: Colors.white, size: 20),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text('Continuing to Account Deletion...'),
+                    ),
+                  ],
+                ),
+                backgroundColor: const Color(0xFF1E293B),
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 2),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            );
+          }
+
+          appRouter.push(pendingRoute.trim());
+          return true;
+        }
+      }
+
+      // 2. Check pending profile
       final pendingId = LocalStorage.instance.getPendingProfileId();
       if (pendingId != null && pendingId.trim().isNotEmpty) {
         await LocalStorage.instance.clearPendingProfileId();
@@ -291,7 +457,7 @@ class DeepLinkService {
         }
       }
     } catch (e) {
-      debugPrint('⚠️ Error processing pending profile link: $e');
+      debugPrint('⚠️ Error processing pending link: $e');
     }
     return false;
   }
@@ -347,6 +513,36 @@ class DeepLinkService {
     // 3. Fallback to Play Store referrer URL until template is created
     final encodedReferrer = Uri.encodeComponent('profile_id=$cleanId');
     return '$playStoreBaseUrl&referrer=$encodedReferrer';
+  }
+
+  /// Creates the static OneLink URL for Delete Account navigation.
+  String createDeleteAccountLink() {
+    final query = Uri(
+      queryParameters: {
+        'deep_link_value': 'delete_account',
+        'af_dp': 'treeko://deleteAccount',
+        'af_web_dp': playStoreBaseUrl,
+      },
+    ).query;
+    return 'https://$oneLinkDomain/$oneLinkTemplateId?$query';
+  }
+
+  /// Creates the OneLink URL for Password Reset carrying the token.
+  String createResetPasswordLink({
+    required String token,
+    String? email,
+  }) {
+    final cleanToken = token.trim();
+    final query = Uri(
+      queryParameters: {
+        'deep_link_value': 'reset_password',
+        'token': cleanToken,
+        if (email != null && email.trim().isNotEmpty) 'email': email.trim(),
+        'af_dp': 'treeko://forgotPassword?token=$cleanToken',
+        'af_web_dp': 'https://casting-be-1.onrender.com/auth/reset-password?token=$cleanToken',
+      },
+    ).query;
+    return 'https://$oneLinkDomain/$oneLinkTemplateId?$query';
   }
 
   /// Complete share action: triggers the native OS share sheet with a single clickable link!

@@ -327,6 +327,8 @@ class LocalStorage {
   // DEFERRED DEEP LINK PENDING DESTINATIONS
   // =========================================================
 
+  static const String _keyPendingRoute = 'pending_target_route';
+
   Future<void> savePendingProfileId(String id) async {
     await _prefs?.setString(_keyPendingProfileId, id);
   }
@@ -337,6 +339,18 @@ class LocalStorage {
 
   Future<void> clearPendingProfileId() async {
     await _prefs?.remove(_keyPendingProfileId);
+  }
+
+  Future<void> savePendingRoute(String route) async {
+    await _prefs?.setString(_keyPendingRoute, route);
+  }
+
+  String? getPendingRoute() {
+    return _prefs?.getString(_keyPendingRoute);
+  }
+
+  Future<void> clearPendingRoute() async {
+    await _prefs?.remove(_keyPendingRoute);
   }
 
   // =========================================================

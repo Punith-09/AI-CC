@@ -49,6 +49,7 @@
                 <data android:scheme="https" android:host="*.onelink.me" />
                 <data android:scheme="https" android:host="treeko.in" android:pathPrefix="/profile" />
                 <data android:scheme="https" android:host="casting-be-1.onrender.com" android:pathPrefix="/users" />
+                <data android:scheme="https" android:host="casting-be-1.onrender.com" android:pathPrefix="/auth/reset-password" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

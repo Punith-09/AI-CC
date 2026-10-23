@@ -68,5 +68,54 @@ void main() {
       // When link arrives, it doesn't need to be queued as pending
       expect(LocalStorage.instance.getPendingProfileId(), isNull);
     });
+
+    test('createDeleteAccountLink generates OneLink for delete_account', () {
+      final service = DeepLinkService.instance;
+      final link = service.createDeleteAccountLink();
+
+      expect(link, isNotEmpty);
+      expect(link, contains('treeko.onelink.me/CEaN'));
+      expect(link, contains('deep_link_value=delete_account'));
+      expect(link, contains('af_dp=treeko%3A%2F%2FdeleteAccount'));
+    });
+
+    test('Delete Account flow: pending route is saved when logged out and cleared after login', () async {
+      expect(LocalStorage.instance.hasToken(), isFalse);
+      expect(LocalStorage.instance.getPendingRoute(), isNull);
+
+      // Simulating incoming delete_account link for unauthenticated user
+      await LocalStorage.instance.savePendingRoute('/deleteAccount');
+      expect(LocalStorage.instance.getPendingRoute(), equals('/deleteAccount'));
+
+      // User logs in
+      await LocalStorage.instance.saveToken('token-abc-123');
+      expect(LocalStorage.instance.hasToken(), isTrue);
+
+      // Pending route is consumed
+      final pendingRoute = LocalStorage.instance.getPendingRoute();
+      expect(pendingRoute, equals('/deleteAccount'));
+
+      await LocalStorage.instance.clearPendingRoute();
+      expect(LocalStorage.instance.getPendingRoute(), isNull);
+    });
+
+    test('createResetPasswordLink generates OneLink carrying token and email', () {
+      final service = DeepLinkService.instance;
+      const testToken = 'abc123xyz789token';
+      const testEmail = 'user@example.com';
+
+      final link = service.createResetPasswordLink(
+        token: testToken,
+        email: testEmail,
+      );
+
+      expect(link, isNotEmpty);
+      expect(link, contains('treeko.onelink.me/CEaN'));
+      expect(link, contains('deep_link_value=reset_password'));
+      expect(link, contains('token=abc123xyz789token'));
+      expect(link, contains('email=user%40example.com'));
+      expect(link, contains('af_dp=treeko%3A%2F%2FforgotPassword%3Ftoken%3Dabc123xyz789token'));
+      expect(link, contains('af_web_dp=https%3A%2F%2Fcasting-be-1.onrender.com%2Fauth%2Freset-password%3Ftoken%3Dabc123xyz789token'));
+    });
   });
 }
