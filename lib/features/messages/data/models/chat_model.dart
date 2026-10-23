@@ -42,7 +42,11 @@ class ChatModel {
 
     void applyUserMap(Map<String, dynamic> u) {
       final id = _s(u['id'] ?? u['_id'] ?? u['userId']);
-      if (participantId.isEmpty && id.isNotEmpty && id != currentUserId) {
+      // Skip if this user map belongs to the current user
+      if (currentUserId != null && currentUserId!.isNotEmpty && id == currentUserId) {
+        return;
+      }
+      if (participantId.isEmpty && id.isNotEmpty) {
         participantId = id;
       }
       if (participantName.isEmpty) {
@@ -101,10 +105,13 @@ class ChatModel {
         applyUserMap(otherMap);
       } else if (otherStringId.isNotEmpty && participantId.isEmpty) {
         participantId = otherStringId;
-      } else if (rawList.first is Map<String, dynamic>) {
-        applyUserMap(extractUserMap(rawList.first) ?? rawList.first as Map<String, dynamic>);
-      } else if (rawList.first is String && participantId.isEmpty) {
-        participantId = rawList.first.toString();
+      } else if (currentUserId == null || currentUserId!.isEmpty) {
+        // Only fall back to first element when we have no currentUserId to compare against
+        if (rawList.first is Map<String, dynamic>) {
+          applyUserMap(extractUserMap(rawList.first) ?? rawList.first as Map<String, dynamic>);
+        } else if (rawList.first is String && participantId.isEmpty) {
+          participantId = rawList.first.toString();
+        }
       }
     }
 

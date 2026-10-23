@@ -38,9 +38,28 @@ class _ChatScreenState extends State<ChatScreen> {
     _chat = widget.chat;
     _currentUserId = LocalStorage.instance.getUserId();
     if (_chat != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.read<MessagesProvider>().markChatAsRead(_chat!.id);
-        _loadMessages();
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        // Ensure we have a valid currentUserId before loading messages
+        if (_currentUserId == null || _currentUserId!.isEmpty) {
+          try {
+            final dioClient = GetIt.instance<DioClient>();
+            final meRes = await dioClient.get(ApiEndpoints.profileMe);
+            if (meRes.data is Map) {
+              final meData = meRes.data['data'] ?? meRes.data['user'] ?? meRes.data;
+              if (meData is Map) {
+                final meId = meData['_id']?.toString() ?? meData['id']?.toString() ?? meData['userId']?.toString() ?? '';
+                if (meId.isNotEmpty) {
+                  await LocalStorage.instance.saveUserId(meId);
+                  if (mounted) setState(() => _currentUserId = meId);
+                }
+              }
+            }
+          } catch (_) {}
+        }
+        if (mounted) {
+          context.read<MessagesProvider>().markChatAsRead(_chat!.id);
+          _loadMessages();
+        }
       });
 
       // Poll messages every 3 seconds while in chat

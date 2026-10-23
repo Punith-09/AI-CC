@@ -233,6 +233,23 @@ class MessagesRemoteDataSourceImpl implements MessagesRemoteDataSource {
   @override
   Future<List<MessageModel>> getChatMessages(String chatId) async {
     try {
+      // Resolve current user id so we can flag messages correctly
+      String currentUserId = LocalStorage.instance.getUserId() ?? '';
+      if (currentUserId.isEmpty) {
+        try {
+          final meRes = await _dioClient.get(ApiEndpoints.profileMe);
+          if (meRes.data is Map) {
+            final meData = meRes.data['data'] ?? meRes.data['user'] ?? meRes.data;
+            if (meData is Map) {
+              currentUserId = meData['_id']?.toString() ?? meData['id']?.toString() ?? meData['userId']?.toString() ?? '';
+              if (currentUserId.isNotEmpty) {
+                await LocalStorage.instance.saveUserId(currentUserId);
+              }
+            }
+          }
+        } catch (_) {}
+      }
+
       final response = await _dioClient.get(
         ApiEndpoints.chatMessages(chatId),
       );
@@ -247,7 +264,7 @@ class MessagesRemoteDataSourceImpl implements MessagesRemoteDataSource {
 
       for (final item in list) {
         if (item is Map<String, dynamic>) {
-          messages.add(MessageModel.fromJson(item));
+          messages.add(MessageModel.fromJson(item, currentUserId: currentUserId.isNotEmpty ? currentUserId : null));
         }
       }
 
