@@ -71,7 +71,10 @@ final GoRouter appRouter = GoRouter(
     }
 
     if (uriStr.contains('reset') && uriStr.contains('password')) {
-      final token = state.uri.queryParameters['token'] ?? state.uri.queryParameters['otp'];
+      final token = state.uri.queryParameters['token'] ??
+          state.uri.queryParameters['deep_link_sub1'] ??
+          state.uri.queryParameters['deep_link_sub2'] ??
+          state.uri.queryParameters['otp'];
       final email = state.uri.queryParameters['email'];
       return ForgotPasswordScreen(token: token, initialEmail: email);
     }
@@ -117,7 +120,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/auth/reset-password',
       builder: (context, state) {
-        final token = state.uri.queryParameters['token'] ?? state.uri.queryParameters['otp'];
+        final token = state.uri.queryParameters['token'] ??
+            state.uri.queryParameters['deep_link_sub1'] ??
+            state.uri.queryParameters['deep_link_sub2'] ??
+            state.uri.queryParameters['otp'];
         final email = state.uri.queryParameters['email'];
         return ForgotPasswordScreen(token: token, initialEmail: email);
       },
@@ -125,7 +131,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/reset-password',
       builder: (context, state) {
-        final token = state.uri.queryParameters['token'] ?? state.uri.queryParameters['otp'];
+        final token = state.uri.queryParameters['token'] ??
+            state.uri.queryParameters['deep_link_sub1'] ??
+            state.uri.queryParameters['deep_link_sub2'] ??
+            state.uri.queryParameters['otp'];
         final email = state.uri.queryParameters['email'];
         return ForgotPasswordScreen(token: token, initialEmail: email);
       },
@@ -133,7 +142,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/reset_password',
       builder: (context, state) {
-        final token = state.uri.queryParameters['token'] ?? state.uri.queryParameters['otp'];
+        final token = state.uri.queryParameters['token'] ??
+            state.uri.queryParameters['deep_link_sub1'] ??
+            state.uri.queryParameters['deep_link_sub2'] ??
+            state.uri.queryParameters['otp'];
         final email = state.uri.queryParameters['email'];
         return ForgotPasswordScreen(token: token, initialEmail: email);
       },
@@ -145,7 +157,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.forgotPassword,
       builder: (context, state) {
-        final token = state.uri.queryParameters['token'] ?? state.uri.queryParameters['otp'];
+        final token = state.uri.queryParameters['token'] ??
+            state.uri.queryParameters['deep_link_sub1'] ??
+            state.uri.queryParameters['deep_link_sub2'] ??
+            state.uri.queryParameters['otp'];
         final email = state.uri.queryParameters['email'];
         return ForgotPasswordScreen(token: token, initialEmail: email);
       },

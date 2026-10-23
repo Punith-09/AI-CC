@@ -71,9 +71,14 @@ class DeepLinkService {
                 deepLink.afSub1;
 
             final token = deepLink.getStringValue('token') ??
+                deepLink.getStringValue('deep_link_sub1') ??
+                deepLink.getStringValue('deep_link_sub2') ??
                 deepLink.getStringValue('otp') ??
+                deepLink.afSub1 ??
                 deepLink.afSub2;
             final email = deepLink.getStringValue('email') ??
+                deepLink.getStringValue('deep_link_sub2') ??
+                deepLink.getStringValue('deep_link_sub3') ??
                 deepLink.afSub3;
 
             debugPrint('🌿 [AppsFlyer UDL] Found payload: $payload, token: $token (isDeferred: ${deepLink.isDeferred})');
@@ -116,9 +121,14 @@ class DeepLinkService {
               data['af_sub1']?.toString();
 
           final token = data['token']?.toString() ??
+              data['deep_link_sub1']?.toString() ??
+              data['deep_link_sub2']?.toString() ??
               data['otp']?.toString() ??
+              data['af_sub1']?.toString() ??
               data['af_sub2']?.toString();
           final email = data['email']?.toString() ??
+              data['deep_link_sub2']?.toString() ??
+              data['deep_link_sub3']?.toString() ??
               data['af_sub3']?.toString();
 
           if (payload != null && payload.isNotEmpty) {
@@ -217,16 +227,26 @@ class DeepLinkService {
           uriLower.contains('forgotpassword') ||
           uriLower.contains('forgot-password') ||
           (uri.scheme == 'treeko' && uri.host.toLowerCase().contains('forgot'))) {
-        final token = uri.queryParameters['token'] ?? uri.queryParameters['otp'];
-        final email = uri.queryParameters['email'];
+        final token = uri.queryParameters['token'] ??
+            uri.queryParameters['deep_link_sub1'] ??
+            uri.queryParameters['deep_link_sub2'] ??
+            uri.queryParameters['otp'];
+        final email = uri.queryParameters['email'] ??
+            uri.queryParameters['deep_link_sub2'] ??
+            uri.queryParameters['deep_link_sub3'];
         debugPrint('🌿 [DeepLink] Resolved Reset Password route from URI with token: $token');
         _routeToResetPassword(token: token, email: email);
         return;
       }
 
       String? payload;
-      final token = uri.queryParameters['token'] ?? uri.queryParameters['otp'];
-      final email = uri.queryParameters['email'];
+      final token = uri.queryParameters['token'] ??
+          uri.queryParameters['deep_link_sub1'] ??
+          uri.queryParameters['deep_link_sub2'] ??
+          uri.queryParameters['otp'];
+      final email = uri.queryParameters['email'] ??
+          uri.queryParameters['deep_link_sub2'] ??
+          uri.queryParameters['deep_link_sub3'];
 
       // 1. Query parameters (?id=... or ?profile_id=... or ?deep_link_value=...)
       payload = uri.queryParameters['deep_link_value'] ??

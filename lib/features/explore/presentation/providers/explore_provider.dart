@@ -7,6 +7,13 @@ import 'package:aicc/features/artist_profile/presentation/providers/profile_prov
 import 'package:aicc/features/explore/data/models/talent_model.dart';
 import 'package:aicc/features/explore/data/repository/explore_repository.dart';
 
+enum ExploreSortOption {
+  firstToLast,
+  lastToFirst,
+  nameAtoZ,
+  nameZtoA,
+}
+
 class ExploreProvider with ChangeNotifier {
   final ExploreRepository _repository;
 
@@ -32,6 +39,40 @@ class ExploreProvider with ChangeNotifier {
   String _selectedLocation = 'Anywhere';
   String get selectedLocation => _selectedLocation;
 
+  // Sort
+  ExploreSortOption _sortOption = ExploreSortOption.firstToLast;
+  ExploreSortOption get sortOption => _sortOption;
+
+  // Filters
+  String filterDepartment = '';
+  String filterGender = '';
+  String filterAgeFrom = '';
+  String filterAgeTo = '';
+  String filterState = '';
+  String filterCity = '';
+  String filterLanguages = '';
+  String filterCategories = '';
+  String filterSkills = '';
+  String filterHeightFrom = '';
+  String filterHeightTo = '';
+  String filterRole = '';
+  String filterProjectType = '';
+
+  bool get hasActiveFilters =>
+      filterDepartment.isNotEmpty ||
+      filterGender.isNotEmpty ||
+      filterAgeFrom.isNotEmpty ||
+      filterAgeTo.isNotEmpty ||
+      filterState.isNotEmpty ||
+      filterCity.isNotEmpty ||
+      filterLanguages.isNotEmpty ||
+      filterCategories.isNotEmpty ||
+      filterSkills.isNotEmpty ||
+      filterHeightFrom.isNotEmpty ||
+      filterHeightTo.isNotEmpty ||
+      filterRole.isNotEmpty ||
+      filterProjectType.isNotEmpty;
+
   // Debounce timer for search
   Timer? _debounce;
 
@@ -54,6 +95,47 @@ class ExploreProvider with ChangeNotifier {
   /// Called when the user selects a new location.
   void onLocationChanged(String location) {
     _selectedLocation = location;
+    fetchExploreUsers();
+  }
+
+  /// Called when the user selects a sort option.
+  void onSortChanged(ExploreSortOption option) {
+    _sortOption = option;
+    _applySort();
+    notifyListeners();
+  }
+
+  void _applySort() {
+    switch (_sortOption) {
+      case ExploreSortOption.firstToLast:
+        // Original order, no change
+        break;
+      case ExploreSortOption.lastToFirst:
+        _talents = _talents.reversed.toList();
+        break;
+      case ExploreSortOption.nameAtoZ:
+        _talents.sort((a, b) => a.name.compareTo(b.name));
+        break;
+      case ExploreSortOption.nameZtoA:
+        _talents.sort((a, b) => b.name.compareTo(a.name));
+        break;
+    }
+  }
+
+  void clearFilters() {
+    filterDepartment = '';
+    filterGender = '';
+    filterAgeFrom = '';
+    filterAgeTo = '';
+    filterState = '';
+    filterCity = '';
+    filterLanguages = '';
+    filterCategories = '';
+    filterSkills = '';
+    filterHeightFrom = '';
+    filterHeightTo = '';
+    filterRole = '';
+    filterProjectType = '';
     fetchExploreUsers();
   }
 
@@ -116,6 +198,7 @@ class ExploreProvider with ChangeNotifier {
       final withLocation =
           needsLocation ? await _attachLocations(filteredResults) : filteredResults;
       _talents = _applyLocationFilter(withLocation);
+      _applySort();
 
       if (sl.isRegistered<ProfileProvider>()) {
         final profileProvider = sl<ProfileProvider>();
@@ -190,6 +273,20 @@ class ExploreProvider with ChangeNotifier {
     _searchQuery = '';
     _selectedCategory = '';
     _selectedLocation = 'Anywhere';
+    _sortOption = ExploreSortOption.firstToLast;
+    filterDepartment = '';
+    filterGender = '';
+    filterAgeFrom = '';
+    filterAgeTo = '';
+    filterState = '';
+    filterCity = '';
+    filterLanguages = '';
+    filterCategories = '';
+    filterSkills = '';
+    filterHeightFrom = '';
+    filterHeightTo = '';
+    filterRole = '';
+    filterProjectType = '';
     _isLoading = false;
     _error = null;
     _debounce?.cancel();
