@@ -110,6 +110,28 @@ class FeedPostModel {
   bool get isVideo => type == FeedMediaType.video && !isPhotoMediaUrl(mediaUrl, category: category);
   bool get isPhoto => !isVideo;
 
+  /// Returns true if a title looks like a raw auto-generated filename
+  /// (e.g. "scaled_Screenshot 2026-09-21 145122" or "VID_20260921_123456").
+  static bool _isRawFilename(String title) {
+    if (title.isEmpty) return false;
+    final t = title.trim();
+    // Common filename patterns: has extension or starts with common OS prefixes
+    if (RegExp(r'\.(jpg|jpeg|png|webp|gif|bmp|mp4|mov|mkv|webm|avi)(\s.*)?$', caseSensitive: false).hasMatch(t)) return true;
+    // OS-generated prefixes like IMG_, VID_, scaled_, Screenshot, DCIM
+    if (RegExp(r'^(IMG_|VID_|DCIM|scaled_|Screenshot|screenshot|photo|video|image|capture|frame)', caseSensitive: true).hasMatch(t)) return true;
+    // Looks like a date-based name: digits / underscores / dashes only (e.g. 20260921_145122)
+    if (RegExp(r'^[\d_\-]{8,}$').hasMatch(t)) return true;
+    return false;
+  }
+
+  /// Returns empty string if the description is a known backend default placeholder.
+  static String _sanitizeDesc(String? raw) {
+    if (raw == null) return '';
+    final t = raw.trim();
+    if (t.toLowerCase() == 'no description' || t.toLowerCase() == 'no description.') return '';
+    return t;
+  }
+
   FeedPostModel copyWith({
     String? id,
     FeedMediaType? type,
@@ -306,8 +328,8 @@ class FeedPostModel {
     return FeedPostModel(
       id: photo.id,
       type: mediaType,
-      title: photo.title,
-      description: photo.desc ?? '',
+      title: _isRawFilename(photo.title) ? '' : photo.title,
+      description: _sanitizeDesc(photo.desc),
       mediaUrl: photo.url,
       thumbnailUrl: photo.thumb ?? (isVid ? null : photo.url),
       category: photo.category,
@@ -351,8 +373,8 @@ class FeedPostModel {
     return FeedPostModel(
       id: video.id,
       type: mediaType,
-      title: video.title,
-      description: video.desc ?? '',
+      title: _isRawFilename(video.title) ? '' : video.title,
+      description: _sanitizeDesc(video.desc),
       mediaUrl: video.url,
       thumbnailUrl: video.thumb ?? (isVid ? null : video.url),
       category: video.category,
@@ -431,8 +453,8 @@ class FeedPostModel {
     return FeedPostModel(
       id: json['id'] as String? ?? json['_id'] as String? ?? '',
       type: mediaType,
-      title: json['title'] as String? ?? '',
-      description: (json['desc'] ?? json['description']) as String? ?? '',
+      title: _isRawFilename(json['title'] as String? ?? '') ? '' : (json['title'] as String? ?? ''),
+      description: _sanitizeDesc((json['desc'] ?? json['description']) as String?),
       mediaUrl: rawUrl,
       thumbnailUrl: json['thumb'] as String? ?? (isVid ? null : rawUrl),
       creatorId: json['creatorId'] as String? ??

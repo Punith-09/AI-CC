@@ -65,13 +65,7 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
           // On native we rely on filePath, so avoid loading the full video
           // into RAM here — bytes are only needed as a web fallback.
           _videoBytes = bytes;
-
-          if (_titleController.text.trim().isEmpty) {
-            final rawName = pickedFile.name;
-            final dotIndex = rawName.lastIndexOf('.');
-            final cleanName = dotIndex != -1 ? rawName.substring(0, dotIndex) : rawName;
-            _titleController.text = cleanName.isNotEmpty ? cleanName : 'My Acting Reel 2026';
-          }
+          // Do NOT auto-fill title with raw filename — user must enter their own title.
         });
       }
     } catch (e) {
@@ -89,12 +83,7 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
               _selectedVideo = XFile(file.path ?? file.name, name: file.name);
               // On web there is no file path, so we keep bytes as the fallback.
               _videoBytes = kIsWeb ? file.bytes : null;
-              if (_titleController.text.trim().isEmpty) {
-                final rawName = file.name;
-                final dotIndex = rawName.lastIndexOf('.');
-                final cleanName = dotIndex != -1 ? rawName.substring(0, dotIndex) : rawName;
-                _titleController.text = cleanName.isNotEmpty ? cleanName : 'My Acting Reel 2026';
-              }
+              // Do NOT auto-fill title with raw filename — user must enter their own title.
             });
             return;
           }

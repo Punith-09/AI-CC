@@ -15,7 +15,6 @@ class ApiEndpoints {
   static const String resetPassword = '/auth/reset-password';
   static const String changePassword = '/auth/change-password';
   static const String deleteAccount = '/auth/account';
-
   static const String exploreUsers = '/users/explore';
   static const String profileMe = '/profile/me';
   static const String profileCompletion = '/profile/me/completion';
@@ -71,7 +70,6 @@ class ApiEndpoints {
   static const String storiesFeed = "/stories/feed";
   static String storyView(String id) => "/stories/$id/views";
   static String deleteStory(String id) => "/stories/$id";
-
   static const String liveStats = "/stats";
 
   // Notifications

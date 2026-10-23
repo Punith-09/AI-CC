@@ -53,17 +53,7 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
         setState(() {
           _selectedImage = pickedFile;
           _imageBytes = bytes;
-
-          if (_titleController.text.trim().isEmpty) {
-            final rawName = pickedFile.name;
-            final dotIndex = rawName.lastIndexOf('.');
-            final cleanName = dotIndex != -1
-                ? rawName.substring(0, dotIndex)
-                : rawName;
-            _titleController.text = cleanName.isNotEmpty
-                ? cleanName
-                : 'Headshot - Portfolio Pic';
-          }
+          // Do NOT auto-fill title with raw filename — user must enter their own title.
         });
       }
     } catch (e) {
@@ -80,16 +70,7 @@ class _UploadPhotoScreenState extends State<UploadPhotoScreen> {
             setState(() {
               _selectedImage = XFile(file.path ?? file.name, name: file.name);
               _imageBytes = file.bytes;
-              if (_titleController.text.trim().isEmpty) {
-                final rawName = file.name;
-                final dotIndex = rawName.lastIndexOf('.');
-                final cleanName = dotIndex != -1
-                    ? rawName.substring(0, dotIndex)
-                    : rawName;
-                _titleController.text = cleanName.isNotEmpty
-                    ? cleanName
-                    : 'Headshot - Portfolio Pic';
-              }
+              // Do NOT auto-fill title with raw filename — user must enter their own title.
             });
             return;
           }
