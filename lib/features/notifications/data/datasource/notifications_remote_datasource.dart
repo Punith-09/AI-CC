@@ -1,120 +1,76 @@
-import 'package:dio/dio.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/network/dio_client.dart';
 import '../models/notification_model.dart';
 
 abstract class NotificationsRemoteDataSource {
   Future<List<NotificationModel>> getNotifications();
-  Future<bool> clearAllNotifications();
-  Future<bool> markAllAsRead();
+  Future<int> getUnreadCount();
+  Future<void> markAsRead(String id);
+  Future<void> markAllAsRead();
+  Future<void> deleteNotification(String id);
+  Future<void> clearAllNotifications();
 }
 
-class NotificationsRemoteDataSourceImpl implements NotificationsRemoteDataSource {
-  final DioClient _dioClient;
+class NotificationsRemoteDataSourceImpl
+    implements NotificationsRemoteDataSource {
+  final DioClient _client;
 
-  NotificationsRemoteDataSourceImpl(this._dioClient);
-
-  // ============================
-  // GET NOTIFICATIONS
-  // ============================
+  NotificationsRemoteDataSourceImpl(this._client);
 
   @override
   Future<List<NotificationModel>> getNotifications() async {
-    try {
-      final response = await _dioClient.get(ApiEndpoints.notifications);
-
-      if (response.data is List) {
-        final list = response.data as List;
+    final response = await _client.get(ApiEndpoints.notifications);
+    final data = response.data;
+    if (data is List) {
+      return data
+          .map((item) =>
+              NotificationModel.fromJson(item as Map<String, dynamic>))
+          .toList();
+    }
+    if (data is Map<String, dynamic>) {
+      final list = data['notifications'] ?? data['data'] ?? [];
+      if (list is List) {
         return list
-            .whereType<Map<String, dynamic>>()
-            .map(NotificationModel.fromJson)
+            .map((item) =>
+                NotificationModel.fromJson(item as Map<String, dynamic>))
             .toList();
       }
-
-      // Some backends wrap the list in { data: [...] }
-      if (response.data is Map) {
-        final map = Map<String, dynamic>.from(response.data as Map);
-        final raw = map['data'] ?? map['notifications'] ?? map['alerts'];
-        if (raw is List) {
-          return raw
-              .whereType<Map<String, dynamic>>()
-              .map(NotificationModel.fromJson)
-              .toList();
-        }
-      }
-
-      return [];
-    } on DioException catch (e) {
-      _handleDioError('GET NOTIFICATIONS', e);
-    } catch (e) {
-      throw Exception('Failed to fetch notifications: $e');
     }
     return [];
   }
 
-  // ============================
-  // CLEAR ALL NOTIFICATIONS
-  // ============================
-
   @override
-  Future<bool> clearAllNotifications() async {
-    try {
-      final response = await _dioClient.delete(ApiEndpoints.notifications);
-
-      if (response.data is Map) {
-        final map = Map<String, dynamic>.from(response.data as Map);
-        return map['success'] as bool? ?? true;
-      }
-      return true;
-    } on DioException catch (e) {
-      _handleDioError('CLEAR NOTIFICATIONS', e);
-    } catch (e) {
-      throw Exception('Failed to clear notifications: $e');
+  Future<int> getUnreadCount() async {
+    final response =
+        await _client.get(ApiEndpoints.notificationsUnreadCount);
+    final data = response.data;
+    if (data is Map<String, dynamic>) {
+      return data['count'] as int? ??
+          data['unreadCount'] as int? ??
+          data['unread'] as int? ??
+          0;
     }
-    return false;
+    if (data is int) return data;
+    return 0;
   }
 
-  // ============================
-  // MARK ALL AS READ
-  // ============================
-
   @override
-  Future<bool> markAllAsRead() async {
-    try {
-      final response = await _dioClient.post(ApiEndpoints.notificationsReadAll);
-
-      if (response.data is Map) {
-        final map = Map<String, dynamic>.from(response.data as Map);
-        return map['success'] as bool? ?? true;
-      }
-      return true;
-    } on DioException catch (e) {
-      _handleDioError('MARK ALL READ', e);
-    } catch (e) {
-      throw Exception('Failed to mark notifications as read: $e');
-    }
-    return false;
+  Future<void> markAsRead(String id) async {
+    await _client.post(ApiEndpoints.markNotificationRead(id));
   }
 
-  // ============================
-  // HELPER
-  // ============================
+  @override
+  Future<void> markAllAsRead() async {
+    await _client.post(ApiEndpoints.markAllNotificationsRead);
+  }
 
-  Never _handleDioError(String tag, DioException e) {
-    print('❌ [$tag] DIO ERROR: status=${e.response?.statusCode}, data=${e.response?.data}');
-    final responseData = e.response?.data;
-    if (responseData is Map) {
-      final rawMsg = responseData['message'] ?? responseData['error'];
-      String msg = '';
-      if (rawMsg is List) {
-        msg = (rawMsg as List).join(', ');
-      } else if (rawMsg != null) {
-        msg = rawMsg.toString();
-      }
-      if (msg.isNotEmpty && !msg.toLowerCase().contains('internal server error')) {
-        throw Exception(msg);
-      }
-    }
-    throw Exception('Request failed. Please check your connection.');
+  @override
+  Future<void> deleteNotification(String id) async {
+    await _client.delete(ApiEndpoints.deleteNotification(id));
+  }
+
+  @override
+  Future<void> clearAllNotifications() async {
+    await _client.delete(ApiEndpoints.clearAllNotifications);
   }
 }

@@ -3,8 +3,11 @@ import '../models/notification_model.dart';
 
 abstract class NotificationsRepository {
   Future<List<NotificationModel>> getNotifications();
-  Future<bool> clearAllNotifications();
-  Future<bool> markAllAsRead();
+  Future<int> getUnreadCount();
+  Future<void> markAsRead(String id);
+  Future<void> markAllAsRead();
+  Future<void> deleteNotification(String id);
+  Future<void> clearAllNotifications();
 }
 
 class NotificationsRepositoryImpl implements NotificationsRepository {
@@ -17,8 +20,18 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
       _dataSource.getNotifications();
 
   @override
-  Future<bool> clearAllNotifications() => _dataSource.clearAllNotifications();
+  Future<int> getUnreadCount() => _dataSource.getUnreadCount();
 
   @override
-  Future<bool> markAllAsRead() => _dataSource.markAllAsRead();
+  Future<void> markAsRead(String id) => _dataSource.markAsRead(id);
+
+  @override
+  Future<void> markAllAsRead() => _dataSource.markAllAsRead();
+
+  @override
+  Future<void> deleteNotification(String id) =>
+      _dataSource.deleteNotification(id);
+
+  @override
+  Future<void> clearAllNotifications() => _dataSource.clearAllNotifications();
 }

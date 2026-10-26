@@ -1,11 +1,11 @@
 import 'package:aicc/core/constants/app_colors.dart';
 import 'package:aicc/core/responsive/responsive_breakpoints.dart';
+import 'package:aicc/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/notifications_provider.dart';
-import '../widgets/notification_card.dart';
+import '../widgets/activity_card.dart';
+import '../widgets/activity_end_text.dart';
 import '../widgets/activity_tab_bar.dart';
-import '../../data/models/notification_model.dart';
 
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});
@@ -15,7 +15,7 @@ class ActivityScreen extends StatefulWidget {
 }
 
 class _ActivityScreenState extends State<ActivityScreen> {
-  int _selectedTab = 0;
+  int selectedTab = 0;
 
   @override
   void initState() {
@@ -25,67 +25,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
     });
   }
 
-  List<NotificationModel> _filterNotifications(
-    List<NotificationModel> all,
-    int tab,
-  ) {
-    switch (tab) {
-      case 1: // Matches
-        return all
-            .where((n) =>
-                n.type.toLowerCase().contains('match') ||
-                n.type.toLowerCase().contains('ai'))
-            .toList();
-      case 2: // Updates
-        return all
-            .where((n) =>
-                n.type.toLowerCase() == 'application' ||
-                n.type.toLowerCase() == 'verification' ||
-                n.type.toLowerCase() == 'audition')
-            .toList();
-      default: // All
-        return all;
-    }
-  }
-
-  Future<void> _onMarkAllRead(BuildContext context) async {
-    await context.read<NotificationsProvider>().markAllAsRead();
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('All notifications marked as read'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
-  }
-
-  Future<void> _onClearAll(BuildContext context) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Clear all notifications?'),
-        content: const Text('This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text(
-              'Clear',
-              style: TextStyle(color: Colors.redAccent),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (confirm == true && context.mounted) {
-      await context.read<NotificationsProvider>().clearAllNotifications();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
@@ -93,31 +32,158 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
     final content = Consumer<NotificationsProvider>(
       builder: (context, provider, _) {
-        final filtered =
-            _filterNotifications(provider.notifications, _selectedTab);
+        final allNotifications = provider.notifications;
+        final displayList = switch (selectedTab) {
+          1 => provider.unreadNotifications,
+          2 => provider.readNotifications,
+          _ => allNotifications,
+        };
+
+        Widget body;
+        if (provider.isLoading) {
+          body = const Center(child: CircularProgressIndicator());
+        } else if (provider.error != null) {
+          body = Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    color: isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8),
+                    size: 48,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    provider.error!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () => provider.fetchNotifications(),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        } else if (displayList.isEmpty) {
+          body = Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.notifications_none_outlined,
+                    size: 56,
+                    color: isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'No notifications yet',
+                    style: TextStyle(
+                      color: isDark ? AppColors.darkText : const Color(0xFF0F172A),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "You're all caught up!",
+                    style: TextStyle(
+                      color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        } else {
+          body = ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: displayList.length + 1,
+            separatorBuilder: (_, _a) => const SizedBox(height: 14),
+            itemBuilder: (context, index) {
+              if (index == displayList.length) {
+                return const ActivityEndText();
+              }
+              return ActivityCard(
+                notification: displayList[index],
+                onTap: () {
+                  if (!displayList[index].isRead) {
+                    provider.markAsRead(displayList[index].id);
+                  }
+                },
+                onDelete: () => provider.deleteNotification(displayList[index].id),
+              );
+            },
+          );
+        }
 
         return Column(
           children: [
             const SizedBox(height: 16),
             ActivityTabBar(
-              selectedIndex: _selectedTab,
+              selectedIndex: selectedTab,
               onChanged: (index) {
-                setState(() => _selectedTab = index);
+                setState(() {
+                  selectedTab = index;
+                });
               },
             ),
             const SizedBox(height: 20),
-            Expanded(
-              child: _buildBody(
-                context,
-                provider: provider,
-                filtered: filtered,
-                isDark: isDark,
-              ),
-            ),
+            Expanded(child: body),
           ],
         );
       },
     );
+
+    Widget markAllAction() {
+      return Consumer<NotificationsProvider>(
+        builder: (context, provider, _) {
+          return Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: provider.isActionLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : GestureDetector(
+                    onTap: () async {
+                      final success = await provider.markAllAsRead();
+                      if (context.mounted && success) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('All notifications marked as read'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkSurface : const Color(0xFFF1F5F9),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.done_all_rounded,
+                        color: isDark ? AppColors.darkText : AppColors.lightText,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+          );
+        },
+      );
+    }
 
     if (isDesktop) {
       return Scaffold(
@@ -138,193 +204,68 @@ class _ActivityScreenState extends State<ActivityScreen> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          'Notifications',
+          "Activity",
           style: TextStyle(
             color: isDark ? AppColors.darkText : AppColors.lightText,
-            fontSize: 22,
+            fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
         ),
         actions: [
+          markAllAction(),
           Consumer<NotificationsProvider>(
-            builder: (_, provider, __) {
-              if (provider.isActing) {
-                return const Padding(
-                  padding: EdgeInsets.only(right: 16),
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.primary,
+            builder: (context, provider, _) => PopupMenuButton<String>(
+              icon: Icon(
+                Icons.more_vert,
+                color: isDark ? AppColors.darkText : AppColors.lightText,
+              ),
+              onSelected: (value) async {
+                if (value == 'clear_all') {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('Clear All Notifications'),
+                      content: const Text(
+                          'Are you sure you want to delete all notifications?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text(
+                            'Clear All',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
                     ),
+                  );
+                  if (confirmed == true && context.mounted) {
+                    await provider.clearAllNotifications();
+                  }
+                }
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(
+                  value: 'clear_all',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_sweep_rounded, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Clear All'),
+                    ],
                   ),
-                );
-              }
-              return PopupMenuButton<String>(
-                icon: Icon(
-                  Icons.more_vert_rounded,
-                  color: isDark ? AppColors.darkText : AppColors.lightText,
                 ),
-                onSelected: (value) {
-                  if (value == 'mark_read') _onMarkAllRead(context);
-                  if (value == 'clear_all') _onClearAll(context);
-                },
-                itemBuilder: (_) => [
-                  const PopupMenuItem(
-                    value: 'mark_read',
-                    child: Row(
-                      children: [
-                        Icon(Icons.done_all_rounded, size: 18),
-                        SizedBox(width: 10),
-                        Text('Mark all as read'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'clear_all',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete_sweep_rounded,
-                            size: 18, color: Colors.redAccent),
-                        SizedBox(width: 10),
-                        Text('Clear all',
-                            style: TextStyle(color: Colors.redAccent)),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            },
+              ],
+            ),
           ),
         ],
       ),
       body: Container(
         color: Theme.of(context).scaffoldBackgroundColor,
         child: content,
-      ),
-    );
-  }
-
-  Widget _buildBody(
-    BuildContext context, {
-    required NotificationsProvider provider,
-    required List<NotificationModel> filtered,
-    required bool isDark,
-  }) {
-    // Loading
-    if (provider.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
-      );
-    }
-
-    // Error
-    if (provider.errorMessage != null && provider.notifications.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.error_outline_rounded,
-                color: Colors.redAccent,
-                size: 48,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                provider.errorMessage!,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : const Color(0xFF64748B),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                ),
-                onPressed: () =>
-                    provider.fetchNotifications(),
-                icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // Empty
-    if (filtered.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.notifications_off_outlined,
-              size: 64,
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : const Color(0xFFCBD5E1),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No notifications yet',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 17,
-                color: isDark ? AppColors.darkText : AppColors.lightText,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              "You're all caught up!",
-              style: TextStyle(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : const Color(0xFF64748B),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return RefreshIndicator(
-      color: AppColors.primary,
-      backgroundColor: isDark ? AppColors.darkCard : Colors.white,
-      onRefresh: () => provider.fetchNotifications(),
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: filtered.length + 1, // +1 for end text
-        separatorBuilder: (_, __) => const SizedBox(height: 14),
-        itemBuilder: (context, index) {
-          if (index == filtered.length) {
-            return const _EndText();
-          }
-          return NotificationCard(notification: filtered[index]);
-        },
-      ),
-    );
-  }
-}
-
-class _EndText extends StatelessWidget {
-  const _EndText();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 30),
-      child: Center(
-        child: Text(
-          'You\'re all caught up!',
-          style: TextStyle(color: Colors.white38, fontSize: 14),
-        ),
       ),
     );
   }

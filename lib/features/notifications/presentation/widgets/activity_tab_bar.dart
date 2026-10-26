@@ -14,7 +14,7 @@ class ActivityTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    const tabs = ["All", "Matches", "Updates"];
+    const tabs = ["All", "Unread", "Read"];
 
     final containerBg = isDark ? AppColors.darkCard : Colors.white;
     final containerBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);

@@ -1,96 +1,134 @@
-import 'package:flutter/foundation.dart';
-import '../../data/models/notification_model.dart';
+import 'package:flutter/material.dart';
 import '../../data/repository/notifications_repository.dart';
+import '../../data/models/notification_model.dart';
 
 class NotificationsProvider extends ChangeNotifier {
   final NotificationsRepository _repository;
 
+  List<NotificationModel> _notifications = [];
+  int _unreadCount = 0;
+  bool _isLoading = false;
+  bool _isActionLoading = false;
+  String? _error;
+
   NotificationsProvider(this._repository);
 
-  // =========================================================
-  // STATE
-  // =========================================================
-
-  List<NotificationModel> _notifications = [];
-  List<NotificationModel> get notifications => List.unmodifiable(_notifications);
-
-  bool _isLoading = false;
+  List<NotificationModel> get notifications => _notifications;
+  int get unreadCount => _unreadCount;
   bool get isLoading => _isLoading;
+  bool get isActionLoading => _isActionLoading;
+  String? get error => _error;
 
-  bool _isActing = false; // for clear / mark-all-read operations
-  bool get isActing => _isActing;
+  List<NotificationModel> get unreadNotifications =>
+      _notifications.where((n) => !n.isRead).toList();
 
-  String? _errorMessage;
-  String? get errorMessage => _errorMessage;
-
-  // Unread count badge shown in the home appbar
-  int get unreadCount =>
-      _notifications.where((n) => !n.isRead).length;
-
-  bool get hasUnread => unreadCount > 0;
-
-  // =========================================================
-  // FETCH
-  // =========================================================
+  List<NotificationModel> get readNotifications =>
+      _notifications.where((n) => n.isRead).toList();
 
   Future<void> fetchNotifications({bool silent = false}) async {
     if (!silent) {
       _isLoading = true;
-      _errorMessage = null;
+      _error = null;
       notifyListeners();
     }
-
     try {
-      final result = await _repository.getNotifications();
-      _notifications = result;
-      _errorMessage = null;
+      _notifications = await _repository.getNotifications();
+      _error = null;
     } catch (e) {
-      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      _error = e.toString().replaceFirst('Exception: ', '').trim();
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  // =========================================================
-  // MARK ALL AS READ
-  // =========================================================
-
-  Future<void> markAllAsRead() async {
-    if (_notifications.every((n) => n.isRead)) return; // nothing to do
-    _isActing = true;
-    notifyListeners();
-
+  Future<void> fetchUnreadCount() async {
     try {
-      await _repository.markAllAsRead();
-      // Optimistic local update
-      _notifications = _notifications
-          .map((n) => n.copyWith(isRead: true))
-          .toList();
+      _unreadCount = await _repository.getUnreadCount();
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  Future<bool> markAsRead(String id) async {
+    _isActionLoading = true;
+    notifyListeners();
+    try {
+      await _repository.markAsRead(id);
+      final idx = _notifications.indexWhere((n) => n.id == id);
+      if (idx != -1) {
+        _notifications[idx] = _notifications[idx].copyWith(isRead: true);
+        if (_unreadCount > 0) _unreadCount--;
+      }
+      return true;
     } catch (e) {
-      // Silently swallow; the badge will re-sync on next fetch
-      debugPrint('⚠️ markAllAsRead failed: $e');
+      _error = e.toString().replaceFirst('Exception: ', '').trim();
+      return false;
     } finally {
-      _isActing = false;
+      _isActionLoading = false;
       notifyListeners();
     }
   }
 
-  // =========================================================
-  // CLEAR ALL
-  // =========================================================
-
-  Future<void> clearAllNotifications() async {
-    _isActing = true;
+  Future<bool> markAllAsRead() async {
+    _isActionLoading = true;
     notifyListeners();
+    try {
+      await _repository.markAllAsRead();
+      _notifications = _notifications
+          .map((n) => n.copyWith(isRead: true))
+          .toList();
+      _unreadCount = 0;
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '').trim();
+      return false;
+    } finally {
+      _isActionLoading = false;
+      notifyListeners();
+    }
+  }
 
+  Future<bool> deleteNotification(String id) async {
+    _isActionLoading = true;
+    notifyListeners();
+    try {
+      await _repository.deleteNotification(id);
+      final removed = _notifications.firstWhere(
+        (n) => n.id == id,
+        orElse: () => NotificationModel(
+          id: '',
+          title: '',
+          message: '',
+          type: '',
+          isRead: true,
+          createdAt: DateTime.now(),
+        ),
+      );
+      _notifications.removeWhere((n) => n.id == id);
+      if (!removed.isRead && _unreadCount > 0) _unreadCount--;
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '').trim();
+      return false;
+    } finally {
+      _isActionLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> clearAllNotifications() async {
+    _isActionLoading = true;
+    notifyListeners();
     try {
       await _repository.clearAllNotifications();
       _notifications = [];
+      _unreadCount = 0;
+      return true;
     } catch (e) {
-      debugPrint('⚠️ clearAllNotifications failed: $e');
+      _error = e.toString().replaceFirst('Exception: ', '').trim();
+      return false;
     } finally {
-      _isActing = false;
+      _isActionLoading = false;
       notifyListeners();
     }
   }
