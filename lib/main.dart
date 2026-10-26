@@ -31,6 +31,7 @@ import 'features/subscription/presentation/providers/subscription_provider.dart'
 import 'features/stories/data/repository/stories_repository.dart';
 import 'features/stories/presentation/providers/stories_provider.dart';
 import 'features/live_stats/presentation/providers/live_stats_provider.dart';
+import 'features/notifications/presentation/providers/notifications_provider.dart';
 import 'core/services/deep_link_service.dart';
 import 'firebase_options.dart';
 
@@ -103,6 +104,9 @@ void main() async {
         ),
         ChangeNotifierProvider(
           create: (_) => sl<LiveStatsProvider>(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => sl<NotificationsProvider>(),
         ),
       ],
       child: const MyApp(),

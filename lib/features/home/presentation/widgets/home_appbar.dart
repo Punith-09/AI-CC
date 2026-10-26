@@ -67,8 +67,7 @@ class HomeAppbar extends StatelessWidget {
             children: [
               IconButton(
                 onPressed: () {
-                  // context.push(AppRoutes.activity);
-                  context.push(AppRoutes.splash);
+                  context.push(AppRoutes.activity);
                 },
                 icon:  Icon(LucideIcons.bell, size: 26,color: isDark?AppColors.white:AppColors.black),
               ),

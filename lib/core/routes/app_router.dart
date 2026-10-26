@@ -13,6 +13,7 @@ import '../../common/widgets/custom_bottom_navbar.dart';
 import '../../common/widgets/app_sidebar.dart';
 import '../../core/utils/scaffold_key.dart';
 import '../../features/messages/presentation/providers/messages_provider.dart';
+import '../../features/notifications/presentation/providers/notifications_provider.dart';
 
 import '../../features/apply_job/data/models/application_model.dart';
 import '../../features/apply_job/presentation/pages/apply_screen.dart';
@@ -376,6 +377,7 @@ class _MainScreenState extends State<MainScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<MessagesProvider>().fetchChats(silent: true);
+        context.read<NotificationsProvider>().fetchUnreadCount();
       }
     });
 

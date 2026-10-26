@@ -12,6 +12,7 @@ import '../../common/widgets/user_avatar.dart';
 import '../../features/create/presentation/widgets/create_bottom_sheet.dart';
 import '../../features/explore/presentation/providers/explore_provider.dart';
 import '../../features/messages/presentation/providers/messages_provider.dart';
+import '../../features/notifications/presentation/providers/notifications_provider.dart';
 
 class DesktopHeader extends StatefulWidget {
   const DesktopHeader({super.key});
@@ -330,11 +331,47 @@ class _DesktopHeaderState extends State<DesktopHeader> {
 
               const SizedBox(width: 8),
 
-              // Notifications Action
-              _HeaderIconButton(
-                icon: LucideIcons.bell,
-                tooltip: "Notifications",
-                onTap: () => context.push(AppRoutes.activity),
+              // Notifications Action with Badge
+              Consumer<NotificationsProvider>(
+                builder: (context, notifProvider, _) {
+                  final unread = notifProvider.unreadCount;
+                  return Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      _HeaderIconButton(
+                        icon: LucideIcons.bell,
+                        tooltip: "Notifications",
+                        onTap: () => context.push(AppRoutes.activity),
+                      ),
+                      if (unread > 0)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFEF4444),
+                              shape: BoxShape.circle,
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Center(
+                              child: Text(
+                                unread > 9 ? '9+' : '$unread',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
               ),
 
               const SizedBox(width: 14),
