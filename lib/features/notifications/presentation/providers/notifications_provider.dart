@@ -11,6 +11,11 @@ class NotificationsProvider extends ChangeNotifier {
   bool _isActionLoading = false;
   String? _error;
 
+  /// True once we have successfully loaded notifications at least once.
+  /// Prevents re-fetching (and resetting locally-marked read states) on
+  /// every screen visit.
+  bool _hasFetched = false;
+
   NotificationsProvider(this._repository);
 
   List<NotificationModel> get notifications => _notifications;
@@ -25,7 +30,13 @@ class NotificationsProvider extends ChangeNotifier {
   List<NotificationModel> get readNotifications =>
       _notifications.where((n) => n.isRead).toList();
 
-  Future<void> fetchNotifications({bool silent = false}) async {
+  /// Fetches notifications from the API.
+  ///
+  /// Set [force] to true to always re-fetch (e.g. pull-to-refresh).
+  /// By default it skips the request if data was already loaded so that
+  /// locally-updated read states are preserved when navigating back and forth.
+  Future<void> fetchNotifications({bool silent = false, bool force = false}) async {
+    if (_hasFetched && !force) return; // preserve locally-updated read states
     if (!silent) {
       _isLoading = true;
       _error = null;
@@ -33,6 +44,7 @@ class NotificationsProvider extends ChangeNotifier {
     }
     try {
       _notifications = await _repository.getNotifications();
+      _hasFetched = true;
       _error = null;
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '').trim();

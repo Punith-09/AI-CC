@@ -4,6 +4,7 @@ import '../models/feed_post_model.dart';
 
 abstract class HomeRepository {
   Future<List<FeedPostModel>> getFeed();
+  Future<FeedPostModel?> getVideoById(String id);
   Future<Map<String, dynamic>> toggleLike({required String id, required bool isVideo});
   Future<List<CommentModel>> getComments(String videoId);
   Future<int> getCommentsCount(String videoId);
@@ -20,6 +21,11 @@ class HomeRepositoryImpl implements HomeRepository {
   @override
   Future<List<FeedPostModel>> getFeed() async {
     return await _remoteDataSource.getFeedPosts();
+  }
+
+  @override
+  Future<FeedPostModel?> getVideoById(String id) async {
+    return await _remoteDataSource.getVideoById(id);
   }
 
   @override
