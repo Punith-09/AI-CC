@@ -232,14 +232,17 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         data: {
           'token': token,
           'otp': otp ?? token,
+          'password': newPassword,
           'newPassword': newPassword,
           if (email != null && email.isNotEmpty) 'email': email,
         },
       );
     } on DioException catch (e) {
-      final msg = e.response?.data?['message']?.toString() ?? e.response?.data?['error']?.toString();
-      if (msg != null && msg.isNotEmpty) {
-        throw Exception(msg);
+      final rawMsg = e.response?.data?['message'] ?? e.response?.data?['error'];
+      if (rawMsg is List && rawMsg.isNotEmpty) {
+        throw Exception(rawMsg.map((e) => e.toString()).join('\n'));
+      } else if (rawMsg != null && rawMsg.toString().isNotEmpty) {
+        throw Exception(rawMsg.toString());
       }
       throw Exception('Failed to reset password. OTP/Token might be invalid or expired.');
     } catch (e) {

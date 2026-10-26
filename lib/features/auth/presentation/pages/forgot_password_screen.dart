@@ -105,8 +105,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       return;
     }
 
-    if (newPassword.length < 6) {
-      _showSnackBar('Password must be at least 6 characters long.', true);
+    if (newPassword.length < 8) {
+      _showSnackBar('Password must be at least 8 characters long.', true);
       return;
     }
 
@@ -123,6 +123,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final success = await authProvider.resetPassword(
       widget.token!,
       newPassword,
+      email: widget.initialEmail,
       otp: widget.token,
     );
 

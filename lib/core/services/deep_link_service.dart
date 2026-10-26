@@ -491,32 +491,7 @@ class DeepLinkService {
   }) async {
     final cleanId = profileId.trim();
 
-    // 1. Try SDK generateInviteLink if OneLink template ID is configured
-    if (oneLinkTemplateId.isNotEmpty && _isInitialized) {
-      try {
-        final generatedUrl = await _appsflyer.generateInviteLink(
-          parameters: AppsFlyerInviteLinkParams(
-            channel: 'share',
-            campaign: 'profile_share',
-            referrerName: name,
-            referrerImageUrl: imageUrl,
-            userParams: {
-              'deep_link_value': cleanId,
-              'profile_id': cleanId,
-              'name': name,
-              if (role != null) 'role': role,
-            },
-          ),
-        );
-        if (generatedUrl.isNotEmpty) {
-          return generatedUrl;
-        }
-      } catch (e) {
-        debugPrint('⚠️ [AppsFlyer] generateInviteLink error, using direct OneLink URL: $e');
-      }
-    }
-
-    // 2. Direct OneLink URL fallback (always works)
+    // Always generate full OneLink URL carrying explicit parameters & af_dp scheme
     if (oneLinkTemplateId.isNotEmpty) {
       final query = Uri(
         queryParameters: {
