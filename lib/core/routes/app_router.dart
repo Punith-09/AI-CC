@@ -45,7 +45,9 @@ import '../../features/post/presentation/pages/upload_video_screen.dart';
 import '../../features/explore/presentation/pages/explore_profile_screen.dart';
 import '../../features/subscription/presentation/pages/subscription_screen.dart';
 import '../../features/stories/presentation/pages/story_upload_screen.dart';
+import '../../features/home/data/repository/home_repository.dart';
 import '../../features/live_stats/presentation/pages/live_stats_screen.dart';
+import '../../core/di/injection_container.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: AppRoutes.welcome,
@@ -293,6 +295,10 @@ final GoRouter appRouter = GoRouter(
         if (extra is FeedPostModel) {
           return WatchMediaScreen(post: extra);
         }
+        // Notification tap passes a String post/video ID
+        if (extra is String && extra.isNotEmpty) {
+          return _PostLoaderScreen(postId: extra);
+        }
         return const Scaffold(body: Center(child: Text('Media not found')));
       },
     ),
@@ -516,6 +522,80 @@ class _MainScreenState extends State<MainScreen> {
             context.go(route);
           }
         },
+      ),
+    );
+  }
+}
+
+// =========================================================
+// POST LOADER SCREEN
+// Used when navigation comes from notifications with only a post ID.
+// Fetches the post from the API then pushes WatchMediaScreen.
+// =========================================================
+
+class _PostLoaderScreen extends StatefulWidget {
+  final String postId;
+  const _PostLoaderScreen({required this.postId});
+
+  @override
+  State<_PostLoaderScreen> createState() => _PostLoaderScreenState();
+}
+
+class _PostLoaderScreenState extends State<_PostLoaderScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final post = await sl<HomeRepository>().getVideoById(widget.postId);
+      if (!mounted) return;
+      if (post != null) {
+        // Replace this loader with the actual watch screen
+        context.pushReplacement(AppRoutes.watchVideo, extra: post);
+      } else {
+        _showError();
+      }
+    } catch (_) {
+      if (mounted) _showError();
+    }
+  }
+
+  void _showError() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Could not load post. Please try again.'),
+        backgroundColor: Colors.redAccent,
+      ),
+    );
+    if (Navigator.of(context).canPop()) context.pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(
+              color: const Color(0xFF4AD0FB),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Loading post...',
+              style: TextStyle(
+                color: isDark ? Colors.white70 : Colors.black54,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,5 +1,7 @@
 import 'package:aicc/core/constants/app_colors.dart';
+import 'package:aicc/core/routes/app_routes.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../data/models/notification_model.dart';
 
 class ActivityCard extends StatelessWidget {
@@ -15,68 +17,88 @@ class ActivityCard extends StatelessWidget {
   });
 
   IconData _iconForType(String type) {
-    switch (type.toLowerCase()) {
-      case 'match':
-      case 'ai_match':
-        return Icons.auto_awesome;
-      case 'application':
-        return Icons.work_outline;
-      case 'verification':
-        return Icons.verified_user_outlined;
-      case 'follow':
-      case 'social':
+    switch (type.toUpperCase()) {
+      case 'POST_LIKED':
+        return Icons.favorite_rounded;
+      case 'POST_COMMENTED':
+        return Icons.chat_bubble_rounded;
+      case 'POST_SHARED':
+        return Icons.share_rounded;
+      case 'FOLLOW':
+      case 'SOCIAL':
         return Icons.person_add_alt_1_outlined;
-      case 'message':
+      case 'MESSAGE':
         return Icons.chat_bubble_outline;
-      case 'audition':
+      case 'AUDITION':
+      case 'AUDITION_APPLIED':
+      case 'AUDITION_SHORTLISTED':
         return Icons.movie_creation_outlined;
-      case 'payment':
+      case 'MATCH':
+      case 'AI_MATCH':
+        return Icons.auto_awesome;
+      case 'PAYMENT':
         return Icons.payment_outlined;
+      case 'VERIFICATION':
+        return Icons.verified_user_outlined;
       default:
         return Icons.notifications_none_outlined;
     }
   }
 
   Color _colorForType(String type) {
-    switch (type.toLowerCase()) {
-      case 'match':
-      case 'ai_match':
-        return Colors.amber;
-      case 'application':
-        return Colors.pink;
-      case 'verification':
-        return Colors.deepPurple;
-      case 'follow':
-      case 'social':
+    switch (type.toUpperCase()) {
+      case 'POST_LIKED':
+        return Colors.pinkAccent;
+      case 'POST_COMMENTED':
+        return const Color(0xFF4AD0FB);
+      case 'POST_SHARED':
+        return Colors.deepPurpleAccent;
+      case 'FOLLOW':
+      case 'SOCIAL':
         return Colors.blue;
-      case 'message':
+      case 'MESSAGE':
         return Colors.teal;
-      case 'audition':
+      case 'AUDITION':
+      case 'AUDITION_APPLIED':
+      case 'AUDITION_SHORTLISTED':
         return Colors.orange;
-      case 'payment':
+      case 'MATCH':
+      case 'AI_MATCH':
+        return Colors.amber;
+      case 'PAYMENT':
         return Colors.green;
+      case 'VERIFICATION':
+        return Colors.deepPurple;
       default:
         return const Color(0xFF4AD0FB);
     }
   }
 
   String _badgeLabel(String type) {
-    switch (type.toLowerCase()) {
-      case 'match':
-      case 'ai_match':
+    switch (type.toUpperCase()) {
+      case 'POST_LIKED':
+        return 'LIKED';
+      case 'POST_COMMENTED':
+        return 'COMMENTED';
+      case 'POST_SHARED':
+        return 'SHARED';
+      case 'MATCH':
+      case 'AI_MATCH':
         return 'AI MATCH';
-      case 'application':
+      case 'AUDITION_APPLIED':
         return 'APPLICATION';
-      case 'verification':
+      case 'AUDITION_SHORTLISTED':
+        return 'SHORTLISTED';
+      case 'VERIFICATION':
         return 'VERIFICATION';
-      case 'follow':
-      case 'social':
+      case 'FOLLOW':
+      case 'SOCIAL':
         return 'SOCIAL';
-      case 'message':
+      case 'MESSAGE':
         return 'MESSAGE';
-      case 'audition':
+      case 'AUDITION':
         return 'AUDITION';
-      case 'payment':
+      case 'PAYMENT':
         return 'PAYMENT';
       default:
         return type.toUpperCase().isNotEmpty ? type.toUpperCase() : 'NOTIFICATION';
@@ -92,6 +114,20 @@ class ActivityCard extends StatelessWidget {
     if (diff.inDays == 1) return 'Yesterday';
     if (diff.inDays < 7) return '${diff.inDays}d ago';
     return '${dt.day}/${dt.month}/${dt.year}';
+  }
+
+  /// Navigate to the relevant post/entity when the card is tapped
+  void _handleNavigation(BuildContext context) {
+    final entity = notification.entity;
+    if (entity == null || entity.id.isEmpty) return;
+
+    final entityType = entity.type.toUpperCase();
+    if (entityType == 'VIDEO' || entityType == 'PHOTO' || entityType == 'POST') {
+      // Navigate to watch/post detail screen, passing entity id as extra
+      context.push(AppRoutes.watchVideo, extra: entity.id);
+    } else if (entityType == 'AUDITION') {
+      context.push(AppRoutes.auditionDetails, extra: entity.id);
+    }
   }
 
   @override
@@ -110,6 +146,10 @@ class ActivityCard extends StatelessWidget {
     final typeColor = _colorForType(notification.type);
     final isHighlight = !notification.isRead;
 
+    // Actor avatar or icon
+    final actorPhoto = notification.actor?.profilePhoto;
+    final actorName = notification.actor?.name ?? '';
+
     return Dismissible(
       key: Key(notification.id),
       direction: DismissDirection.endToStart,
@@ -127,7 +167,10 @@ class ActivityCard extends StatelessWidget {
         return true;
       },
       child: GestureDetector(
-        onTap: onTap,
+        onTap: () {
+          onTap?.call();
+          _handleNavigation(context);
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           decoration: BoxDecoration(
@@ -165,19 +208,8 @@ class ActivityCard extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        width: 46,
-                        height: 46,
-                        decoration: BoxDecoration(
-                          color: typeColor.withValues(alpha: 0.12),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          _iconForType(notification.type),
-                          color: typeColor,
-                          size: 22,
-                        ),
-                      ),
+                      // Actor avatar (profile photo) or fallback icon
+                      _buildAvatar(actorPhoto, actorName, typeColor),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -188,7 +220,7 @@ class ActivityCard extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    notification.title,
+                                    notification.displayTitle,
                                     style: TextStyle(
                                       color: titleColor,
                                       fontWeight: isHighlight
@@ -209,8 +241,9 @@ class ActivityCard extends StatelessWidget {
                               ],
                             ),
                             const SizedBox(height: 4),
+                            // Rich description: "user15 liked your post."
                             Text(
-                              notification.message,
+                              notification.displayText,
                               style: TextStyle(
                                 color: subtitleColor,
                                 height: 1.4,
@@ -261,6 +294,45 @@ class ActivityCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildAvatar(String? photoUrl, String name, Color typeColor) {
+    if (photoUrl != null && photoUrl.isNotEmpty) {
+      return CircleAvatar(
+        radius: 23,
+        backgroundImage: NetworkImage(photoUrl),
+        backgroundColor: typeColor.withValues(alpha: 0.12),
+        onBackgroundImageError: (_, __) {},
+      );
+    }
+    // Fallback: initials or icon
+    if (name.isNotEmpty) {
+      return CircleAvatar(
+        radius: 23,
+        backgroundColor: typeColor.withValues(alpha: 0.15),
+        child: Text(
+          name[0].toUpperCase(),
+          style: TextStyle(
+            color: typeColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+      );
+    }
+    return Container(
+      width: 46,
+      height: 46,
+      decoration: BoxDecoration(
+        color: typeColor.withValues(alpha: 0.12),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(
+        _iconForType(''),
+        color: typeColor,
+        size: 22,
       ),
     );
   }

@@ -21,7 +21,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<NotificationsProvider>().fetchNotifications();
+      // force:true ensures we always load fresh on first visit;
+      // subsequent back-and-forth navigations use cached data via _hasFetched guard.
+      context.read<NotificationsProvider>().fetchNotifications(force: true);
     });
   }
 
@@ -105,24 +107,28 @@ class _ActivityScreenState extends State<ActivityScreen> {
             ),
           );
         } else {
-          body = ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: displayList.length + 1,
-            separatorBuilder: (_, _a) => const SizedBox(height: 14),
-            itemBuilder: (context, index) {
-              if (index == displayList.length) {
-                return const ActivityEndText();
-              }
-              return ActivityCard(
-                notification: displayList[index],
-                onTap: () {
-                  if (!displayList[index].isRead) {
-                    provider.markAsRead(displayList[index].id);
-                  }
-                },
-                onDelete: () => provider.deleteNotification(displayList[index].id),
-              );
-            },
+          body = RefreshIndicator(
+            onRefresh: () => provider.fetchNotifications(force: true),
+            color: AppColors.primary,
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: displayList.length + 1,
+              separatorBuilder: (_, _a) => const SizedBox(height: 14),
+              itemBuilder: (context, index) {
+                if (index == displayList.length) {
+                  return const ActivityEndText();
+                }
+                return ActivityCard(
+                  notification: displayList[index],
+                  onTap: () {
+                    if (!displayList[index].isRead) {
+                      provider.markAsRead(displayList[index].id);
+                    }
+                  },
+                  onDelete: () => provider.deleteNotification(displayList[index].id),
+                );
+              },
+            ),
           );
         }
 

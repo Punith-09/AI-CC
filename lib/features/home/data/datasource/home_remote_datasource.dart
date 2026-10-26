@@ -8,6 +8,7 @@ import '../models/feed_post_model.dart';
 abstract class HomeRemoteDataSource {
   Future<List<PhotoModel>> getPhotos();
   Future<List<VideoModel>> getVideos();
+  Future<FeedPostModel?> getVideoById(String id);
   Future<List<FeedPostModel>> getFeedPosts();
   Future<Map<String, dynamic>> toggleLike({required String id, required bool isVideo});
   Future<List<CommentModel>> getComments(String videoId);
@@ -260,6 +261,27 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     });
 
     return uniqueFeed;
+  }
+
+  @override
+  Future<FeedPostModel?> getVideoById(String id) async {
+    try {
+      final response = await _dioClient.get('/videos/$id');
+      dynamic data = response.data;
+      if (data is Map) {
+        final map = Map<String, dynamic>.from(data as Map);
+        // Backend may wrap in 'data' or 'video'
+        final raw = map['data'] ?? map['video'] ?? map;
+        if (raw is Map) {
+          final videoMap = Map<String, dynamic>.from(raw as Map);
+          final video = VideoModel.fromJson(videoMap);
+          return FeedPostModel.fromVideoModel(video);
+        }
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
   }
 
   @override
