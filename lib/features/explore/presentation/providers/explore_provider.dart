@@ -123,6 +123,7 @@ class ExploreProvider with ChangeNotifier {
   }
 
   void clearFilters() {
+    _selectedCategory = '';
     filterDepartment = '';
     filterGender = '';
     filterAgeFrom = '';
@@ -145,9 +146,22 @@ class ExploreProvider with ChangeNotifier {
     notifyListeners();
 
     try {
+      final effectiveCategory = filterDepartment.isNotEmpty
+          ? filterDepartment
+          : (_selectedCategory.isEmpty ? null : _selectedCategory);
+
+      final effectiveLocation = filterCity.isNotEmpty
+          ? filterCity
+          : (filterState.isNotEmpty
+              ? filterState
+              : (_selectedLocation.isEmpty || _selectedLocation == 'Anywhere'
+                  ? null
+                  : _selectedLocation));
+
       final results = await _repository.getExploreUsers(
         query: _searchQuery.isEmpty ? null : _searchQuery,
-        category: _selectedCategory.isEmpty ? null : _selectedCategory,
+        category: effectiveCategory,
+        location: effectiveLocation,
       );
 
       // Filter out logged in user
@@ -185,19 +199,74 @@ class ExploreProvider with ChangeNotifier {
             return false;
           }
         }
-        if (_selectedCategory.isNotEmpty && _selectedCategory != 'All') {
-          if (!talent.matchesCategory(_selectedCategory)) {
+
+        // Filter by category / craft
+        final targetCategory = filterDepartment.isNotEmpty
+            ? filterDepartment
+            : _selectedCategory;
+        if (targetCategory.isNotEmpty && targetCategory != 'All') {
+          if (!talent.matchesCategory(targetCategory)) {
             return false;
           }
         }
+
+        // Filter by categories (Film, TV, etc.)
+        if (filterCategories.isNotEmpty) {
+          final target = filterCategories.toLowerCase();
+          final inCat = talent.category.toLowerCase().contains(target);
+          final inBio = talent.bio.toLowerCase().contains(target);
+          if (!inCat && !inBio) {
+            return false;
+          }
+        }
+
+        // Filter by skills
+        if (filterSkills.isNotEmpty) {
+          if (!talent.matchesCategory(filterSkills)) {
+            final target = filterSkills.toLowerCase();
+            final inCat = talent.category.toLowerCase().contains(target);
+            final inBio = talent.bio.toLowerCase().contains(target);
+            if (!inCat && !inBio) {
+              return false;
+            }
+          }
+        }
+
+        // Filter by role
+        if (filterRole.isNotEmpty) {
+          final target = filterRole.toLowerCase();
+          final inCat = talent.category.toLowerCase().contains(target);
+          final inBio = talent.bio.toLowerCase().contains(target);
+          if (!inCat && !inBio) {
+            return false;
+          }
+        }
+
         return true;
       }).toList();
 
-      final needsLocation =
-          _selectedLocation.isNotEmpty && _selectedLocation != 'Anywhere';
+      final needsLocation = (_selectedLocation.isNotEmpty &&
+              _selectedLocation != 'Anywhere') ||
+          filterCity.isNotEmpty ||
+          filterState.isNotEmpty;
       final withLocation =
           needsLocation ? await _attachLocations(filteredResults) : filteredResults;
-      _talents = _applyLocationFilter(withLocation);
+
+      var finalTalents = withLocation;
+      if (_selectedLocation.isNotEmpty && _selectedLocation != 'Anywhere') {
+        finalTalents = _applyLocationFilter(finalTalents);
+      }
+      if (filterCity.isNotEmpty) {
+        finalTalents = finalTalents
+            .where((talent) => talent.matchesLocation(filterCity))
+            .toList();
+      }
+      if (filterState.isNotEmpty) {
+        finalTalents = finalTalents
+            .where((talent) => talent.matchesLocation(filterState))
+            .toList();
+      }
+      _talents = finalTalents;
       _applySort();
 
       if (sl.isRegistered<ProfileProvider>()) {

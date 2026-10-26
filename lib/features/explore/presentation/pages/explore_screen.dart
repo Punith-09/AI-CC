@@ -1,4 +1,5 @@
 import 'package:aicc/common/widgets/app_background.dart';
+import 'package:aicc/core/constants/craft_constants.dart';
 import 'package:aicc/features/explore/presentation/providers/explore_provider.dart';
 import 'package:aicc/features/explore/presentation/widgets/explore_appbar.dart';
 import 'package:aicc/features/explore/presentation/widgets/talent_card.dart';
@@ -197,297 +198,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   void _showFilterBottomSheet(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? const Color(0xFF1C1C1E) : Colors.white;
-    final borderColor = isDark ? const Color(0xFF3A3A3C) : const Color(0xFFE5E7EB);
-    final textColor = isDark ? Colors.white : AppColors.lightText;
-    final hintColor = isDark ? Colors.white38 : Colors.black38;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (ctx, setSheetState) {
-            final provider = context.read<ExploreProvider>();
-
-            // Local state mirrors
-            String dept = provider.filterDepartment;
-            String gender = provider.filterGender;
-            String ageFrom = provider.filterAgeFrom;
-            String ageTo = provider.filterAgeTo;
-            String state = provider.filterState;
-            String city = provider.filterCity;
-            String languages = provider.filterLanguages;
-            String categories = provider.filterCategories;
-            String skills = provider.filterSkills;
-            String heightFrom = provider.filterHeightFrom;
-            String heightTo = provider.filterHeightTo;
-            String role = provider.filterRole;
-            String projectType = provider.filterProjectType;
-
-            Widget dropdownField(
-              String label,
-              String value,
-              List<String> options,
-              void Function(String) onChanged,
-            ) {
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(50),
-                  border: Border.all(color: borderColor),
-                  color: bgColor,
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: value.isEmpty ? null : value,
-                    hint: Padding(
-                      padding: const EdgeInsets.only(left: 20),
-                      child: Text(
-                        label,
-                        style: GoogleFonts.poppins(
-                          color: hintColor,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    isExpanded: true,
-                    icon: Padding(
-                      padding: const EdgeInsets.only(right: 16),
-                      child: Icon(Icons.keyboard_arrow_down_rounded,
-                          color: hintColor),
-                    ),
-                    dropdownColor: bgColor,
-                    borderRadius: BorderRadius.circular(16),
-                    items: options.map((opt) {
-                      return DropdownMenuItem<String>(
-                        value: opt,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 20),
-                          child: Text(
-                            opt,
-                            style: GoogleFonts.poppins(
-                              color: textColor,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (v) {
-                      if (v != null) {
-                        setSheetState(() {
-                          onChanged(v);
-                        });
-                      }
-                    },
-                    selectedItemBuilder: (context) {
-                      return options.map((opt) {
-                        return Padding(
-                          padding: const EdgeInsets.only(left: 20),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              opt,
-                              style: GoogleFonts.poppins(
-                                color: textColor,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList();
-                    },
-                  ),
-                ),
-              );
-            }
-
-            Widget textField(
-              String label,
-              String value,
-              void Function(String) onChanged,
-            ) {
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(50),
-                  border: Border.all(color: borderColor),
-                  color: bgColor,
-                ),
-                child: TextField(
-                  controller: TextEditingController(text: value)
-                    ..selection = TextSelection.fromPosition(
-                      TextPosition(offset: value.length),
-                    ),
-                  keyboardType: TextInputType.number,
-                  style: GoogleFonts.poppins(color: textColor, fontSize: 14),
-                  cursorColor: AppColors.primary,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 14,
-                    ),
-                    hintText: label,
-                    hintStyle: GoogleFonts.poppins(
-                      color: hintColor,
-                      fontSize: 14,
-                    ),
-                  ),
-                  onChanged: onChanged,
-                ),
-              );
-            }
-
-            return Container(
-              height: MediaQuery.of(context).size.height * 0.85,
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              child: SafeArea(
-                top: false,
-                child: Column(
-                  children: [
-                    const SizedBox(height: 12),
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: isDark ? Colors.white24 : Colors.black12,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Column(
-                          children: [
-                            dropdownField(
-                              'Department',
-                              dept,
-                              ['Acting', 'Dancing', 'Singing', 'Direction', 'Cinematography', 'Editing', 'Music', 'Stunts', 'Makeup', 'Costumes', 'Production'],
-                              (v) => dept = v,
-                            ),
-                            dropdownField(
-                              'Gender',
-                              gender,
-                              ['Male', 'Female', 'Other'],
-                              (v) => gender = v,
-                            ),
-                            textField('From Age', ageFrom, (v) => ageFrom = v),
-                            textField('To Age', ageTo, (v) => ageTo = v),
-                            dropdownField(
-                              'Present State',
-                              state,
-                              ['Andhra Pradesh', 'Karnataka', 'Maharashtra', 'Tamil Nadu', 'Telangana', 'Delhi', 'Uttar Pradesh', 'Gujarat', 'Rajasthan', 'West Bengal', 'Kerala', 'Odisha', 'Punjab', 'Haryana', 'Bihar', 'Madhya Pradesh'],
-                              (v) => state = v,
-                            ),
-                            dropdownField(
-                              'Present City',
-                              city,
-                              ['Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Chennai', 'Pune', 'Kolkata', 'Ahmedabad', 'Surat', 'Jaipur', 'Ranchi', 'Lucknow', 'Coimbatore', 'Kochi'],
-                              (v) => city = v,
-                            ),
-                            dropdownField(
-                              'Languages',
-                              languages,
-                              ['Hindi', 'English', 'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Bengali', 'Marathi', 'Gujarati', 'Punjabi', 'Odia', 'Urdu'],
-                              (v) => languages = v,
-                            ),
-                            dropdownField(
-                              'Categories',
-                              categories,
-                              ['Film', 'Television', 'Web Series', 'Short Film', 'Theatre', 'Music Video', 'Advertisement', 'Documentary'],
-                              (v) => categories = v,
-                            ),
-                            dropdownField(
-                              'Skills',
-                              skills,
-                              ['Acting', 'Dancing', 'Singing', 'Martial Arts', 'Horse Riding', 'Swimming', 'Gymnastics', 'Mimicry', 'Comedy'],
-                              (v) => skills = v,
-                            ),
-                            dropdownField(
-                              'From Height',
-                              heightFrom,
-                              ['4.0 ft', '4.5 ft', '5.0 ft', '5.1 ft', '5.2 ft', '5.3 ft', '5.4 ft', '5.5 ft', '5.6 ft', '5.7 ft', '5.8 ft', '5.9 ft', '6.0 ft', '6.1 ft', '6.2 ft'],
-                              (v) => heightFrom = v,
-                            ),
-                            dropdownField(
-                              'To Height',
-                              heightTo,
-                              ['4.0 ft', '4.5 ft', '5.0 ft', '5.1 ft', '5.2 ft', '5.3 ft', '5.4 ft', '5.5 ft', '5.6 ft', '5.7 ft', '5.8 ft', '5.9 ft', '6.0 ft', '6.1 ft', '6.2 ft'],
-                              (v) => heightTo = v,
-                            ),
-                            dropdownField(
-                              'Role',
-                              role,
-                              ['Lead', 'Supporting', 'Character', 'Cameo', 'Extra / Junior Artist'],
-                              (v) => role = v,
-                            ),
-                            dropdownField(
-                              'Project Type',
-                              projectType,
-                              ['Film', 'Short Film', 'Web Series', 'Television', 'Advertisement', 'Music Video', 'Theatre', 'OTT'],
-                              (v) => projectType = v,
-                            ),
-                            const SizedBox(height: 12),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            elevation: 0,
-                          ),
-                          onPressed: () {
-                            provider.filterDepartment = dept;
-                            provider.filterGender = gender;
-                            provider.filterAgeFrom = ageFrom;
-                            provider.filterAgeTo = ageTo;
-                            provider.filterState = state;
-                            provider.filterCity = city;
-                            provider.filterLanguages = languages;
-                            provider.filterCategories = categories;
-                            provider.filterSkills = skills;
-                            provider.filterHeightFrom = heightFrom;
-                            provider.filterHeightTo = heightTo;
-                            provider.filterRole = role;
-                            provider.filterProjectType = projectType;
-                            Navigator.pop(sheetContext);
-                            provider.fetchExploreUsers();
-                          },
-                          child: Text(
-                            'Submit',
-                            style: GoogleFonts.poppins(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
+        return _FilterBottomSheet(
+          provider: context.read<ExploreProvider>(),
         );
       },
     );
@@ -523,7 +240,138 @@ class _ExploreScreenState extends State<ExploreScreen> {
           ),
         ),
 
-        const SizedBox(height: 18),
+        // ── Active Filters Row ───────────────────────────────
+        Consumer<ExploreProvider>(
+          builder: (context, provider, _) {
+            if (!provider.hasActiveFilters) {
+              return const SizedBox(height: 18);
+            }
+
+            final chips = <Widget>[];
+
+            void addChip(String label, VoidCallback onRemove) {
+              chips.add(
+                Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        label,
+                        style: GoogleFonts.poppins(
+                          color: AppColors.primary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      GestureDetector(
+                        onTap: onRemove,
+                        child: const Icon(
+                          Icons.close_rounded,
+                          size: 14,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            if (provider.filterDepartment.isNotEmpty) {
+              addChip(provider.filterDepartment, () {
+                provider.filterDepartment = '';
+                provider.fetchExploreUsers();
+              });
+            }
+            if (provider.filterGender.isNotEmpty) {
+              addChip(provider.filterGender, () {
+                provider.filterGender = '';
+                provider.fetchExploreUsers();
+              });
+            }
+            if (provider.filterCity.isNotEmpty) {
+              addChip(provider.filterCity, () {
+                provider.filterCity = '';
+                provider.fetchExploreUsers();
+              });
+            }
+            if (provider.filterState.isNotEmpty) {
+              addChip(provider.filterState, () {
+                provider.filterState = '';
+                provider.fetchExploreUsers();
+              });
+            }
+            if (provider.filterCategories.isNotEmpty) {
+              addChip(provider.filterCategories, () {
+                provider.filterCategories = '';
+                provider.fetchExploreUsers();
+              });
+            }
+            if (provider.filterSkills.isNotEmpty) {
+              addChip(provider.filterSkills, () {
+                provider.filterSkills = '';
+                provider.fetchExploreUsers();
+              });
+            }
+            if (provider.filterRole.isNotEmpty) {
+              addChip(provider.filterRole, () {
+                provider.filterRole = '';
+                provider.fetchExploreUsers();
+              });
+            }
+            if (provider.filterProjectType.isNotEmpty) {
+              addChip(provider.filterProjectType, () {
+                provider.filterProjectType = '';
+                provider.fetchExploreUsers();
+              });
+            }
+            if (provider.filterAgeFrom.isNotEmpty || provider.filterAgeTo.isNotEmpty) {
+              final ageLabel =
+                  'Age: ${provider.filterAgeFrom.isNotEmpty ? provider.filterAgeFrom : '0'}-${provider.filterAgeTo.isNotEmpty ? provider.filterAgeTo : 'Any'}';
+              addChip(ageLabel, () {
+                provider.filterAgeFrom = '';
+                provider.filterAgeTo = '';
+                provider.fetchExploreUsers();
+              });
+            }
+
+            chips.add(
+              GestureDetector(
+                onTap: () => provider.clearFilters(),
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 4, top: 4),
+                  child: Text(
+                    'Clear All',
+                    style: GoogleFonts.poppins(
+                      color: AppColors.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ),
+            );
+
+            return Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 8),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(children: chips),
+              ),
+            );
+          },
+        ),
 
         // ── Section Header: Top Matches Near You  📍 Select Location ──
         Padding(
@@ -863,6 +711,575 @@ class _SearchBar extends StatelessWidget {
             color: hintColor,
             fontSize: 13.5,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Filter bottom sheet
+// ──────────────────────────────────────────────────────────────────────────────
+class _FilterBottomSheet extends StatefulWidget {
+  final ExploreProvider provider;
+
+  const _FilterBottomSheet({required this.provider});
+
+  @override
+  State<_FilterBottomSheet> createState() => _FilterBottomSheetState();
+}
+
+class _FilterBottomSheetState extends State<_FilterBottomSheet> {
+  late String _dept;
+  late String _gender;
+  late final TextEditingController _ageFromCtrl;
+  late final TextEditingController _ageToCtrl;
+  late String _state;
+  late String _city;
+  late String _languages;
+  late String _categories;
+  late String _skills;
+  late String _heightFrom;
+  late String _heightTo;
+  late String _role;
+  late String _projectType;
+
+  // Options
+  static const List<String> _genderOptions = ['Male', 'Female', 'Other'];
+  static const List<String> _stateOptions = [
+    'Andhra Pradesh',
+    'Karnataka',
+    'Maharashtra',
+    'Tamil Nadu',
+    'Telangana',
+    'Delhi',
+    'Uttar Pradesh',
+    'Gujarat',
+    'Rajasthan',
+    'West Bengal',
+    'Kerala',
+    'Odisha',
+    'Punjab',
+    'Haryana',
+    'Bihar',
+    'Madhya Pradesh',
+  ];
+  static const List<String> _cityOptions = [
+    'Mumbai',
+    'Delhi',
+    'Bangalore',
+    'Hyderabad',
+    'Chennai',
+    'Pune',
+    'Kolkata',
+    'Ahmedabad',
+    'Surat',
+    'Jaipur',
+    'Ranchi',
+    'Lucknow',
+    'Coimbatore',
+    'Kochi',
+  ];
+  static const List<String> _languageOptions = [
+    'Hindi',
+    'English',
+    'Tamil',
+    'Telugu',
+    'Kannada',
+    'Malayalam',
+    'Bengali',
+    'Marathi',
+    'Gujarati',
+    'Punjabi',
+    'Odia',
+    'Urdu',
+  ];
+  static const List<String> _categoryOptions = [
+    'Film',
+    'Television',
+    'Web Series',
+    'Short Film',
+    'Theatre',
+    'Music Video',
+    'Advertisement',
+    'Documentary',
+  ];
+  static const List<String> _skillOptions = [
+    'Acting',
+    'Dancing',
+    'Singing',
+    'Martial Arts',
+    'Horse Riding',
+    'Swimming',
+    'Gymnastics',
+    'Mimicry',
+    'Comedy',
+  ];
+  static const List<String> _heightOptions = [
+    '4.0 ft',
+    '4.5 ft',
+    '5.0 ft',
+    '5.1 ft',
+    '5.2 ft',
+    '5.3 ft',
+    '5.4 ft',
+    '5.5 ft',
+    '5.6 ft',
+    '5.7 ft',
+    '5.8 ft',
+    '5.9 ft',
+    '6.0 ft',
+    '6.1 ft',
+    '6.2 ft',
+  ];
+  static const List<String> _roleOptions = [
+    'Lead',
+    'Supporting',
+    'Character',
+    'Cameo',
+    'Extra / Junior Artist',
+  ];
+  static const List<String> _projectTypeOptions = [
+    'Film',
+    'Short Film',
+    'Web Series',
+    'Television',
+    'Advertisement',
+    'Music Video',
+    'Theatre',
+    'OTT',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _dept = widget.provider.filterDepartment;
+    _gender = widget.provider.filterGender;
+    _ageFromCtrl = TextEditingController(text: widget.provider.filterAgeFrom);
+    _ageToCtrl = TextEditingController(text: widget.provider.filterAgeTo);
+    _state = widget.provider.filterState;
+    _city = widget.provider.filterCity;
+    _languages = widget.provider.filterLanguages;
+    _categories = widget.provider.filterCategories;
+    _skills = widget.provider.filterSkills;
+    _heightFrom = widget.provider.filterHeightFrom;
+    _heightTo = widget.provider.filterHeightTo;
+    _role = widget.provider.filterRole;
+    _projectType = widget.provider.filterProjectType;
+  }
+
+  @override
+  void dispose() {
+    _ageFromCtrl.dispose();
+    _ageToCtrl.dispose();
+    super.dispose();
+  }
+
+  bool get _hasAnyFilter =>
+      _dept.isNotEmpty ||
+      _gender.isNotEmpty ||
+      _ageFromCtrl.text.isNotEmpty ||
+      _ageToCtrl.text.isNotEmpty ||
+      _state.isNotEmpty ||
+      _city.isNotEmpty ||
+      _languages.isNotEmpty ||
+      _categories.isNotEmpty ||
+      _skills.isNotEmpty ||
+      _heightFrom.isNotEmpty ||
+      _heightTo.isNotEmpty ||
+      _role.isNotEmpty ||
+      _projectType.isNotEmpty;
+
+  void _resetLocalFilters() {
+    setState(() {
+      _dept = '';
+      _gender = '';
+      _ageFromCtrl.clear();
+      _ageToCtrl.clear();
+      _state = '';
+      _city = '';
+      _languages = '';
+      _categories = '';
+      _skills = '';
+      _heightFrom = '';
+      _heightTo = '';
+      _role = '';
+      _projectType = '';
+    });
+  }
+
+  Widget _buildDropdownField({
+    required String label,
+    required String value,
+    required List<String> options,
+    required ValueChanged<String?> onChanged,
+    required Color bgColor,
+    required Color borderColor,
+    required Color textColor,
+    required Color hintColor,
+  }) {
+    final hasValue = value.isNotEmpty && options.contains(value);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(50),
+        border: Border.all(
+          color: hasValue ? AppColors.primary.withValues(alpha: 0.7) : borderColor,
+          width: hasValue ? 1.5 : 1.0,
+        ),
+        color: bgColor,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: hasValue ? value : null,
+                hint: Text(
+                  label,
+                  style: GoogleFonts.poppins(
+                    color: hintColor,
+                    fontSize: 14,
+                  ),
+                ),
+                isExpanded: true,
+                icon: Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: hintColor,
+                ),
+                dropdownColor: bgColor,
+                borderRadius: BorderRadius.circular(16),
+                items: options.map((opt) {
+                  return DropdownMenuItem<String>(
+                    value: opt,
+                    child: Text(
+                      opt,
+                      style: GoogleFonts.poppins(
+                        color: textColor,
+                        fontSize: 14,
+                        fontWeight:
+                            opt == value ? FontWeight.w600 : FontWeight.w400,
+                      ),
+                    ),
+                  );
+                }).toList(),
+                onChanged: onChanged,
+              ),
+            ),
+          ),
+          if (hasValue)
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => onChanged(null),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 6),
+                child: Icon(
+                  Icons.close_rounded,
+                  size: 18,
+                  color: hintColor,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    required Color bgColor,
+    required Color borderColor,
+    required Color textColor,
+    required Color hintColor,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      height: 52,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(50),
+        border: Border.all(color: borderColor),
+        color: bgColor,
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        style: GoogleFonts.poppins(color: textColor, fontSize: 14),
+        cursorColor: AppColors.primary,
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 14,
+          ),
+          hintText: label,
+          hintStyle: GoogleFonts.poppins(
+            color: hintColor,
+            fontSize: 14,
+          ),
+          suffixIcon: ValueListenableBuilder<TextEditingValue>(
+            valueListenable: controller,
+            builder: (context, val, _) {
+              if (val.text.isEmpty) return const SizedBox.shrink();
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => controller.clear(),
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: Icon(Icons.close_rounded, size: 18, color: hintColor),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF1C1C1E) : Colors.white;
+    final borderColor =
+        isDark ? const Color(0xFF3A3A3C) : const Color(0xFFE5E7EB);
+    final textColor = isDark ? Colors.white : AppColors.lightText;
+    final hintColor = isDark ? Colors.white38 : Colors.black38;
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.85,
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white24 : Colors.black12,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const SizedBox(width: 48),
+                  Text(
+                    'Filters',
+                    style: GoogleFonts.poppins(
+                      color: textColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (_hasAnyFilter)
+                    GestureDetector(
+                      onTap: _resetLocalFilters,
+                      child: Text(
+                        'Reset',
+                        style: GoogleFonts.poppins(
+                          color: AppColors.primary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    )
+                  else
+                    const SizedBox(width: 48),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    _buildDropdownField(
+                      label: 'Department',
+                      value: _dept,
+                      options: kFilmCrafts,
+                      onChanged: (v) => setState(() => _dept = v ?? ''),
+                      bgColor: bgColor,
+                      borderColor: borderColor,
+                      textColor: textColor,
+                      hintColor: hintColor,
+                    ),
+                    _buildDropdownField(
+                      label: 'Gender',
+                      value: _gender,
+                      options: _genderOptions,
+                      onChanged: (v) => setState(() => _gender = v ?? ''),
+                      bgColor: bgColor,
+                      borderColor: borderColor,
+                      textColor: textColor,
+                      hintColor: hintColor,
+                    ),
+                    _buildTextField(
+                      label: 'From Age',
+                      controller: _ageFromCtrl,
+                      bgColor: bgColor,
+                      borderColor: borderColor,
+                      textColor: textColor,
+                      hintColor: hintColor,
+                    ),
+                    _buildTextField(
+                      label: 'To Age',
+                      controller: _ageToCtrl,
+                      bgColor: bgColor,
+                      borderColor: borderColor,
+                      textColor: textColor,
+                      hintColor: hintColor,
+                    ),
+                    _buildDropdownField(
+                      label: 'Present State',
+                      value: _state,
+                      options: _stateOptions,
+                      onChanged: (v) => setState(() => _state = v ?? ''),
+                      bgColor: bgColor,
+                      borderColor: borderColor,
+                      textColor: textColor,
+                      hintColor: hintColor,
+                    ),
+                    _buildDropdownField(
+                      label: 'Present City',
+                      value: _city,
+                      options: _cityOptions,
+                      onChanged: (v) => setState(() => _city = v ?? ''),
+                      bgColor: bgColor,
+                      borderColor: borderColor,
+                      textColor: textColor,
+                      hintColor: hintColor,
+                    ),
+                    _buildDropdownField(
+                      label: 'Languages',
+                      value: _languages,
+                      options: _languageOptions,
+                      onChanged: (v) => setState(() => _languages = v ?? ''),
+                      bgColor: bgColor,
+                      borderColor: borderColor,
+                      textColor: textColor,
+                      hintColor: hintColor,
+                    ),
+                    _buildDropdownField(
+                      label: 'Categories',
+                      value: _categories,
+                      options: _categoryOptions,
+                      onChanged: (v) => setState(() => _categories = v ?? ''),
+                      bgColor: bgColor,
+                      borderColor: borderColor,
+                      textColor: textColor,
+                      hintColor: hintColor,
+                    ),
+                    _buildDropdownField(
+                      label: 'Skills',
+                      value: _skills,
+                      options: _skillOptions,
+                      onChanged: (v) => setState(() => _skills = v ?? ''),
+                      bgColor: bgColor,
+                      borderColor: borderColor,
+                      textColor: textColor,
+                      hintColor: hintColor,
+                    ),
+                    _buildDropdownField(
+                      label: 'From Height',
+                      value: _heightFrom,
+                      options: _heightOptions,
+                      onChanged: (v) => setState(() => _heightFrom = v ?? ''),
+                      bgColor: bgColor,
+                      borderColor: borderColor,
+                      textColor: textColor,
+                      hintColor: hintColor,
+                    ),
+                    _buildDropdownField(
+                      label: 'To Height',
+                      value: _heightTo,
+                      options: _heightOptions,
+                      onChanged: (v) => setState(() => _heightTo = v ?? ''),
+                      bgColor: bgColor,
+                      borderColor: borderColor,
+                      textColor: textColor,
+                      hintColor: hintColor,
+                    ),
+                    _buildDropdownField(
+                      label: 'Role',
+                      value: _role,
+                      options: _roleOptions,
+                      onChanged: (v) => setState(() => _role = v ?? ''),
+                      bgColor: bgColor,
+                      borderColor: borderColor,
+                      textColor: textColor,
+                      hintColor: hintColor,
+                    ),
+                    _buildDropdownField(
+                      label: 'Project Type',
+                      value: _projectType,
+                      options: _projectTypeOptions,
+                      onChanged: (v) => setState(() => _projectType = v ?? ''),
+                      bgColor: bgColor,
+                      borderColor: borderColor,
+                      textColor: textColor,
+                      hintColor: hintColor,
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+              child: SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 0,
+                  ),
+                  onPressed: () {
+                    widget.provider.filterDepartment = _dept;
+                    widget.provider.filterGender = _gender;
+                    widget.provider.filterAgeFrom = _ageFromCtrl.text.trim();
+                    widget.provider.filterAgeTo = _ageToCtrl.text.trim();
+                    widget.provider.filterState = _state;
+                    widget.provider.filterCity = _city;
+                    widget.provider.filterLanguages = _languages;
+                    widget.provider.filterCategories = _categories;
+                    widget.provider.filterSkills = _skills;
+                    widget.provider.filterHeightFrom = _heightFrom;
+                    widget.provider.filterHeightTo = _heightTo;
+                    widget.provider.filterRole = _role;
+                    widget.provider.filterProjectType = _projectType;
+                    Navigator.pop(context);
+                    widget.provider.fetchExploreUsers();
+                  },
+                  child: Text(
+                    'Submit',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

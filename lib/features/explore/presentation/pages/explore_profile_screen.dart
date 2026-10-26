@@ -12,7 +12,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../core/services/branch_service.dart';
 
 import '../../../../core/theme/theme_provider.dart';
 import '../../../artist_profile/data/models/artist_model.dart';
