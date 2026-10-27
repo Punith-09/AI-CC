@@ -144,4 +144,17 @@ class NotificationsProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  /// Removes all **read** notifications from the local list (no API call needed).
+  void clearReadNotifications() {
+    _notifications.removeWhere((n) => n.isRead);
+    notifyListeners();
+  }
+
+  /// Removes all **unread** notifications from the local list (no API call needed).
+  void clearUnreadNotifications() {
+    _notifications.removeWhere((n) => !n.isRead);
+    if (_unreadCount > 0) _unreadCount = 0;
+    notifyListeners();
+  }
 }

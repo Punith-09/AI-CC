@@ -16,36 +16,9 @@ class ActivityCard extends StatelessWidget {
     this.onDelete,
   });
 
-  IconData _iconForType(String type) {
-    switch (type.toUpperCase()) {
-      case 'POST_LIKED':
-        return Icons.favorite_rounded;
-      case 'POST_COMMENTED':
-        return Icons.chat_bubble_rounded;
-      case 'POST_SHARED':
-        return Icons.share_rounded;
-      case 'FOLLOW':
-      case 'SOCIAL':
-        return Icons.person_add_alt_1_outlined;
-      case 'MESSAGE':
-        return Icons.chat_bubble_outline;
-      case 'AUDITION':
-      case 'AUDITION_APPLIED':
-      case 'AUDITION_SHORTLISTED':
-        return Icons.movie_creation_outlined;
-      case 'MATCH':
-      case 'AI_MATCH':
-        return Icons.auto_awesome;
-      case 'PAYMENT':
-        return Icons.payment_outlined;
-      case 'VERIFICATION':
-        return Icons.verified_user_outlined;
-      default:
-        return Icons.notifications_none_outlined;
-    }
-  }
+  // ── Helpers ────────────────────────────────────────────────────────────────
 
-  Color _colorForType(String type) {
+  Color _typeColor(String type) {
     switch (type.toUpperCase()) {
       case 'POST_LIKED':
         return Colors.pinkAccent;
@@ -70,38 +43,58 @@ class ActivityCard extends StatelessWidget {
       case 'VERIFICATION':
         return Colors.deepPurple;
       default:
-        return const Color(0xFF4AD0FB);
+        return AppColors.primary;
     }
   }
 
-  String _badgeLabel(String type) {
+  IconData _typeIcon(String type) {
     switch (type.toUpperCase()) {
       case 'POST_LIKED':
-        return 'LIKED';
+        return Icons.favorite_rounded;
       case 'POST_COMMENTED':
-        return 'COMMENTED';
+        return Icons.chat_bubble_rounded;
       case 'POST_SHARED':
-        return 'SHARED';
-      case 'MATCH':
-      case 'AI_MATCH':
-        return 'AI MATCH';
-      case 'AUDITION_APPLIED':
-        return 'APPLICATION';
-      case 'AUDITION_SHORTLISTED':
-        return 'SHORTLISTED';
-      case 'VERIFICATION':
-        return 'VERIFICATION';
+        return Icons.share_rounded;
       case 'FOLLOW':
       case 'SOCIAL':
-        return 'SOCIAL';
+        return Icons.person_add_alt_1_rounded;
       case 'MESSAGE':
-        return 'MESSAGE';
+        return Icons.chat_bubble_outline;
       case 'AUDITION':
-        return 'AUDITION';
+      case 'AUDITION_APPLIED':
+      case 'AUDITION_SHORTLISTED':
+        return Icons.movie_creation_outlined;
+      case 'MATCH':
+      case 'AI_MATCH':
+        return Icons.auto_awesome;
       case 'PAYMENT':
-        return 'PAYMENT';
+        return Icons.payment_outlined;
+      case 'VERIFICATION':
+        return Icons.verified_user_outlined;
       default:
-        return type.toUpperCase().isNotEmpty ? type.toUpperCase() : 'NOTIFICATION';
+        return Icons.notifications_rounded;
+    }
+  }
+
+  /// "liked your post", "commented on your post", etc.
+  String _actionText(String type) {
+    switch (type.toUpperCase()) {
+      case 'POST_LIKED':
+        return 'liked your post';
+      case 'POST_COMMENTED':
+        return 'commented on your post';
+      case 'POST_SHARED':
+        return 'shared your post';
+      case 'FOLLOW':
+        return 'started following you';
+      case 'AUDITION_APPLIED':
+        return 'applied to your Casting call';
+      case 'AUDITION_SHORTLISTED':
+        return 'You have been shortlisted';
+      case 'MESSAGE':
+        return 'sent you a message';
+      default:
+        return notification.message.isNotEmpty ? notification.message : 'sent you a notification';
     }
   }
 
@@ -116,50 +109,45 @@ class ActivityCard extends StatelessWidget {
     return '${dt.day}/${dt.month}/${dt.year}';
   }
 
-  /// Navigate to the relevant post/entity when the card is tapped
   void _handleNavigation(BuildContext context) {
     final entity = notification.entity;
     if (entity == null || entity.id.isEmpty) return;
-
-    final entityType = entity.type.toUpperCase();
-    if (entityType == 'VIDEO' || entityType == 'PHOTO' || entityType == 'POST') {
-      // Navigate to watch/post detail screen, passing entity id as extra
+    final t = entity.type.toUpperCase();
+    if (t == 'VIDEO' || t == 'PHOTO' || t == 'POST') {
       context.push(AppRoutes.watchVideo, extra: entity.id);
-    } else if (entityType == 'AUDITION') {
+    } else if (t == 'AUDITION') {
       context.push(AppRoutes.auditionDetails, extra: entity.id);
     }
   }
 
+  // ── Build ──────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? AppColors.darkCard : Colors.white;
-    final cardBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
-    final titleColor = isDark ? AppColors.darkText : const Color(0xFF0F172A);
-    final subtitleColor =
-        isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
-    final timeColor =
-        isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8);
-    final chevronColor =
-        isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8);
+    final bgColor = isDark ? AppColors.darkScaffold : Colors.white;
+    final textPrimary = isDark ? AppColors.darkText : const Color(0xFF111827);
+    final textSecondary = isDark ? AppColors.darkTextSecondary : const Color(0xFF6B7280);
+    final unreadBg = isDark
+        ? AppColors.darkSurface.withValues(alpha: 0.6)
+        : const Color(0xFFFFF8F0);
 
-    final typeColor = _colorForType(notification.type);
-    final isHighlight = !notification.isRead;
+    final typeColor = _typeColor(notification.type);
+    final isUnread = !notification.isRead;
 
-    // Actor avatar or icon
     final actorPhoto = notification.actor?.profilePhoto;
     final actorName = notification.actor?.name ?? '';
+    // entity thumbnail (photo preview on the right)
+    final entityThumb = notification.metadata?['thumbnail'] as String? ??
+        notification.metadata?['image'] as String?;
 
     return Dismissible(
       key: Key(notification.id),
       direction: DismissDirection.endToStart,
       background: Container(
         alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          color: Colors.red.shade600,
-          borderRadius: BorderRadius.circular(18),
-        ),
+        padding: const EdgeInsets.only(right: 24),
+        color: Colors.red.shade600,
         child: const Icon(Icons.delete_outline, color: Colors.white, size: 26),
       ),
       confirmDismiss: (_) async {
@@ -171,126 +159,33 @@ class ActivityCard extends StatelessWidget {
           onTap?.call();
           _handleNavigation(context);
         },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          decoration: BoxDecoration(
-            color: cardBg,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: isHighlight ? typeColor.withValues(alpha: 0.4) : cardBorder,
-              width: isHighlight ? 1.5 : 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
+        child: Container(
+          color: isUnread ? unreadBg : bgColor,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              if (isHighlight)
-                Container(
-                  width: 4,
-                  height: 110,
-                  decoration: BoxDecoration(
-                    color: typeColor,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(18),
-                      bottomLeft: Radius.circular(18),
-                    ),
-                  ),
-                ),
+              // ── Left: stacked avatars / single avatar with badge ─────────
+              _buildAvatarStack(actorPhoto, actorName, typeColor),
+
+              const SizedBox(width: 12),
+
+              // ── Middle: rich inline text ─────────────────────────────────
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Actor avatar (profile photo) or fallback icon
-                      _buildAvatar(actorPhoto, actorName, typeColor),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    notification.displayTitle,
-                                    style: TextStyle(
-                                      color: titleColor,
-                                      fontWeight: isHighlight
-                                          ? FontWeight.bold
-                                          : FontWeight.w600,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  _formatTime(notification.createdAt),
-                                  style: TextStyle(
-                                    color: timeColor,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            // Rich description: "user15 liked your post."
-                            Text(
-                              notification.displayText,
-                              style: TextStyle(
-                                color: subtitleColor,
-                                height: 1.4,
-                                fontSize: 13,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: typeColor.withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    _badgeLabel(notification.type),
-                                    style: TextStyle(
-                                      color: typeColor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 10,
-                                    ),
-                                  ),
-                                ),
-                                if (isHighlight) ...[
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: BoxDecoration(
-                                      color: typeColor,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(Icons.chevron_right, color: chevronColor, size: 20),
-                    ],
-                  ),
+                child: _buildTextContent(
+                  actorName: actorName,
+                  actionText: _actionText(notification.type),
+                  timeText: _formatTime(notification.createdAt),
+                  textPrimary: textPrimary,
+                  textSecondary: textSecondary,
+                  isUnread: isUnread,
                 ),
               ),
+
+              const SizedBox(width: 12),
+
+              // ── Right: post thumbnail or unread dot ──────────────────────
+              _buildRightSection(entityThumb, typeColor, isUnread),
             ],
           ),
         ),
@@ -298,41 +193,168 @@ class ActivityCard extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatar(String? photoUrl, String name, Color typeColor) {
+  // ── Sub-builders ───────────────────────────────────────────────────────────
+
+  Widget _buildAvatarStack(
+      String? photoUrl, String name, Color typeColor) {
+    return SizedBox(
+      width: 52,
+      height: 52,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // Main actor avatar
+          _circleAvatar(photoUrl, name, typeColor, radius: 24),
+          // Small type-icon badge at bottom-right
+          Positioned(
+            bottom: -2,
+            right: -4,
+            child: Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: typeColor,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 1.5),
+              ),
+              child: Icon(
+                _typeIcon(notification.type),
+                size: 10,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _circleAvatar(
+      String? photoUrl, String name, Color typeColor,
+      {double radius = 22}) {
     if (photoUrl != null && photoUrl.isNotEmpty) {
       return CircleAvatar(
-        radius: 23,
+        radius: radius,
         backgroundImage: NetworkImage(photoUrl),
         backgroundColor: typeColor.withValues(alpha: 0.12),
-        onBackgroundImageError: (_, __) {},
+        onBackgroundImageError: (_, _) {},
       );
     }
-    // Fallback: initials or icon
     if (name.isNotEmpty) {
       return CircleAvatar(
-        radius: 23,
+        radius: radius,
         backgroundColor: typeColor.withValues(alpha: 0.15),
         child: Text(
           name[0].toUpperCase(),
           style: TextStyle(
             color: typeColor,
             fontWeight: FontWeight.bold,
-            fontSize: 18,
+            fontSize: radius * 0.75,
           ),
         ),
       );
     }
-    return Container(
-      width: 46,
-      height: 46,
-      decoration: BoxDecoration(
-        color: typeColor.withValues(alpha: 0.12),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(
-        _iconForType(''),
-        color: typeColor,
-        size: 22,
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: typeColor.withValues(alpha: 0.12),
+      child: Icon(_typeIcon(''), color: typeColor, size: radius * 0.9),
+    );
+  }
+
+  Widget _buildTextContent({
+    required String actorName,
+    required String actionText,
+    required String timeText,
+    required Color textPrimary,
+    required Color textSecondary,
+    required bool isUnread,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        RichText(
+          text: TextSpan(
+            style: TextStyle(
+              color: textPrimary,
+              fontSize: 14,
+              height: 1.4,
+            ),
+            children: [
+              if (actorName.isNotEmpty) ...[
+                TextSpan(
+                  text: actorName,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                const TextSpan(text: ' '),
+              ],
+              TextSpan(
+                text: actionText,
+                style: TextStyle(
+                  fontWeight:
+                      isUnread ? FontWeight.w500 : FontWeight.w400,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          timeText,
+          style: TextStyle(
+            color: textSecondary,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRightSection(
+      String? thumbUrl, Color typeColor, bool isUnread) {
+    if (thumbUrl != null && thumbUrl.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(6),
+        child: Image.network(
+          thumbUrl,
+          width: 54,
+          height: 54,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => _unreadDot(typeColor, isUnread),
+        ),
+      );
+    }
+    // No thumbnail: show unread dot or empty space
+    return SizedBox(
+      width: 54,
+      child: isUnread
+          ? Align(
+              alignment: Alignment.centerRight,
+              child: Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: typeColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            )
+          : null,
+    );
+  }
+
+  Widget _unreadDot(Color typeColor, bool isUnread) {
+    if (!isUnread) return const SizedBox(width: 54);
+    return SizedBox(
+      width: 54,
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Container(
+          width: 10,
+          height: 10,
+          decoration:
+              BoxDecoration(color: typeColor, shape: BoxShape.circle),
+        ),
       ),
     );
   }

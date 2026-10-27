@@ -545,7 +545,13 @@ class _PostLoaderScreenState extends State<_PostLoaderScreen> {
   @override
   void initState() {
     super.initState();
-    _load();
+    // Defer navigation to after the first frame is fully committed.
+    // Navigating synchronously in initState causes the
+    // navigator.dart `!keyReservation.contains(key)` assertion because
+    // the route entry hasn't been registered by the Navigator yet.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _load();
+    });
   }
 
   Future<void> _load() async {
@@ -553,8 +559,9 @@ class _PostLoaderScreenState extends State<_PostLoaderScreen> {
       final post = await sl<HomeRepository>().getVideoById(widget.postId);
       if (!mounted) return;
       if (post != null) {
-        // Replace this loader with the actual watch screen
-        context.pushReplacement(AppRoutes.watchVideo, extra: post);
+        // Use go() instead of replace() — replacing with the same path (/watchVideo)
+        // causes a GoRouter key reservation conflict.
+        context.go(AppRoutes.watchVideo, extra: post);
       } else {
         _showError();
       }
