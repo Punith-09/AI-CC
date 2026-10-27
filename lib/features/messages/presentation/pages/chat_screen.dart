@@ -208,7 +208,6 @@ class _ChatScreenState extends State<ChatScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final appBarBg = isDark ? AppColors.darkCard : Colors.white;
     final titleColor = isDark ? AppColors.darkText : const Color(0xFF111827);
-    final iconColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
     final bodyBg = isDark ? AppColors.darkScaffold : const Color(0xFFF8FAFC);
 
     return Scaffold(
@@ -361,19 +360,33 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   DateTime _parseDate(String iso) {
-    if (iso.isEmpty) return DateTime.now();
-    try {
-      String cleaned = iso.trim();
-      if (cleaned.endsWith('Z') || cleaned.endsWith('z')) {
-        cleaned = cleaned.substring(0, cleaned.length - 1);
+    if (iso.trim().isEmpty) return DateTime.now();
+    final clean = iso.trim();
+
+    final numVal = int.tryParse(clean);
+    if (numVal != null) {
+      if (numVal > 1000000000000) {
+        return DateTime.fromMillisecondsSinceEpoch(numVal, isUtc: true).toLocal();
+      } else if (numVal > 1000000000) {
+        return DateTime.fromMillisecondsSinceEpoch(numVal * 1000, isUtc: true).toLocal();
       }
-      if (cleaned.contains('+')) {
-        cleaned = cleaned.split('+').first;
-      }
-      return DateTime.parse(cleaned);
-    } catch (_) {
-      return DateTime.tryParse(iso) ?? DateTime.now();
     }
+
+    try {
+      if (clean.endsWith('Z') || clean.endsWith('z') || clean.contains('+')) {
+        return DateTime.parse(clean).toLocal();
+      }
+      if (clean.contains('T') && clean.substring(clean.indexOf('T')).contains('-')) {
+        return DateTime.parse(clean).toLocal();
+      }
+      if (clean.contains('T')) {
+        return DateTime.parse('${clean}Z').toLocal();
+      }
+      final parsed = DateTime.tryParse(clean);
+      if (parsed != null) return parsed.isUtc ? parsed.toLocal() : parsed;
+    } catch (_) {}
+
+    return DateTime.tryParse(clean)?.toLocal() ?? DateTime.now();
   }
 
   String _formatTime(String iso) {
