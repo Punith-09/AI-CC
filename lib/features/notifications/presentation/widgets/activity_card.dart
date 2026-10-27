@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../data/models/notification_model.dart';
 
-class ActivityCard extends StatelessWidget {
+class ActivityCard extends StatefulWidget {
   final NotificationModel notification;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
@@ -16,6 +16,11 @@ class ActivityCard extends StatelessWidget {
     this.onDelete,
   });
 
+  @override
+  State<ActivityCard> createState() => _ActivityCardState();
+}
+
+class _ActivityCardState extends State<ActivityCard> {
   // ── Helpers ────────────────────────────────────────────────────────────────
 
   Color _typeColor(String type) {
@@ -76,7 +81,6 @@ class ActivityCard extends StatelessWidget {
     }
   }
 
-  /// "liked your post", "commented on your post", etc.
   String _actionText(String type) {
     switch (type.toUpperCase()) {
       case 'POST_LIKED':
@@ -94,7 +98,9 @@ class ActivityCard extends StatelessWidget {
       case 'MESSAGE':
         return 'sent you a message';
       default:
-        return notification.message.isNotEmpty ? notification.message : 'sent you a notification';
+        return widget.notification.message.isNotEmpty
+            ? widget.notification.message
+            : 'sent you a notification';
     }
   }
 
@@ -110,7 +116,7 @@ class ActivityCard extends StatelessWidget {
   }
 
   void _handleNavigation(BuildContext context) {
-    final entity = notification.entity;
+    final entity = widget.notification.entity;
     if (entity == null || entity.id.isEmpty) return;
     final t = entity.type.toUpperCase();
     if (t == 'VIDEO' || t == 'PHOTO' || t == 'POST') {
@@ -127,36 +133,70 @@ class ActivityCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? AppColors.darkScaffold : Colors.white;
     final textPrimary = isDark ? AppColors.darkText : const Color(0xFF111827);
-    final textSecondary = isDark ? AppColors.darkTextSecondary : const Color(0xFF6B7280);
+    final textSecondary =
+        isDark ? AppColors.darkTextSecondary : const Color(0xFF6B7280);
     final unreadBg = isDark
         ? AppColors.darkSurface.withValues(alpha: 0.6)
         : const Color(0xFFFFF8F0);
 
-    final typeColor = _typeColor(notification.type);
-    final isUnread = !notification.isRead;
+    final typeColor = _typeColor(widget.notification.type);
+    final isUnread = !widget.notification.isRead;
 
-    final actorPhoto = notification.actor?.profilePhoto;
-    final actorName = notification.actor?.name ?? '';
-    // entity thumbnail (photo preview on the right)
-    final entityThumb = notification.metadata?['thumbnail'] as String? ??
-        notification.metadata?['image'] as String?;
+    final actorPhoto = widget.notification.actor?.profilePhoto;
+    final actorName = widget.notification.actor?.name ?? '';
+    final entityThumb =
+        widget.notification.metadata?['thumbnail'] as String? ??
+            widget.notification.metadata?['image'] as String?;
 
     return Dismissible(
-      key: Key(notification.id),
+      key: Key(widget.notification.id),
       direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 24),
-        color: Colors.red.shade600,
-        child: const Icon(Icons.delete_outline, color: Colors.white, size: 26),
+      // Do NOT auto-dismiss — just reveal the delete button
+      confirmDismiss: (_) => Future.value(false),
+      background: GestureDetector(
+        onTap: () => widget.onDelete?.call(),
+        child: Container(
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 28),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.red.shade300, Colors.red.shade700],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: const BoxDecoration(
+                  color: Colors.white24,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.white,
+                  size: 26,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Delete',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
-      confirmDismiss: (_) async {
-        onDelete?.call();
-        return true;
-      },
       child: GestureDetector(
         onTap: () {
-          onTap?.call();
+          widget.onTap?.call();
           _handleNavigation(context);
         },
         child: Container(
@@ -165,17 +205,17 @@ class ActivityCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // ── Left: stacked avatars / single avatar with badge ─────────
+              // ── Left: avatar with type badge ─────────────────────────────
               _buildAvatarStack(actorPhoto, actorName, typeColor),
 
               const SizedBox(width: 12),
 
-              // ── Middle: rich inline text ─────────────────────────────────
+              // ── Middle: rich inline text ──────────────────────────────────
               Expanded(
                 child: _buildTextContent(
                   actorName: actorName,
-                  actionText: _actionText(notification.type),
-                  timeText: _formatTime(notification.createdAt),
+                  actionText: _actionText(widget.notification.type),
+                  timeText: _formatTime(widget.notification.createdAt),
                   textPrimary: textPrimary,
                   textSecondary: textSecondary,
                   isUnread: isUnread,
@@ -184,7 +224,7 @@ class ActivityCard extends StatelessWidget {
 
               const SizedBox(width: 12),
 
-              // ── Right: post thumbnail or unread dot ──────────────────────
+              // ── Right: thumbnail or unread dot ────────────────────────────
               _buildRightSection(entityThumb, typeColor, isUnread),
             ],
           ),
@@ -195,17 +235,14 @@ class ActivityCard extends StatelessWidget {
 
   // ── Sub-builders ───────────────────────────────────────────────────────────
 
-  Widget _buildAvatarStack(
-      String? photoUrl, String name, Color typeColor) {
+  Widget _buildAvatarStack(String? photoUrl, String name, Color typeColor) {
     return SizedBox(
       width: 52,
       height: 52,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Main actor avatar
           _circleAvatar(photoUrl, name, typeColor, radius: 24),
-          // Small type-icon badge at bottom-right
           Positioned(
             bottom: -2,
             right: -4,
@@ -218,7 +255,7 @@ class ActivityCard extends StatelessWidget {
                 border: Border.all(color: Colors.white, width: 1.5),
               ),
               child: Icon(
-                _typeIcon(notification.type),
+                _typeIcon(widget.notification.type),
                 size: 10,
                 color: Colors.white,
               ),
@@ -229,15 +266,14 @@ class ActivityCard extends StatelessWidget {
     );
   }
 
-  Widget _circleAvatar(
-      String? photoUrl, String name, Color typeColor,
+  Widget _circleAvatar(String? photoUrl, String name, Color typeColor,
       {double radius = 22}) {
     if (photoUrl != null && photoUrl.isNotEmpty) {
       return CircleAvatar(
         radius: radius,
         backgroundImage: NetworkImage(photoUrl),
         backgroundColor: typeColor.withValues(alpha: 0.12),
-        onBackgroundImageError: (_, _) {},
+        onBackgroundImageError: (_, __) {},
       );
     }
     if (name.isNotEmpty) {
@@ -291,8 +327,7 @@ class ActivityCard extends StatelessWidget {
               TextSpan(
                 text: actionText,
                 style: TextStyle(
-                  fontWeight:
-                      isUnread ? FontWeight.w500 : FontWeight.w400,
+                  fontWeight: isUnread ? FontWeight.w500 : FontWeight.w400,
                 ),
               ),
             ],
@@ -310,8 +345,7 @@ class ActivityCard extends StatelessWidget {
     );
   }
 
-  Widget _buildRightSection(
-      String? thumbUrl, Color typeColor, bool isUnread) {
+  Widget _buildRightSection(String? thumbUrl, Color typeColor, bool isUnread) {
     if (thumbUrl != null && thumbUrl.isNotEmpty) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(6),
@@ -320,11 +354,10 @@ class ActivityCard extends StatelessWidget {
           width: 54,
           height: 54,
           fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => _unreadDot(typeColor, isUnread),
+          errorBuilder: (_, __, ___) => _unreadDot(typeColor, isUnread),
         ),
       );
     }
-    // No thumbnail: show unread dot or empty space
     return SizedBox(
       width: 54,
       child: isUnread
@@ -352,8 +385,7 @@ class ActivityCard extends StatelessWidget {
         child: Container(
           width: 10,
           height: 10,
-          decoration:
-              BoxDecoration(color: typeColor, shape: BoxShape.circle),
+          decoration: BoxDecoration(color: typeColor, shape: BoxShape.circle),
         ),
       ),
     );
