@@ -121,7 +121,27 @@ class _ActivityScreenState extends State<ActivityScreen> {
             color: isDark ? AppColors.darkText : AppColors.lightText,
           ),
           onSelected: (value) async {
-            if (value == 'clear_all') {
+            if (value == 'mark_read') {
+              final success = await provider.markAllAsRead();
+              if (context.mounted && success) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('All notifications marked as read'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+            } else if (value == 'mark_unread') {
+              provider.markAllAsUnread();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('All notifications marked as unread'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+            } else if (value == 'clear_all') {
               final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (ctx) => AlertDialog(
@@ -146,71 +166,29 @@ class _ActivityScreenState extends State<ActivityScreen> {
               if (confirmed == true && context.mounted) {
                 await provider.clearAllNotifications();
               }
-            } else if (value == 'clear_read') {
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Clear Read Notifications'),
-                  content: const Text(
-                      'Remove all read notifications?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, true),
-                      child: const Text(
-                        'Clear Read',
-                        style: TextStyle(color: Colors.orange),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-              if (confirmed == true && context.mounted) {
-                provider.clearReadNotifications();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Read notifications cleared'),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-              }
-            } else if (value == 'clear_unread') {
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Clear Unread Notifications'),
-                  content: const Text(
-                      'Remove all unread notifications?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, true),
-                      child: const Text(
-                        'Clear Unread',
-                        style: TextStyle(color: Colors.orange),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-              if (confirmed == true && context.mounted) {
-                provider.clearUnreadNotifications();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Unread notifications cleared'),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-              }
             }
           },
           itemBuilder: (_) => const [
+            PopupMenuItem(
+              value: 'mark_read',
+              child: Row(
+                children: [
+                  Icon(Icons.done_all_rounded, color: Colors.green),
+                  SizedBox(width: 8),
+                  Text('Read'),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'mark_unread',
+              child: Row(
+                children: [
+                  Icon(Icons.mark_email_unread_outlined, color: Colors.blue),
+                  SizedBox(width: 8),
+                  Text('Unread'),
+                ],
+              ),
+            ),
             PopupMenuItem(
               value: 'clear_all',
               child: Row(
@@ -218,26 +196,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   Icon(Icons.delete_sweep_rounded, color: Colors.red),
                   SizedBox(width: 8),
                   Text('Clear All'),
-                ],
-              ),
-            ),
-            PopupMenuItem(
-              value: 'clear_read',
-              child: Row(
-                children: [
-                  Icon(Icons.mark_email_read_outlined, color: Colors.orange),
-                  SizedBox(width: 8),
-                  Text('Clear Read'),
-                ],
-              ),
-            ),
-            PopupMenuItem(
-              value: 'clear_unread',
-              child: Row(
-                children: [
-                  Icon(Icons.mark_email_unread_outlined, color: Colors.orange),
-                  SizedBox(width: 8),
-                  Text('Clear Unread'),
                 ],
               ),
             ),
