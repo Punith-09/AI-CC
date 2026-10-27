@@ -215,7 +215,7 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
       profileImage: myPic,
       username: myName,
       comment: text,
-      time: '1m',
+      time: 'just now',
       createdAt: nowIso,
       likes: 0,
       isLiked: false,
@@ -240,6 +240,9 @@ class _CommentsBottomSheetState extends State<CommentsBottomSheet> {
         profileImage: createdComment.profileImage.isNotEmpty
             ? createdComment.profileImage
             : myPic,
+        createdAt: (createdComment.createdAt != null && createdComment.createdAt!.isNotEmpty)
+            ? createdComment.createdAt
+            : nowIso,
       );
 
       if (mounted) {
