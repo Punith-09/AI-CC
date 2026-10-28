@@ -47,9 +47,13 @@ import '../../features/subscription/presentation/pages/subscription_screen.dart'
 import '../../features/stories/presentation/pages/story_upload_screen.dart';
 import '../../features/home/data/repository/home_repository.dart';
 import '../../features/live_stats/presentation/pages/live_stats_screen.dart';
+import '../../features/messages/data/repository/messages_repository.dart';
 import '../../core/di/injection_container.dart';
 
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
 final GoRouter appRouter = GoRouter(
+  navigatorKey: rootNavigatorKey,
   initialLocation: AppRoutes.welcome,
   redirect: (context, state) {
     final isLoggedIn = LocalStorage.instance.hasToken();
@@ -96,8 +100,25 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.chat,
       builder: (context, state) {
         final extra = state.extra;
-        final chat = extra is ChatModel ? extra : null;
-        return ChatScreen(chat: chat);
+        if (extra is ChatModel) {
+          return ChatScreen(chat: extra);
+        }
+        if (extra is String && extra.isNotEmpty) {
+          return ChatScreen(
+            chat: ChatModel(id: extra, participantId: ''),
+          );
+        }
+        if (extra is Map) {
+          final chatId = extra['chatId']?.toString() ?? '';
+          final participantId = extra['participantId']?.toString() ?? '';
+          if (chatId.isNotEmpty) {
+            return ChatScreen(
+              chat: ChatModel(id: chatId, participantId: participantId),
+            );
+          }
+          return _ChatOpenScreen(participantId: participantId);
+        }
+        return const ChatScreen();
       },
     ),
 
@@ -516,6 +537,61 @@ class _PostLoaderScreenState extends State<_PostLoaderScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ChatOpenScreen extends StatefulWidget {
+  final String participantId;
+
+  const _ChatOpenScreen({required this.participantId});
+
+  @override
+  State<_ChatOpenScreen> createState() => _ChatOpenScreenState();
+}
+
+class _ChatOpenScreenState extends State<_ChatOpenScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _open();
+    });
+  }
+
+  Future<void> _open() async {
+    try {
+      if (widget.participantId.isEmpty) {
+        _fail();
+        return;
+      }
+      final chat =
+          await sl<MessagesRepository>().startChat(widget.participantId);
+      if (!mounted) return;
+      context.go(AppRoutes.chat, extra: chat);
+    } catch (_) {
+      if (mounted) _fail();
+    }
+  }
+
+  void _fail() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Could not open chat. Please try again.'),
+        backgroundColor: Colors.redAccent,
+      ),
+    );
+    if (Navigator.of(context).canPop()) context.pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+      body: const Center(
+        child: CircularProgressIndicator(color: Color(0xFF4AD0FB)),
       ),
     );
   }

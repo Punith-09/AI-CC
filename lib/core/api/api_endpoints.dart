@@ -79,4 +79,9 @@ class ApiEndpoints {
   static String markNotificationRead(String id) => "/notifications/$id/read";
   static const String markAllNotificationsRead = "/notifications/read-all";
   static String deleteNotification(String id) => "/notifications/$id";
+
+  // Device-token registration is not defined in this Flutter client.
+  // Targeted FCM delivery requires a backend endpoint, for example:
+  // POST /notifications/device-token
+  // { "token": "<fcmToken>", "platform": "android" | "ios" }
 }

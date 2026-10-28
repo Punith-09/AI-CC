@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -33,6 +34,8 @@ import 'features/stories/presentation/providers/stories_provider.dart';
 import 'features/live_stats/presentation/providers/live_stats_provider.dart';
 import 'features/notifications/presentation/providers/notifications_provider.dart';
 import 'core/services/deep_link_service.dart';
+import 'core/services/push_notification_service.dart';
+import 'features/notifications/presentation/widgets/foreground_notification_banner.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -40,9 +43,11 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   await LocalStorage.init();
   await DeepLinkService.instance.init();
   await initDependencies();
+  await PushNotificationService.instance.init();
 
 
   final dioClient = sl<DioClient>();
@@ -114,8 +119,21 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      PushNotificationService.instance.attachRouter();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -128,6 +146,11 @@ class MyApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: themeProvider.themeMode,
       routerConfig: appRouter,
+      builder: (context, child) {
+        return ForegroundNotificationHost(
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

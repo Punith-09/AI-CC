@@ -116,12 +116,40 @@ class _ActivityCardState extends State<ActivityCard> {
   }
 
   void _handleNavigation(BuildContext context) {
-    final entity = widget.notification.entity;
+    final n = widget.notification;
+    final type = n.type.toUpperCase();
+    final entity = n.entity;
+    final entityType = entity?.type.toUpperCase() ?? '';
+    final entityId = entity?.id ?? '';
+    final actorId = n.actor?.id ?? '';
+
+    if (type == 'FOLLOW' || type == 'SOCIAL') {
+      if (actorId.isNotEmpty) {
+        context.push(AppRoutes.exploreProfile, extra: actorId);
+      }
+      return;
+    }
+
+    if (type == 'MESSAGE' || entityType == 'CHAT') {
+      final chatId = entityType == 'CHAT' ? entityId : entityId;
+      if (chatId.isNotEmpty) {
+        context.push(
+          AppRoutes.chat,
+          extra: {
+            'chatId': chatId,
+            'participantId': actorId,
+          },
+        );
+      } else if (actorId.isNotEmpty) {
+        context.push(AppRoutes.chat, extra: {'participantId': actorId});
+      }
+      return;
+    }
+
     if (entity == null || entity.id.isEmpty) return;
-    final t = entity.type.toUpperCase();
-    if (t == 'VIDEO' || t == 'PHOTO' || t == 'POST') {
+    if (entityType == 'VIDEO' || entityType == 'PHOTO' || entityType == 'POST') {
       context.push(AppRoutes.watchVideo, extra: entity.id);
-    } else if (t == 'AUDITION') {
+    } else if (entityType == 'AUDITION') {
       context.push(AppRoutes.auditionDetails, extra: entity.id);
     }
   }

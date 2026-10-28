@@ -145,6 +145,24 @@ class NotificationsProvider extends ChangeNotifier {
     }
   }
 
+  /// Called when an FCM push arrives so badges and inbox stay in sync.
+  void onPushReceived() {
+    fetchUnreadCount();
+    if (_hasFetched) {
+      fetchNotifications(silent: true, force: true);
+    }
+  }
+
+  void clearForLogout() {
+    _notifications = [];
+    _unreadCount = 0;
+    _isLoading = false;
+    _isActionLoading = false;
+    _error = null;
+    _hasFetched = false;
+    notifyListeners();
+  }
+
   /// Marks all notifications as unread locally.
   void markAllAsUnread() {
     _notifications = _notifications

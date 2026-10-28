@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/services/push_notification_service.dart';
 import '../../../../core/storage/local_storage.dart';
+import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../../../artist_profile/presentation/providers/profile_provider.dart';
 import '../../../explore/presentation/providers/explore_provider.dart';
 import '../../../home/presentation/providers/home_feed_provider.dart';
@@ -34,6 +36,7 @@ class AuthProvider extends ChangeNotifier {
       if (sl.isRegistered<ExploreProvider>()) {
         sl<ExploreProvider>().clearForLogout();
       }
+      PushNotificationService.instance.onUserSignedIn();
     } catch (_) {}
   }
 
@@ -48,6 +51,10 @@ class AuthProvider extends ChangeNotifier {
       if (sl.isRegistered<ExploreProvider>()) {
         sl<ExploreProvider>().clearForLogout();
       }
+      if (sl.isRegistered<NotificationsProvider>()) {
+        sl<NotificationsProvider>().clearForLogout();
+      }
+      PushNotificationService.instance.onUserSignedOut();
     } catch (_) {}
   }
 
