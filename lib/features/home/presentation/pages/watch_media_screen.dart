@@ -25,10 +25,12 @@ import '../providers/home_feed_provider.dart';
 
 class WatchMediaScreen extends StatefulWidget {
   final FeedPostModel post;
+  final bool autoFocusComment;
 
   const WatchMediaScreen({
     super.key,
     required this.post,
+    this.autoFocusComment = false,
   });
 
   @override
@@ -69,6 +71,29 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
 
     _fetchComments();
     _incrementView();
+
+    if (widget.autoFocusComment) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future.delayed(const Duration(milliseconds: 200), () {
+          if (!mounted) return;
+          _commentFocusNode.requestFocus();
+          if (_desktopCommentsScrollController.hasClients) {
+            _desktopCommentsScrollController.animateTo(
+              _desktopCommentsScrollController.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
+          if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
+        });
+      });
+    }
   }
 
   void _initFollowStatus() {
@@ -227,14 +252,34 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
     FocusScope.of(context).unfocus();
 
     try {
+      final nowIso = DateTime.now().toUtc().toIso8601String();
       final newComment = await sl<HomeRepository>().postComment(
         videoId: _post.id,
         text: text,
       );
 
+      final myId = LocalStorage.instance.getUserId() ?? '';
+      final myName = LocalStorage.instance.getUserName() ?? 'You';
+      final myPic = LocalStorage.instance.getUserProfilePhoto() ?? '';
+
+      final finalComment = newComment.copyWith(
+        userId: newComment.userId.isNotEmpty ? newComment.userId : myId,
+        username: (newComment.username.isNotEmpty &&
+                newComment.username != 'Artist' &&
+                newComment.username != 'User')
+            ? newComment.username
+            : myName,
+        profileImage: newComment.profileImage.isNotEmpty
+            ? newComment.profileImage
+            : myPic,
+        createdAt: (newComment.createdAt != null && newComment.createdAt!.isNotEmpty)
+            ? newComment.createdAt
+            : nowIso,
+      );
+
       if (mounted) {
         setState(() {
-          _comments.insert(0, newComment);
+          _comments.insert(0, finalComment);
           _post = _post.copyWith(commentsCount: _comments.length);
           _isPostingComment = false;
         });
@@ -1817,6 +1862,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
             child: TextField(
               controller: _commentController,
               focusNode: _commentFocusNode,
+              autofocus: widget.autoFocusComment,
               style: GoogleFonts.poppins(
                 color: isDark ? AppColors.darkText : const Color(0xFF111827),
                 fontSize: 14,

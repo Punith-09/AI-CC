@@ -16,6 +16,13 @@ class TalentModel {
   final String city;
   final String state;
   final String country;
+  final String gender;
+  final int age;
+  final List<String> languages;
+  final double heightFt;
+  final List<String> skills;
+  final String role;
+  final String projectType;
 
   const TalentModel({
     this.id = '',
@@ -32,6 +39,13 @@ class TalentModel {
     this.city = '',
     this.state = '',
     this.country = '',
+    this.gender = '',
+    this.age = 0,
+    this.languages = const [],
+    this.heightFt = 0.0,
+    this.skills = const [],
+    this.role = '',
+    this.projectType = '',
   });
 
   bool get hasCity => city.trim().isNotEmpty;
@@ -120,6 +134,114 @@ class TalentModel {
     return false;
   }
 
+  bool matchesGender(String selected) {
+    final s = selected.trim().toLowerCase();
+    if (s.isEmpty || s == 'all') return true;
+    final g = gender.trim().toLowerCase();
+    if (g.isNotEmpty) {
+      if (g == s) return true;
+      if (s == 'male' && (g == 'male' || g == 'm' || g == 'man')) return true;
+      if (s == 'female' && (g == 'female' || g == 'f' || g == 'woman')) return true;
+      if (s == 'other' && (g == 'other' || g == 'others' || g == 'prefer not to say' || g == 'non-binary')) return true;
+      return false;
+    }
+    final b = bio.trim().toLowerCase();
+    if (s == 'female' && (b.contains('actress') || b.contains('female') || b.contains('woman') || b.contains('she/her'))) return true;
+    if (s == 'male' && (b.contains('actor') || b.contains('male') || b.contains('man') || b.contains('he/him'))) return true;
+    return false;
+  }
+
+  bool matchesAge(String ageFromStr, String ageToStr) {
+    final from = int.tryParse(ageFromStr.trim());
+    final to = int.tryParse(ageToStr.trim());
+    if (from == null && to == null) return true;
+    if (age <= 0) {
+      final b = bio.toLowerCase();
+      final match = RegExp(r'(\d{2})\s*(?:years?|yrs?|yo|\s*old)').firstMatch(b);
+      if (match != null) {
+        final a = int.tryParse(match.group(1) ?? '') ?? 0;
+        if (a > 0) {
+          if (from != null && a < from) return false;
+          if (to != null && to > 0 && a > to) return false;
+          return true;
+        }
+      }
+      return false;
+    }
+    if (from != null && age < from) return false;
+    if (to != null && to > 0 && age > to) return false;
+    return true;
+  }
+
+  bool matchesLanguage(String selected) {
+    final s = selected.trim().toLowerCase();
+    if (s.isEmpty) return true;
+    for (final l in languages) {
+      final lang = l.trim().toLowerCase();
+      if (lang == s || lang.contains(s) || s.contains(lang)) return true;
+    }
+    final b = bio.toLowerCase();
+    return b.contains(s);
+  }
+
+  bool matchesHeight(String heightFromStr, String heightToStr) {
+    double? toInches(String val) {
+      final v = val.trim().toLowerCase();
+      if (v.isEmpty) return null;
+      final numStr = v.replaceAll(RegExp(r'[^0-9.]'), '');
+      if (numStr.isEmpty) return null;
+      final parts = numStr.split('.');
+      final ft = double.tryParse(parts[0]) ?? 0;
+      final inch = (parts.length > 1) ? (double.tryParse(parts[1]) ?? 0) : 0;
+      return (ft * 12.0) + inch;
+    }
+
+    final fromInches = toInches(heightFromStr);
+    final toInchesVal = toInches(heightToStr);
+    if (fromInches == null && toInchesVal == null) return true;
+
+    final talentInches = heightFt * 12.0;
+    if (talentInches <= 0) {
+      return false;
+    }
+    if (fromInches != null && talentInches < (fromInches - 0.5)) return false;
+    if (toInchesVal != null && talentInches > (toInchesVal + 0.5)) return false;
+    return true;
+  }
+
+  bool matchesSkills(String selected) {
+    final s = selected.trim().toLowerCase();
+    if (s.isEmpty) return true;
+    for (final sk in skills) {
+      final skl = sk.trim().toLowerCase();
+      if (skl == s || skl.contains(s) || s.contains(skl)) return true;
+    }
+    if (matchesCategory(selected)) return true;
+    final b = bio.toLowerCase();
+    final c = category.toLowerCase();
+    return b.contains(s) || c.contains(s);
+  }
+
+  bool matchesRole(String selected) {
+    final s = selected.trim().toLowerCase();
+    if (s.isEmpty) return true;
+    final r = role.toLowerCase();
+    if (r == s || r.contains(s) || s.contains(r)) return true;
+    final b = bio.toLowerCase();
+    final c = category.toLowerCase();
+    return b.contains(s) || c.contains(s);
+  }
+
+  bool matchesProjectType(String selected) {
+    final s = selected.trim().toLowerCase();
+    if (s.isEmpty) return true;
+    final p = projectType.toLowerCase();
+    if (p == s || p.contains(s) || s.contains(p)) return true;
+    final b = bio.toLowerCase();
+    final c = category.toLowerCase();
+    return b.contains(s) || c.contains(s);
+  }
+
   static String _normalizePlace(String value) {
     return value.trim().toLowerCase().replaceAll(RegExp(r'[^a-z]'), '');
   }
@@ -129,6 +251,13 @@ class TalentModel {
     String? state,
     String? country,
     bool? following,
+    String? gender,
+    int? age,
+    List<String>? languages,
+    double? heightFt,
+    List<String>? skills,
+    String? role,
+    String? projectType,
   }) {
     return TalentModel(
       id: id,
@@ -145,6 +274,13 @@ class TalentModel {
       city: city ?? this.city,
       state: state ?? this.state,
       country: country ?? this.country,
+      gender: gender ?? this.gender,
+      age: age ?? this.age,
+      languages: languages ?? this.languages,
+      heightFt: heightFt ?? this.heightFt,
+      skills: skills ?? this.skills,
+      role: role ?? this.role,
+      projectType: projectType ?? this.projectType,
     );
   }
 
@@ -163,6 +299,18 @@ class TalentModel {
       return v.toString().trim();
     }
 
+    String parseStringOrJoinList(dynamic v) {
+      if (v == null) return '';
+      if (v is String) return v.trim();
+      if (v is List) {
+        return v.map((e) => parseString(e)).where((e) => e.isNotEmpty).join(', ');
+      }
+      if (v is Map) {
+        return parseString(v['name'] ?? v['title'] ?? v['value']);
+      }
+      return v.toString().trim();
+    }
+
     int parseInt(dynamic v) {
       if (v is int) return v;
       if (v is double) return v.toInt();
@@ -170,7 +318,7 @@ class TalentModel {
       return 0;
     }
 
-    final location = data['location'];
+    final location = data['location'] ?? json['location'];
     String locationCity = '';
     String locationState = '';
     if (location is Map) {
@@ -190,13 +338,61 @@ class TalentModel {
                 ? json['following'] as bool
                 : (json['isFollowing'] is bool ? json['isFollowing'] as bool : null)));
 
+    int parsedAge = parseInt(data['age'] ?? json['age']);
+    final dobVal = data['dob'] ?? data['dateOfBirth'] ?? json['dob'] ?? json['dateOfBirth'];
+    if (parsedAge == 0 && dobVal != null) {
+      try {
+        final dobStr = dobVal.toString();
+        final dob = DateTime.tryParse(dobStr);
+        if (dob != null) {
+          final now = DateTime.now();
+          parsedAge = now.year - dob.year;
+          if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) {
+            parsedAge--;
+          }
+        }
+      } catch (_) {}
+    }
+
+    List<String> parseList(dynamic raw) {
+      if (raw == null) return const [];
+      if (raw is List) {
+        return raw.map((e) => parseString(e)).where((e) => e.isNotEmpty).toList();
+      }
+      if (raw is String && raw.isNotEmpty) {
+        return raw.split(RegExp(r'[,|/]')).map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+      }
+      return const [];
+    }
+
+    double parsedHeightFt = 0.0;
+    final rawHeight = data['height'] ?? data['heightInCm'] ?? data['heightInches'] ?? json['height'];
+    if (rawHeight != null) {
+      final hStr = rawHeight.toString().trim();
+      final ftMatch = RegExp(r"(\d+)(?:'|\.|\s*ft\s*)(\d*)").firstMatch(hStr);
+      if (ftMatch != null && (hStr.contains("'") || hStr.contains("ft") || hStr.contains("."))) {
+        final ft = double.tryParse(ftMatch.group(1) ?? '') ?? 0;
+        final inch = double.tryParse(ftMatch.group(2) ?? '') ?? 0;
+        parsedHeightFt = ft + (inch / 12.0);
+      } else {
+        final numVal = double.tryParse(hStr) ?? 0;
+        if (numVal >= 100) {
+          parsedHeightFt = numVal / 30.48;
+        } else if (numVal >= 36) {
+          parsedHeightFt = numVal / 12.0;
+        } else if (numVal > 0) {
+          parsedHeightFt = numVal;
+        }
+      }
+    }
+
     return TalentModel(
       id: parseString(data['id'] ?? data['_id']),
-      name: parseString(data['name'] ?? data['fullName']),
+      name: parseString(data['name'] ?? data['fullName'] ?? data['stageName']),
       category: parseString(data['category'] ?? data['role']),
       bio: parseString(data['bio']),
       pic: parseString(data['pic'] ?? data['profilePhoto'] ?? data['image']),
-      handle: parseString(data['handle']),
+      handle: parseString(data['handle'] ?? data['username']),
       followers: parseInt(data['followers']),
       videosCount: parseInt(data['videosCount']),
       following: explicitFollowing == true,
@@ -207,8 +403,44 @@ class TalentModel {
       city: parseString(
         data['city'] ?? data['currentCity'] ?? data['hometown'] ?? locationCity,
       ),
-      state: parseString(data['state'] ?? locationState),
+      state: parseString(data['state'] ?? data['currentState'] ?? locationState),
       country: parseString(data['country']),
+      gender: parseString(data['gender'] ?? data['sex'] ?? json['gender']),
+      age: parsedAge,
+      languages: parseList(
+        data['languages'] ??
+        data['actingLanguages'] ??
+        data['preferredLanguages'] ??
+        data['preferredLanguage'] ??
+        data['language'] ??
+        json['languages'] ??
+        json['preferredLanguages'],
+      ),
+      heightFt: parsedHeightFt,
+      skills: parseList(
+        data['skills'] ??
+        data['skill'] ??
+        data['crafts'] ??
+        json['skills'],
+      ),
+      role: parseStringOrJoinList(
+        data['preferredRole'] ??
+        data['preferredRoles'] ??
+        data['roles'] ??
+        data['role'] ??
+        json['preferredRole'] ??
+        json['roles'] ??
+        json['role'],
+      ),
+      projectType: parseStringOrJoinList(
+        data['projectType'] ??
+        data['project_type'] ??
+        data['availableFor'] ??
+        data['projectTypes'] ??
+        data['categories'] ??
+        json['projectType'] ??
+        json['availableFor'],
+      ),
     );
   }
 

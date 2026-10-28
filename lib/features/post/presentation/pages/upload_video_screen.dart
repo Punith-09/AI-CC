@@ -11,6 +11,8 @@ import 'package:provider/provider.dart';
 import '../../../../common/widgets/app_background.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/responsive/responsive_breakpoints.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../../../artist_profile/data/models/portfolio_model.dart';
 import '../../../artist_profile/presentation/providers/profile_provider.dart';
 import '../../../home/presentation/providers/home_feed_provider.dart';
@@ -293,7 +295,14 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
     final isUploading = context.watch<VideosProvider>().isUploading;
     final uploadProgress = context.watch<VideosProvider>().uploadProgress;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
 
+    // ── DESKTOP / WEB VIEW ─────────────────────────────────────────────
+    if (isDesktop) {
+      return _buildDesktopView(context, isDark, isUploading, uploadProgress);
+    }
+
+    // ── MOBILE VIEW (100% UNCHANGED) ──────────────────────────────────
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkScaffold : AppColors.lightScaffold,
       body: AppBackground(
@@ -359,6 +368,140 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
     );
   }
 
+  Widget _buildDesktopView(
+    BuildContext context,
+    bool isDark,
+    bool isUploading,
+    double uploadProgress,
+  ) {
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 740),
+          child: Container(
+            padding: const EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF141720) : Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isDark ? const Color(0xFF262D3D) : const Color(0xFFE2E8F0),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                  blurRadius: 24,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Desktop Header with Back button and subtitle
+                Row(
+                  children: [
+                    InkWell(
+                      borderRadius: BorderRadius.circular(10),
+                      onTap: () {
+                        if (Navigator.of(context).canPop()) {
+                          context.pop();
+                        } else {
+                          context.go(AppRoutes.home);
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1F2433) : const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          LucideIcons.chevronLeft,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Upload Video',
+                            style: GoogleFonts.poppins(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                              color: isDark ? Colors.white : AppColors.lightText,
+                            ),
+                          ),
+                          Text(
+                            'Share your reels, acting clips, or audition videos with the industry',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12.5,
+                              color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Divider(
+                  color: isDark ? const Color(0xFF262D3D) : const Color(0xFFE2E8F0),
+                  height: 1,
+                ),
+                const SizedBox(height: 24),
+
+                // Upload Video Box
+                _buildUploadBox(isDesktop: true),
+
+                const SizedBox(height: 24),
+
+                // Title Label & Input
+                _buildSectionLabel('Title *'),
+                const SizedBox(height: 8),
+                _buildInputField(
+                  controller: _titleController,
+                  hintText: 'e.g. My Acting Reel 2026, Monologue Performance',
+                  icon: LucideIcons.film,
+                  isDesktop: true,
+                ),
+
+                const SizedBox(height: 20),
+
+                // Category Label & Pills
+                _buildSectionLabel('Category *'),
+                const SizedBox(height: 10),
+                _buildCategorySelector(),
+
+                const SizedBox(height: 20),
+
+                // Description Label & Input
+                _buildSectionLabel('Description'),
+                const SizedBox(height: 8),
+                _buildTextArea(
+                  controller: _descriptionController,
+                  hintText: 'Tell viewers and casting directors about this video...',
+                  isDesktop: true,
+                ),
+
+                const SizedBox(height: 28),
+
+                // Upload Button
+                _buildUploadButton(isUploading, uploadProgress),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildTopBar(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -416,21 +559,23 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
     );
   }
 
-  Widget _buildUploadBox() {
+  Widget _buildUploadBox({bool isDesktop = false}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return DottedBorder(
       borderType: BorderType.RRect,
-      radius: const Radius.circular(24),
+      radius: Radius.circular(isDesktop ? 16 : 24),
       dashPattern: const [7, 5],
       color: AppColors.primary.withValues(alpha: 0.45),
       strokeWidth: 1.6,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 26),
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: isDesktop ? 22 : 26),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF0F323D).withValues(alpha: 0.7) : const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(24),
+          color: isDesktop
+              ? (isDark ? const Color(0xFF191F2C) : const Color(0xFFF8FAFC))
+              : (isDark ? const Color(0xFF0F323D).withValues(alpha: 0.7) : const Color(0xFFF8FAFC)),
+          borderRadius: BorderRadius.circular(isDesktop ? 16 : 24),
         ),
         child: _selectedVideo == null ? _buildEmptyState() : _buildPreviewState(),
       ),
@@ -795,16 +940,21 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
     required TextEditingController controller,
     required String hintText,
     required IconData icon,
+    bool isDesktop = false,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final radius = isDesktop ? 12.0 : 30.0;
+    final bgColor = isDesktop
+        ? (isDark ? const Color(0xFF0F121A) : const Color(0xFFF8FAFC))
+        : (isDark ? const Color(0xFF0F323D) : const Color(0xFFF8FAFC));
+    final borderColor = isDesktop
+        ? (isDark ? const Color(0xFF262D3E) : const Color(0xFFE2E8F0))
+        : AppColors.hint;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F323D) : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(30),
-        // border: Border.all(
-        //   color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
-        // ),
+        color: bgColor,
+        borderRadius: BorderRadius.circular(radius),
       ),
       child: TextField(
         controller: controller,
@@ -824,18 +974,18 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
             size: 20,
           ),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: const BorderSide(color: AppColors.hint, width: 1.5),
+            borderRadius: BorderRadius.circular(radius),
+            borderSide: BorderSide(color: borderColor, width: isDesktop ? 1.2 : 1.5),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: const BorderSide(color: AppColors.hint, width: 1.5),
+            borderRadius: BorderRadius.circular(radius),
+            borderSide: BorderSide(color: borderColor, width: isDesktop ? 1.2 : 1.5),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(radius),
             borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: isDesktop ? 15 : 16),
         ),
       ),
     );
@@ -844,16 +994,21 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
   Widget _buildTextArea({
     required TextEditingController controller,
     required String hintText,
+    bool isDesktop = false,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final radius = isDesktop ? 12.0 : 14.0;
+    final bgColor = isDesktop
+        ? (isDark ? const Color(0xFF0F121A) : const Color(0xFFF8FAFC))
+        : (isDark ? const Color(0xFF0F323D) : const Color(0xFFF8FAFC));
+    final borderColor = isDesktop
+        ? (isDark ? const Color(0xFF262D3E) : const Color(0xFFE2E8F0))
+        : AppColors.hint;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F323D) : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(14),
-        // border: Border.all(
-        //   color: isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0),
-        // ),
+        color: bgColor,
+        borderRadius: BorderRadius.circular(radius),
       ),
       child: TextField(
         controller: controller,
@@ -869,15 +1024,15 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
             fontSize: 14,
           ),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: const BorderSide(color: AppColors.hint, width: 1.5),
+            borderRadius: BorderRadius.circular(radius),
+            borderSide: BorderSide(color: borderColor, width: isDesktop ? 1.2 : 1.5),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: const BorderSide(color: AppColors.hint, width: 1.5),
+            borderRadius: BorderRadius.circular(radius),
+            borderSide: BorderSide(color: borderColor, width: isDesktop ? 1.2 : 1.5),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(radius),
             borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
           ),
           contentPadding: const EdgeInsets.all(16),

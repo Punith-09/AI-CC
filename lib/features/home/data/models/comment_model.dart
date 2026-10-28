@@ -31,17 +31,30 @@ class CommentModel {
 
   static String formatInstagramTime(String? rawDate) {
     if (rawDate == null || rawDate.trim().isEmpty) {
-      return '1m';
+      return 'just now';
     }
     try {
       final String cleanDate = rawDate.trim();
-      final DateTime parsed = DateTime.parse(cleanDate);
+      DateTime parsed;
+      final intVal = int.tryParse(cleanDate);
+      if (intVal != null && intVal > 1000000000) {
+        if (intVal > 1000000000000) {
+          parsed = DateTime.fromMillisecondsSinceEpoch(intVal, isUtc: true);
+        } else {
+          parsed =
+              DateTime.fromMillisecondsSinceEpoch(intVal * 1000, isUtc: true);
+        }
+      } else {
+        parsed = DateTime.parse(cleanDate);
+      }
+
       final DateTime now = DateTime.now();
 
-      // The PostgreSQL DB timestamp without timezone stores the local time directly (e.g. 11:14:07).
-      // If the backend appends 'Z', parsing it as UTC creates a false ~5.5h future discrepancy against local time.
-      // Therefore we calculate the time difference in local timeline:
-      DateTime createdLocal = DateTime(
+      // UTC difference (accurate for standard ISO-8601 UTC timestamps)
+      final Duration diffUtc = now.toUtc().difference(parsed.toUtc());
+
+      // Local timeline difference (in case server sent naive local time or false-Z)
+      final DateTime createdLocal = DateTime(
         parsed.year,
         parsed.month,
         parsed.day,
@@ -49,19 +62,31 @@ class CommentModel {
         parsed.minute,
         parsed.second,
       );
+      final Duration diffLocal = now.difference(createdLocal);
 
-      Duration diff = now.difference(createdLocal);
+      // Account for minor device/server clock skew (up to 2 minutes into the future)
+      final adjUtc = diffUtc.isNegative && diffUtc.inSeconds.abs() < 120
+          ? Duration.zero
+          : diffUtc;
+      final adjLocal = diffLocal.isNegative && diffLocal.inSeconds.abs() < 120
+          ? Duration.zero
+          : diffLocal;
 
-      // If diff is negative (e.g. if the date was strictly UTC), try standard UTC difference:
-      if (diff.isNegative) {
-        final Duration diffUtc = now.toUtc().difference(parsed.toUtc());
-        if (!diffUtc.isNegative) {
-          diff = diffUtc;
-        } else {
-          diff = Duration.zero;
-        }
+      Duration diff;
+      if (!adjLocal.isNegative && !adjUtc.isNegative) {
+        // Pick the smaller non-negative difference (closest true elapsed time)
+        diff = adjLocal < adjUtc ? adjLocal : adjUtc;
+      } else if (!adjLocal.isNegative) {
+        diff = adjLocal;
+      } else if (!adjUtc.isNegative) {
+        diff = adjUtc;
+      } else {
+        diff = Duration.zero;
       }
 
+      if (diff.inSeconds < 45) {
+        return 'just now';
+      }
       if (diff.inMinutes < 1) {
         return '1m';
       }
@@ -86,7 +111,7 @@ class CommentModel {
       return '${years}y';
     } catch (_) {
       if (rawDate.toLowerCase().contains('now')) {
-        return '1m';
+        return 'just now';
       }
       return rawDate;
     }

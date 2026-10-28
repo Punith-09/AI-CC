@@ -7,10 +7,12 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/craft_constants.dart';
+import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/theme/theme_provider.dart';
 import '../../../auditions/data/models/create_audition_request.dart';
 import '../../../auditions/presentation/providers/auditions_provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class PostScreen extends StatefulWidget {
   const PostScreen({super.key});
@@ -142,7 +144,14 @@ class _PostScreenState extends State<PostScreen> {
     final auditionsProvider = context.watch<AuditionsProvider>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? AppColors.white : AppColors.lightText;
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
 
+    // ── DESKTOP / WEB VIEW ─────────────────────────────────────────────
+    if (isDesktop) {
+      return _buildDesktopView(context, isDark, textColor, auditionsProvider);
+    }
+
+    // ── MOBILE VIEW (100% UNCHANGED) ──────────────────────────────────
     return Scaffold(
       backgroundColor: isDark
           ? AppColors.darkScaffold
@@ -555,6 +564,517 @@ class _PostScreenState extends State<PostScreen> {
     );
   }
 
+  Widget _buildDesktopView(
+    BuildContext context,
+    bool isDark,
+    Color textColor,
+    AuditionsProvider auditionsProvider,
+  ) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 740),
+          child: Container(
+            padding: const EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF141720) : Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isDark ? const Color(0xFF262D3D) : const Color(0xFFE2E8F0),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                  blurRadius: 24,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Desktop Header
+                  Row(
+                    children: [
+                      InkWell(
+                        borderRadius: BorderRadius.circular(10),
+                        onTap: () {
+                          if (Navigator.of(context).canPop()) {
+                            context.pop();
+                          } else {
+                            context.go(AppRoutes.auditions);
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1F2433) : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            LucideIcons.chevronLeft,
+                            color: AppColors.primary,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Post New Audition',
+                              style: GoogleFonts.poppins(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w700,
+                                color: textColor,
+                              ),
+                            ),
+                            Text(
+                              'Create a casting call for your film, TV series, or commercial production',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12.5,
+                                color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  Divider(
+                    color: isDark ? const Color(0xFF262D3D) : const Color(0xFFE2E8F0),
+                    height: 1,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Project Title
+                  _buildLabel('Project Title'),
+                  const SizedBox(height: 8),
+                  _buildInputField(
+                    controller: _titleController,
+                    hint: 'e.g. Action Movie 2026, Untitled Drama Series',
+                    isDesktop: true,
+                    validator: (val) => val == null || val.trim().isEmpty
+                        ? 'Please enter a project title'
+                        : null,
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Category Pills
+                  _buildLabel('Category'),
+                  const SizedBox(height: 10),
+                  _buildCategorySelector(isDesktop: true),
+                  const SizedBox(height: 20),
+
+                  // Role
+                  _buildLabel('Role'),
+                  const SizedBox(height: 8),
+                  _buildInputField(
+                    controller: _roleController,
+                    hint: 'e.g. Lead Performer, Hero, Supporting Artist',
+                    icon: Icons.people_outline,
+                    isDesktop: true,
+                    validator: (val) => val == null || val.trim().isEmpty
+                        ? 'Please enter the role name'
+                        : null,
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Age Range (Min & Max side-by-side)
+                  _buildLabel('Age Range', isRequired: false),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildInputField(
+                          controller: _roleAgeMinController,
+                          hint: 'Min (e.g. 20)',
+                          keyboardType: TextInputType.number,
+                          isDesktop: true,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          validator: (val) {
+                            if (val == null || val.trim().isEmpty) return null;
+                            final v = int.tryParse(val.trim());
+                            if (v == null) return 'Invalid';
+                            final maxStr = _roleAgeMaxController.text.trim();
+                            if (maxStr.isNotEmpty) {
+                              final max = int.tryParse(maxStr);
+                              if (max != null && v > max) {
+                                return 'Min > Max';
+                              }
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: _buildInputField(
+                          controller: _roleAgeMaxController,
+                          hint: 'Max (e.g. 35)',
+                          keyboardType: TextInputType.number,
+                          isDesktop: true,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          validator: (val) {
+                            if (val == null || val.trim().isEmpty) return null;
+                            final v = int.tryParse(val.trim());
+                            if (v == null) return 'Invalid';
+                            return null;
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Gender
+                  _buildLabel('Gender', isRequired: false),
+                  const SizedBox(height: 10),
+                  _buildGenderSelector(isDesktop: true),
+                  const SizedBox(height: 20),
+
+                  // Location & Pay (2-Column Grid on Desktop)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildLabel('Location'),
+                            const SizedBox(height: 8),
+                            _buildInputField(
+                              controller: _locationController,
+                              hint: 'e.g. Mumbai, Hyderabad',
+                              icon: Icons.location_on_outlined,
+                              isDesktop: true,
+                              validator: (val) => val == null || val.trim().isEmpty
+                                  ? 'Please enter location'
+                                  : null,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildLabel('Pay (Optional)', isRequired: false),
+                            const SizedBox(height: 8),
+                            _buildInputField(
+                              controller: _payController,
+                              hint: 'e.g. 50000',
+                              icon: Icons.currency_rupee,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                              isDesktop: true,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Application Deadline & Language Requirement (2-Column Grid on Desktop)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildLabel('Application Deadline'),
+                            const SizedBox(height: 8),
+                            GestureDetector(
+                              onTap: _selectDate,
+                              child: AbsorbPointer(
+                                child: _buildInputField(
+                                  controller: _deadlineController,
+                                  hint: 'Select deadline date',
+                                  icon: Icons.calendar_today_outlined,
+                                  readOnly: true,
+                                  isDesktop: true,
+                                  validator: (val) => val == null || val.trim().isEmpty
+                                      ? 'Please select deadline'
+                                      : null,
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      Icons.edit_calendar_outlined,
+                                      color: Colors.grey.shade500,
+                                      size: 18,
+                                    ),
+                                    onPressed: _selectDate,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildLabel('Language Requirement'),
+                            const SizedBox(height: 8),
+                            _buildInputField(
+                              controller: _langController,
+                              hint: 'e.g. Hindi, Telugu, English',
+                              icon: Icons.translate_outlined,
+                              isDesktop: true,
+                              validator: (val) => val == null || val.trim().isEmpty
+                                  ? 'Please enter language'
+                                  : null,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Description
+                  _buildLabel('Description'),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _descController,
+                    maxLines: 5,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : AppColors.lightText,
+                    ),
+                    validator: (val) => val == null || val.trim().isEmpty
+                        ? 'Please enter description'
+                        : null,
+                    decoration: InputDecoration(
+                      hintText: 'Describe the role, scene requirements, script details...',
+                      hintStyle: TextStyle(
+                        color: isDark
+                            ? Colors.grey.shade500
+                            : const Color(0xFF94A3B8),
+                      ),
+                      filled: true,
+                      fillColor: isDark
+                          ? const Color(0xFF0F121A)
+                          : const Color(0xFFF8FAFC),
+                      contentPadding: const EdgeInsets.all(16),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: isDark ? const Color(0xFF262D3D) : const Color(0xFFE2E8F0),
+                          width: 1.2,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: AppColors.primary,
+                          width: 1.5,
+                        ),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.danger),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: AppColors.danger,
+                          width: 1.5,
+                        ),
+                      ),
+                      errorStyle: const TextStyle(
+                        color: AppColors.danger,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 28),
+
+                  // Publish Audition Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        gradient: const LinearGradient(
+                          colors: AppColors.BtnGradient,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.35),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: auditionsProvider.isCreateLoading ? null : _submitPost,
+                        child: auditionsProvider.isCreateLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : const Text(
+                                'Publish Audition',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategorySelector({bool isDesktop = false}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: _categories.map((cat) {
+          final isSelected = _selectedCategory == cat;
+          return MouseRegion(
+            cursor: isDesktop ? SystemMouseCursors.click : MouseCursor.defer,
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedCategory = cat),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                margin: const EdgeInsets.only(right: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 9,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.primary
+                      : (isDark
+                            ? (isDesktop ? const Color(0xFF1B202D) : AppColors.darkCard)
+                            : (isDesktop ? const Color(0xFFF1F5F9) : AppColors.lightCard)),
+                  borderRadius: BorderRadius.circular(isDesktop ? 12 : 24),
+                  border: Border.all(
+                    color: isSelected
+                        ? AppColors.primary
+                        : (isDesktop
+                            ? (isDark ? const Color(0xFF2B3347) : const Color(0xFFE2E8F0))
+                            : AppColors.primary),
+                  ),
+                ),
+                child: Text(
+                  cat,
+                  style: TextStyle(
+                    color: isSelected
+                        ? Colors.white
+                        : (isDark
+                              ? Colors.grey.shade400
+                              : const Color(0xFF475569)),
+                    fontSize: 13,
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.w400,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildGenderSelector({bool isDesktop = false}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: _genders.map((g) {
+          final isSelected = _selectedGender == g;
+          return MouseRegion(
+            cursor: isDesktop ? SystemMouseCursors.click : MouseCursor.defer,
+            child: GestureDetector(
+              onTap: () => setState(
+                () => _selectedGender =
+                    _selectedGender == g ? null : g,
+              ),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                margin: const EdgeInsets.only(right: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 9,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.primary
+                      : (isDark
+                          ? (isDesktop ? const Color(0xFF1B202D) : AppColors.darkCard)
+                          : (isDesktop ? const Color(0xFFF1F5F9) : AppColors.lightCard)),
+                  borderRadius: BorderRadius.circular(isDesktop ? 12 : 24),
+                  border: Border.all(
+                    color: isSelected
+                        ? AppColors.primary
+                        : (isDesktop
+                            ? (isDark ? const Color(0xFF2B3347) : const Color(0xFFE2E8F0))
+                            : AppColors.primary),
+                  ),
+                ),
+                child: Text(
+                  g,
+                  style: TextStyle(
+                    color: isSelected
+                        ? Colors.white
+                        : (isDark
+                            ? Colors.grey.shade400
+                            : const Color(0xFF475569)),
+                    fontSize: 13,
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.w400,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   Widget _buildLabel(String text, {bool isRequired = true}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -591,8 +1111,16 @@ class _PostScreenState extends State<PostScreen> {
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
+    bool isDesktop = false,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final radius = isDesktop ? 12.0 : 14.0;
+    final fillColor = isDesktop
+        ? (isDark ? const Color(0xFF0F121A) : const Color(0xFFF8FAFC))
+        : (isDark ? AppColors.darkCard : AppColors.lightCard);
+    final borderColor = isDesktop
+        ? (isDark ? const Color(0xFF262D3D) : const Color(0xFFE2E8F0))
+        : AppColors.primary;
 
     return TextFormField(
       controller: controller,
@@ -616,25 +1144,25 @@ class _PostScreenState extends State<PostScreen> {
             : null,
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+        fillColor: fillColor,
         contentPadding: EdgeInsets.symmetric(
           vertical: 16,
           horizontal: icon != null ? 0 : 16,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.primary),
+          borderRadius: BorderRadius.circular(radius),
+          borderSide: BorderSide(color: borderColor, width: isDesktop ? 1.2 : 1.0),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(radius),
           borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(radius),
           borderSide: const BorderSide(color: AppColors.danger),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(radius),
           borderSide: const BorderSide(color: AppColors.danger, width: 1.5),
         ),
         errorStyle: const TextStyle(

@@ -315,15 +315,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
           return _buildEmptyState(isDark: isDark);
         }
 
-        // On desktop, auto-select first conversation if none selected
-        if (isDesktop && _selectedChat == null && chats.isNotEmpty) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted && _selectedChat == null) {
-              setState(() => _selectedChat = chats.first);
-            }
-          });
-        }
-
         return RefreshIndicator(
           color: AppColors.primary,
           backgroundColor: isDark ? AppColors.darkCard : Colors.white,
@@ -342,16 +333,24 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 isSelected: isSelected,
                 onTap: () async {
                   provider.markChatAsRead(chat.id);
-                  if (isDesktop) {
+                  if (mounted) {
                     setState(() => _selectedChat = chat);
-                  } else {
-                    await context.push(
-                      AppRoutes.chat,
-                      extra: chat,
-                    );
-                    if (context.mounted) {
-                      context.read<MessagesProvider>().fetchChats(silent: true);
-                    }
+                  }
+                  await context.push(
+                    Uri(
+                      path: AppRoutes.chat,
+                      queryParameters: {
+                        if (chat.id.isNotEmpty) 'chatId': chat.id,
+                        if (chat.participantId.isNotEmpty) 'userId': chat.participantId,
+                        if (chat.participantName.isNotEmpty) 'name': chat.participantName,
+                        if (chat.participantAvatar.isNotEmpty) 'avatar': chat.participantAvatar,
+                        if (chat.participantRole.isNotEmpty) 'role': chat.participantRole,
+                      },
+                    ).toString(),
+                    extra: chat,
+                  );
+                  if (context.mounted) {
+                    context.read<MessagesProvider>().fetchChats(silent: true);
                   }
                 },
                 onLongPress: () => _showChatOptions(context, chat),
@@ -760,29 +759,31 @@ class _ChatTile extends StatelessWidget {
   }
 
   DateTime _parseDate(String isoString) {
-    if (isoString.isEmpty) return DateTime.now();
+    if (isoString.trim().isEmpty) return DateTime.now();
     final clean = isoString.trim();
-
-    try {
-      String iso = clean;
-      if (iso.endsWith('Z') || iso.endsWith('z')) {
-        iso = iso.substring(0, iso.length - 1);
-      }
-      if (iso.contains('+')) {
-        iso = iso.split('+').first;
-      }
-      final parsed = DateTime.tryParse(iso) ?? DateTime.tryParse(clean);
-      if (parsed != null) return parsed;
-    } catch (_) {}
 
     final numVal = int.tryParse(clean);
     if (numVal != null) {
       if (numVal > 1000000000000) {
-        return DateTime.fromMillisecondsSinceEpoch(numVal);
+        return DateTime.fromMillisecondsSinceEpoch(numVal, isUtc: true).toLocal();
       } else if (numVal > 1000000000) {
-        return DateTime.fromMillisecondsSinceEpoch(numVal * 1000);
+        return DateTime.fromMillisecondsSinceEpoch(numVal * 1000, isUtc: true).toLocal();
       }
     }
+
+    try {
+      if (clean.endsWith('Z') || clean.endsWith('z') || clean.contains('+')) {
+        return DateTime.parse(clean).toLocal();
+      }
+      if (clean.contains('T') && clean.substring(clean.indexOf('T')).contains('-')) {
+        return DateTime.parse(clean).toLocal();
+      }
+      if (clean.contains('T')) {
+        return DateTime.parse('${clean}Z').toLocal();
+      }
+      final parsed = DateTime.tryParse(clean);
+      if (parsed != null) return parsed.isUtc ? parsed.toLocal() : parsed;
+    } catch (_) {}
 
     final timeMatch = RegExp(r'(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)?').firstMatch(clean);
     if (timeMatch != null) {

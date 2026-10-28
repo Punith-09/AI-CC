@@ -1,14 +1,15 @@
 import 'package:aicc/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
+
+import '../../../../core/routes/app_routes.dart';
 
 import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../data/models/feed_post_model.dart';
 import '../providers/home_feed_provider.dart';
 import 'comments_bottom_sheet.dart';
-import '../../../subscription/presentation/providers/subscription_provider.dart';
-import '../../../subscription/presentation/widgets/limit_upgrade_dialog.dart';
 
 class FeedActions extends StatefulWidget {
   final FeedPostModel post;
@@ -130,7 +131,10 @@ class _FeedActionsState extends State<FeedActions> {
                       builder: (context) => CommentsBottomSheet(post: widget.post),
                     );
                   } else {
-
+                    context.push(
+                      '${AppRoutes.watchVideo}?focusComment=true',
+                      extra: widget.post,
+                    );
                   }
                 },
                 icon: Icon(
@@ -139,12 +143,32 @@ class _FeedActionsState extends State<FeedActions> {
                   color: iconColor,
                 ),
               ),
-              Text(
-                _formatCount(commentsCount),
-                style: TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w600,
-                  color: countColor,
+              GestureDetector(
+                onTap: () {
+                  if (!isDesktop) {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+                      ),
+                      builder: (context) => CommentsBottomSheet(post: widget.post),
+                    );
+                  } else {
+                    context.push(
+                      '${AppRoutes.watchVideo}?focusComment=true',
+                      extra: widget.post,
+                    );
+                  }
+                },
+                child: Text(
+                  _formatCount(commentsCount),
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: countColor,
+                  ),
                 ),
               ),
             ],

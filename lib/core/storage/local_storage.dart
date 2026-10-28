@@ -327,6 +327,8 @@ class LocalStorage {
   // DEFERRED DEEP LINK PENDING DESTINATIONS
   // =========================================================
 
+  static const String _keyPendingRoute = 'pending_target_route';
+
   Future<void> savePendingProfileId(String id) async {
     await _prefs?.setString(_keyPendingProfileId, id);
   }
@@ -339,11 +341,24 @@ class LocalStorage {
     await _prefs?.remove(_keyPendingProfileId);
   }
 
+  Future<void> savePendingRoute(String route) async {
+    await _prefs?.setString(_keyPendingRoute, route);
+  }
+
+  String? getPendingRoute() {
+    return _prefs?.getString(_keyPendingRoute);
+  }
+
+  Future<void> clearPendingRoute() async {
+    await _prefs?.remove(_keyPendingRoute);
+  }
+
   // =========================================================
   // GOOGLE PLAY INSTALL REFERRER STATUS
   // =========================================================
 
   static const String _keyHasCheckedReferrer = 'has_checked_install_referrer';
+  static const String _keyProcessedDeferredInstall = 'has_processed_deferred_install';
 
   bool hasCheckedInstallReferrer() {
     return _prefs?.getBool(_keyHasCheckedReferrer) ?? false;
@@ -351,5 +366,13 @@ class LocalStorage {
 
   Future<void> setHasCheckedInstallReferrer(bool value) async {
     await _prefs?.setBool(_keyHasCheckedReferrer, value);
+  }
+
+  bool hasProcessedDeferredInstall() {
+    return _prefs?.getBool(_keyProcessedDeferredInstall) ?? false;
+  }
+
+  Future<void> setHasProcessedDeferredInstall(bool value) async {
+    await _prefs?.setBool(_keyProcessedDeferredInstall, value);
   }
 }

@@ -12,6 +12,103 @@ class CreateBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // ── DESKTOP / WEB VIEW ─────────────────────────────────────────────
+    if (isDesktop) {
+      final desktopBgColor = isDark ? const Color(0xFF12151D) : Colors.white;
+      final desktopTextColor = isDark ? AppColors.darkText : AppColors.lightText;
+      final desktopBorderColor = isDark ? const Color(0xFF262E3E) : const Color(0xFFE2E8F0);
+
+      return Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: 440,
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: desktopBgColor,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: desktopBorderColor,
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.55 : 0.15),
+                  blurRadius: 32,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 22, 20, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Desktop Header with title and close icon
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const SizedBox(width: 32),
+                      Text(
+                        "Create",
+                        style: GoogleFonts.montserrat(
+                          color: desktopTextColor,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: Icon(
+                          Icons.close_rounded,
+                          color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                          size: 20,
+                        ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        splashRadius: 18,
+                        tooltip: 'Close',
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  _CreateOption(
+                    icon: Icons.assignment_outlined,
+                    title: 'Post Audition',
+                    subtitle: 'Create a casting call',
+                    onTap: () => Navigator.pop(context, AppRoutes.post),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  _CreateOption(
+                    icon: Icons.video_library_outlined,
+                    title: 'Upload Video',
+                    subtitle: 'Share your portfolio reel',
+                    onTap: () => Navigator.pop(context, AppRoutes.uploadVideo),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  _CreateOption(
+                    icon: Icons.photo_camera_outlined,
+                    title: 'Upload Photo',
+                    subtitle: 'Add to your portfolio',
+                    onTap: () => Navigator.pop(context, AppRoutes.uploadPhoto),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // ── MOBILE VIEW (100% UNCHANGED) ──────────────────────────────────
     final bgColor = isDark ? AppColors.darkCard : Colors.white;
     final textColor = isDark ? AppColors.darkText : AppColors.lightText;
     final handleColor = isDark ? Colors.white24 : Colors.black12;
@@ -22,9 +119,8 @@ class CreateBottomSheet extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.vertical(
-            top: const Radius.circular(28),
-            bottom: isDesktop ? const Radius.circular(28) : Radius.zero,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(28),
           ),
         ),
         child: Padding(
@@ -85,7 +181,6 @@ class CreateBottomSheet extends StatelessWidget {
               ),
 
               const SizedBox(height: 18),
-
               Container(
                 height: 1,
                 color: dividerColor,
@@ -93,27 +188,26 @@ class CreateBottomSheet extends StatelessWidget {
 
               const SizedBox(height: 8),
 
-              if (!isDesktop)
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      'Cancel',
-                      style: TextStyle(
-                        color: cancelColor,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  ),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: cancelColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
+              ),
             ],
           ),
         ),
@@ -137,9 +231,10 @@ class _CreateOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final itemBg = isDark ? AppColors.darkSurface : const Color(0xFFF8FAFC);
-    final itemBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
+    final itemBg = isDark ? (isDesktop ? const Color(0xFF181D27) : AppColors.darkSurface) : const Color(0xFFF8FAFC);
+    final itemBorder = isDark ? (isDesktop ? const Color(0xFF2B3346) : AppColors.darkBorder) : const Color(0xFFE2E8F0);
     final titleColor = isDark ? AppColors.darkText : AppColors.lightText;
     final subtitleColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
     final arrowColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8);
@@ -148,17 +243,20 @@ class _CreateOption extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(17),
+        mouseCursor: isDesktop ? SystemMouseCursors.click : MouseCursor.defer,
+        borderRadius: BorderRadius.circular(16),
+        hoverColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.04),
         child: Ink(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 14,
-            vertical: 13,
+          padding: EdgeInsets.symmetric(
+            horizontal: isDesktop ? 16 : 14,
+            vertical: isDesktop ? 14 : 13,
           ),
           decoration: BoxDecoration(
             color: itemBg,
-            borderRadius: BorderRadius.circular(17),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: itemBorder,
+              width: 1,
             ),
           ),
           child: Row(
@@ -167,8 +265,8 @@ class _CreateOption extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: AppColors.buttonPrimary.withValues(alpha: 0.10),
-                  border: Border.all(color: AppColors.buttonPrimary.withValues(alpha: 0.3)),
+                  color: AppColors.buttonPrimary.withValues(alpha: 0.12),
+                  border: Border.all(color: AppColors.buttonPrimary.withValues(alpha: 0.35)),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
@@ -178,7 +276,7 @@ class _CreateOption extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(width: 14),
+              const SizedBox(width: 16),
 
               Expanded(
                 child: Column(
@@ -188,7 +286,7 @@ class _CreateOption extends StatelessWidget {
                       title,
                       style: TextStyle(
                         color: titleColor,
-                        fontSize: 14,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -197,7 +295,7 @@ class _CreateOption extends StatelessWidget {
                       subtitle,
                       style: TextStyle(
                         color: subtitleColor,
-                        fontSize: 11.5,
+                        fontSize: 12,
                       ),
                     ),
                   ],

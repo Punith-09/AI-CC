@@ -12,11 +12,13 @@ import '../../features/create/presentation/widgets/create_bottom_sheet.dart';
 class CustomBottomNavbar extends StatelessWidget {
   final String currentLocation;
   final ValueChanged<String> onItemSelected;
+  final Color? backgroundColor;
 
   const CustomBottomNavbar({
     super.key,
     required this.currentLocation,
     required this.onItemSelected,
+    this.backgroundColor,
   });
 
   int get currentIndex {
@@ -57,7 +59,7 @@ class CustomBottomNavbar extends StatelessWidget {
             child: Container(
               height: 72,
               decoration: BoxDecoration(
-                color: isDark ? AppColors.darkCard : Colors.white,
+                color: backgroundColor ?? (isDark ? AppColors.darkCard : Colors.white),
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(24),
                 ),
