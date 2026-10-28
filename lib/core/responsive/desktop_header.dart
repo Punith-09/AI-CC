@@ -54,12 +54,16 @@ class _DesktopHeaderState extends State<DesktopHeader> {
       padding: const EdgeInsets.symmetric(horizontal: 28),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCard : Colors.white,
-        border: Border(
-          bottom: BorderSide(
-            color: isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
-            width: 1,
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : Colors.black.withValues(alpha: 0.08),
+            blurRadius: 12,
+            spreadRadius: 0,
+            offset: const Offset(0, 4),
           ),
-        ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -449,7 +453,7 @@ class _HeaderIconButton extends StatelessWidget {
           width: 38,
           height: 38,
           decoration: BoxDecoration(
-            color: isDark ? AppColors.darkTextField : const Color(0xFFF8FAFC),
+            color: isDark ? AppColors.black : AppColors.white,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0)),
           ),

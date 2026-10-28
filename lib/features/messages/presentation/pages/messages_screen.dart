@@ -315,15 +315,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
           return _buildEmptyState(isDark: isDark);
         }
 
-        // On desktop, auto-select first conversation if none selected
-        if (isDesktop && _selectedChat == null && chats.isNotEmpty) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted && _selectedChat == null) {
-              setState(() => _selectedChat = chats.first);
-            }
-          });
-        }
-
         return RefreshIndicator(
           color: AppColors.primary,
           backgroundColor: isDark ? AppColors.darkCard : Colors.white,
@@ -342,16 +333,24 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 isSelected: isSelected,
                 onTap: () async {
                   provider.markChatAsRead(chat.id);
-                  if (isDesktop) {
+                  if (mounted) {
                     setState(() => _selectedChat = chat);
-                  } else {
-                    await context.push(
-                      AppRoutes.chat,
-                      extra: chat,
-                    );
-                    if (context.mounted) {
-                      context.read<MessagesProvider>().fetchChats(silent: true);
-                    }
+                  }
+                  await context.push(
+                    Uri(
+                      path: AppRoutes.chat,
+                      queryParameters: {
+                        if (chat.id.isNotEmpty) 'chatId': chat.id,
+                        if (chat.participantId.isNotEmpty) 'userId': chat.participantId,
+                        if (chat.participantName.isNotEmpty) 'name': chat.participantName,
+                        if (chat.participantAvatar.isNotEmpty) 'avatar': chat.participantAvatar,
+                        if (chat.participantRole.isNotEmpty) 'role': chat.participantRole,
+                      },
+                    ).toString(),
+                    extra: chat,
+                  );
+                  if (context.mounted) {
+                    context.read<MessagesProvider>().fetchChats(silent: true);
                   }
                 },
                 onLongPress: () => _showChatOptions(context, chat),

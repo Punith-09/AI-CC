@@ -26,12 +26,16 @@ class DesktopSidebar extends StatelessWidget {
       width: 240,
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCard : Colors.white,
-        border: Border(
-          right: BorderSide(
-            color: isDark ? AppColors.darkBorder : const Color(0xFFE5E7EB),
-            width: 1,
+        boxShadow: [
+          BoxShadow(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : Colors.black.withValues(alpha: 0.08),
+            blurRadius: 18,
+            spreadRadius: 0,
+            offset: const Offset(6, 0),
           ),
-        ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,7 +56,8 @@ class DesktopSidebar extends StatelessWidget {
           _SidebarItem(
             icon: LucideIcons.compass,
             label: "Explore",
-            isSelected: currentLocation == AppRoutes.explore,
+            isSelected: currentLocation == AppRoutes.explore ||
+                currentLocation == AppRoutes.exploreProfile,
             onTap: () {
               if (currentLocation != AppRoutes.explore) {
                 context.go(AppRoutes.explore);
@@ -126,7 +131,7 @@ class DesktopSidebar extends StatelessWidget {
                         ),
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(
-                            maxWidth: 560,
+                            maxWidth: 440,
                           ),
                           child: const CreateBottomSheet(),
                         ),

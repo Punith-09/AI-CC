@@ -158,11 +158,21 @@ class ExploreProvider with ChangeNotifier {
                   ? null
                   : _selectedLocation));
 
-      final results = await _repository.getExploreUsers(
+      var results = await _repository.getExploreUsers(
         query: _searchQuery.isEmpty ? null : _searchQuery,
         category: effectiveCategory,
         location: effectiveLocation,
       );
+
+      // If backend returned nothing with location param, retry without location param
+      // and let client-side profile matching filter by location!
+      if (results.isEmpty && effectiveLocation != null) {
+        results = await _repository.getExploreUsers(
+          query: _searchQuery.isEmpty ? null : _searchQuery,
+          category: effectiveCategory,
+          location: null,
+        );
+      }
 
       // Filter out logged in user
       String? currentUserId;
@@ -175,7 +185,7 @@ class ExploreProvider with ChangeNotifier {
         currentUserEmail = LocalStorage.instance.getUserEmail();
       } catch (_) {}
 
-      final filteredResults = results.where((talent) {
+      final baseList = results.where((talent) {
         if (currentUserId != null &&
             currentUserId.isNotEmpty &&
             talent.id == currentUserId) {
@@ -199,8 +209,14 @@ class ExploreProvider with ChangeNotifier {
             return false;
           }
         }
+        return true;
+      }).toList();
 
-        // Filter by category / craft
+      // Enrich talents with full public profile details (gender, age, location, skills, languages, height, role, projectType)
+      final enrichedTalents = await _enrichTalents(baseList);
+
+      final filteredResults = enrichedTalents.where((talent) {
+        // 1. Filter by category / craft / department
         final targetCategory = filterDepartment.isNotEmpty
             ? filterDepartment
             : _selectedCategory;
@@ -210,34 +226,79 @@ class ExploreProvider with ChangeNotifier {
           }
         }
 
-        // Filter by categories (Film, TV, etc.)
-        if (filterCategories.isNotEmpty) {
-          final target = filterCategories.toLowerCase();
-          final inCat = talent.category.toLowerCase().contains(target);
-          final inBio = talent.bio.toLowerCase().contains(target);
-          if (!inCat && !inBio) {
+        // 2. Filter by gender
+        if (filterGender.isNotEmpty) {
+          if (!talent.matchesGender(filterGender)) {
             return false;
           }
         }
 
-        // Filter by skills
-        if (filterSkills.isNotEmpty) {
-          if (!talent.matchesCategory(filterSkills)) {
-            final target = filterSkills.toLowerCase();
-            final inCat = talent.category.toLowerCase().contains(target);
-            final inBio = talent.bio.toLowerCase().contains(target);
-            if (!inCat && !inBio) {
-              return false;
-            }
+        // 3. Filter by age range
+        if (filterAgeFrom.isNotEmpty || filterAgeTo.isNotEmpty) {
+          if (!talent.matchesAge(filterAgeFrom, filterAgeTo)) {
+            return false;
           }
         }
 
-        // Filter by role
-        if (filterRole.isNotEmpty) {
-          final target = filterRole.toLowerCase();
+        // 4. Filter by categories (Film, Television, Web Series, etc.)
+        if (filterCategories.isNotEmpty) {
+          final target = filterCategories.toLowerCase();
           final inCat = talent.category.toLowerCase().contains(target);
           final inBio = talent.bio.toLowerCase().contains(target);
-          if (!inCat && !inBio) {
+          final inProj = talent.projectType.toLowerCase().contains(target);
+          if (!inCat && !inBio && !inProj) {
+            return false;
+          }
+        }
+
+        // 5. Filter by skills
+        if (filterSkills.isNotEmpty) {
+          if (!talent.matchesSkills(filterSkills)) {
+            return false;
+          }
+        }
+
+        // 6. Filter by languages
+        if (filterLanguages.isNotEmpty) {
+          if (!talent.matchesLanguage(filterLanguages)) {
+            return false;
+          }
+        }
+
+        // 7. Filter by height range
+        if (filterHeightFrom.isNotEmpty || filterHeightTo.isNotEmpty) {
+          if (!talent.matchesHeight(filterHeightFrom, filterHeightTo)) {
+            return false;
+          }
+        }
+
+        // 8. Filter by role
+        if (filterRole.isNotEmpty) {
+          if (!talent.matchesRole(filterRole)) {
+            return false;
+          }
+        }
+
+        // 9. Filter by project type
+        if (filterProjectType.isNotEmpty) {
+          if (!talent.matchesProjectType(filterProjectType)) {
+            return false;
+          }
+        }
+
+        // 10. Filter by location
+        if (_selectedLocation.isNotEmpty && _selectedLocation != 'Anywhere') {
+          if (!talent.matchesLocation(_selectedLocation)) {
+            return false;
+          }
+        }
+        if (filterCity.isNotEmpty) {
+          if (!talent.matchesLocation(filterCity)) {
+            return false;
+          }
+        }
+        if (filterState.isNotEmpty) {
+          if (!talent.matchesLocation(filterState)) {
             return false;
           }
         }
@@ -245,28 +306,7 @@ class ExploreProvider with ChangeNotifier {
         return true;
       }).toList();
 
-      final needsLocation = (_selectedLocation.isNotEmpty &&
-              _selectedLocation != 'Anywhere') ||
-          filterCity.isNotEmpty ||
-          filterState.isNotEmpty;
-      final withLocation =
-          needsLocation ? await _attachLocations(filteredResults) : filteredResults;
-
-      var finalTalents = withLocation;
-      if (_selectedLocation.isNotEmpty && _selectedLocation != 'Anywhere') {
-        finalTalents = _applyLocationFilter(finalTalents);
-      }
-      if (filterCity.isNotEmpty) {
-        finalTalents = finalTalents
-            .where((talent) => talent.matchesLocation(filterCity))
-            .toList();
-      }
-      if (filterState.isNotEmpty) {
-        finalTalents = finalTalents
-            .where((talent) => talent.matchesLocation(filterState))
-            .toList();
-      }
-      _talents = finalTalents;
+      _talents = filteredResults;
       _applySort();
 
       if (sl.isRegistered<ProfileProvider>()) {
@@ -292,29 +332,28 @@ class ExploreProvider with ChangeNotifier {
     }
   }
 
-  Future<List<TalentModel>> _attachLocations(List<TalentModel> talents) async {
+  Future<List<TalentModel>> _enrichTalents(List<TalentModel> talents) async {
     final futures = talents.map((talent) async {
-      final cached = _locationByUserId[talent.id];
-      if (cached != null && cached.hasCity) {
-        return talent.copyWith(
-          city: cached.city,
-          state: cached.state,
-          country: cached.country,
-        );
-      }
-
       if (talent.id.isEmpty) return talent;
+
+      final cached = _locationByUserId[talent.id];
+      if (cached != null && (cached.hasCity || cached.gender.isNotEmpty || cached.skills.isNotEmpty || cached.languages.isNotEmpty)) {
+        return cached;
+      }
 
       try {
         final profile = await _repository.getUserPublicProfile(talent.id);
-        final city = profile.city.isNotEmpty ? profile.city : talent.city;
-        final state = profile.state.isNotEmpty ? profile.state : talent.state;
-        final country =
-            profile.country.isNotEmpty ? profile.country : talent.country;
         final enriched = talent.copyWith(
-          city: city,
-          state: state,
-          country: country,
+          city: profile.city.isNotEmpty ? profile.city : talent.city,
+          state: profile.state.isNotEmpty ? profile.state : talent.state,
+          country: profile.country.isNotEmpty ? profile.country : talent.country,
+          gender: profile.gender.isNotEmpty ? profile.gender : talent.gender,
+          age: profile.age > 0 ? profile.age : talent.age,
+          languages: profile.languages.isNotEmpty ? profile.languages : talent.languages,
+          heightFt: profile.heightFt > 0 ? profile.heightFt : talent.heightFt,
+          skills: profile.skills.isNotEmpty ? profile.skills : talent.skills,
+          role: profile.role.isNotEmpty ? profile.role : talent.role,
+          projectType: profile.projectType.isNotEmpty ? profile.projectType : talent.projectType,
         );
         _locationByUserId[talent.id] = enriched;
         return enriched;
@@ -326,14 +365,6 @@ class ExploreProvider with ChangeNotifier {
     return Future.wait(futures);
   }
 
-  List<TalentModel> _applyLocationFilter(List<TalentModel> talents) {
-    if (_selectedLocation.isEmpty || _selectedLocation == 'Anywhere') {
-      return talents;
-    }
-    return talents
-        .where((talent) => talent.matchesLocation(_selectedLocation))
-        .toList();
-  }
 
   /// Clears state when the user logs out so the next user sees a fresh list.
   void clearForLogout() {

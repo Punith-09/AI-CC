@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../data/models/chat_model.dart';
@@ -57,14 +58,22 @@ class _ChatScreenState extends State<ChatScreen> {
           } catch (_) {}
         }
         if (mounted) {
-          context.read<MessagesProvider>().markChatAsRead(_chat!.id);
-          _loadMessages();
+          if (_chat!.id.isNotEmpty) {
+            context.read<MessagesProvider>().markChatAsRead(_chat!.id);
+            _loadMessages();
+          } else if (_chat!.participantId.isNotEmpty) {
+            final newChat = await context.read<MessagesProvider>().startChat(_chat!.participantId);
+            if (newChat != null && mounted) {
+              setState(() => _chat = newChat);
+              _loadMessages();
+            }
+          }
         }
       });
 
       // Poll messages every 3 seconds while in chat
       _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-        if (mounted && _chat != null) {
+        if (mounted && _chat != null && _chat!.id.isNotEmpty) {
           context.read<MessagesProvider>().fetchMessages(_chat!.id, silent: true);
         }
       });
@@ -209,151 +218,178 @@ class _ChatScreenState extends State<ChatScreen> {
     final appBarBg = isDark ? AppColors.darkCard : Colors.white;
     final titleColor = isDark ? AppColors.darkText : const Color(0xFF111827);
     final bodyBg = isDark ? AppColors.darkScaffold : const Color(0xFFF8FAFC);
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+
+    final appBar = AppBar(
+      backgroundColor: appBarBg,
+      elevation: 0,
+      centerTitle: true,
+      automaticallyImplyLeading: false,
+      leading: IconButton(
+        onPressed: () {
+          if (Navigator.of(context).canPop()) {
+            context.pop();
+          } else {
+            context.go(AppRoutes.messages);
+          }
+        },
+        icon: Icon(Icons.arrow_back_ios_new, color: titleColor, size: 18),
+      ),
+      title: Text(
+        chat?.participantName.isNotEmpty == true
+            ? chat!.participantName
+            : 'Chat',
+        style: TextStyle(
+          color: titleColor,
+          fontWeight: FontWeight.bold,
+          fontSize: 18,
+        ),
+      ),
+      actions: const [],
+    );
+
+    final chatContent = Column(
+      children: [
+        // Profile header (original widget, now dynamic)
+        ProfileHeader(
+          chat: chat,
+          onViewProfile: () {
+            if (chat?.participantId.isNotEmpty == true) {
+              context.push(AppRoutes.exploreProfile, extra: chat!.participantId);
+            }
+          },
+        ),
+
+        Divider(
+          color: isDark ? AppColors.darkDivider : const Color(0xFFE2E8F0),
+          height: 1,
+        ),
+
+        // Messages list
+        Expanded(
+          child: chat == null
+              ? const Center(
+                  child: Text(
+                    'Open a conversation to start chatting.',
+                    style: TextStyle(color: Color(0xFF64748B)),
+                  ),
+                )
+              : Consumer<MessagesProvider>(
+                  builder: (context, provider, _) {
+                    if (provider.isLoadingMessages &&
+                        provider.messagesForChat(chat.id).isEmpty) {
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation(Color(0xFF7C3AED)),
+                        ),
+                      );
+                    }
+
+                    final messages = provider.messagesForChat(chat.id);
+
+                    if (messages.isEmpty) {
+                      return Center(
+                        child: Text(
+                          'No messages yet.\nSay hello! 👋',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                            fontSize: 15,
+                          ),
+                        ),
+                      );
+                    }
+
+                    return ListView.builder(
+                      controller: _scrollController,
+                      reverse: false,
+                      padding: const EdgeInsets.fromLTRB(18, 20, 18, 20),
+                      itemCount: messages.length,
+                      itemBuilder: (context, index) {
+                        final msg = messages[index];
+                        final isMe = msg.isMe ||
+                            (_currentUserId != null &&
+                                _currentUserId!.isNotEmpty &&
+                                msg.senderId == _currentUserId);
+
+                        // Date separator
+                        Widget? separator;
+                        final curDay = _dayOf(msg.createdAt);
+                        if (index == 0) {
+                          separator = _DateChip(label: _dateLabel(msg.createdAt));
+                        } else {
+                          final prevDay = _dayOf(messages[index - 1].createdAt);
+                          if (prevDay != curDay) {
+                            separator = _DateChip(label: _dateLabel(msg.createdAt));
+                          }
+                        }
+
+                        return Column(
+                          children: [
+                            ?separator,
+                            if (separator != null) const SizedBox(height: 8),
+                            MessageBubble(
+                              isSender: isMe,
+                              message: msg.content,
+                              time: _formatTime(msg.createdAt),
+                              participantAvatar: chat.participantAvatar,
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
+        ),
+
+        // Chat input (original widget, now with real send callback)
+        Consumer<MessagesProvider>(
+          builder: (context, provider, _) => ChatInput(
+            controller: _controller,
+            onSend: _sendMessage,
+            isSending: provider.isSending,
+          ),
+        ),
+      ],
+    );
+
+    if (isDesktop) {
+      return Scaffold(
+        backgroundColor: isDark ? AppColors.darkScaffold : const Color(0xFFF1F5F9),
+        resizeToAvoidBottomInset: true,
+        appBar: appBar,
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 880),
+            child: Container(
+              decoration: BoxDecoration(
+                color: bodyBg,
+                border: Border.symmetric(
+                  vertical: BorderSide(
+                    color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: SafeArea(
+                child: chatContent,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: appBarBg,
       resizeToAvoidBottomInset: true,
       extendBodyBehindAppBar: false,
-
-      appBar: AppBar(
-        backgroundColor: appBarBg,
-        elevation: 0,
-        centerTitle: true,
-        automaticallyImplyLeading: false,
-        leading: IconButton(
-          onPressed: () => context.pop(),
-          icon: Icon(Icons.arrow_back_ios_new, color: titleColor, size: 18),
-        ),
-        title: Text(
-          chat?.participantName.isNotEmpty == true
-              ? chat!.participantName
-              : 'Chat',
-          style: TextStyle(
-            color: titleColor,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
-        actions: [
-          // Padding(
-          //   padding: const EdgeInsets.symmetric(horizontal: 10),
-          //   child: Icon(Icons.photo_camera_outlined, color: iconColor),
-          // ),
-          // Padding(
-          //   padding: const EdgeInsets.only(right: 15),
-          //   child: Icon(Icons.more_vert, color: iconColor),
-          // ),
-        ],
-      ),
-
+      appBar: appBar,
       body: Container(
         color: bodyBg,
         child: SafeArea(
-          child: Column(
-            children: [
-              // Profile header (original widget, now dynamic)
-              ProfileHeader(
-                chat: chat,
-                onViewProfile: () {
-                  if (chat?.participantId.isNotEmpty == true) {
-                    context.push(AppRoutes.exploreProfile, extra: chat!.participantId);
-                  }
-                },
-              ),
-
-              Divider(
-                color: isDark ? AppColors.darkDivider : const Color(0xFFE2E8F0),
-                height: 1,
-              ),
-
-              // Messages list
-              Expanded(
-                child: chat == null
-                    ? const Center(
-                        child: Text(
-                          'Open a conversation to start chatting.',
-                          style: TextStyle(color: Color(0xFF64748B)),
-                        ),
-                      )
-                    : Consumer<MessagesProvider>(
-                        builder: (context, provider, _) {
-                          if (provider.isLoadingMessages &&
-                              provider.messagesForChat(chat.id).isEmpty) {
-                            return const Center(
-                              child: CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation(Color(0xFF7C3AED)),
-                              ),
-                            );
-                          }
-
-                          final messages = provider.messagesForChat(chat.id);
-
-                          if (messages.isEmpty) {
-                            return Center(
-                              child: Text(
-                                'No messages yet.\nSay hello! 👋',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
-                                  fontSize: 15,
-                                ),
-                              ),
-                            );
-                          }
-
-                          return ListView.builder(
-                            controller: _scrollController,
-                            reverse: false,
-                            padding: const EdgeInsets.fromLTRB(18, 20, 18, 20),
-                            itemCount: messages.length,
-                            itemBuilder: (context, index) {
-                              final msg = messages[index];
-                              final isMe = msg.isMe ||
-                                  (_currentUserId != null &&
-                                      _currentUserId!.isNotEmpty &&
-                                      msg.senderId == _currentUserId);
-
-                              // Date separator
-                              Widget? separator;
-                              final curDay = _dayOf(msg.createdAt);
-                              if (index == 0) {
-                                separator = _DateChip(label: _dateLabel(msg.createdAt));
-                              } else {
-                                final prevDay = _dayOf(messages[index - 1].createdAt);
-                                if (prevDay != curDay) {
-                                  separator = _DateChip(label: _dateLabel(msg.createdAt));
-                                }
-                              }
-
-                              return Column(
-                                children: [
-                                  ?separator,
-                                  if (separator != null) const SizedBox(height: 8),
-                                  MessageBubble(
-                                    isSender: isMe,
-                                    message: msg.content,
-                                    time: _formatTime(msg.createdAt),
-                                    participantAvatar: chat.participantAvatar,
-                                  ),
-                                  const SizedBox(height: 12),
-                                ],
-                              );
-                            },
-                          );
-                        },
-                      ),
-              ),
-
-              // Chat input (original widget, now with real send callback)
-              Consumer<MessagesProvider>(
-                builder: (context, provider, _) => ChatInput(
-                  controller: _controller,
-                  onSend: _sendMessage,
-                  isSending: provider.isSending,
-                ),
-              ),
-            ],
-          ),
+          child: chatContent,
         ),
       ),
     );

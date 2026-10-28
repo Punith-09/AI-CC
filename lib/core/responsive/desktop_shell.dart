@@ -27,9 +27,14 @@ class DesktopShell extends StatelessWidget {
       case AppRoutes.artistProfile:
       case AppRoutes.subscription:
       case AppRoutes.editArtistProfile:
+      case AppRoutes.exploreProfile:
         return 840.0;
       case AppRoutes.messages:
         return 1200.0;
+      case AppRoutes.post:
+      case AppRoutes.uploadVideo:
+      case AppRoutes.uploadPhoto:
+        return 740.0;
       default:
         return 800.0;
     }
@@ -40,9 +45,11 @@ class DesktopShell extends StatelessWidget {
     final screenWidth = MediaQuery.sizeOf(context).width;
     // Show right panel when there's comfortable space (>= 1160px)
     final showRightPanel = screenWidth >= 1160 &&
-        (currentLocation == AppRoutes.home ||
-            currentLocation == AppRoutes.auditions ||
-            currentLocation == AppRoutes.explore);
+        (currentLocation == AppRoutes.home
+            // ||
+            // currentLocation == AppRoutes.auditions ||
+            // currentLocation == AppRoutes.explore
+        );
 
     final maxContentWidth = _getMaxContentWidth(currentLocation);
     final isDark = Theme.of(context).brightness == Brightness.dark;

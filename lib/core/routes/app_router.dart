@@ -183,8 +183,36 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.chat,
       builder: (context, state) {
         final extra = state.extra;
-        final chat = extra is ChatModel ? extra : null;
-        return ChatScreen(chat: chat);
+        if (extra is ChatModel) {
+          return ChatScreen(chat: extra);
+        }
+
+        final chatId = state.uri.queryParameters['chatId'] ??
+            state.uri.queryParameters['id'] ??
+            '';
+        final participantId = state.uri.queryParameters['userId'] ??
+            state.uri.queryParameters['participantId'] ??
+            '';
+        final participantName = state.uri.queryParameters['name'] ?? '';
+        final participantAvatar = state.uri.queryParameters['avatar'] ?? '';
+        final participantRole = state.uri.queryParameters['role'] ?? '';
+
+        if (chatId.isNotEmpty || participantId.isNotEmpty) {
+          return ChatScreen(
+            chat: ChatModel(
+              id: chatId,
+              participantId: participantId,
+              participantName: participantName,
+              participantAvatar: participantAvatar,
+              participantRole: participantRole,
+              lastMessage: '',
+              lastMessageAt: '',
+              unreadCount: 0,
+            ),
+          );
+        }
+
+        return const ChatScreen();
       },
     ),
 
@@ -247,21 +275,6 @@ final GoRouter appRouter = GoRouter(
       },
     ),
 
-    // =========================================================
-    // UPLOAD PHOTO
-    // =========================================================
-    GoRoute(
-      path: AppRoutes.uploadPhoto,
-      builder: (_, __) => const UploadPhotoScreen(),
-    ),
-
-    // =========================================================
-    // UPLOAD VIDEO
-    // =========================================================
-    GoRoute(
-      path: AppRoutes.uploadVideo,
-      builder: (_, __) => const UploadVideoScreen(),
-    ),
 
     // =========================================================
     // APPLIED AUDITIONS
@@ -292,12 +305,29 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.watchVideo,
       builder: (context, state) {
         final extra = state.extra;
+        final focusComment = state.uri.queryParameters['focusComment'] == 'true';
         if (extra is FeedPostModel) {
-          return WatchMediaScreen(post: extra);
+          return WatchMediaScreen(
+            post: extra,
+            autoFocusComment: focusComment,
+          );
+        }
+        if (extra is Map<String, dynamic>) {
+          final post = extra['post'];
+          final autoFocus = extra['autoFocusComment'] as bool? ?? focusComment;
+          if (post is FeedPostModel) {
+            return WatchMediaScreen(
+              post: post,
+              autoFocusComment: autoFocus,
+            );
+          }
         }
         // Notification tap passes a String post/video ID
         if (extra is String && extra.isNotEmpty) {
-          return _PostLoaderScreen(postId: extra);
+          return _PostLoaderScreen(
+            postId: extra,
+            autoFocusComment: focusComment,
+          );
         }
         return const Scaffold(body: Center(child: Text('Media not found')));
       },
@@ -345,6 +375,22 @@ final GoRouter appRouter = GoRouter(
         // POST
         // -----------------------------------------------------
         GoRoute(path: AppRoutes.post, builder: (_, __) => const PostScreen()),
+
+        // -----------------------------------------------------
+        // UPLOAD PHOTO
+        // -----------------------------------------------------
+        GoRoute(
+          path: AppRoutes.uploadPhoto,
+          builder: (_, __) => const UploadPhotoScreen(),
+        ),
+
+        // -----------------------------------------------------
+        // UPLOAD VIDEO
+        // -----------------------------------------------------
+        GoRoute(
+          path: AppRoutes.uploadVideo,
+          builder: (_, __) => const UploadVideoScreen(),
+        ),
 
         // -----------------------------------------------------
         // AUDITIONS
@@ -535,7 +581,11 @@ class _MainScreenState extends State<MainScreen> {
 
 class _PostLoaderScreen extends StatefulWidget {
   final String postId;
-  const _PostLoaderScreen({required this.postId});
+  final bool autoFocusComment;
+  const _PostLoaderScreen({
+    required this.postId,
+    this.autoFocusComment = false,
+  });
 
   @override
   State<_PostLoaderScreen> createState() => _PostLoaderScreenState();
@@ -561,7 +611,10 @@ class _PostLoaderScreenState extends State<_PostLoaderScreen> {
       if (post != null) {
         // Use go() instead of replace() — replacing with the same path (/watchVideo)
         // causes a GoRouter key reservation conflict.
-        context.go(AppRoutes.watchVideo, extra: post);
+        final uri = widget.autoFocusComment
+            ? '${AppRoutes.watchVideo}?focusComment=true'
+            : AppRoutes.watchVideo;
+        context.go(uri, extra: post);
       } else {
         _showError();
       }

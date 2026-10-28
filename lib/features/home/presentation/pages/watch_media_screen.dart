@@ -25,10 +25,12 @@ import '../providers/home_feed_provider.dart';
 
 class WatchMediaScreen extends StatefulWidget {
   final FeedPostModel post;
+  final bool autoFocusComment;
 
   const WatchMediaScreen({
     super.key,
     required this.post,
+    this.autoFocusComment = false,
   });
 
   @override
@@ -69,6 +71,29 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
 
     _fetchComments();
     _incrementView();
+
+    if (widget.autoFocusComment) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future.delayed(const Duration(milliseconds: 200), () {
+          if (!mounted) return;
+          _commentFocusNode.requestFocus();
+          if (_desktopCommentsScrollController.hasClients) {
+            _desktopCommentsScrollController.animateTo(
+              _desktopCommentsScrollController.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
+          if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
+        });
+      });
+    }
   }
 
   void _initFollowStatus() {
@@ -1837,6 +1862,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
             child: TextField(
               controller: _commentController,
               focusNode: _commentFocusNode,
+              autofocus: widget.autoFocusComment,
               style: GoogleFonts.poppins(
                 color: isDark ? AppColors.darkText : const Color(0xFF111827),
                 fontSize: 14,

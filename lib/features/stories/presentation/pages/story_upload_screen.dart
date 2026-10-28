@@ -12,6 +12,8 @@ import 'package:video_player/video_player.dart';
 
 import '../../../../common/widgets/app_background.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/responsive/responsive_breakpoints.dart';
+import '../../../../core/storage/local_storage.dart';
 import '../../../../core/theme/theme_provider.dart';
 import '../providers/stories_provider.dart';
 
@@ -121,6 +123,10 @@ class _StoryUploadScreenState extends State<StoryUploadScreen> {
     VideoPlayerController? controller;
     if (!kIsWeb && file.path.isNotEmpty) {
       controller = VideoPlayerController.file(File(file.path));
+    } else if (kIsWeb && file.path.isNotEmpty) {
+      try {
+        controller = VideoPlayerController.networkUrl(Uri.parse(file.path));
+      } catch (_) {}
     }
 
     if (controller != null) {
@@ -210,6 +216,16 @@ class _StoryUploadScreenState extends State<StoryUploadScreen> {
     final storiesProvider = context.watch<StoriesProvider>();
     final isUploading = storiesProvider.isUploading;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+
+    if (isDesktop) {
+      return Scaffold(
+        backgroundColor: isDark ? const Color(0xFF0B0F17) : const Color(0xFFF1F5F9),
+        body: SafeArea(
+          child: _buildDesktopLayout(isDark, isUploading),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -666,6 +682,893 @@ class _StoryUploadScreenState extends State<StoryUploadScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // =========================================================
+  // DESKTOP LAYOUT (Web / Wide Viewports)
+  // =========================================================
+
+  Widget _buildDesktopLayout(bool isDark, bool isUploading) {
+    return Column(
+      children: [
+        _buildDesktopTopBar(isDark, isUploading),
+        Expanded(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+              child: _selectedFile == null && _mediaBytes == null
+                  ? _buildDesktopPickerPrompt(isDark)
+                  : _buildDesktopMediaPreview(isDark, isUploading),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopTopBar(bool isDark, bool isUploading) {
+    return Container(
+      height: 64,
+      padding: const EdgeInsets.symmetric(horizontal: 28),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF161C26) : Colors.white,
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? const Color(0xFF263040) : const Color(0xFFE2E8F0),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 960),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Back Button
+              InkWell(
+                onTap: isUploading ? null : () => context.pop(),
+                borderRadius: BorderRadius.circular(10),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        LucideIcons.chevronLeft,
+                        size: 20,
+                        color: isDark ? Colors.white : const Color(0xFF1E293B),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Back to Feed',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : const Color(0xFF1E293B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Title Header
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Add to Story',
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                  ),
+                  Text(
+                    'Active for 24 hours on your profile',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+
+              // Right action
+              if (_selectedFile != null || _mediaBytes != null)
+                TextButton.icon(
+                  onPressed: isUploading ? null : _resetSelection,
+                  icon: const Icon(LucideIcons.rotateCcw, size: 14),
+                  label: const Text('Change Media'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
+                )
+              else
+                IconButton(
+                  onPressed: isUploading ? null : () => context.pop(),
+                  icon: Icon(
+                    Icons.close_rounded,
+                    color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                    size: 22,
+                  ),
+                  tooltip: 'Close',
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopPickerPrompt(bool isDark) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 680),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 36),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF161C26) : Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isDark ? const Color(0xFF263040) : const Color(0xFFE2E8F0),
+            width: 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.05),
+              blurRadius: 30,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Icon
+            Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF8A00), Color(0xFFFF3D00), Color(0xFFFFB800)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF8A00).withValues(alpha: 0.38),
+                    blurRadius: 26,
+                    spreadRadius: 4,
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.camera_enhance_rounded,
+                color: Colors.white,
+                size: 44,
+              ),
+            ),
+            const SizedBox(height: 22),
+
+            Text(
+              'Share a Moment',
+              style: GoogleFonts.poppins(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 460),
+              child: Text(
+                'Photos and videos disappear from your story after 24 hours. Select media from your device to share.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                  height: 1.45,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            // 2x2 Grid Options
+            Row(
+              children: [
+                Expanded(
+                  child: _buildDesktopOptionTile(
+                    icon: LucideIcons.image,
+                    title: 'Choose Photo',
+                    subtitle: 'Upload high-res picture or headshot',
+                    badge: 'Photo',
+                    onTap: () => _pickImage(ImageSource.gallery),
+                    isDark: isDark,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildDesktopOptionTile(
+                    icon: LucideIcons.video,
+                    title: 'Choose Video',
+                    subtitle: 'Share quick clips or reels (up to 60s)',
+                    badge: 'Video',
+                    onTap: () => _pickVideo(ImageSource.gallery),
+                    isDark: isDark,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildDesktopOptionTile(
+                    icon: LucideIcons.camera,
+                    title: 'Take Photo',
+                    subtitle: 'Capture current moment via camera',
+                    badge: 'Webcam',
+                    onTap: () => _pickImage(ImageSource.camera),
+                    isDark: isDark,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildDesktopOptionTile(
+                    icon: LucideIcons.film,
+                    title: 'Record Video',
+                    subtitle: 'Record intro greeting or rehearsal',
+                    badge: 'Record',
+                    onTap: () => _pickVideo(ImageSource.camera),
+                    isDark: isDark,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // Recommendation badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.25),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    LucideIcons.sparkles,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Vertical 9:16 portrait format works best for Stories',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? const Color(0xFFFFB800) : const Color(0xFFB45309),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopOptionTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String badge,
+    required VoidCallback onTap,
+    required bool isDark,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        hoverColor: AppColors.primary.withValues(alpha: 0.08),
+        splashColor: AppColors.primary.withValues(alpha: 0.16),
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.03)
+                : const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark ? const Color(0xFF263040) : const Color(0xFFE2E8F0),
+              width: 1.2,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(icon, color: AppColors.primary, size: 21),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : Colors.black.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      badge,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white70 : const Color(0xFF475569),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                  height: 1.3,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopMediaPreview(bool isDark, bool isUploading) {
+    final myName = LocalStorage.instance.getUserName() ?? 'You';
+    final myPic = LocalStorage.instance.getUserProfilePhoto();
+
+    // 9:16 portrait dimensions for clean desktop frame
+    const double frameHeight = 620.0;
+    const double frameWidth = frameHeight * 9 / 16;
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 820),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Left: Vertical Story Canvas (Phone Viewport)
+          Container(
+            width: frameWidth,
+            height: frameHeight,
+            decoration: BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: isDark ? const Color(0xFF334155) : const Color(0xFF0F172A),
+                width: 3,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  blurRadius: 36,
+                  offset: const Offset(0, 14),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(25),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Media content
+                  _isVideo
+                      ? (_videoController != null && _videoController!.value.isInitialized
+                          ? FittedBox(
+                              fit: BoxFit.cover,
+                              child: SizedBox(
+                                width: _videoController!.value.size.width,
+                                height: _videoController!.value.size.height,
+                                child: VideoPlayer(_videoController!),
+                              ),
+                            )
+                          : const Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(LucideIcons.video, color: Colors.white54, size: 48),
+                                  SizedBox(height: 10),
+                                  Text('Video selected', style: TextStyle(color: Colors.white70)),
+                                ],
+                              ),
+                            ))
+                      : (_mediaBytes != null
+                          ? Image.memory(
+                              _mediaBytes!,
+                              fit: BoxFit.cover,
+                            )
+                          : (!kIsWeb && _selectedFile != null
+                              ? Image.file(
+                                  File(_selectedFile!.path),
+                                  fit: BoxFit.cover,
+                                )
+                              : const SizedBox.shrink())),
+
+                  // Dark subtle top gradient
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 100,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.black.withValues(alpha: 0.75),
+                            Colors.transparent,
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Top User Pill & Story Tag
+                  Positioned(
+                    top: 14,
+                    left: 14,
+                    right: 14,
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 15,
+                          backgroundColor: AppColors.primary,
+                          backgroundImage: (myPic != null && myPic.isNotEmpty) ? NetworkImage(myPic) : null,
+                          child: (myPic == null || myPic.isEmpty)
+                              ? Text(
+                                  myName.isNotEmpty ? myName[0].toUpperCase() : 'U',
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                                )
+                              : null,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                myName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                              const Text(
+                                'Preview',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 10.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.6),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white24, width: 0.8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _isVideo ? LucideIcons.video : LucideIcons.image,
+                                color: Colors.white,
+                                size: 12,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _isVideo ? 'Video' : 'Photo',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Video Play / Pause Tap Overlay
+                  if (_isVideo && _videoController != null)
+                    Positioned.fill(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          setState(() {
+                            if (_videoController!.value.isPlaying) {
+                              _videoController!.pause();
+                            } else {
+                              _videoController!.play();
+                            }
+                          });
+                        },
+                        child: Center(
+                          child: AnimatedOpacity(
+                            opacity: _videoController!.value.isPlaying ? 0.0 : 0.85,
+                            duration: const Duration(milliseconds: 200),
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: const BoxDecoration(
+                                color: Colors.black54,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.play_arrow_rounded,
+                                size: 48,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // Bottom subtle gradient
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: 80,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.8),
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Bottom story badge inside canvas
+                  Positioned(
+                    bottom: 14,
+                    left: 14,
+                    right: 14,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(LucideIcons.clock, size: 12, color: AppColors.primary),
+                          SizedBox(width: 6),
+                          Text(
+                            'Disappears after 24 hours',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.white70,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 36),
+
+          // Right: Publishing Controls & Story Info Panel
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(28),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF161C26) : Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF263040) : const Color(0xFFE2E8F0),
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.05),
+                    blurRadius: 30,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Story Details',
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircleAvatar(
+                              radius: 3.5,
+                              backgroundColor: Color(0xFF10B981),
+                            ),
+                            SizedBox(width: 6),
+                            Text(
+                              'Ready to share',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF10B981),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  Divider(
+                    color: isDark ? const Color(0xFF263040) : const Color(0xFFE2E8F0),
+                    height: 1,
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Info list
+                  _buildDetailRow(
+                    icon: _isVideo ? LucideIcons.video : LucideIcons.image,
+                    label: 'Format',
+                    value: _isVideo ? 'Video Story (MP4)' : 'Photo Story (High Res)',
+                    isDark: isDark,
+                  ),
+                  const SizedBox(height: 14),
+                  _buildDetailRow(
+                    icon: LucideIcons.users,
+                    label: 'Audience',
+                    value: 'All Followers & Profile Visitors',
+                    isDark: isDark,
+                  ),
+                  const SizedBox(height: 14),
+                  _buildDetailRow(
+                    icon: LucideIcons.clock,
+                    label: 'Lifespan',
+                    value: '24 hours from publication',
+                    isDark: isDark,
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Tip box
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0xFF1F2937).withValues(alpha: 0.6)
+                          : const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isDark ? const Color(0xFF374151) : const Color(0xFFE2E8F0),
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(
+                          LucideIcons.lightbulb,
+                          size: 18,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Your story appears at the top of the Home feed for your network. Tap "Share" to post instantly.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Primary Button: Share to Your Story
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: isUploading ? null : _handleUpload,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 4,
+                        shadowColor: AppColors.primary.withValues(alpha: 0.4),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: isUploading
+                          ? const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.2,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                Text(
+                                  'Uploading Story...',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(LucideIcons.send, size: 18, color: Colors.white),
+                                SizedBox(width: 10),
+                                Text(
+                                  'Share to Your Story',
+                                  style: TextStyle(
+                                    fontSize: 15.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Secondary Button: Change Media
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: OutlinedButton.icon(
+                      onPressed: isUploading ? null : _resetSelection,
+                      icon: const Icon(LucideIcons.refreshCw, size: 16),
+                      label: const Text('Choose Different Media'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: isDark ? Colors.white70 : const Color(0xFF475569),
+                        side: BorderSide(
+                          color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required bool isDark,
+  }) {
+    return Row(
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 16, color: AppColors.primary),
+        ),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+              ),
+            ),
+            Text(
+              value,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

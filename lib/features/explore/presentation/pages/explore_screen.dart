@@ -35,7 +35,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
     super.dispose();
   }
 
+  // ── Sort: bottom sheet on mobile, popup dialog on desktop ──────────────────
   void _showSortBottomSheet(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    if (isDesktop) {
+      _showSortPopup(context);
+      return;
+    }
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? const Color(0xFF1C1C1E) : Colors.white;
     final textColor = isDark ? Colors.white : AppColors.lightText;
@@ -59,7 +65,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const SizedBox(height: 12),
-                    // Drag handle
                     Center(
                       child: Container(
                         width: 40,
@@ -123,6 +128,146 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       isLast: true,
                     ),
                     const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Desktop-only: compact centered dialog for Sort
+  void _showSortPopup(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF1C1C1E) : Colors.white;
+    final textColor = isDark ? Colors.white : AppColors.lightText;
+    final dividerColor = isDark ? const Color(0xFF2C2C2E) : const Color(0xFFE5E7EB);
+    final borderColor = isDark ? const Color(0xFF2C2C2E) : const Color(0xFFE2E8F0);
+    final provider = context.read<ExploreProvider>();
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.35),
+      builder: (dialogCtx) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            void selectOption(ExploreSortOption option) {
+              provider.onSortChanged(option);
+              setDialogState(() {});
+              Navigator.pop(dialogCtx);
+            }
+
+            Widget optionRow(String label, ExploreSortOption option) {
+              final isSelected = provider.sortOption == option;
+              return InkWell(
+                onTap: () => selectOption(option),
+                borderRadius: BorderRadius.circular(10),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        label,
+                        style: GoogleFonts.poppins(
+                          color: isSelected ? AppColors.primary : textColor,
+                          fontSize: 14,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                        ),
+                      ),
+                      Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected ? AppColors.primary : (isDark ? Colors.white38 : Colors.black26),
+                            width: 2,
+                          ),
+                        ),
+                        child: isSelected
+                            ? Center(
+                                child: Container(
+                                  width: 9,
+                                  height: 9,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              )
+                            : null,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              child: Container(
+                width: 340,
+                decoration: BoxDecoration(
+                  color: bgColor,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: borderColor),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.12),
+                      blurRadius: 30,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Sort By',
+                            style: GoogleFonts.poppins(
+                              color: textColor,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.pop(dialogCtx),
+                            child: Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF1F5F9),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.close_rounded,
+                                size: 16,
+                                color: isDark ? Colors.white70 : AppColors.lightText,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Divider(color: dividerColor, height: 1),
+                    optionRow('First to Last', ExploreSortOption.firstToLast),
+                    Divider(color: dividerColor, height: 1, indent: 20, endIndent: 20),
+                    optionRow('Last to First', ExploreSortOption.lastToFirst),
+                    Divider(color: dividerColor, height: 1, indent: 20, endIndent: 20),
+                    optionRow('Name (A to Z)', ExploreSortOption.nameAtoZ),
+                    Divider(color: dividerColor, height: 1, indent: 20, endIndent: 20),
+                    optionRow('Name (Z to A)', ExploreSortOption.nameZtoA),
+                    const SizedBox(height: 12),
                   ],
                 ),
               ),
@@ -197,13 +342,32 @@ class _ExploreScreenState extends State<ExploreScreen> {
     ];
   }
 
+  // ── Filter: bottom sheet on mobile, dialog on desktop ───────────────────────
   void _showFilterBottomSheet(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+    if (isDesktop) {
+      _showFilterDialog(context);
+      return;
+    }
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         return _FilterBottomSheet(
+          provider: context.read<ExploreProvider>(),
+        );
+      },
+    );
+  }
+
+  /// Desktop-only: full-featured filter dialog in a centered popup
+  void _showFilterDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.35),
+      builder: (dialogCtx) {
+        return _FilterDialog(
           provider: context.read<ExploreProvider>(),
         );
       },
@@ -288,7 +452,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
             }
 
             if (provider.filterDepartment.isNotEmpty) {
-              addChip(provider.filterDepartment, () {
+              addChip('Dept: ${provider.filterDepartment}', () {
                 provider.filterDepartment = '';
                 provider.fetchExploreUsers();
               });
@@ -299,15 +463,30 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 provider.fetchExploreUsers();
               });
             }
-            if (provider.filterCity.isNotEmpty) {
-              addChip(provider.filterCity, () {
-                provider.filterCity = '';
+            if (provider.filterAgeFrom.isNotEmpty || provider.filterAgeTo.isNotEmpty) {
+              final ageLabel =
+                  'Age: ${provider.filterAgeFrom.isNotEmpty ? provider.filterAgeFrom : '0'}-${provider.filterAgeTo.isNotEmpty ? provider.filterAgeTo : 'Any'}';
+              addChip(ageLabel, () {
+                provider.filterAgeFrom = '';
+                provider.filterAgeTo = '';
                 provider.fetchExploreUsers();
               });
             }
             if (provider.filterState.isNotEmpty) {
               addChip(provider.filterState, () {
                 provider.filterState = '';
+                provider.fetchExploreUsers();
+              });
+            }
+            if (provider.filterCity.isNotEmpty) {
+              addChip(provider.filterCity, () {
+                provider.filterCity = '';
+                provider.fetchExploreUsers();
+              });
+            }
+            if (provider.filterLanguages.isNotEmpty) {
+              addChip(provider.filterLanguages, () {
+                provider.filterLanguages = '';
                 provider.fetchExploreUsers();
               });
             }
@@ -323,8 +502,17 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 provider.fetchExploreUsers();
               });
             }
+            if (provider.filterHeightFrom.isNotEmpty || provider.filterHeightTo.isNotEmpty) {
+              final htLabel =
+                  'Height: ${provider.filterHeightFrom.isNotEmpty ? provider.filterHeightFrom : 'Any'}-${provider.filterHeightTo.isNotEmpty ? provider.filterHeightTo : 'Any'}';
+              addChip(htLabel, () {
+                provider.filterHeightFrom = '';
+                provider.filterHeightTo = '';
+                provider.fetchExploreUsers();
+              });
+            }
             if (provider.filterRole.isNotEmpty) {
-              addChip(provider.filterRole, () {
+              addChip('Role: ${provider.filterRole}', () {
                 provider.filterRole = '';
                 provider.fetchExploreUsers();
               });
@@ -332,15 +520,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
             if (provider.filterProjectType.isNotEmpty) {
               addChip(provider.filterProjectType, () {
                 provider.filterProjectType = '';
-                provider.fetchExploreUsers();
-              });
-            }
-            if (provider.filterAgeFrom.isNotEmpty || provider.filterAgeTo.isNotEmpty) {
-              final ageLabel =
-                  'Age: ${provider.filterAgeFrom.isNotEmpty ? provider.filterAgeFrom : '0'}-${provider.filterAgeTo.isNotEmpty ? provider.filterAgeTo : 'Any'}';
-              addChip(ageLabel, () {
-                provider.filterAgeFrom = '';
-                provider.filterAgeTo = '';
                 provider.fetchExploreUsers();
               });
             }
@@ -393,6 +572,24 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   return Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Sort & Filter buttons – desktop only, inline with header
+                      if (isDesktop) ...[
+                        _DesktopHeaderButton(
+                          label: 'Sort',
+                          icon: LucideIcons.arrowUpDown,
+                          isDark: isDark,
+                          onTap: () => _showSortBottomSheet(context),
+                        ),
+                        const SizedBox(width: 8),
+                        _DesktopHeaderButton(
+                          label: provider.hasActiveFilters ? 'Filter ✓' : 'Filter',
+                          icon: LucideIcons.slidersHorizontal,
+                          isDark: isDark,
+                          isActive: provider.hasActiveFilters,
+                          onTap: () => _showFilterBottomSheet(context),
+                        ),
+                        const SizedBox(width: 12),
+                      ],
                       PopupMenuButton<String>(
                         color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
                         initialValue: provider.selectedLocation,
@@ -474,7 +671,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
         const SizedBox(height: 12),
 
-        // ── List ─────────────────────────────────────────────
+        // ── List / Grid ───────────────────────────────────────
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -554,6 +751,25 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   );
                 }
 
+                // Desktop: 3-column grid
+                if (isDesktop) {
+                  return GridView.builder(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: 32),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 0.72,
+                    ),
+                    itemCount: provider.talents.length,
+                    itemBuilder: (context, index) {
+                      return TalentCard(talent: provider.talents[index]);
+                    },
+                  );
+                }
+
+                // Mobile: original list
                 return ListView.builder(
                   itemCount: provider.talents.length,
                   itemBuilder: (context, index) {
@@ -565,75 +781,76 @@ class _ExploreScreenState extends State<ExploreScreen> {
           ),
         ),
 
-        // ── Bottom Sort / Filter Bar ──────────────────────────
-        Consumer<ExploreProvider>(
-          builder: (context, provider, _) {
-            final hasFilters = provider.hasActiveFilters;
-            final borderTop = isDark
-                ? const Color(0xFF2C2C2E)
-                : const Color(0xFFE5E7EB);
-            final barBg = isDark ? const Color(0xFF1C1C1E) : Colors.white;
+        // ── Bottom Sort / Filter Bar (mobile only) ────────────
+        if (!isDesktop)
+          Consumer<ExploreProvider>(
+            builder: (context, provider, _) {
+              final hasFilters = provider.hasActiveFilters;
+              final borderTop = isDark
+                  ? const Color(0xFF2C2C2E)
+                  : const Color(0xFFE5E7EB);
+              final barBg = isDark ? const Color(0xFF1C1C1E) : Colors.white;
 
-            return Container(
-              decoration: BoxDecoration(
-                color: barBg,
-                border: Border(
-                  top: BorderSide(color: borderTop, width: 1),
+              return Container(
+                decoration: BoxDecoration(
+                  color: barBg,
+                  border: Border(
+                    top: BorderSide(color: borderTop, width: 1),
+                  ),
                 ),
-              ),
-              child: Row(
-                children: [
-                  // Sort button
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => _showSortBottomSheet(context),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        child: Center(
-                          child: Text(
-                            'Sort',
-                            style: GoogleFonts.poppins(
-                              color: isDark ? Colors.white70 : AppColors.lightText,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
+                child: Row(
+                  children: [
+                    // Sort button
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => _showSortBottomSheet(context),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          child: Center(
+                            child: Text(
+                              'Sort',
+                              style: GoogleFonts.poppins(
+                                color: isDark ? Colors.white70 : AppColors.lightText,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  // Vertical divider
-                  Container(
-                    width: 1,
-                    height: 32,
-                    color: borderTop,
-                  ),
-                  // Filter button
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => _showFilterBottomSheet(context),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        child: Center(
-                          child: Text(
-                            hasFilters ? 'Filter ✓' : 'Filter',
-                            style: GoogleFonts.poppins(
-                              color: hasFilters
-                                  ? AppColors.primary
-                                  : (isDark ? Colors.white70 : AppColors.lightText),
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
+                    // Vertical divider
+                    Container(
+                      width: 1,
+                      height: 32,
+                      color: borderTop,
+                    ),
+                    // Filter button
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => _showFilterBottomSheet(context),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          child: Center(
+                            child: Text(
+                              hasFilters ? 'Filter ✓' : 'Filter',
+                              style: GoogleFonts.poppins(
+                                color: hasFilters
+                                    ? AppColors.primary
+                                    : (isDark ? Colors.white70 : AppColors.lightText),
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
+                  ],
+                ),
+              );
+            },
+          ),
       ],
     );
 
@@ -711,6 +928,762 @@ class _SearchBar extends StatelessWidget {
             color: hintColor,
             fontSize: 13.5,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Desktop header sort/filter button (inline pill button)
+// ──────────────────────────────────────────────────────────────────────────────
+class _DesktopHeaderButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isDark;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _DesktopHeaderButton({
+    required this.label,
+    required this.icon,
+    required this.isDark,
+    required this.onTap,
+    this.isActive = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = isActive
+        ? AppColors.primary.withValues(alpha: 0.12)
+        : (isDark ? const Color(0xFF1C1C1E) : const Color(0xFFF1F5F9));
+    final border = isActive
+        ? AppColors.primary.withValues(alpha: 0.5)
+        : (isDark ? const Color(0xFF2C2C2E) : const Color(0xFFE2E8F0));
+    final textColor = isActive
+        ? AppColors.primary
+        : (isDark ? Colors.white70 : AppColors.lightText);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: border, width: 1),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 13, color: textColor),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                color: textColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Desktop Filter Dialog (Popup)
+// ──────────────────────────────────────────────────────────────────────────────
+class _FilterDialog extends StatefulWidget {
+  final ExploreProvider provider;
+
+  const _FilterDialog({required this.provider});
+
+  @override
+  State<_FilterDialog> createState() => _FilterDialogState();
+}
+
+class _FilterDialogState extends State<_FilterDialog> {
+  late String _dept;
+  late String _gender;
+  late final TextEditingController _ageFromCtrl;
+  late final TextEditingController _ageToCtrl;
+  late String _state;
+  late String _city;
+  late String _languages;
+  late String _categories;
+  late String _skills;
+  late String _heightFrom;
+  late String _heightTo;
+  late String _role;
+  late String _projectType;
+
+  // Options
+  static const List<String> _genderOptions = ['Male', 'Female', 'Other'];
+  static const List<String> _stateOptions = [
+    'Andhra Pradesh',
+    'Karnataka',
+    'Maharashtra',
+    'Tamil Nadu',
+    'Telangana',
+    'Delhi',
+    'Uttar Pradesh',
+    'Gujarat',
+    'Rajasthan',
+    'West Bengal',
+    'Kerala',
+    'Odisha',
+    'Punjab',
+    'Haryana',
+    'Bihar',
+    'Madhya Pradesh',
+  ];
+  static const List<String> _cityOptions = [
+    'Mumbai',
+    'Delhi',
+    'Bangalore',
+    'Hyderabad',
+    'Chennai',
+    'Pune',
+    'Kolkata',
+    'Ahmedabad',
+    'Surat',
+    'Jaipur',
+    'Ranchi',
+    'Lucknow',
+    'Coimbatore',
+    'Kochi',
+  ];
+  static const List<String> _languageOptions = [
+    'Hindi',
+    'English',
+    'Tamil',
+    'Telugu',
+    'Kannada',
+    'Malayalam',
+    'Bengali',
+    'Marathi',
+    'Gujarati',
+    'Punjabi',
+    'Odia',
+    'Urdu',
+  ];
+  static const List<String> _categoryOptions = [
+    'Film',
+    'Television',
+    'Web Series',
+    'Short Film',
+    'Theatre',
+    'Music Video',
+    'Advertisement',
+    'Documentary',
+  ];
+  static const List<String> _skillOptions = [
+    'Acting',
+    'Dancing',
+    'Singing',
+    'Martial Arts',
+    'Horse Riding',
+    'Swimming',
+    'Gymnastics',
+    'Mimicry',
+    'Comedy',
+  ];
+  static const List<String> _heightOptions = [
+    '4.0 ft',
+    '4.5 ft',
+    '5.0 ft',
+    '5.1 ft',
+    '5.2 ft',
+    '5.3 ft',
+    '5.4 ft',
+    '5.5 ft',
+    '5.6 ft',
+    '5.7 ft',
+    '5.8 ft',
+    '5.9 ft',
+    '6.0 ft',
+    '6.1 ft',
+    '6.2 ft',
+  ];
+  static const List<String> _roleOptions = [
+    'Lead',
+    'Supporting',
+    'Character',
+    'Cameo',
+    'Extra / Junior Artist',
+  ];
+  static const List<String> _projectTypeOptions = [
+    'Film',
+    'Short Film',
+    'Web Series',
+    'Television',
+    'Advertisement',
+    'Music Video',
+    'Theatre',
+    'OTT',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _dept = widget.provider.filterDepartment;
+    _gender = widget.provider.filterGender;
+    _ageFromCtrl = TextEditingController(text: widget.provider.filterAgeFrom);
+    _ageToCtrl = TextEditingController(text: widget.provider.filterAgeTo);
+    _state = widget.provider.filterState;
+    _city = widget.provider.filterCity;
+    _languages = widget.provider.filterLanguages;
+    _categories = widget.provider.filterCategories;
+    _skills = widget.provider.filterSkills;
+    _heightFrom = widget.provider.filterHeightFrom;
+    _heightTo = widget.provider.filterHeightTo;
+    _role = widget.provider.filterRole;
+    _projectType = widget.provider.filterProjectType;
+  }
+
+  @override
+  void dispose() {
+    _ageFromCtrl.dispose();
+    _ageToCtrl.dispose();
+    super.dispose();
+  }
+
+  bool get _hasAnyFilter =>
+      _dept.isNotEmpty ||
+      _gender.isNotEmpty ||
+      _ageFromCtrl.text.isNotEmpty ||
+      _ageToCtrl.text.isNotEmpty ||
+      _state.isNotEmpty ||
+      _city.isNotEmpty ||
+      _languages.isNotEmpty ||
+      _categories.isNotEmpty ||
+      _skills.isNotEmpty ||
+      _heightFrom.isNotEmpty ||
+      _heightTo.isNotEmpty ||
+      _role.isNotEmpty ||
+      _projectType.isNotEmpty;
+
+  void _resetLocalFilters() {
+    setState(() {
+      _dept = '';
+      _gender = '';
+      _ageFromCtrl.clear();
+      _ageToCtrl.clear();
+      _state = '';
+      _city = '';
+      _languages = '';
+      _categories = '';
+      _skills = '';
+      _heightFrom = '';
+      _heightTo = '';
+      _role = '';
+      _projectType = '';
+    });
+  }
+
+  Widget _buildDropdownField({
+    required String label,
+    required String value,
+    required List<String> options,
+    required ValueChanged<String?> onChanged,
+    required Color bgColor,
+    required Color borderColor,
+    required Color textColor,
+    required Color hintColor,
+  }) {
+    final hasValue = value.isNotEmpty && options.contains(value);
+
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: hasValue ? AppColors.primary.withValues(alpha: 0.7) : borderColor,
+          width: hasValue ? 1.5 : 1.0,
+        ),
+        color: bgColor,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: hasValue ? value : null,
+                hint: Text(
+                  label,
+                  style: GoogleFonts.poppins(
+                    color: hintColor,
+                    fontSize: 13.5,
+                  ),
+                ),
+                isExpanded: true,
+                icon: Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: hintColor,
+                  size: 20,
+                ),
+                dropdownColor: bgColor,
+                borderRadius: BorderRadius.circular(12),
+                items: options.map((opt) {
+                  return DropdownMenuItem<String>(
+                    value: opt,
+                    child: Text(
+                      opt,
+                      style: GoogleFonts.poppins(
+                        color: textColor,
+                        fontSize: 13.5,
+                        fontWeight:
+                            opt == value ? FontWeight.w600 : FontWeight.w400,
+                      ),
+                    ),
+                  );
+                }).toList(),
+                onChanged: onChanged,
+              ),
+            ),
+          ),
+          if (hasValue)
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => onChanged(null),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 6),
+                child: Icon(
+                  Icons.close_rounded,
+                  size: 16,
+                  color: hintColor,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    required Color bgColor,
+    required Color borderColor,
+    required Color textColor,
+    required Color hintColor,
+  }) {
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
+        color: bgColor,
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        style: GoogleFonts.poppins(color: textColor, fontSize: 13.5),
+        cursorColor: AppColors.primary,
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
+          hintText: label,
+          hintStyle: GoogleFonts.poppins(
+            color: hintColor,
+            fontSize: 13.5,
+          ),
+          suffixIcon: ValueListenableBuilder<TextEditingValue>(
+            valueListenable: controller,
+            builder: (context, val, _) {
+              if (val.text.isEmpty) return const SizedBox.shrink();
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => controller.clear(),
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: Icon(Icons.close_rounded, size: 16, color: hintColor),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF1C1C1E) : Colors.white;
+    final inputBgColor = isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF8FAFC);
+    final borderColor = isDark ? const Color(0xFF3A3A3C) : const Color(0xFFE2E8F0);
+    final textColor = isDark ? Colors.white : AppColors.lightText;
+    final hintColor = isDark ? Colors.white38 : Colors.black45;
+    final dividerColor = isDark ? const Color(0xFF2C2C2E) : const Color(0xFFE5E7EB);
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      child: Container(
+        width: 620,
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: borderColor),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.12),
+              blurRadius: 30,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── Dialog Header ─────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 20, 14),
+              child: Row(
+                children: [
+                  Text(
+                    'Filters',
+                    style: GoogleFonts.poppins(
+                      color: textColor,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (_hasAnyFilter)
+                    GestureDetector(
+                      onTap: _resetLocalFilters,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          'Reset',
+                          style: GoogleFonts.poppins(
+                            color: AppColors.primary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? const Color(0xFF2C2C2E)
+                            : const Color(0xFFF1F5F9),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.close_rounded,
+                        size: 16,
+                        color: isDark ? Colors.white70 : AppColors.lightText,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Divider(color: dividerColor, height: 1),
+
+            // ── Dialog Scrollable Form (Two Column Grid) ─────────────────
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 18, 24, 18),
+                child: Column(
+                  children: [
+                    // Row 1: Department & Gender
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildDropdownField(
+                            label: 'Department',
+                            value: _dept,
+                            options: kFilmCrafts,
+                            onChanged: (v) => setState(() => _dept = v ?? ''),
+                            bgColor: inputBgColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            hintColor: hintColor,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: _buildDropdownField(
+                            label: 'Gender',
+                            value: _gender,
+                            options: _genderOptions,
+                            onChanged: (v) => setState(() => _gender = v ?? ''),
+                            bgColor: inputBgColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            hintColor: hintColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Row 2: From Age & To Age
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildTextField(
+                            label: 'From Age',
+                            controller: _ageFromCtrl,
+                            bgColor: inputBgColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            hintColor: hintColor,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: _buildTextField(
+                            label: 'To Age',
+                            controller: _ageToCtrl,
+                            bgColor: inputBgColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            hintColor: hintColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Row 3: Present State & Present City
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildDropdownField(
+                            label: 'Present State',
+                            value: _state,
+                            options: _stateOptions,
+                            onChanged: (v) => setState(() => _state = v ?? ''),
+                            bgColor: inputBgColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            hintColor: hintColor,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: _buildDropdownField(
+                            label: 'Present City',
+                            value: _city,
+                            options: _cityOptions,
+                            onChanged: (v) => setState(() => _city = v ?? ''),
+                            bgColor: inputBgColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            hintColor: hintColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Row 4: Languages & Categories
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildDropdownField(
+                            label: 'Languages',
+                            value: _languages,
+                            options: _languageOptions,
+                            onChanged: (v) => setState(() => _languages = v ?? ''),
+                            bgColor: inputBgColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            hintColor: hintColor,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: _buildDropdownField(
+                            label: 'Categories',
+                            value: _categories,
+                            options: _categoryOptions,
+                            onChanged: (v) => setState(() => _categories = v ?? ''),
+                            bgColor: inputBgColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            hintColor: hintColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Row 5: Skills & Role
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildDropdownField(
+                            label: 'Skills',
+                            value: _skills,
+                            options: _skillOptions,
+                            onChanged: (v) => setState(() => _skills = v ?? ''),
+                            bgColor: inputBgColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            hintColor: hintColor,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: _buildDropdownField(
+                            label: 'Role',
+                            value: _role,
+                            options: _roleOptions,
+                            onChanged: (v) => setState(() => _role = v ?? ''),
+                            bgColor: inputBgColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            hintColor: hintColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Row 6: From Height & To Height
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildDropdownField(
+                            label: 'From Height',
+                            value: _heightFrom,
+                            options: _heightOptions,
+                            onChanged: (v) => setState(() => _heightFrom = v ?? ''),
+                            bgColor: inputBgColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            hintColor: hintColor,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: _buildDropdownField(
+                            label: 'To Height',
+                            value: _heightTo,
+                            options: _heightOptions,
+                            onChanged: (v) => setState(() => _heightTo = v ?? ''),
+                            bgColor: inputBgColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            hintColor: hintColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Row 7: Project Type
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildDropdownField(
+                            label: 'Project Type',
+                            value: _projectType,
+                            options: _projectTypeOptions,
+                            onChanged: (v) => setState(() => _projectType = v ?? ''),
+                            bgColor: inputBgColor,
+                            borderColor: borderColor,
+                            textColor: textColor,
+                            hintColor: hintColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            Divider(color: dividerColor, height: 1),
+
+            // ── Dialog Footer Action Buttons ──────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 14, 24, 18),
+              child: Row(
+                children: [
+                  OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: textColor,
+                      side: BorderSide(color: borderColor),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Cancel',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        elevation: 0,
+                      ),
+                      onPressed: () {
+                        widget.provider.filterDepartment = _dept;
+                        widget.provider.filterGender = _gender;
+                        widget.provider.filterAgeFrom = _ageFromCtrl.text.trim();
+                        widget.provider.filterAgeTo = _ageToCtrl.text.trim();
+                        widget.provider.filterState = _state;
+                        widget.provider.filterCity = _city;
+                        widget.provider.filterLanguages = _languages;
+                        widget.provider.filterCategories = _categories;
+                        widget.provider.filterSkills = _skills;
+                        widget.provider.filterHeightFrom = _heightFrom;
+                        widget.provider.filterHeightTo = _heightTo;
+                        widget.provider.filterRole = _role;
+                        widget.provider.filterProjectType = _projectType;
+                        Navigator.pop(context);
+                        widget.provider.fetchExploreUsers();
+                      },
+                      child: Text(
+                        'Apply Filters',
+                        style: GoogleFonts.poppins(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

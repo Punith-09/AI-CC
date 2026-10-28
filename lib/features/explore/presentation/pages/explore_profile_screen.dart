@@ -2,6 +2,8 @@ import 'package:aicc/common/widgets/custom_bottom_navbar.dart';
 import 'package:aicc/common/widgets/video_frame_thumbnail.dart';
 import 'package:aicc/core/api/api_endpoints.dart';
 import 'package:aicc/core/constants/app_colors.dart';
+import 'package:aicc/core/responsive/desktop_shell.dart';
+import 'package:aicc/core/responsive/responsive_breakpoints.dart';
 import 'package:aicc/core/routes/app_routes.dart';
 import 'package:aicc/core/storage/local_storage.dart';
 import 'package:aicc/features/artist_profile/data/models/artist_model.dart';
@@ -86,9 +88,18 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final scaffoldBg = isDark ? AppColors.darkScaffold : Colors.white;
 
+    if (isDesktop) {
+      return DesktopShell(
+        currentLocation: AppRoutes.exploreProfile,
+        child: _buildDesktopContent(context, isDark),
+      );
+    }
+
+    // Mobile view (100% UNCHANGED)
     return Scaffold(
       backgroundColor: scaffoldBg,
       bottomNavigationBar: CustomBottomNavbar(
@@ -413,6 +424,336 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
       ),
     );
   }
+
+  Widget _buildDesktopContent(BuildContext context, bool isDark) {
+    return Consumer<ProfileProvider>(
+      builder: (context, provider, _) {
+        if (provider.isLoading) {
+          return const Center(
+            child: CircularProgressIndicator(
+              color: AppColors.primary,
+            ),
+          );
+        }
+
+        if (provider.error != null) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    LucideIcons.wifiOff,
+                    color: Colors.black26,
+                    size: 40,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    provider.error!,
+                    style: const TextStyle(
+                      color: AppColors.danger,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => context
+                        .read<ProfileProvider>()
+                        .fetchUserProfile(widget.userId),
+                    child: const Text(
+                      'Retry',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final profile = provider.viewedProfile;
+        final mediaList = provider.viewedMedia;
+
+        final fullName = profile?.name ?? '';
+        final location = _formatLocation(profile?.city, profile?.state);
+        final role = profile?.roles.isNotEmpty == true
+            ? profile!.roles.first
+            : 'Artist';
+
+        final projectsCount = (profile != null && profile.projects > 0)
+            ? '${profile.projects}'
+            : '${mediaList.length}';
+        final followersCount = (profile != null && profile.followers.isNotEmpty)
+            ? profile.followers
+            : '0';
+        final awardsCount = '${profile?.awards ?? 0}';
+
+        final experience = (profile != null && profile.experience.isNotEmpty)
+            ? profile.experience
+            : '3-4 Years';
+        final languages = (profile != null && profile.languages.isNotEmpty)
+            ? profile.languages
+            : 'Tamil';
+
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Back to Explore Button ──
+              Row(
+                children: [
+                  InkWell(
+                    onTap: () {
+                      if (Navigator.of(context).canPop()) {
+                        context.pop();
+                      } else {
+                        context.go(AppRoutes.explore);
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1F2433) : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: isDark ? const Color(0xFF262D3D) : const Color(0xFFE2E8F0),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            size: 14,
+                            color: isDark ? Colors.white : const Color(0xFF111827),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Back to Explore',
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? Colors.white : const Color(0xFF111827),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+
+              // ── Profile Desktop Card ──
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF141720) : Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF262D3D) : const Color(0xFFE2E8F0),
+                    width: 1.2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // ── Centered Avatar ──
+                    _CenteredAvatar(
+                      imageUrl: profile?.profileImage,
+                      isDark: isDark,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // ── Name ──
+                    Text(
+                      fullName.isNotEmpty ? fullName : 'Artist',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white : const Color(0xFF111827),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+
+                    // ── Location ──
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.location_on_outlined,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          location,
+                          style: GoogleFonts.poppins(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w400,
+                            color: isDark
+                                ? const Color(0xFF94A3B8)
+                                : const Color(0xFF8E8E93),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // ── Role Pill ──
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 22,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        role.isNotEmpty
+                            ? role[0].toUpperCase() + role.substring(1)
+                            : 'Artist',
+                        style: GoogleFonts.poppins(
+                          color: const Color(0xFF1A1A1A),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // ── Stats Row ──
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 580),
+                      child: Row(
+                        children: [
+                          _StatCard(
+                            value: projectsCount.padLeft(2, '0'),
+                            label: 'Projects',
+                            isDark: isDark,
+                          ),
+                          const SizedBox(width: 16),
+                          _StatCard(
+                            value: followersCount.padLeft(2, '0'),
+                            label: 'Followers',
+                            isDark: isDark,
+                          ),
+                          const SizedBox(width: 16),
+                          _StatCard(
+                            value: awardsCount.padLeft(2, '0'),
+                            label: 'Awards',
+                            isDark: isDark,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // ── Action Buttons Row ──
+                    if (!_isCurrentUser(profile)) ...[
+                      const SizedBox(height: 20),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 420),
+                        child: _ActionButtonsRow(
+                          userId: widget.userId,
+                          profile: profile,
+                          provider: provider,
+                          isDark: isDark,
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 20),
+
+                    // ── Experience & Languages Row ──
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 580),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _DetailInfoCard(
+                              icon: LucideIcons.award,
+                              value: experience,
+                              label: 'Experience',
+                              isDark: isDark,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _DetailInfoCard(
+                              icon: LucideIcons.languages,
+                              value: languages,
+                              label: 'Languages',
+                              isDark: isDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // ── Portfolio Header ──
+                    Row(
+                      children: [
+                        Container(
+                          width: 4,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Portfolio',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF111827),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // ── Portfolio Grid ──
+                    _ArtistPortfolioGrid(
+                      mediaList: mediaList,
+                      profile: profile,
+                      userId: widget.userId,
+                      isDark: isDark,
+                      isDesktop: true,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -652,8 +993,18 @@ class _ActionButtonsRowState extends State<_ActionButtonsRow> {
                   ? widget.profile!.roles.first
                   : 'Artist'),
         );
+        final chatUri = Uri(
+          path: AppRoutes.chat,
+          queryParameters: {
+            if (enrichedChat.id.isNotEmpty) 'chatId': enrichedChat.id,
+            if (enrichedChat.participantId.isNotEmpty) 'userId': enrichedChat.participantId,
+            if (enrichedChat.participantName.isNotEmpty) 'name': enrichedChat.participantName,
+            if (enrichedChat.participantAvatar.isNotEmpty) 'avatar': enrichedChat.participantAvatar,
+            if (enrichedChat.participantRole.isNotEmpty) 'role': enrichedChat.participantRole,
+          },
+        ).toString();
         router.push(
-          AppRoutes.chat,
+          chatUri,
           extra: enrichedChat,
         );
       } else {
@@ -775,13 +1126,34 @@ class _ArtistPortfolioGrid extends StatelessWidget {
   final ArtistModel? profile;
   final String userId;
   final bool isDark;
+  final bool isDesktop;
 
   const _ArtistPortfolioGrid({
     required this.mediaList,
     this.profile,
     this.userId = '',
     required this.isDark,
+    this.isDesktop = false,
   });
+
+  void _openMedia(BuildContext context, PortfolioModel item) {
+    final post = item.toFeedPostModel(artist: profile);
+    final enrichedPost = post.copyWith(
+      creatorId: (post.creatorId != null && post.creatorId!.isNotEmpty)
+          ? post.creatorId
+          : (profile?.id.isNotEmpty == true
+              ? profile!.id
+              : (userId.isNotEmpty ? userId : null)),
+      creatorName: post.creatorName.isNotEmpty && post.creatorName != 'Creator'
+          ? post.creatorName
+          : (profile?.name.isNotEmpty == true ? profile!.name : 'Creator'),
+      creatorPic: (post.creatorPic != null && post.creatorPic!.isNotEmpty)
+          ? post.creatorPic
+          : profile?.profileImage,
+      creatorCategory: post.creatorCategory ?? (profile?.roles.isNotEmpty == true ? profile!.roles.first : 'Artist'),
+    );
+    context.push(AppRoutes.watchVideo, extra: enrichedPost);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -818,6 +1190,29 @@ class _ArtistPortfolioGrid extends StatelessWidget {
       );
     }
 
+    if (isDesktop) {
+      return GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: mediaList.length,
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 200,
+          crossAxisSpacing: 14,
+          mainAxisSpacing: 14,
+          childAspectRatio: 1.15,
+        ),
+        itemBuilder: (context, index) {
+          final item = mediaList[index];
+          return _PortfolioItemCard(
+            media: item,
+            isDark: isDark,
+            isDesktop: true,
+            onTap: () => _openMedia(context, item),
+          );
+        },
+      );
+    }
+
     return SizedBox(
       height: 125,
       child: ListView.separated(
@@ -829,24 +1224,7 @@ class _ArtistPortfolioGrid extends StatelessWidget {
           return _PortfolioItemCard(
             media: item,
             isDark: isDark,
-            onTap: () {
-              final post = item.toFeedPostModel(artist: profile);
-              final enrichedPost = post.copyWith(
-                creatorId: (post.creatorId != null && post.creatorId!.isNotEmpty)
-                    ? post.creatorId
-                    : (profile?.id.isNotEmpty == true
-                        ? profile!.id
-                        : (userId.isNotEmpty ? userId : null)),
-                creatorName: post.creatorName.isNotEmpty && post.creatorName != 'Creator'
-                    ? post.creatorName
-                    : (profile?.name.isNotEmpty == true ? profile!.name : 'Creator'),
-                creatorPic: (post.creatorPic != null && post.creatorPic!.isNotEmpty)
-                    ? post.creatorPic
-                    : profile?.profileImage,
-                creatorCategory: post.creatorCategory ?? (profile?.roles.isNotEmpty == true ? profile!.roles.first : 'Artist'),
-              );
-              context.push(AppRoutes.watchVideo, extra: enrichedPost);
-            },
+            onTap: () => _openMedia(context, item),
           );
         },
       ),
@@ -861,11 +1239,13 @@ class _PortfolioItemCard extends StatelessWidget {
   final PortfolioModel media;
   final VoidCallback? onTap;
   final bool isDark;
+  final bool isDesktop;
 
   const _PortfolioItemCard({
     required this.media,
     this.onTap,
     required this.isDark,
+    this.isDesktop = false,
   });
 
   @override
@@ -886,8 +1266,8 @@ class _PortfolioItemCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 155,
-        height: 125,
+        width: isDesktop ? double.infinity : 155,
+        height: isDesktop ? double.infinity : 125,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
           color: isDark ? const Color(0xFF1C1C1E) : const Color(0xFFF3F4F6),
