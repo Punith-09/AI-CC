@@ -15,8 +15,9 @@ abstract class ApplyJobRepository {
 
   Future<void> updateApplicationStatus(
       String applicationId,
-      String status,
-      );
+      String status, {
+      String details = '',
+      });
 }
 
 class ApplyJobRepositoryImpl
@@ -56,12 +57,14 @@ class ApplyJobRepositoryImpl
   @override
   Future<void> updateApplicationStatus(
       String applicationId,
-      String status,
-      ) {
+      String status, {
+      String details = '',
+      }) {
     return _remoteDataSource
         .updateApplicationStatus(
       applicationId,
       status,
+      details: details,
     );
   }
 }

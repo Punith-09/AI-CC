@@ -189,28 +189,7 @@ class AuditionCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF27AE60).withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFF27AE60), width: 0.8),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.check_circle, size: 14, color: Color(0xFF27AE60)),
-                      SizedBox(width: 4),
-                      Text(
-                        "Application Submitted",
-                        style: TextStyle(
-                          color: Color(0xFF27AE60),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                _buildStatusBadge(),
                 if (onDelete != null)
                   IconButton(
                     icon: const Icon(LucideIcons.trash2, size: 18, color: Colors.redAccent),
@@ -287,6 +266,60 @@ class AuditionCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge() {
+    final status = (audition?.applicationStatus ?? '').toUpperCase();
+
+    Color bgColor;
+    Color borderColor;
+    Color textColor;
+    IconData icon;
+    String label;
+
+    if (status == 'SHORTLISTED') {
+      bgColor = const Color(0xFF27AE60).withValues(alpha: 0.15);
+      borderColor = const Color(0xFF27AE60);
+      textColor = const Color(0xFF27AE60);
+      icon = Icons.star_rounded;
+      label = 'Shortlisted';
+    } else if (status == 'REJECTED') {
+      bgColor = Colors.redAccent.withValues(alpha: 0.15);
+      borderColor = Colors.redAccent;
+      textColor = Colors.redAccent;
+      icon = Icons.cancel_rounded;
+      label = 'Rejected';
+    } else {
+      bgColor = const Color(0xFF27AE60).withValues(alpha: 0.15);
+      borderColor = const Color(0xFF27AE60);
+      textColor = const Color(0xFF27AE60);
+      icon = Icons.check_circle;
+      label = 'Application Submitted';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: borderColor, width: 0.8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: textColor),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),

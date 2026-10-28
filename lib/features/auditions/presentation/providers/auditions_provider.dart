@@ -176,6 +176,7 @@ class AuditionsProvider extends ChangeNotifier {
           gender: a.gender,
           experience: a.experience,
           skills: a.skills,
+          applicationStatus: a.applicationStatus,
         );
       }
       return a;
@@ -207,6 +208,7 @@ class AuditionsProvider extends ChangeNotifier {
         gender: a.gender,
         experience: a.experience,
         skills: a.skills,
+        applicationStatus: a.applicationStatus,
       );
     }
 
@@ -240,6 +242,7 @@ class AuditionsProvider extends ChangeNotifier {
           gender: a.gender,
           experience: a.experience,
           skills: a.skills,
+          applicationStatus: '',
         );
       }
       return a;
@@ -271,7 +274,52 @@ class AuditionsProvider extends ChangeNotifier {
         gender: a.gender,
         experience: a.experience,
         skills: a.skills,
+        applicationStatus: '',
       );
+    }
+
+    notifyListeners();
+  }
+
+  /// Called after a recruiter shortlists or rejects an applicant — updates the
+  /// applicant's own audition card badge on the Auditions list screen.
+  void markAuditionApplicationStatus(String auditionId, String status) {
+    AuditionModel _copyWith(AuditionModel a, String newStatus) {
+      return AuditionModel(
+        id: a.id,
+        creatorId: a.creatorId,
+        title: a.title,
+        category: a.category,
+        role: a.role,
+        language: a.language,
+        pay: a.pay,
+        location: a.location,
+        deadline: a.deadline,
+        description: a.description,
+        director: a.director,
+        contactName: a.contactName,
+        createdAt: a.createdAt,
+        applied: a.applied,
+        createdByMe: a.createdByMe,
+        phone: a.phone,
+        email: a.email,
+        applicants: a.applicants,
+        auditionDate: a.auditionDate,
+        age: a.age,
+        gender: a.gender,
+        experience: a.experience,
+        skills: a.skills,
+        applicationStatus: newStatus,
+      );
+    }
+
+    _auditions = _auditions.map((a) {
+      if (a.id == auditionId) return _copyWith(a, status);
+      return a;
+    }).toList();
+
+    if (_selectedAudition?.id == auditionId) {
+      _selectedAudition = _copyWith(_selectedAudition!, status);
     }
 
     notifyListeners();

@@ -165,6 +165,7 @@ class AuditionModel {
   final String gender;
   final String experience;
   final String skills;
+  final String applicationStatus; // e.g. 'PENDING', 'SHORTLISTED', 'REJECTED'
 
   const AuditionModel({
     this.id = '',
@@ -193,6 +194,7 @@ class AuditionModel {
     this.gender = '',
     this.experience = '',
     this.skills = '',
+    this.applicationStatus = '',
   });
 
   int get applicantsCount => applicants.length;
@@ -247,6 +249,7 @@ class AuditionModel {
       gender: json['gender'] as String? ?? '',
       experience: json['experience'] as String? ?? '',
       skills: json['skills'] as String? ?? '',
+      applicationStatus: (json['applicationStatus'] ?? json['application_status'] ?? '') as String? ?? '',
     );
   }
 
@@ -277,5 +280,6 @@ class AuditionModel {
         'gender': gender,
         'experience': experience,
         'skills': skills,
+        'applicationStatus': applicationStatus,
       };
 }
