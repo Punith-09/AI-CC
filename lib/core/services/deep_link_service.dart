@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:appsflyer_sdk/appsflyer_sdk.dart';
 import 'package:app_links/app_links.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -166,7 +165,7 @@ class DeepLinkService {
       }
 
       _appLinksSub = _appLinks.uriLinkStream.listen(
-        (uri) {
+            (uri) {
           debugPrint('🌿 [AppLinks] Incoming URI: $uri');
           _handleIncomingUri(uri);
         },
