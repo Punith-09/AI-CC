@@ -741,6 +741,7 @@ import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../../../core/theme/theme_provider.dart';
+import '../../../apply_job/presentation/providers/apply_job_provider.dart';
 import '../../../explore/presentation/providers/explore_provider.dart';
 import '../../data/models/audition_model.dart';
 import '../providers/auditions_provider.dart';
@@ -761,6 +762,9 @@ class AuditionDetails extends StatefulWidget {
 }
 
 class _AuditionDetailsState extends State<AuditionDetails> {
+  // Track optimistic local status updates keyed by applicant (application) ID
+  final Map<String, String> _localStatusOverrides = {};
+  final Set<String> _updatingIds = {};
   // ---------------------------------------------------------------------------
   // THEME COLORS
   // ---------------------------------------------------------------------------
@@ -1292,21 +1296,102 @@ class _AuditionDetailsState extends State<AuditionDetails> {
     );
   }
 
+  Future<void> _updateApplicantStatus(
+    ApplicantModel applicant,
+    String newStatus,
+  ) async {
+    final applicationId = applicant.id;
+    if (applicationId.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Application ID is missing. Cannot update status.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      return;
+    }
+
+    if (_updatingIds.contains(applicationId)) return;
+
+    setState(() {
+      _updatingIds.add(applicationId);
+    });
+
+    final success = await context
+        .read<ApplyJobProvider>()
+        .updateApplicationStatus(
+          applicationId: applicationId,
+          status: newStatus,
+        );
+
+    if (!mounted) return;
+
+    if (success) {
+      setState(() {
+        _localStatusOverrides[applicationId] = newStatus;
+        _updatingIds.remove(applicationId);
+      });
+
+      // Update the badge on the auditions list card for the applicant
+      final auditionId = widget.auditionId ??
+          widget.audition?.id ??
+          context.read<AuditionsProvider>().selectedAudition?.id ??
+          '';
+      if (auditionId.isNotEmpty) {
+        context
+            .read<AuditionsProvider>()
+            .markAuditionApplicationStatus(auditionId, newStatus);
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            newStatus == 'SHORTLISTED'
+                ? 'Candidate shortlisted successfully!'
+                : 'Candidate rejected.',
+          ),
+          backgroundColor:
+              newStatus == 'SHORTLISTED' ? Colors.green : Colors.redAccent,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } else {
+      setState(() {
+        _updatingIds.remove(applicationId);
+      });
+      final err = context.read<ApplyJobProvider>().errorMessage;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(err ?? 'Failed to update status.'),
+          backgroundColor: Colors.redAccent,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   Widget _buildApplicantCard(
       ApplicantModel applicant,
       ) {
-    Color statusColor;
+    // Use local override if available (optimistic update)
+    final effectiveStatus =
+        _localStatusOverrides[applicant.id] ?? applicant.status;
+    final isPending =
+        effectiveStatus.toUpperCase() == 'PENDING';
+    final isUpdating = _updatingIds.contains(applicant.id);
 
-    switch (applicant.status.toUpperCase()) {
+    Color statusColor;
+    switch (effectiveStatus.toUpperCase()) {
       case 'APPROVED':
       case 'ACCEPTED':
-        statusColor = Colors.greenAccent;
+      case 'SHORTLISTED':
+        statusColor = Colors.green;
         break;
-
       case 'REJECTED':
         statusColor = Colors.redAccent;
         break;
-
       case 'PENDING':
       default:
         statusColor = _primaryOrange;
@@ -1382,55 +1467,166 @@ class _AuditionDetailsState extends State<AuditionDetails> {
                         ],
                       ),
                     ),
-                    if (applicant.category.isNotEmpty) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 9,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _primaryOrange.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: _primaryOrange.withValues(
-                              alpha: 0.4,
+                  ],
+                ),
+
+                const SizedBox(height: 12),
+
+                // ---- Action row ----
+                if (isUpdating)
+                  const Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: _primaryOrange,
+                      ),
+                    ),
+                  )
+                else if (isPending)
+                  // Show Shortlist + Reject buttons for PENDING applicants
+                  Row(
+                    children: [
+                      if (applicant.category.isNotEmpty) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _primaryOrange.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: _primaryOrange.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: Text(
+                            applicant.category,
+                            style: const TextStyle(
+                              color: _primaryOrange,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
-                        child: Text(
-                          applicant.category,
-                          style: const TextStyle(
-                            color: _primaryOrange,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                        const SizedBox(width: 8),
+                      ],
+                      const Spacer(),
+                      // Shortlist button
+                      GestureDetector(
+                        onTap: () => _updateApplicantStatus(
+                          applicant,
+                          'SHORTLISTED',
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: _primaryOrange,
+                              width: 1.4,
+                            ),
+                          ),
+                          child: const Text(
+                            'Shortlist',
+                            style: TextStyle(
+                              color: _primaryOrange,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
+                      // Reject button
+                      GestureDetector(
+                        onTap: () => _updateApplicantStatus(
+                          applicant,
+                          'REJECTED',
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.redAccent,
+                              width: 1.4,
+                            ),
+                          ),
+                          child: const Text(
+                            'Reject',
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: statusColor.withValues(alpha: 0.6),
+                  )
+                else
+                  // Already processed — show category chip + status badge
+                  Row(
+                    children: [
+                      if (applicant.category.isNotEmpty) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _primaryOrange.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: _primaryOrange.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: Text(
+                            applicant.category,
+                            style: const TextStyle(
+                              color: _primaryOrange,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: statusColor.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        child: Text(
+                          effectiveStatus,
+                          style: TextStyle(
+                            color: statusColor,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                      child: Text(
-                        applicant.status,
-                        style: TextStyle(
-                          color: statusColor,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+
                 if (applicant.coverLetter.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   Container(
@@ -1747,17 +1943,17 @@ class _AuditionDetailsState extends State<AuditionDetails> {
                                 ),
                               ),
 
-                              // _buildDivider(),
+                              _buildDivider(),
 
-                              // Expanded(
-                              //   child: _buildStatItem(
-                              //     icon: Icons
-                              //         .calendar_month_outlined,
-                              //     label: "Audition Date",
-                              //     value:
-                              //     displayAuditionDate,
-                              //   ),
-                              // ),
+                              Expanded(
+                                child: _buildStatItem(
+                                  icon: Icons
+                                      .calendar_month_outlined,
+                                  label: "Audition Date",
+                                  value:
+                                  displayAuditionDate,
+                                ),
+                              ),
                             ],
                           ),
                         ),

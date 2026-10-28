@@ -38,10 +38,23 @@ class _AuditionScreenState extends State<AuditionScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       context.read<AuditionsProvider>().fetchAuditions();
       context.read<AuditionsProvider>().fetchMyPostedAuditions();
-      context.read<ApplyJobProvider>().fetchMyApplications();
+      await context.read<ApplyJobProvider>().fetchMyApplications();
+      if (!mounted) return;
+      // Sync application statuses into audition cards so Shortlisted/Rejected
+      // badges appear immediately on load.
+      final applications = context.read<ApplyJobProvider>().applications;
+      final auditionsProvider = context.read<AuditionsProvider>();
+      for (final app in applications) {
+        if (app.auditionId.isNotEmpty && app.status.isNotEmpty) {
+          auditionsProvider.markAuditionApplicationStatus(
+            app.auditionId,
+            app.status,
+          );
+        }
+      }
     });
   }
 

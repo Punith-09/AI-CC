@@ -18,8 +18,9 @@ abstract class ApplyJobRemoteDataSource {
 
   Future<void> updateApplicationStatus(
       String applicationId,
-      String status,
-      );
+      String status, {
+      String details = '',
+      });
 }
 
 class ApplyJobRemoteDataSourceImpl
@@ -224,8 +225,9 @@ class ApplyJobRemoteDataSourceImpl
   @override
   Future<void> updateApplicationStatus(
       String applicationId,
-      String status,
-      ) async {
+      String status, {
+      String details = '',
+      }) async {
     try {
       await _dioClient.patch(
         ApiEndpoints.updateApplicationStatus(
@@ -233,6 +235,7 @@ class ApplyJobRemoteDataSourceImpl
         ),
         data: {
           'status': status,
+          'details': details.isNotEmpty ? details : status,
         },
       );
     } on DioException catch (e) {
