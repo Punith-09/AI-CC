@@ -224,14 +224,31 @@ class _BannerCard extends StatelessWidget {
         return Colors.pinkAccent;
       case 'POST_COMMENTED':
         return const Color(0xFF4AD0FB);
+      case 'COMMENT_LIKED':
+        return Colors.deepPurpleAccent;
+      case 'STORY_LIKED':
+      case 'STORY_REPLIED':
+        return Colors.purpleAccent;
       case 'FOLLOW':
+      case 'NEW_FOLLOWER':
         return Colors.blue;
       case 'MESSAGE':
+      case 'NEW_MESSAGE':
         return Colors.teal;
       case 'AUDITION':
       case 'AUDITION_APPLIED':
       case 'AUDITION_SHORTLISTED':
         return Colors.orange;
+      case 'AUDITION_CANCELLED':
+      case 'AUDITION_UPDATED':
+        return Colors.deepOrange;
+      case 'APPLICATION_SHORTLISTED':
+      case 'APPLICATION_ACCEPTED':
+        return Colors.green;
+      case 'APPLICATION_REJECTED':
+        return Colors.redAccent;
+      case 'APPLICATION_STATUS_UPDATED':
+        return Colors.amber;
       default:
         return AppColors.primary;
     }
@@ -243,14 +260,32 @@ class _BannerCard extends StatelessWidget {
         return Icons.favorite_rounded;
       case 'POST_COMMENTED':
         return Icons.chat_bubble_rounded;
+      case 'COMMENT_LIKED':
+        return Icons.thumb_up_alt_rounded;
+      case 'STORY_LIKED':
+        return Icons.favorite_border_rounded;
+      case 'STORY_REPLIED':
+        return Icons.reply_rounded;
       case 'FOLLOW':
+      case 'NEW_FOLLOWER':
         return Icons.person_add_alt_1_rounded;
       case 'MESSAGE':
+      case 'NEW_MESSAGE':
         return Icons.chat_bubble_outline;
       case 'AUDITION':
       case 'AUDITION_APPLIED':
       case 'AUDITION_SHORTLISTED':
         return Icons.movie_creation_outlined;
+      case 'AUDITION_CANCELLED':
+      case 'AUDITION_UPDATED':
+        return Icons.event_busy_rounded;
+      case 'APPLICATION_SHORTLISTED':
+      case 'APPLICATION_ACCEPTED':
+        return Icons.check_circle_outline_rounded;
+      case 'APPLICATION_REJECTED':
+        return Icons.cancel_outlined;
+      case 'APPLICATION_STATUS_UPDATED':
+        return Icons.update_rounded;
       default:
         return Icons.notifications_rounded;
     }
@@ -275,7 +310,7 @@ class _Avatar extends StatelessWidget {
         radius: 22,
         backgroundColor: color.withValues(alpha: 0.12),
         backgroundImage: NetworkImage(url!),
-        onBackgroundImageError: (_, __) {},
+        onBackgroundImageError: (_, _) {},
       );
     }
     return CircleAvatar(

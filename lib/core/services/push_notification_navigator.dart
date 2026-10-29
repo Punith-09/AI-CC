@@ -67,7 +67,9 @@ class PushNotificationNavigator {
     final actorId = payload.actorId ?? '';
     final chatId = payload.chatId ?? '';
 
-    if (type == 'MESSAGE' || entityType == 'CHAT' || chatId.isNotEmpty) {
+    // ── Chat / Messages ─────────────────────────────────────────────────────
+    if (type == 'MESSAGE' || type == 'NEW_MESSAGE' ||
+        entityType == 'CHAT' || chatId.isNotEmpty) {
       final opened = await _openChat(
         chatId: chatId.isNotEmpty
             ? chatId
@@ -78,18 +80,23 @@ class PushNotificationNavigator {
       return;
     }
 
-    if (type == 'FOLLOW' || type == 'SOCIAL') {
-      if (actorId.isNotEmpty) {
-        appRouter.push(AppRoutes.exploreProfile, extra: actorId);
+    // ── Follow / New Follower ────────────────────────────────────────────────
+    if (type == 'FOLLOW' || type == 'NEW_FOLLOWER' || type == 'SOCIAL') {
+      // For NEW_FOLLOWER, actorId is the follower's userId
+      final profileId = actorId.isNotEmpty ? actorId : entityId;
+      if (profileId.isNotEmpty) {
+        appRouter.push(AppRoutes.exploreProfile, extra: profileId);
       } else {
         _goActivity();
       }
       return;
     }
 
+    // ── Video / Photo posts ──────────────────────────────────────────────────
     if (type == 'POST_LIKED' ||
         type == 'POST_COMMENTED' ||
         type == 'POST_SHARED' ||
+        type == 'COMMENT_LIKED' ||
         entityType == 'VIDEO' ||
         entityType == 'PHOTO' ||
         entityType == 'POST') {
@@ -101,11 +108,39 @@ class PushNotificationNavigator {
       return;
     }
 
+    // ── Stories ─────────────────────────────────────────────────────────────
+    if (type == 'STORY_LIKED' ||
+        type == 'STORY_REPLIED' ||
+        entityType == 'STORY') {
+      if (entityId.isNotEmpty) {
+        appRouter.push(AppRoutes.storyViewer, extra: entityId);
+      } else {
+        _goActivity();
+      }
+      return;
+    }
+
+    // ── Application statuses ─────────────────────────────────────────────────
+    if (type == 'APPLICATION_SHORTLISTED' ||
+        type == 'APPLICATION_ACCEPTED' ||
+        type == 'APPLICATION_REJECTED' ||
+        type == 'APPLICATION_STATUS_UPDATED' ||
+        entityType == 'APPLICATION') {
+      // Navigate to my applications list; pass applicationId as extra
+      appRouter.push(AppRoutes.appliedAuditions, extra: entityId.isNotEmpty ? entityId : null);
+      return;
+    }
+
+    // ── Auditions ────────────────────────────────────────────────────────────
     if (type == 'AUDITION' ||
         type == 'AUDITION_APPLIED' ||
         type == 'AUDITION_SHORTLISTED' ||
+        type == 'AUDITION_CANCELLED' ||
+        type == 'AUDITION_UPDATED' ||
         entityType == 'AUDITION') {
-      if (entityId.isNotEmpty) {
+      if (entityId.isNotEmpty &&
+          type != 'AUDITION_CANCELLED' &&
+          type != 'AUDITION_UPDATED') {
         appRouter.push(AppRoutes.auditionDetails, extra: entityId);
       } else {
         appRouter.go(AppRoutes.auditions);
@@ -113,6 +148,7 @@ class PushNotificationNavigator {
       return;
     }
 
+    // ── Fallback ─────────────────────────────────────────────────────────────
     _goActivity();
   }
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -9,7 +10,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../../features/notifications/presentation/providers/notifications_provider.dart';
 import '../../firebase_options.dart';
+import '../api/api_endpoints.dart';
 import '../di/injection_container.dart';
+import '../network/dio_client.dart';
+import '../storage/local_storage.dart';
 import 'push_notification_navigator.dart';
 import 'push_notification_payload.dart';
 
@@ -84,7 +88,9 @@ class PushNotificationService {
     await _requestPermissionGracefully();
     _bindForegroundListeners();
     await _handleLaunchMessages();
-    await _logCurrentToken();
+    // Register token with backend on every app launch.
+    // _registerTokenWithBackend() guards against unauthenticated calls.
+    await _registerTokenWithBackend();
   }
 
   void attachRouter() {
@@ -93,11 +99,14 @@ class PushNotificationService {
 
   Future<void> onUserSignedIn() async {
     await _requestPermissionGracefully();
-    await _logCurrentToken();
+    await _registerTokenWithBackend();
     await _consumePendingLaunch();
   }
 
   Future<void> onUserSignedOut() async {
+    // 1. Deregister token from backend so no more pushes are sent after logout
+    await _clearTokenFromBackend();
+    // 2. Delete the local FCM token so it is regenerated fresh on next login
     try {
       await FirebaseMessaging.instance.deleteToken();
     } catch (e) {
@@ -187,11 +196,10 @@ class PushNotificationService {
     _onMessageSub = FirebaseMessaging.onMessage.listen(_onForegroundMessage);
     _onOpenedSub =
         FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpened);
+    // Re-register refreshed token with the backend automatically
     _tokenSub = FirebaseMessaging.instance.onTokenRefresh.listen((token) {
-      debugPrint(
-        'FCM token refreshed (${token.length} chars). '
-        'No device-token API is defined in this Flutter client.',
-      );
+      debugPrint('FCM token refreshed (${token.length} chars). Re-registering with backend.');
+      _sendTokenToBackend(token);
     });
   }
 
@@ -265,12 +273,20 @@ class PushNotificationService {
     return true;
   }
 
-  Future<void> _logCurrentToken() async {
+  /// Fetches the current FCM token and registers it with the backend.
+  /// Only runs when the user is logged in (has a JWT token).
+  Future<void> _registerTokenWithBackend() async {
+    if (kIsWeb) return;
+    if (!LocalStorage.instance.hasToken()) {
+      debugPrint('FCM token registration skipped: user not logged in.');
+      return;
+    }
     try {
       if (!kIsWeb && Platform.isIOS) {
         final apns = await FirebaseMessaging.instance.getAPNSToken();
         if (apns == null) {
-          debugPrint('APNS token not ready yet; FCM token will retry on refresh.');
+          debugPrint('APNS token not ready yet; FCM token registration will retry on refresh.');
+          return;
         }
       }
       final token = await FirebaseMessaging.instance.getToken();
@@ -278,12 +294,42 @@ class PushNotificationService {
         debugPrint('FCM token unavailable (permission denied or unsupported platform).');
         return;
       }
-      debugPrint(
-        'FCM token acquired (${token.length} chars). '
-        'This client has no token-registration API; the backend must store it before targeted pushes work.',
-      );
+      debugPrint('FCM token acquired (${token.length} chars). Registering with backend...');
+      await _sendTokenToBackend(token);
     } catch (e) {
-      debugPrint('FCM getToken failed: $e');
+      debugPrint('FCM token registration failed: $e');
+    }
+  }
+
+  /// POSTs the FCM device token to the backend so it can target push notifications.
+  static Future<void> _sendTokenToBackend(String token) async {
+    try {
+      final client = sl<DioClient>();
+      await client.post(
+        ApiEndpoints.fcmToken,
+        data: {'token': token},
+      );
+      debugPrint('FCM token registered with backend successfully.');
+    } on DioException catch (e) {
+      // 401 = user not logged in yet; silently ignore and retry on next login
+      if (e.response?.statusCode == 401) {
+        debugPrint('FCM token backend registration skipped: not authenticated.');
+        return;
+      }
+      debugPrint('FCM token backend registration failed: ${e.message}');
+    } catch (e) {
+      debugPrint('FCM token backend registration error: $e');
+    }
+  }
+
+  /// Calls DELETE /notifications/fcm-token on the backend to deregister.
+  static Future<void> _clearTokenFromBackend() async {
+    try {
+      final client = sl<DioClient>();
+      await client.delete(ApiEndpoints.fcmToken);
+      debugPrint('FCM token cleared from backend successfully.');
+    } catch (e) {
+      debugPrint('FCM token backend clear failed (non-critical): $e');
     }
   }
 

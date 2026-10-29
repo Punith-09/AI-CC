@@ -79,4 +79,7 @@ class ApiEndpoints {
   static String markNotificationRead(String id) => "/notifications/$id/read";
   static const String markAllNotificationsRead = "/notifications/read-all";
   static String deleteNotification(String id) => "/notifications/$id";
+
+  // FCM Device Token
+  static const String fcmToken = "/notifications/fcm-token";
 }
