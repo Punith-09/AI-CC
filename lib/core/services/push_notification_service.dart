@@ -48,8 +48,8 @@ void _onLocalNotificationBackgroundTap(NotificationResponse response) {
 
 /// Receives backend-sent FCM pushes and presents them.
 ///
-/// Does not send notifications. Device-token upload is skipped until the
-/// backend documents a registration endpoint (none exists in this project).
+/// Does not send notifications. This Flutter client has no device-token
+/// registration endpoint, so the token is obtained locally only.
 class PushNotificationService {
   PushNotificationService._();
   static final PushNotificationService instance = PushNotificationService._();
@@ -168,6 +168,12 @@ class PushNotificationService {
         provisional: false,
       );
       debugPrint('Notification permission: ${settings.authorizationStatus}');
+
+      if (!kIsWeb && Platform.isAndroid) {
+        final android = _localPlugin.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+        await android?.requestNotificationsPermission();
+      }
     } catch (e) {
       debugPrint('Notification permission request failed: $e');
     }
@@ -182,7 +188,10 @@ class PushNotificationService {
     _onOpenedSub =
         FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpened);
     _tokenSub = FirebaseMessaging.instance.onTokenRefresh.listen((token) {
-      debugPrint('FCM token refreshed (${token.length} chars). Backend registration endpoint is not defined in this app.');
+      debugPrint(
+        'FCM token refreshed (${token.length} chars). '
+        'No device-token API is defined in this Flutter client.',
+      );
     });
   }
 
@@ -225,7 +234,11 @@ class PushNotificationService {
     if (!_foregroundController.isClosed) {
       _foregroundController.add(payload);
     }
-    await displayLocalNotification(payload);
+    // Android does not show FCM notification payloads while the app is in
+    // the foreground; a high-importance local notification is the heads-up.
+    if (!kIsWeb && Platform.isAndroid) {
+      await displayLocalNotification(payload);
+    }
   }
 
   Future<void> _onMessageOpened(RemoteMessage message) async {
@@ -254,6 +267,12 @@ class PushNotificationService {
 
   Future<void> _logCurrentToken() async {
     try {
+      if (!kIsWeb && Platform.isIOS) {
+        final apns = await FirebaseMessaging.instance.getAPNSToken();
+        if (apns == null) {
+          debugPrint('APNS token not ready yet; FCM token will retry on refresh.');
+        }
+      }
       final token = await FirebaseMessaging.instance.getToken();
       if (token == null || token.isEmpty) {
         debugPrint('FCM token unavailable (permission denied or unsupported platform).');
@@ -261,7 +280,7 @@ class PushNotificationService {
       }
       debugPrint(
         'FCM token acquired (${token.length} chars). '
-        'No device-token API exists in this Flutter project; the backend must accept this token before pushes can be targeted.',
+        'This client has no token-registration API; the backend must store it before targeted pushes work.',
       );
     } catch (e) {
       debugPrint('FCM getToken failed: $e');
