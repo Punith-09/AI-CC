@@ -36,4 +36,5 @@ class AppRoutes {
   static const String storyUpload = "/storyUpload";
   static const String storyViewer = "/storyViewer";
   static const String liveStats = "/liveStats";
+  static const String statUsersList = "/statUsersList";
 }

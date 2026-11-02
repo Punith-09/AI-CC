@@ -47,6 +47,7 @@ import '../../features/subscription/presentation/pages/subscription_screen.dart'
 import '../../features/stories/presentation/pages/story_upload_screen.dart';
 import '../../features/home/data/repository/home_repository.dart';
 import '../../features/live_stats/presentation/pages/live_stats_screen.dart';
+import '../../features/live_stats/presentation/pages/stat_users_list_screen.dart';
 import '../../features/messages/data/repository/messages_repository.dart';
 import '../../core/di/injection_container.dart';
 
@@ -251,6 +252,26 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.liveStats,
       builder: (_, __) => const LiveStatsScreen(),
+    ),
+
+    // =========================================================
+    // STAT USERS LIST SCREEN
+    // =========================================================
+    GoRoute(
+      path: AppRoutes.statUsersList,
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? {};
+        final title = extra['title'] as String? ?? 'Users';
+        final filterType = extra['filterType'] as StatFilterType? ?? StatFilterType.all;
+        final filterValue = extra['filterValue'] as String? ?? '';
+        final expectedCount = extra['expectedCount'] as int?;
+        return StatUsersListScreen(
+          title: title,
+          filterType: filterType,
+          filterValue: filterValue,
+          expectedCount: expectedCount,
+        );
+      },
     ),
 
     // =========================================================

@@ -6,6 +6,9 @@ abstract class ExploreRepository {
     String? query,
     String? category,
     String? location,
+    String? role,
+    String? gender,
+    int? limit,
   });
 
   Future<TalentModel> getUserPublicProfile(String id);
@@ -21,11 +24,17 @@ class ExploreRepositoryImpl implements ExploreRepository {
     String? query,
     String? category,
     String? location,
+    String? role,
+    String? gender,
+    int? limit,
   }) async {
     return await remoteDataSource.fetchExploreUsers(
       query: query,
       category: category,
       location: location,
+      role: role,
+      gender: gender,
+      limit: limit,
     );
   }
 

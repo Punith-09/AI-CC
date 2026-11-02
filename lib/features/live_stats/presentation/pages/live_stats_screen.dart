@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/routes/app_routes.dart';
 import '../providers/live_stats_provider.dart';
-import '../../data/models/live_stats_model.dart';
+import 'stat_users_list_screen.dart';
 
 class LiveStatsScreen extends StatefulWidget {
   const LiveStatsScreen({super.key});
@@ -128,30 +130,60 @@ class _LiveStatsScreenState extends State<LiveStatsScreen> {
                       label: 'Total Users',
                       description: 'All registered users on the platform.',
                       isDark: isDark,
+                      onTap: () => context.push(AppRoutes.statUsersList, extra: {
+                        'title': 'Total Users',
+                        'filterType': StatFilterType.all,
+                        'filterValue': '',
+                        'expectedCount': stats.users.total,
+                      }),
                     ),
                     _StatCard(
                       value: _fmt(stats.users.artists),
                       label: 'Artists',
                       description: 'Users registered as artists.',
                       isDark: isDark,
+                      onTap: () => context.push(AppRoutes.statUsersList, extra: {
+                        'title': 'Artists',
+                        'filterType': StatFilterType.role,
+                        'filterValue': 'artist',
+                        'expectedCount': stats.users.artists,
+                      }),
                     ),
                     _StatCard(
                       value: _fmt(stats.users.audience),
                       label: 'Audience / Guest',
                       description: 'Users registered as audience / guests.',
                       isDark: isDark,
+                      onTap: () => context.push(AppRoutes.statUsersList, extra: {
+                        'title': 'Audience / Guest',
+                        'filterType': StatFilterType.role,
+                        'filterValue': 'audience',
+                        'expectedCount': stats.users.audience,
+                      }),
                     ),
                     _StatCard(
                       value: _fmt(stats.users.byGender.male),
                       label: 'Male',
                       description: 'Male users across all roles.',
                       isDark: isDark,
+                      onTap: () => context.push(AppRoutes.statUsersList, extra: {
+                        'title': 'Male Users',
+                        'filterType': StatFilterType.gender,
+                        'filterValue': 'male',
+                        'expectedCount': stats.users.byGender.male,
+                      }),
                     ),
                     _StatCard(
                       value: _fmt(stats.users.byGender.female),
                       label: 'Female',
                       description: 'Female users across all roles.',
                       isDark: isDark,
+                      onTap: () => context.push(AppRoutes.statUsersList, extra: {
+                        'title': 'Female Users',
+                        'filterType': StatFilterType.gender,
+                        'filterValue': 'female',
+                        'expectedCount': stats.users.byGender.female,
+                      }),
                     ),
                     _StatCard(
                       value: _fmt(stats.users.byGender.other +
@@ -159,6 +191,12 @@ class _LiveStatsScreenState extends State<LiveStatsScreen> {
                       label: 'Other / Unspecified',
                       description: 'Other or unspecified gender profiles.',
                       isDark: isDark,
+                      onTap: () => context.push(AppRoutes.statUsersList, extra: {
+                        'title': 'Other / Unspecified',
+                        'filterType': StatFilterType.gender,
+                        'filterValue': 'other/unspecified',
+                        'expectedCount': stats.users.byGender.other + stats.users.byGender.unspecified,
+                      }),
                     ),
                   ]),
 
@@ -175,6 +213,15 @@ class _LiveStatsScreenState extends State<LiveStatsScreen> {
                                 description:
                                     'Artists registered under ${nc.name}.',
                                 isDark: isDark,
+                                onTap: () => context.push(
+                                  AppRoutes.statUsersList,
+                                  extra: {
+                                    'title': nc.name,
+                                    'filterType': StatFilterType.craft,
+                                    'filterValue': nc.name,
+                                    'expectedCount': nc.count,
+                                  },
+                                ),
                               ))
                           .toList(),
                     ),
@@ -193,6 +240,15 @@ class _LiveStatsScreenState extends State<LiveStatsScreen> {
                                 description:
                                     'Profiles with present state ${nc.name}.',
                                 isDark: isDark,
+                                onTap: () => context.push(
+                                  AppRoutes.statUsersList,
+                                  extra: {
+                                    'title': nc.name,
+                                    'filterType': StatFilterType.state,
+                                    'filterValue': nc.name,
+                                    'expectedCount': nc.count,
+                                  },
+                                ),
                               ))
                           .toList(),
                     ),
@@ -382,12 +438,14 @@ class _StatCard extends StatelessWidget {
   final String label;
   final String description;
   final bool isDark;
+  final VoidCallback? onTap;
 
   const _StatCard({
     required this.value,
     required this.label,
     required this.description,
     required this.isDark,
+    this.onTap,
   });
 
   @override
@@ -396,53 +454,82 @@ class _StatCard extends StatelessWidget {
     final labelColor = isDark ? Colors.white : const Color(0xFF111827);
     final descColor = isDark ? Colors.white54 : const Color(0xFF6B7280);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-      decoration: BoxDecoration(
-        color: cardBg,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Value
-          Text(
-            value,
-            style: GoogleFonts.sora(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: const Color(0xFF7C3AED),
-              letterSpacing: -0.5,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Value
+              Text(
+                value,
+                style: GoogleFonts.sora(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF7C3AED),
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 6),
+              // Label
+              Text(
+                label,
+                style: GoogleFonts.sora(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: labelColor,
+                ),
+              ),
+              const SizedBox(height: 4),
+              // Description
+              Text(
+                description,
+                style: GoogleFonts.inter(
+                  fontSize: 11.5,
+                  color: descColor,
+                  height: 1.45,
+                ),
+              ),
+              if (onTap != null) ...[
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'View all',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: const Color(0xFF7C3AED),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 3),
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 10,
+                      color: Color(0xFF7C3AED),
+                    ),
+                  ],
+                ),
+              ],
+            ],
           ),
-          const SizedBox(height: 6),
-          // Label
-          Text(
-            label,
-            style: GoogleFonts.sora(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
-              color: labelColor,
-            ),
-          ),
-          const SizedBox(height: 4),
-          // Description
-          Text(
-            description,
-            style: GoogleFonts.inter(
-              fontSize: 11.5,
-              color: descColor,
-              height: 1.45,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
