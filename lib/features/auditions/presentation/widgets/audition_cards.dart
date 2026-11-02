@@ -11,9 +11,13 @@ import 'audition_card.dart';
 class AuditionCards extends StatelessWidget {
   final List<AuditionModel>? auditions;
 
+  /// When true all cards show "Audition Closed" button
+  final bool isPast;
+
   const AuditionCards({
     super.key,
     this.auditions,
+    this.isPast = false,
   });
 
   static const AuditionModel demoAudition = AuditionModel(
@@ -40,13 +44,6 @@ class AuditionCards extends StatelessWidget {
     if (audition.id.isEmpty) return;
 
     final applyProvider = context.read<ApplyJobProvider>();
-
-    // TODO: Re-enable subscription canApplyAudition check when ready
-    // final subProvider = context.read<SubscriptionProvider>();
-    // if (!subProvider.canApplyAudition) {
-    //   LimitUpgradeDialog.show(context, type: LimitType.auditionApplication);
-    //   return;
-    // }
 
     final success = await applyProvider.submitApplication(
       auditionId: audition.id,
@@ -96,6 +93,7 @@ class AuditionCards extends StatelessWidget {
 
         return AuditionCard(
           audition: audition,
+          isPast: isPast,
 
           // -----------------------------------------------
           // View details
@@ -228,10 +226,6 @@ class AuditionCards extends StatelessWidget {
       context
           .read<AuditionsProvider>()
           .markAuditionUnapplied(audition.id);
-      // TODO: Re-enable subscription revertAuditionApplied when ready
-      // try {
-      //   context.read<SubscriptionProvider>().revertAuditionApplied();
-      // } catch (_) {}
     }
 
     ScaffoldMessenger.of(context).showSnackBar(

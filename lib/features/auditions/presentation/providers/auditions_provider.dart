@@ -177,6 +177,9 @@ class AuditionsProvider extends ChangeNotifier {
           experience: a.experience,
           skills: a.skills,
           applicationStatus: a.applicationStatus,
+          viewCount: a.viewCount,
+          positionsAvailable: a.positionsAvailable,
+          producer: a.producer,
         );
       }
       return a;
@@ -209,6 +212,9 @@ class AuditionsProvider extends ChangeNotifier {
         experience: a.experience,
         skills: a.skills,
         applicationStatus: a.applicationStatus,
+        viewCount: a.viewCount,
+        positionsAvailable: a.positionsAvailable,
+        producer: a.producer,
       );
     }
 
@@ -243,6 +249,9 @@ class AuditionsProvider extends ChangeNotifier {
           experience: a.experience,
           skills: a.skills,
           applicationStatus: '',
+          viewCount: a.viewCount,
+          positionsAvailable: a.positionsAvailable,
+          producer: a.producer,
         );
       }
       return a;
@@ -275,6 +284,9 @@ class AuditionsProvider extends ChangeNotifier {
         experience: a.experience,
         skills: a.skills,
         applicationStatus: '',
+        viewCount: a.viewCount,
+        positionsAvailable: a.positionsAvailable,
+        producer: a.producer,
       );
     }
 
@@ -310,6 +322,9 @@ class AuditionsProvider extends ChangeNotifier {
         experience: a.experience,
         skills: a.skills,
         applicationStatus: newStatus,
+        viewCount: a.viewCount,
+        positionsAvailable: a.positionsAvailable,
+        producer: a.producer,
       );
     }
 

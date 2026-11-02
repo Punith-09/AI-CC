@@ -166,6 +166,9 @@ class AuditionModel {
   final String experience;
   final String skills;
   final String applicationStatus; // e.g. 'PENDING', 'SHORTLISTED', 'REJECTED'
+  final int viewCount;            // number of views from API
+  final int positionsAvailable;   // number of open positions
+  final String producer;          // producer name
 
   const AuditionModel({
     this.id = '',
@@ -195,6 +198,9 @@ class AuditionModel {
     this.experience = '',
     this.skills = '',
     this.applicationStatus = '',
+    this.viewCount = 0,
+    this.positionsAvailable = 0,
+    this.producer = '',
   });
 
   int get applicantsCount => applicants.length;
@@ -250,6 +256,9 @@ class AuditionModel {
       experience: json['experience'] as String? ?? '',
       skills: json['skills'] as String? ?? '',
       applicationStatus: (json['applicationStatus'] ?? json['application_status'] ?? '') as String? ?? '',
+      viewCount: parseIntField(json['viewCount'] ?? json['views'] ?? json['view_count']) ?? 0,
+      positionsAvailable: parseIntField(json['position'] ?? json['positions'] ?? json['positionsAvailable'] ?? json['openPositions']) ?? 0,
+      producer: (json['producer'] ?? json['producerName'] ?? '') as String? ?? '',
     );
   }
 
@@ -281,5 +290,8 @@ class AuditionModel {
         'experience': experience,
         'skills': skills,
         'applicationStatus': applicationStatus,
+        'viewCount': viewCount,
+        'position': positionsAvailable,
+        'producer': producer,
       };
 }

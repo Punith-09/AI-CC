@@ -1,19 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../common/widgets/app_background.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../../../core/responsive/responsive_breakpoints.dart';
-import '../../../../core/routes/app_routes.dart';
 import '../../../apply_job/presentation/providers/apply_job_provider.dart';
 import '../../data/models/audition_model.dart';
 import '../providers/auditions_provider.dart';
-import '../widgets/analytics_card.dart';
 import '../widgets/audition_cards.dart';
-import '../widgets/audition_chips.dart';
-import '../widgets/audition_search_bar.dart';
-import '../widgets/new_audition_card.dart';
 
 class AuditionScreen extends StatefulWidget {
   const AuditionScreen({super.key});
@@ -22,22 +15,15 @@ class AuditionScreen extends StatefulWidget {
   State<AuditionScreen> createState() => _AuditionScreenState();
 }
 
-class _AuditionScreenState extends State<AuditionScreen> {
-  int selectedIndex = 0;
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
-
-  static const List<String> categories = [
-    "All",
-    "Films",
-    "Dance",
-    "Ads",
-    "TV Shows",
-  ];
+class _AuditionScreenState extends State<AuditionScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       context.read<AuditionsProvider>().fetchAuditions();
       context.read<AuditionsProvider>().fetchMyPostedAuditions();
@@ -60,229 +46,69 @@ class _AuditionScreenState extends State<AuditionScreen> {
 
   @override
   void dispose() {
-    _searchController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
-  void _onCategorySelected(int index) {
-    setState(() {
-      selectedIndex = index;
-    });
-    final selectedCategory = categories[index];
-    String? backendCategory;
-    if (selectedCategory == 'Films') {
-      backendCategory = 'Film';
-    } else if (selectedCategory == 'Dance') {
-      backendCategory = 'Dancer';
-    } else if (selectedCategory == 'Ads') {
-      backendCategory = 'Ad';
-    } else if (selectedCategory == 'TV Shows') {
-      backendCategory = 'TV';
-    }
+  // ── Helpers ───────────────────────────────────────────────────────────────
 
-    context.read<AuditionsProvider>().fetchAuditions(
-          category: backendCategory,
-        );
-  }
+  /// Splits auditions into active (deadline in future) and past (expired).
+  (List<AuditionModel>, List<AuditionModel>) _splitAuditions(
+      List<AuditionModel> all) {
+    final active = <AuditionModel>[];
+    final past = <AuditionModel>[];
 
-  void _onSearchChanged(String value) {
-    setState(() {
-      _searchQuery = value;
-    });
-  }
-
-  void _clearSearch() {
-    _searchController.clear();
-    setState(() {
-      _searchQuery = '';
-    });
-  }
-
-  List<AuditionModel> _filterAuditions(List<AuditionModel> list) {
-    if (_searchQuery.trim().isEmpty) {
-      return list;
-    }
-    final q = _searchQuery.toLowerCase().trim();
-    return list.where((a) {
-      return a.title.toLowerCase().contains(q) ||
-          a.role.toLowerCase().contains(q) ||
-          a.location.toLowerCase().contains(q) ||
-          a.language.toLowerCase().contains(q) ||
-          a.category.toLowerCase().contains(q) ||
-          a.description.toLowerCase().contains(q) ||
-          a.effectiveContact.toLowerCase().contains(q);
-    }).toList();
-  }
-
-  Widget _buildSectionHeader(String title, Color titleColor, {Widget? trailing}) {
-    return Row(
-      children: [
-        Container(
-          width: 3.5,
-          height: 18,
-          decoration: BoxDecoration(
-            color: const Color(0xFFFF9500),
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          title,
-          style: TextStyle(
-            color: titleColor,
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        if (trailing != null) ...[
-          const Spacer(),
-          trailing,
-        ],
-      ],
-    );
-  }
-
-  Future<void> _confirmAndDeleteAudition(
-    AuditionModel audition,
-  ) async {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Row(
-          children: [
-            const Icon(
-              Icons.delete_outline_rounded,
-              color: AppColors.primary,
-              size: 24,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                "Delete Audition",
-                style: TextStyle(
-                  color: isDark ? Colors.white : AppColors.lightText,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          "Are you sure you want to delete \"${audition.title}\"? This action cannot be undone.",
-          style: TextStyle(
-            color: isDark ? const Color(0xFF9E9E9E) : const Color(0xFF64748B),
-            fontSize: 14,
-          ),
-        ),
-        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        actions: [
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor:
-                        isDark ? Colors.white70 : const Color(0xFF64748B),
-                    side: BorderSide(
-                      color: isDark
-                          ? Colors.white24
-                          : const Color(0xFFCBD5E1),
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  onPressed: () => Navigator.of(ctx).pop(false),
-                  child: const Text(
-                    "Cancel",
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  onPressed: () => Navigator.of(ctx).pop(true),
-                  child: const Text(
-                    "Delete",
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true || !mounted) return;
-
-    try {
-      final success =
-          await context.read<AuditionsProvider>().deleteAudition(audition.id);
-      if (!mounted) return;
-
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Audition deleted successfully"),
-            backgroundColor: Color(0xFF10B981),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+    for (final a in all) {
+      final daysLeft = _daysLeft(a.deadline);
+      if (daysLeft >= 0) {
+        active.add(a);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Failed to delete audition. Please try again."),
-            backgroundColor: Color(0xFFEF4444),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        past.add(a);
       }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: const Color(0xFFEF4444),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+    }
+    return (active, past);
+  }
+
+  int _daysLeft(String deadline) {
+    if (deadline.isEmpty) return 999;
+    try {
+      DateTime? dt = DateTime.tryParse(deadline.trim());
+      if (dt == null) {
+        final parts = deadline.trim().split(RegExp(r'[-/]'));
+        if (parts.length == 3) {
+          if (parts[0].length == 4) {
+            dt = DateTime(int.parse(parts[0]), int.parse(parts[1]),
+                int.parse(parts[2]));
+          } else {
+            dt = DateTime(int.parse(parts[2]), int.parse(parts[1]),
+                int.parse(parts[0]));
+          }
+        }
+      }
+      if (dt == null) return 999;
+      final today = DateTime(now.year, now.month, now.day);
+      return dt.difference(today).inDays;
+    } catch (_) {
+      return 999;
     }
   }
+
+  DateTime get now => DateTime.now();
+
+  // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final auditionsProvider = context.watch<AuditionsProvider>();
-    final applyJobProvider = context.watch<ApplyJobProvider>();
-    final appliedCount = applyJobProvider.applications.length;
-    final displayedAuditions = _filterAuditions(auditionsProvider.auditions);
+    context.watch<ApplyJobProvider>(); // watch for apply state changes
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final titleColor = isDark ? Colors.white : AppColors.lightText;
-    final cardBg = isDark ? const Color(0xFF141414) : Colors.white;
-    final cardBorder = isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFE2E8F0);
-    final subtitleColor = isDark ? const Color(0xFF8E8E93) : const Color(0xFF64748B);
 
-    // Build the scrollable content using CustomScrollView for reliable layout
-    final scrollView = RefreshIndicator(
-      color: const Color(0xFFFF9500),
+    final (activeAuditions, pastAuditions) =
+        _splitAuditions(auditionsProvider.auditions);
+
+    final body = RefreshIndicator(
+      color: const Color(0xFFE59424),
       backgroundColor: isDark ? const Color(0xFF1A1A1A) : Colors.white,
       onRefresh: () async {
         await Future.wait([
@@ -296,311 +122,51 @@ class _AuditionScreenState extends State<AuditionScreen> {
           parent: BouncingScrollPhysics(),
         ),
         slivers: [
-          // ── Fixed Header (title + search + chips) ─────────────────────
+          // ── Title ────────────────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 26, 16, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title
-                  Center(
-                    child: Text(
-                      "Auditions",
-                      style: TextStyle(
-                        color: titleColor,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  // Search Bar
-                  AuditionSearchBar(
-                    controller: _searchController,
-                    onChanged: _onSearchChanged,
-                    onClear: _clearSearch,
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  // Category Tabs
-                  AuditionChips(
-                    categories: categories,
-                    selectedIndex: selectedIndex,
-                    onSelected: _onCategorySelected,
-                  ),
-
-                  const SizedBox(height: 18),
-                ],
-              ),
-            ),
-          ),
-
-          // ── Audition Analysis Card ─────────────────────────────────────
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverToBoxAdapter(
-              child: AnalyticsCard(appliedCount: appliedCount),
-            ),
-          ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 22)),
-
-          // ── My Posted Auditions ────────────────────────────────────────
-          if (auditionsProvider.isMyPostedLoading)
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                child: Center(
-                  child: CircularProgressIndicator(
-                    color: Color(0xFFFF9500),
-                    strokeWidth: 2,
-                  ),
+              padding: const EdgeInsets.only(top: 26, bottom: 14),
+              child: Text(
+                'Auditions',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: isDark ? Colors.white : const Color(0xFF1C1C1C),
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
                 ),
               ),
-            )
-          else if (auditionsProvider.myPostedAuditions.isNotEmpty) ...[
-            SliverPadding(
+            ),
+          ),
+
+          // ── Active / Past Auditions Tab Bar ───────────────────────
+          SliverToBoxAdapter(
+            child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverToBoxAdapter(
-                child: _buildSectionHeader(
-                  "My Posted Auditions",
-                  titleColor,
-                  trailing: Text(
-                    "${auditionsProvider.myPostedAuditions.length}",
-                    style: const TextStyle(
-                      color: Color(0xFFFF9500),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 14)),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final audition = auditionsProvider.myPostedAuditions[index];
-                    final applicantsCount = audition.applicantsCount;
-                    final loc = audition.location.isNotEmpty
-                        ? audition.location
-                        : 'Location N/A';
-                    final isDeleting =
-                        auditionsProvider.isDeleting(audition.id);
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(16),
-                        onTap: isDeleting
-                            ? null
-                            : () {
-                                context.push(
-                                  AppRoutes.auditionDetails,
-                                  extra: audition,
-                                );
-                              },
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 18, vertical: 14),
-                          decoration: BoxDecoration(
-                            color: cardBg,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: cardBorder, width: 1),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(
-                                    alpha: isDark ? 0.2 : 0.03),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      audition.title,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: titleColor,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 5),
-                                    Text(
-                                      "$applicantsCount applicant(s) · $loc",
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: subtitleColor,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              if (isDeleting)
-                                const SizedBox(
-                                  width: 36,
-                                  height: 36,
-                                  child: Padding(
-                                    padding: EdgeInsets.all(8),
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Color(0xFFEF4444),
-                                    ),
-                                  ),
-                                )
-                              else
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.delete_outline_rounded,
-                                    color: Color(0xFFEF4444),
-                                    size: 22,
-                                  ),
-                                  splashRadius: 20,
-                                  tooltip: "Delete audition",
-                                  onPressed: () =>
-                                      _confirmAndDeleteAudition(audition),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                  childCount: auditionsProvider.myPostedAuditions.length,
-                ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 14)),
-          ],
-
-          // ── Top Matches Section Header ─────────────────────────────────
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverToBoxAdapter(
-              child: _buildSectionHeader("Top Matches for You", titleColor),
-            ),
-          ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 14)),
-
-          // ── Top Matches Content ────────────────────────────────────────
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverToBoxAdapter(
-              child: auditionsProvider.isLoading
-                  ? const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 36),
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFFFF9500),
-                        ),
-                      ),
-                    )
-                  : auditionsProvider.errorMessage != null
-                      ? Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 32),
-                          child: Center(
-                            child: Text(
-                              auditionsProvider.errorMessage!,
-                              style: const TextStyle(
-                                  color: Colors.redAccent, fontSize: 14),
-                            ),
-                          ),
-                        )
-                      : _searchQuery.trim().isNotEmpty &&
-                              displayedAuditions.isEmpty
-                          ? Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 36),
-                              child: Center(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.search_off_rounded,
-                                      size: 46,
-                                      color: Color(0xFF7A7A7A),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      "No auditions matching \"$_searchQuery\"",
-                                      style: const TextStyle(
-                                        color: Color(0xFF8E8E93),
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    TextButton(
-                                      onPressed: _clearSearch,
-                                      child: const Text(
-                                        "Clear search",
-                                        style: TextStyle(
-                                          color: Color(0xFFFF9500),
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            )
-                          : AuditionCards(auditions: displayedAuditions),
+              child: _buildTabBar(isDark),
             ),
           ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
-          // ── New Auditions Section ──────────────────────────────────────
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverToBoxAdapter(
-              child: _buildSectionHeader("New Auditions", titleColor),
+          // ── Content Switcher ──────────────────────────────────────
+          SliverToBoxAdapter(
+            child: _buildTabContent(
+              isDark: isDark,
+              activeAuditions: activeAuditions,
+              pastAuditions: pastAuditions,
+              isLoading: auditionsProvider.isLoading,
+              errorMessage: auditionsProvider.errorMessage,
             ),
           ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 14)),
-
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverToBoxAdapter(
-              child: NewAuditionCard(
-                onPressed: () {
-                  context.push(AppRoutes.post);
-                },
-              ),
-            ),
-          ),
-
-          // Bottom spacing (accounts for bottom nav bar)
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
     );
 
     if (isDesktop) {
-      return Scaffold(
-        backgroundColor: Colors.transparent,
-        body: scrollView,
-      );
+      return Scaffold(backgroundColor: Colors.transparent, body: body);
     }
 
     return Scaffold(
@@ -608,8 +174,186 @@ class _AuditionScreenState extends State<AuditionScreen> {
       body: AppBackground(
         child: SafeArea(
           bottom: false,
-          child: scrollView,
+          child: body,
         ),
+      ),
+    );
+  }
+
+  // ── Tab Bar (pill style like the mockup) ──────────────────────────────────
+
+  Widget _buildTabBar(bool isDark) {
+    final bgColor = isDark ? const Color(0xFF1C1C1C) : const Color(0xFFF0F0F0);
+    const activeColor = Color(0xFFE59424);
+    final inactiveColor =
+        isDark ? Colors.white54 : const Color(0xFF888888);
+
+    return AnimatedBuilder(
+      animation: _tabController,
+      builder: (context, _) {
+        final tab = _tabController.index;
+        return Container(
+          height: 44,
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(22),
+          ),
+          child: Row(
+            children: [
+              _buildTabPill(
+                label: 'Active',
+                isSelected: tab == 0,
+                onTap: () => _tabController.animateTo(0),
+                activeColor: activeColor,
+                inactiveColor: inactiveColor,
+                isDark: isDark,
+              ),
+              _buildTabPill(
+                label: 'Past Auditions',
+                isSelected: tab == 1,
+                onTap: () => _tabController.animateTo(1),
+                activeColor: activeColor,
+                inactiveColor: inactiveColor,
+                isDark: isDark,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTabPill({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required Color activeColor,
+    required Color inactiveColor,
+    required bool isDark,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeInOut,
+          margin: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: isSelected ? activeColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : inactiveColor,
+              fontSize: 14,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Tab Content ────────────────────────────────────────────────────────────
+
+  Widget _buildTabContent({
+    required bool isDark,
+    required List<AuditionModel> activeAuditions,
+    required List<AuditionModel> pastAuditions,
+    required bool isLoading,
+    String? errorMessage,
+  }) {
+    if (isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 60),
+        child: Center(
+          child: CircularProgressIndicator(color: Color(0xFFE59424)),
+        ),
+      );
+    }
+
+    if (errorMessage != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+        child: Center(
+          child: Column(
+            children: [
+              const Icon(Icons.cloud_off_rounded,
+                  size: 48, color: Color(0xFFE59424)),
+              const SizedBox(height: 12),
+              Text(
+                errorMessage,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.redAccent, fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE59424),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                ),
+                onPressed: () =>
+                    context.read<AuditionsProvider>().fetchAuditions(),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return AnimatedBuilder(
+      animation: _tabController,
+      builder: (context, _) {
+        final isActive = _tabController.index == 0;
+        final list = isActive ? activeAuditions : pastAuditions;
+
+        if (list.isEmpty) {
+          return _buildEmptyState(
+            isDark: isDark,
+            message: isActive
+                ? 'No active auditions right now.\nPull down to refresh.'
+                : 'No past auditions found.',
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: AuditionCards(
+            auditions: list,
+            isPast: !isActive,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyState({required bool isDark, required String message}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.movie_filter_outlined,
+            size: 52,
+            color: isDark ? Colors.white24 : Colors.black26,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isDark ? const Color(0xFF8E8E93) : const Color(0xFF888888),
+              fontSize: 14,
+              height: 1.5,
+            ),
+          ),
+        ],
       ),
     );
   }

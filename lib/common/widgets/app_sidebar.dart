@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart' show Share;
 import '../../core/constants/app_colors.dart';
 import '../../core/routes/app_routes.dart';
 import '../../core/routes/app_router.dart';
+import '../../core/theme/theme_provider.dart';
 import '../../features/artist_profile/presentation/providers/profile_provider.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/explore/presentation/providers/explore_provider.dart';
@@ -317,6 +318,21 @@ class AppSidebar extends StatelessWidget {
                     onTap: () {
                       Navigator.of(context).pop();
                       context.push(AppRoutes.liveStats);
+                    },
+                  ),
+                  Builder(
+                    builder: (context) {
+                      final themeProvider = context.watch<ThemeProvider>();
+                      final isDarkMode = themeProvider.isDarkMode;
+                      return buildSectionItem(
+                        icon: isDarkMode
+                            ? Icons.light_mode_rounded
+                            : Icons.dark_mode_rounded,
+                        label: isDarkMode ? 'Light Theme' : 'Dark Theme',
+                        onTap: () {
+                          context.read<ThemeProvider>().toggleTheme();
+                        },
+                      );
                     },
                   ),
                 ],
