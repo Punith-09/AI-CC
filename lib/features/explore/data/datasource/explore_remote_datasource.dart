@@ -7,6 +7,9 @@ abstract class ExploreRemoteDataSource {
     String? query,
     String? category,
     String? location,
+    String? role,
+    String? gender,
+    int? limit,
   });
 
   Future<TalentModel> fetchUserPublicProfile(String id);
@@ -22,13 +25,19 @@ class ExploreRemoteDataSourceImpl implements ExploreRemoteDataSource {
     String? query,
     String? category,
     String? location,
+    String? role,
+    String? gender,
+    int? limit,
   }) async {
     // Build query parameters matching the Swagger spec:
-    // GET /users/explore?query=...&category=...&location=...
+    // GET /users/explore?query=...&category=...&location=...&role=...&gender=...&limit=...
     final Map<String, dynamic> params = {};
     if (query != null && query.isNotEmpty) params['query'] = query;
     if (category != null && category.isNotEmpty) params['category'] = category;
     if (location != null && location.isNotEmpty) params['location'] = location;
+    if (role != null && role.isNotEmpty) params['role'] = role;
+    if (gender != null && gender.isNotEmpty) params['gender'] = gender;
+    if (limit != null) params['limit'] = limit;
 
     final response = await _dioClient.get(
       ApiEndpoints.exploreUsers,
