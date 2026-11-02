@@ -54,6 +54,16 @@ class DesktopSidebar extends StatelessWidget {
             },
           ),
           _SidebarItem(
+            icon: Icons.play_circle_outline_rounded,
+            label: "Videos",
+            isSelected: currentLocation == AppRoutes.videos,
+            onTap: () {
+              if (currentLocation != AppRoutes.videos) {
+                context.go(AppRoutes.videos);
+              }
+            },
+          ),
+          _SidebarItem(
             icon: LucideIcons.compass,
             label: "Explore",
             isSelected: currentLocation == AppRoutes.explore ||

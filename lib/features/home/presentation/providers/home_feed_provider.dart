@@ -4,8 +4,6 @@ import '../../data/repository/home_repository.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../artist_profile/data/repository/profile_repository.dart';
 import '../../../artist_profile/presentation/providers/profile_provider.dart';
-import '../../../subscription/presentation/providers/subscription_provider.dart';
-import '../../../subscription/presentation/widgets/limit_upgrade_dialog.dart';
 
 class HomeFeedProvider extends ChangeNotifier {
   final HomeRepository _homeRepository;
@@ -17,6 +15,8 @@ class HomeFeedProvider extends ChangeNotifier {
   String? _errorMessage;
 
   List<FeedPostModel> get posts => _posts;
+  List<FeedPostModel> get imagePosts => _posts.where((p) => p.isPhoto).toList();
+  List<FeedPostModel> get videoPosts => _posts.where((p) => p.isVideo).toList();
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 

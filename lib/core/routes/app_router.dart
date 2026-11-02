@@ -35,6 +35,7 @@ import '../../features/creator_profile/presentation/pages/creator_profile_screen
 import '../../features/explore/presentation/pages/explore_screen.dart';
 import '../../features/home/data/models/feed_post_model.dart';
 import '../../features/home/presentation/pages/home_screen.dart';
+import '../../features/home/presentation/pages/videos_screen.dart';
 import '../../features/home/presentation/pages/watch_media_screen.dart';
 import '../../features/messages/presentation/pages/chat_screen.dart';
 import '../../features/messages/presentation/pages/messages_screen.dart';
@@ -276,6 +277,11 @@ final GoRouter appRouter = GoRouter(
         // HOME
         // -----------------------------------------------------
         GoRoute(path: AppRoutes.home, builder: (_, __) => const HomeScreen()),
+
+        // -----------------------------------------------------
+        // VIDEOS
+        // -----------------------------------------------------
+        GoRoute(path: AppRoutes.videos, builder: (_, __) => const VideosScreen()),
 
         // -----------------------------------------------------
         // EXPLORE

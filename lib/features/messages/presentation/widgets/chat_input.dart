@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/responsive/responsive_breakpoints.dart';
 
 class ChatInput extends StatefulWidget {
   final TextEditingController controller;
@@ -21,6 +22,7 @@ class _ChatInputState extends State<ChatInput> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
     final containerBg = isDark ? AppColors.darkCard : Colors.white;
     final borderTopColor = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
     final inputFieldBg = isDark ? AppColors.darkCard : AppColors.lightCard;
@@ -77,12 +79,56 @@ class _ChatInputState extends State<ChatInput> {
                 //   icon: Icon(Icons.attach_file, color: attachIconColor),
                 // ),
 
+                // Expanded(
+                //   child: Container(
+                //     decoration: BoxDecoration(
+                //       color: inputFieldBg,
+                //       borderRadius: BorderRadius.circular(30),
+                //       border: Border.all(color: AppColors.primary),
+                //     ),
+                //     child: TextField(
+                //       controller: widget.controller,
+                //       style: TextStyle(
+                //         color: textColor,
+                //         fontSize: 14.5,
+                //       ),
+                //       textInputAction: TextInputAction.send,
+                //       onSubmitted: (_) => widget.onSend?.call(),
+                //       decoration: InputDecoration(
+                //         hintText: "Type a message...",
+                //         hintStyle: TextStyle(color: hintColor),
+                //         border: OutlineInputBorder(
+                //           borderRadius: BorderRadius.circular(30),
+                //           borderSide: BorderSide(color: AppColors.purple,width: isDesktop ? 1.2 : 1.5),
+                //         ),
+                //         enabledBorder: InputBorder.none,
+                //         focusedBorder: InputBorder.none,
+                //         contentPadding: const EdgeInsets.symmetric(
+                //           horizontal: 16,
+                //           vertical: 12,
+                //         ),
+                //         // suffixIcon: IconButton(
+                //         //   onPressed: () {},
+                //         //   icon: Icon(
+                //         //     Icons.emoji_emotions_outlined,
+                //         //     color: hintColor,
+                //         //   ),
+                //         // ),
+                //       ),
+                //     ),
+                //   ),
+                // ),
+
+
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
                       color: inputFieldBg,
-                      borderRadius: BorderRadius.circular(5),
-                      border: Border.all(color: AppColors.primary),
+                      borderRadius: BorderRadius.circular(30),
+                      // border: Border.all(
+                      //   color: AppColors.primary,
+                      //   width: 1.2,
+                      // ),
                     ),
                     child: TextField(
                       controller: widget.controller,
@@ -95,20 +141,35 @@ class _ChatInputState extends State<ChatInput> {
                       decoration: InputDecoration(
                         hintText: "Type a message...",
                         hintStyle: TextStyle(color: hintColor),
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
+
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          borderSide: BorderSide(
+                            color: AppColors.hint,
+                            width: 1.2,
+                          ),
+                        ),
+
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          borderSide: BorderSide(
+                            color: AppColors.hint,
+                            width: 1.2,
+                          ),
+                        ),
+
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          borderSide: BorderSide(
+                            color: AppColors.primary,
+                            width: 1.5,
+                          ),
+                        ),
+
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 12,
                         ),
-                        // suffixIcon: IconButton(
-                        //   onPressed: () {},
-                        //   icon: Icon(
-                        //     Icons.emoji_emotions_outlined,
-                        //     color: hintColor,
-                        //   ),
-                        // ),
                       ),
                     ),
                   ),

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-
 import 'package:provider/provider.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/routes/app_routes.dart';
 import '../../features/artist_profile/presentation/providers/profile_provider.dart';
 import '../../features/create/presentation/widgets/create_bottom_sheet.dart';
+import '../../features/home/presentation/providers/home_feed_provider.dart';
 
 class CustomBottomNavbar extends StatelessWidget {
   final String currentLocation;
@@ -25,15 +25,19 @@ class CustomBottomNavbar extends StatelessWidget {
     switch (currentLocation) {
       case AppRoutes.home:
         return 0;
-      case AppRoutes.explore:
+      case AppRoutes.videos:
         return 1;
-      case AppRoutes.post:
+      case AppRoutes.explore:
+      case AppRoutes.exploreProfile:
         return 2;
-      case AppRoutes.auditions:
+      case AppRoutes.post:
         return 3;
+      case AppRoutes.auditions:
+        return 4;
       case AppRoutes.artistProfile:
       case AppRoutes.subscription:
-        return 4;
+      case AppRoutes.editArtistProfile:
+        return 5;
       default:
         return 0;
     }
@@ -42,84 +46,69 @@ class CustomBottomNavbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final index = currentIndex;
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return SizedBox(
-      height: 82,
-
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.topCenter,
+    return Container(
+      height: 72 + MediaQuery.of(context).padding.bottom,
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+      decoration: BoxDecoration(
+        color: backgroundColor ?? (isDark ? AppColors.darkCard : Colors.white),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(24),
+        ),
+        border: Border(
+          top: BorderSide(
+            color: isDark ? AppColors.darkBorder : AppColors.divider,
+            width: 1,
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, -3),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-            Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 72,
-              decoration: BoxDecoration(
-                color: backgroundColor ?? (isDark ? AppColors.darkCard : Colors.white),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(24),
-                ),
-                border: Border(
-                  top: BorderSide(
-                    color: isDark ? AppColors.darkBorder : AppColors.divider,
-                    width: 1,
-                  ),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
-                    blurRadius: 12,
-                    offset: const Offset(0, -3),
-                  ),
-                ],
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: _NavItem(
-                      icon: LucideIcons.home,
-                      label: "Home",
-                      selected: index == 0,
-                      onTap: () => onItemSelected(AppRoutes.home),
-                    ),
-                  ),
-                  Expanded(
-                    child: _NavItem(
-                      icon: LucideIcons.search,
-                      label: "Explore",
-                      selected: index == 1,
-                      onTap: () => onItemSelected(AppRoutes.explore),
-                    ),
-                  ),
-                  const SizedBox(width: 70),
-                  Expanded(
-                    child: _NavItem(
-                      icon: LucideIcons.clapperboard,
-                      label: "Auditions",
-                      selected: index == 3,
-                      onTap: () => onItemSelected(AppRoutes.auditions),
-                    ),
-                  ),
-                  Expanded(
-                    child: _NavItem(
-                      icon: LucideIcons.userRound,
-                      label: "Profile",
-                      selected: index == 4,
-                      onTap: () => onItemSelected(AppRoutes.artistProfile),
-                    ),
-                  ),
-                ],
-              ),
+          // 1. Home
+          Expanded(
+            child: _NavItem(
+              icon: LucideIcons.home,
+              label: "Home",
+              selected: index == 0,
+              onTap: () => onItemSelected(AppRoutes.home),
             ),
           ),
-          Positioned(
-            top: -8,
-            child: GestureDetector(
+
+          // 2. Videos (New item after Home)
+          Expanded(
+            child: _NavItem(
+              icon: LucideIcons.playCircle,
+              label: "Videos",
+              selected: index == 1,
+              onTap: () => onItemSelected(AppRoutes.videos),
+            ),
+          ),
+
+          // 3. Explore
+          Expanded(
+            child: _NavItem(
+              icon: LucideIcons.search,
+              label: "Explore",
+              selected: index == 2,
+              onTap: () => onItemSelected(AppRoutes.explore),
+            ),
+          ),
+
+          // 4. Post (Regular bottom bar item)
+          Expanded(
+            child: _NavItem(
+              icon: LucideIcons.plusCircle,
+              label: "Post",
+              selected: index == 3,
               onTap: () async {
                 final route = await showModalBottomSheet<String>(
                   context: context,
@@ -135,31 +124,31 @@ class CustomBottomNavbar extends StatelessWidget {
                   if (result == true && context.mounted) {
                     try {
                       context.read<ProfileProvider>().fetchMyProfile(silent: true);
+                      context.read<HomeFeedProvider>().fetchFeed();
                     } catch (_) {}
                   }
                 }
               },
-              child: Container(
-                width: 58,
-                height: 58,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primary,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.buttonPrimary.withValues(alpha: 0.35),
-                      blurRadius: 14,
-                      spreadRadius: 1,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.add,
-                  size: 34,
-                  color: Colors.white,
-                ),
-              ),
+            ),
+          ),
+
+          // 5. Auditions
+          Expanded(
+            child: _NavItem(
+              icon: LucideIcons.clapperboard,
+              label: "Auditions",
+              selected: index == 4,
+              onTap: () => onItemSelected(AppRoutes.auditions),
+            ),
+          ),
+
+          // 6. Profile
+          Expanded(
+            child: _NavItem(
+              icon: LucideIcons.userRound,
+              label: "Profile",
+              selected: index == 5,
+              onTap: () => onItemSelected(AppRoutes.artistProfile),
             ),
           ),
         ],
@@ -203,6 +192,7 @@ class _NavItem extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 11,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                 color: selected ? AppColors.primary : unselectedColor,
               ),
             ),

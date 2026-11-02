@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final feedProvider = context.watch<HomeFeedProvider>();
 
-    final posts = feedProvider.posts;
+    final posts = feedProvider.imagePosts;
     final isLoading = feedProvider.isLoading;
     final errorMessage = feedProvider.errorMessage;
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
@@ -147,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'No posts or videos yet',
+                    'No posts yet',
                     style: TextStyle(
                       color: isDark ? AppColors.darkText : AppColors.lightText,
                       fontSize: 16,
@@ -156,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Be the first one to share a photo or video reel!',
+                    'Be the first one to share a photo!',
                     style: TextStyle(
                       color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
                       fontSize: 13,

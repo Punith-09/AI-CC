@@ -19,6 +19,7 @@ class DesktopShell extends StatelessWidget {
   double _getMaxContentWidth(String route) {
     switch (route) {
       case AppRoutes.home:
+      case AppRoutes.videos:
         return 650.0;
       case AppRoutes.explore:
         return 920.0;

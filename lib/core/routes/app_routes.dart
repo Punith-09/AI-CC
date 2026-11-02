@@ -10,6 +10,7 @@ class AppRoutes {
   static const String splash = "/splash";
 
   static const String home = "/home";
+  static const String videos = "/videos";
   static const String explore = "/explore";
   static const String post = "/post";
   static const String auditions = "/auditions";
