@@ -46,6 +46,8 @@ class NotificationsProvider extends ChangeNotifier {
       _notifications = await _repository.getNotifications();
       _hasFetched = true;
       _error = null;
+      // Sync unread count from the fetched list so badge stays accurate
+      _unreadCount = _notifications.where((n) => !n.isRead).length;
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '').trim();
     } finally {
