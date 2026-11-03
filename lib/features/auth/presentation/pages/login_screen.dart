@@ -91,13 +91,13 @@ class _LoginScreenState extends State<LoginScreen> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.black,
+        systemNavigationBarIconBrightness: Brightness.light,
       ),
       child: Scaffold(
-        backgroundColor: AppColors.white,
+        backgroundColor: AppColors.black,
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -197,8 +197,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: GoogleFonts.inter(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
-                                  color:AppColors.black,
-
+                                  color: AppColors.white,
                                 ),
                                 decoration: InputDecoration(
                                   hintText: 'Email / Phone Number / TRK ID',
@@ -210,7 +209,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                                   ),
                                   filled: true,
-                                  fillColor: AppColors.white,
+                                  fillColor: AppColors.black,
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 22,
                                     vertical: 14,
@@ -255,7 +254,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: GoogleFonts.inter(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
-                                  color: AppColors.black,
+                                  color: AppColors.white,
                                 ),
                                 decoration: InputDecoration(
                                   hintText: 'Password',
@@ -266,7 +265,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     // backgroundColor: AppColors.black
                                   ),
                                   filled: true,
-                                  fillColor: Colors.white,
+                                  fillColor: AppColors.black,
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 22,
                                     vertical: 14,
@@ -356,7 +355,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ? null
                                       : _handleLogin,
                                   style: OutlinedButton.styleFrom(
-                                    backgroundColor: AppColors.white,
+                                    backgroundColor: AppColors.black,
                                     foregroundColor: AppColors.primary,
                                     side: const BorderSide(
                                       color: AppColors.primary,
@@ -408,7 +407,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       style: GoogleFonts.inter(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w400,
-                                        color: AppColors.black.withValues(alpha: 0.75),
+                                        color: AppColors.white.withValues(alpha: 0.75),
                                       ),
                                       children: [
                                         TextSpan(

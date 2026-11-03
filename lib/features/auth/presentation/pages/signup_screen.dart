@@ -179,9 +179,9 @@ class _SignupScreenState extends State<SignupScreen> {
         systemNavigationBarIconBrightness: Brightness.light,
       ),
       child: Scaffold(
-        backgroundColor: AppColors.white,
+        backgroundColor: AppColors.black,
         appBar: AppBar(
-          backgroundColor: AppColors.white,
+          backgroundColor: AppColors.black,
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: AppColors.white),
@@ -349,7 +349,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(4),
                                     ),
-                                    side: const BorderSide(color: AppColors.black),
+                                    side: const BorderSide(color: AppColors.white),
                                     onChanged: (val) {
                                       setState(() {
                                         _agreedToTerms = val ?? false;
@@ -363,7 +363,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                     text: TextSpan(
                                       text: 'I Agree to the ',
                                       style: GoogleFonts.sora(
-                                        color: AppColors.black,
+                                        color: AppColors.white,
                                         fontSize: 12,
                                       ),
                                       children: [
@@ -376,7 +376,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                         ),
                                         const TextSpan(
                                           text: ' And ',
-                                          style: TextStyle(color: AppColors.black),
+                                          style: TextStyle(color: AppColors.white),
                                         ),
                                         TextSpan(
                                           text: 'Privacy Policy',
@@ -407,7 +407,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                         ? null
                                         : _handleSignup,
                                     style: OutlinedButton.styleFrom(
-                                      backgroundColor: AppColors.white,
+                                      backgroundColor: AppColors.black,
                                       foregroundColor: AppColors.primary,
                                       side: const BorderSide(
                                         color: AppColors.primary,
@@ -463,7 +463,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                     style: GoogleFonts.inter(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w400,
-                                      color: AppColors.black.withValues(alpha: 0.75),
+                                      color: AppColors.white.withValues(alpha: 0.75),
                                     ),
                                     children: [
                                       TextSpan(
@@ -514,7 +514,7 @@ class _SignupScreenState extends State<SignupScreen> {
       style: GoogleFonts.inter(
         fontSize: 12,
         fontWeight: FontWeight.w500,
-        color: AppColors.black,
+        color: AppColors.white,
       ),
       decoration: InputDecoration(
         hintText: hint,
@@ -527,7 +527,7 @@ class _SignupScreenState extends State<SignupScreen> {
           // backgroundColor: AppColors.black,
         ),
         filled: true,
-        fillColor: AppColors.white,
+        fillColor: AppColors.black,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 22,
           vertical: 14,
@@ -590,7 +590,7 @@ class _SignupScreenState extends State<SignupScreen> {
             child: Text(
               label,
               style: GoogleFonts.inter(
-                color: AppColors.black,
+                color: AppColors.white,
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
@@ -599,7 +599,7 @@ class _SignupScreenState extends State<SignupScreen> {
         ],
         Container(
           decoration: BoxDecoration(
-            color: AppColors.white,
+            color: AppColors.black,
             borderRadius: BorderRadius.circular(30),
             border: Border.all(color: AppColors.hint, width: 1.2),
           ),
@@ -608,7 +608,7 @@ class _SignupScreenState extends State<SignupScreen> {
             child: DropdownButton<String>(
               isExpanded: true,
               value: value,
-              dropdownColor: AppColors.white,
+              dropdownColor: AppColors.black,
               hint: Text(
                 hint,
                 style: GoogleFonts.inter(
@@ -619,7 +619,7 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
               icon: const Icon(
                 Icons.keyboard_arrow_down,
-                color: AppColors.black,
+                color: AppColors.white,
                 size: 20,
               ),
               items: items.map((String item) {
@@ -630,8 +630,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.black,
-                      // backgroundColor: AppColors.white
+                      color: AppColors.white,
                     ),
                   ),
                 );
