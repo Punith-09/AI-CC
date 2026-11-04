@@ -210,18 +210,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.black,
+        systemNavigationBarIconBrightness: Brightness.light,
       ),
       child: Scaffold(
-        backgroundColor: AppColors.white,
+        backgroundColor: AppColors.black,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.black),
+            icon: const Icon(Icons.arrow_back, color: AppColors.white),
             onPressed: () {
               if (context.canPop()) {
                 context.pop();
@@ -345,7 +345,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: AppColors.black,
+              color: AppColors.white,
             ),
             decoration: InputDecoration(
               hintText: 'Email / Phone Number / TRK ID',
@@ -355,7 +355,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 color: AppColors.hint,
               ),
               filled: true,
-              fillColor: AppColors.white,
+              fillColor: AppColors.black,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 22,
                 vertical: 14,
@@ -410,7 +410,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: AppColors.black,
+              color: AppColors.white,
             ),
             decoration: InputDecoration(
               hintText: 'New Password',
@@ -420,7 +420,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 color: AppColors.hint,
               ),
               filled: true,
-              fillColor: AppColors.white,
+              fillColor: AppColors.black,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 22,
                 vertical: 14,
@@ -430,7 +430,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   _isPasswordVisible
                       ? Icons.visibility_outlined
                       : Icons.visibility_off_outlined,
-                  color: AppColors.black,
+                  color: const Color(0xFF94A3B8),
                   size: 18,
                 ),
                 splashRadius: 18,
@@ -474,7 +474,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: AppColors.black,
+              color: AppColors.white,
             ),
             decoration: InputDecoration(
               hintText: 'Confirm New Password',
@@ -484,7 +484,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 color: AppColors.hint,
               ),
               filled: true,
-              fillColor: AppColors.white,
+              fillColor: AppColors.black,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 22,
                 vertical: 14,
@@ -494,7 +494,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   _isConfirmPasswordVisible
                       ? Icons.visibility_outlined
                       : Icons.visibility_off_outlined,
-                  color: AppColors.black,
+                  color: const Color(0xFF94A3B8),
                   size: 18,
                 ),
                 splashRadius: 18,
@@ -549,7 +549,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     }
                   },
             style: OutlinedButton.styleFrom(
-              backgroundColor: AppColors.white,
+              backgroundColor: AppColors.black,
               foregroundColor: AppColors.primary,
               side: const BorderSide(
                 color: AppColors.primary,
@@ -616,7 +616,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           style: GoogleFonts.sora(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: AppColors.black,
+            color: AppColors.white,
           ),
         ).animate().fadeIn(delay: 400.ms),
         const SizedBox(height: 16),

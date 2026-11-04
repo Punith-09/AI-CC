@@ -8,7 +8,7 @@ import "package:provider/provider.dart";
 import "../../../../core/constants/app_colors.dart";
 import "../../../../core/theme/theme_provider.dart";
 import "../../../messages/presentation/providers/messages_provider.dart";
-// import "../../messages/presentation/providers/messages_provider.dart";
+import "../../../notifications/presentation/providers/notifications_provider.dart";
 
 class HomeAppbar extends StatelessWidget {
   const HomeAppbar({super.key});
@@ -65,12 +65,54 @@ class HomeAppbar extends StatelessWidget {
           ),
           Row(
             children: [
-              IconButton(
-                onPressed: () {
-                  context.push(AppRoutes.activity);
+              // ─── Notification Bell with badge ───
+              Consumer<NotificationsProvider>(
+                builder: (_, notifProvider, __) {
+                  final unreadNotif = notifProvider.unreadNotifications.length;
+                  return Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          context.push(AppRoutes.activity);
+                        },
+                        icon: Icon(
+                          LucideIcons.bell,
+                          size: 26,
+                          color: isDark ? AppColors.white : AppColors.black,
+                        ),
+                      ),
+                      if (unreadNotif > 0)
+                        Positioned(
+                          right: 6,
+                          top: 6,
+                          child: Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFEF4444),
+                              shape: BoxShape.circle,
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Center(
+                              child: Text(
+                                unreadNotif > 9 ? '9+' : '$unreadNotif',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
                 },
-                icon:  Icon(LucideIcons.bell, size: 26,color: isDark?AppColors.white:AppColors.black),
               ),
+              // ─── Messages icon with badge ───
               Consumer<MessagesProvider>(
                 builder: (_, provider, __) {
                   final unread = provider.totalUnreadCount;
@@ -81,9 +123,10 @@ class HomeAppbar extends StatelessWidget {
                         onPressed: () {
                           context.push(AppRoutes.messages);
                         },
-                        icon: const Icon(
+                        icon: Icon(
                           LucideIcons.messageCircleMore,
                           size: 26,
+                          color: isDark ? AppColors.white : AppColors.black,
                         ),
                       ),
                       if (unread > 0)

@@ -14,7 +14,7 @@ class WelcomeScreen extends StatelessWidget {
 
     return
        Scaffold(
-        backgroundColor: AppColors.white,
+        backgroundColor: AppColors.black,
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -109,7 +109,7 @@ class WelcomeScreen extends StatelessWidget {
                           context: context,
                           text: 'Sign Up',
                           textColor: AppColors.primary,
-                          backgroundColor: AppColors.white,
+                          backgroundColor: AppColors.black,
                           borderColor: AppColors.primary,
                           fontSize: 16,
                           onTap: () {

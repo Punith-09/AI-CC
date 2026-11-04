@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../storage/local_storage.dart';
 
 class ThemeProvider extends ChangeNotifier {
-  ThemeMode _themeMode = ThemeMode.light;
+  ThemeMode _themeMode = ThemeMode.dark;
 
   ThemeMode get themeMode => _themeMode;
   bool get isDarkMode => _themeMode == ThemeMode.dark;
@@ -20,7 +20,7 @@ class ThemeProvider extends ChangeNotifier {
         _themeMode = ThemeMode.light;
       } else {
         // No saved preference — default to dark theme
-        _themeMode = ThemeMode.light;
+        _themeMode = ThemeMode.dark;
       }
       notifyListeners();
     } catch (_) {}
