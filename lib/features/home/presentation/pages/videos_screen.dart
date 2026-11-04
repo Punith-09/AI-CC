@@ -65,9 +65,9 @@ class _VideosScreenState extends State<VideosScreen> {
     Widget body;
 
     if (isLoading && videoPosts.isEmpty) {
-      body = const Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(
+      body = const ColoredBox(
+        color: Colors.black,
+        child: Center(
           child: CircularProgressIndicator(
             color: AppColors.primary,
             strokeWidth: 2.5,
@@ -75,9 +75,9 @@ class _VideosScreenState extends State<VideosScreen> {
         ),
       );
     } else if (videoPosts.isEmpty) {
-      body = Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(
+      body = ColoredBox(
+        color: Colors.black,
+        child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -122,9 +122,9 @@ class _VideosScreenState extends State<VideosScreen> {
         ),
       );
     } else {
-      body = Scaffold(
-        backgroundColor: Colors.black,
-        body: PageView.builder(
+      body = ColoredBox(
+        color: Colors.black,
+        child: PageView.builder(
           controller: _pageController,
           scrollDirection: Axis.vertical,
           itemCount: videoPosts.length,
@@ -147,13 +147,10 @@ class _VideosScreenState extends State<VideosScreen> {
     }
 
     if (isDesktop) {
-      return Scaffold(
-        backgroundColor: const Color(0xFF0F172A),
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: body,
-          ),
+      return Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: body,
         ),
       );
     }
@@ -186,7 +183,6 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
   bool _isLoading = true;
   bool _hasError = false;
   bool _isPlaying = true;
-  bool _showPlayPauseAnimation = false;
   bool _hasIncrementedView = false;
 
   String get effectiveMediaUrl =>
@@ -205,16 +201,24 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
     if (widget.isCurrent && !oldWidget.isCurrent) {
       if (_controller != null && _isInitialized) {
         _controller!.play();
-        setState(() => _isPlaying = true);
         _incrementViewIfNeeded();
       }
     } else if (!widget.isCurrent && oldWidget.isCurrent) {
       _controller?.pause();
-      setState(() => _isPlaying = false);
     }
 
     if (widget.isMuted != oldWidget.isMuted) {
       _controller?.setVolume(widget.isMuted ? 0.0 : 1.0);
+    }
+  }
+
+  void _onControllerUpdate() {
+    if (!mounted || _controller == null) return;
+    final isPlaying = _controller!.value.isPlaying;
+    if (_isPlaying != isPlaying) {
+      setState(() {
+        _isPlaying = isPlaying;
+      });
     }
   }
 
@@ -233,15 +237,17 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
       await controller.setLooping(true);
       await controller.setVolume(widget.isMuted ? 0.0 : 1.0);
 
+      controller.addListener(_onControllerUpdate);
+
       if (mounted) {
         setState(() {
           _isInitialized = true;
           _isLoading = false;
+          _isPlaying = widget.isCurrent;
         });
 
         if (widget.isCurrent) {
           controller.play();
-          setState(() => _isPlaying = true);
           _incrementViewIfNeeded();
         }
       }
@@ -264,28 +270,24 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
     }
   }
 
-  void _togglePlayPause() {
+  Future<void> _togglePlayPause() async {
     if (_controller == null || !_isInitialized) return;
 
-    if (_controller!.value.isPlaying) {
-      _controller!.pause();
-      setState(() {
-        _isPlaying = false;
-        _showPlayPauseAnimation = true;
-      });
-    } else {
-      _controller!.play();
-      setState(() {
-        _isPlaying = true;
-        _showPlayPauseAnimation = true;
-      });
-    }
+    final wasPlaying = _isPlaying || _controller!.value.isPlaying;
 
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (mounted) {
-        setState(() => _showPlayPauseAnimation = false);
-      }
+    setState(() {
+      _isPlaying = !wasPlaying;
     });
+
+    try {
+      if (wasPlaying) {
+        await _controller!.pause();
+      } else {
+        await _controller!.play();
+      }
+    } catch (e) {
+      debugPrint('Error toggling play/pause: $e');
+    }
   }
 
   void _showMoreOptions() {
@@ -365,15 +367,18 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
 
   @override
   void dispose() {
+    _controller?.removeListener(_onControllerUpdate);
     _controller?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).padding.bottom;
-    // Clearance for the bottom navigation bar so overlay items don't get covered
-    final controlsBottom = bottomInset + 82.0;
+    final mediaBottom = MediaQuery.of(context).padding.bottom;
+    // Scaffold(extendBody: true) accounts for the bottom navbar height in padding.bottom (~72px).
+    // Ensure we clear the navbar with a tight 12px margin, without duplicate empty voids.
+    final navClearance = mediaBottom >= 64.0 ? mediaBottom : (72.0 + mediaBottom);
+    final controlsBottom = navClearance + 12.0;
 
     final isFollowing = context.watch<HomeFeedProvider>().isFollowing(widget.post.creatorId);
     final myUserId = LocalStorage.instance.getUserId();
@@ -384,58 +389,66 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // 1. Video Layer & Tap Area
-        GestureDetector(
-          onTap: _togglePlayPause,
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            color: Colors.black,
-            child: _buildVideoContent(),
+        // 1. Video Layer (pure visual, clicks handled above it)
+        Container(
+          color: Colors.black,
+          child: _buildVideoContent(),
+        ),
+
+        // 2. Full-Screen Tap Recognizer for Play/Pause
+        Positioned.fill(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _togglePlayPause,
           ),
         ),
 
-        // 2. Play/Pause Animated Feedback
-        if (_showPlayPauseAnimation || !_isPlaying)
+        // 3. Play Button in Center when Paused (stays visible while paused)
+        if (_isInitialized && !_isPlaying)
           Center(
-            child: Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.5),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                _isPlaying ? Icons.play_arrow_rounded : Icons.pause_rounded,
-                color: Colors.white,
-                size: 40,
+            child: GestureDetector(
+              onTap: _togglePlayPause,
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.play_arrow_rounded,
+                  color: Colors.white,
+                  size: 48,
+                ),
               ),
             ),
           ),
 
-        // 3. Top-Left Badge (as shown in reference image)
-        Positioned(
-          top: MediaQuery.of(context).padding.top + 10,
-          left: 16,
-          child: Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.25),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.workspace_premium_rounded,
-              color: Color(0xFFFFB800),
-              size: 28,
-            ),
-          ),
-        ),
+        // 3. Top-Left Badge
+        // Positioned(
+        //   top: MediaQuery.of(context).padding.top + 10,
+        //   left: 16,
+        //   child: Container(
+        //     padding: const EdgeInsets.all(6),
+        //     decoration: BoxDecoration(
+        //       color: Colors.black.withValues(alpha: 0.25),
+        //       shape: BoxShape.circle,
+        //     ),
+        //     child: const Icon(
+        //       Icons.workspace_premium_rounded,
+        //       color: Color(0xFFFFB800),
+        //       size: 28,
+        //     ),
+        //   ),
+        // ),
 
-        // 4. Gradient Shade at Bottom for Text Readability
+        // 4. Subtle Gradient Shade at Bottom for Text Readability
         Positioned(
           left: 0,
           right: 0,
           bottom: 0,
-          height: 240,
+          height: 220,
           child: IgnorePointer(
             child: Container(
               decoration: BoxDecoration(
@@ -443,8 +456,8 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                    Colors.black.withValues(alpha: 0.85),
-                    Colors.black.withValues(alpha: 0.3),
+                    Colors.black.withValues(alpha: 0.8),
+                    Colors.black.withValues(alpha: 0.25),
                     Colors.transparent,
                   ],
                 ),
@@ -467,7 +480,7 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
                 iconColor: Colors.white,
                 onTap: widget.onToggleMute,
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
 
               // Like
               _ReelActionButton(
@@ -478,7 +491,7 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
                   context.read<HomeFeedProvider>().toggleLike(widget.post.id);
                 },
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
 
               // Comment
               _ReelActionButton(
@@ -495,7 +508,7 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
                   );
                 },
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
 
               // Views
               _ReelActionButton(
@@ -504,7 +517,7 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
                 label: '${widget.post.viewsCount}',
                 onTap: null,
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
 
               // Share
               _ReelActionButton(
@@ -515,7 +528,7 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
                   Share.share(effectiveMediaUrl, subject: widget.post.title);
                 },
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 14),
 
               // More (Three dots)
               _ReelActionButton(
@@ -530,7 +543,7 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
         // 6. Bottom-Left Information (Creator, Follow, Timestamp, Title/Caption)
         Positioned(
           left: 16,
-          right: 80,
+          right: 76,
           bottom: controlsBottom,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -552,7 +565,7 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
                         border: Border.all(color: Colors.white, width: 1.5),
                       ),
                       child: UserAvatar(
-                        radius: 18,
+                        radius: 17,
                         imageUrl: widget.post.creatorPic,
                         name: widget.post.creatorName,
                       ),
@@ -609,7 +622,7 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
                   ],
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
 
               // Timestamp (e.g. "20hrs ago")
               Text(
@@ -623,33 +636,27 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
                 ),
               ),
 
-              // Title / Description
+              // Title
               if (widget.post.title.isNotEmpty) ...[
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    const Icon(Icons.play_arrow_rounded, color: Colors.redAccent, size: 16),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        widget.post.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          shadows: [
-                            Shadow(blurRadius: 4, color: Colors.black87),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 4),
+                Text(
+                  widget.post.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    shadows: [
+                      Shadow(blurRadius: 4, color: Colors.black87),
+                    ],
+                  ),
                 ),
               ],
+
+              // Description / Caption
               if (widget.post.description.isNotEmpty) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Text(
                   widget.post.description,
                   maxLines: 2,
@@ -667,19 +674,23 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
           ),
         ),
 
-        // 7. Video Progress Line
+        // 7. Video Progress Line flush right on top of the navbar
         if (_controller != null && _isInitialized)
           Positioned(
             left: 0,
             right: 0,
-            bottom: controlsBottom - 10,
-            child: VideoProgressIndicator(
-              _controller!,
-              allowScrubbing: true,
-              colors: const VideoProgressColors(
-                playedColor: AppColors.primary,
-                bufferedColor: Colors.white24,
-                backgroundColor: Colors.transparent,
+            bottom: navClearance,
+            child: SizedBox(
+              height: 2.0,
+              child: VideoProgressIndicator(
+                _controller!,
+                allowScrubbing: true,
+                padding: EdgeInsets.zero,
+                colors: const VideoProgressColors(
+                  playedColor: AppColors.primary,
+                  bufferedColor: Colors.white24,
+                  backgroundColor: Colors.transparent,
+                ),
               ),
             ),
           ),
@@ -737,7 +748,9 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
           child: SizedBox(
             width: _controller!.value.size.width,
             height: _controller!.value.size.height,
-            child: VideoPlayer(_controller!),
+            child: IgnorePointer(
+              child: VideoPlayer(_controller!),
+            ),
           ),
         ),
       ),
@@ -767,7 +780,7 @@ class _ReelActionButton extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.25),
               shape: BoxShape.circle,
@@ -787,7 +800,7 @@ class _ReelActionButton extends StatelessWidget {
               label!,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 11.5,
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
                 shadows: [
                   Shadow(blurRadius: 4, color: Colors.black87),

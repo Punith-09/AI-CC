@@ -10,6 +10,7 @@ import '../../../notifications/presentation/providers/notifications_provider.dar
 import '../../../stories/presentation/providers/stories_provider.dart';
 import '../../../artist_profile/presentation/providers/profile_provider.dart';
 import '../providers/home_feed_provider.dart';
+import '../widgets/complete_profile_card.dart';
 import '../widgets/feed_card.dart';
 import '../widgets/home_appbar.dart';
 import '../widgets/stories_list.dart';
@@ -32,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context.read<MessagesProvider>().fetchChats(silent: true);
       context.read<StoriesProvider>().fetchStories(silent: true);
       context.read<ProfileProvider>().fetchMyProfile();
+      context.read<ProfileProvider>().fetchProfileCompletion();
       context.read<NotificationsProvider>().fetchNotifications(silent: true);
     });
   }
@@ -53,6 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
         await Future.wait([
           feedProvider.refreshFeed(),
           context.read<StoriesProvider>().fetchStories(silent: true),
+          context.read<ProfileProvider>().fetchProfileCompletion(),
         ]);
       },
       child: ListView.separated(
@@ -71,9 +74,15 @@ class _HomeScreenState extends State<HomeScreen> {
           return const SizedBox(height: 24);
         },
         itemBuilder: (context, index) {
-          // 1. Stories at the top
+          // 1. Stories at the top, then Complete Profile Card before feed posts
           if (index == 0) {
-            return const StoriesList();
+            return const Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                StoriesList(),
+                CompleteProfileCard(),
+              ],
+            );
           }
 
           final postIndex = index - 1;

@@ -54,7 +54,7 @@ class CustomBottomNavbar extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor ?? (isDark ? AppColors.darkCard : Colors.white),
         borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(24),
+          top: Radius.circular(0),
         ),
         border: Border(
           top: BorderSide(
