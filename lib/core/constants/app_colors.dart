@@ -60,6 +60,7 @@ class AppColors {
   static const Color card = Color(0xFFFFFFFF);
   static const Color textField = Color(0xFFF3F4F6);
   static const Color logo = Color(0xFF111827);
+  static const Color favorite = Color(0xFFAA0027);
 
   static const Color black = Color(0xFF000000);
   static const Color blackShade = Color(0xFF1F2937);

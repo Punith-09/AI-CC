@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/storage/local_storage.dart';
-import '../../../stories/data/models/story_item_model.dart';
 import '../../../stories/data/models/user_stories_group_model.dart';
 import '../../../stories/presentation/pages/story_viewer_screen.dart';
 import '../../../stories/presentation/providers/stories_provider.dart';
@@ -18,76 +17,6 @@ class StoriesList extends StatefulWidget {
 }
 
 class _StoriesListState extends State<StoriesList> {
-  // Built-in community stories matching the Figma design to ensure home screen is lively
-  static final List<UserStoriesGroupModel> _demoCommunityStories = [
-    UserStoriesGroupModel(
-      creatorId: 'demo_priya',
-      creatorName: 'Priya',
-      creatorUsername: 'priya_roy',
-      creatorPic: 'assets/images/profile2.jpeg',
-      hasUnviewed: true,
-      items: [
-        StoryItemModel(
-          id: 'demo_s1',
-          mediaUrl: 'assets/images/profile2.jpeg',
-          mediaType: 'image',
-          createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-        ),
-        StoryItemModel(
-          id: 'demo_s2',
-          mediaUrl: 'assets/images/post1.jpeg',
-          mediaType: 'image',
-          createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-        ),
-      ],
-    ),
-    UserStoriesGroupModel(
-      creatorId: 'demo_shirisha',
-      creatorName: 'Shirisha',
-      creatorUsername: 'shirisha_k',
-      creatorPic: 'assets/images/profile4.jpeg',
-      hasUnviewed: true,
-      items: [
-        StoryItemModel(
-          id: 'demo_s3',
-          mediaUrl: 'assets/images/profile4.jpeg',
-          mediaType: 'image',
-          createdAt: DateTime.now().subtract(const Duration(hours: 3)),
-        ),
-      ],
-    ),
-    UserStoriesGroupModel(
-      creatorId: 'demo_anjali',
-      creatorName: 'Anjali',
-      creatorUsername: 'anjali_art',
-      creatorPic: 'assets/images/profile3.jpeg',
-      hasUnviewed: true,
-      items: [
-        StoryItemModel(
-          id: 'demo_s4',
-          mediaUrl: 'assets/images/profile3.jpeg',
-          mediaType: 'image',
-          createdAt: DateTime.now().subtract(const Duration(hours: 4)),
-        ),
-      ],
-    ),
-    UserStoriesGroupModel(
-      creatorId: 'demo_meena',
-      creatorName: 'Meena',
-      creatorUsername: 'meena_v',
-      creatorPic: 'assets/images/profile5.jpeg',
-      hasUnviewed: true,
-      items: [
-        StoryItemModel(
-          id: 'demo_s5',
-          mediaUrl: 'assets/images/profile5.jpeg',
-          mediaType: 'image',
-          createdAt: DateTime.now().subtract(const Duration(hours: 5)),
-        ),
-      ],
-    ),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -114,10 +43,7 @@ class _StoriesListState extends State<StoriesList> {
     final myStoriesGroup = storiesProvider.myStoriesGroup;
     final hasMyStory = storiesProvider.hasMyStory;
 
-    // Prefer server stories; combine with demo community stories if server list is empty
-    final serverOtherStories = storiesProvider.otherStoriesGroups;
-    final otherGroups = serverOtherStories.isNotEmpty ? serverOtherStories : _demoCommunityStories;
-
+    final otherGroups = storiesProvider.otherStoriesGroups;
     final myProfilePic = LocalStorage.instance.getUserProfilePhoto();
 
     // Build the complete list of groups for viewer navigation

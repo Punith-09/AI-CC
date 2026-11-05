@@ -326,39 +326,32 @@ class _StepItem extends StatelessWidget {
 
           const SizedBox(width: 8),
 
-          // 4. Action Button or Done Badge
+          // 4. Action Button or Done Badge (Disabled once completed)
           if (isCompleted)
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onTap,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: Colors.green.withValues(alpha: 0.3),
-                      width: 1,
+                border: Border.all(
+                  color: Colors.green.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.check_circle_rounded, color: Colors.green, size: 14),
+                  SizedBox(width: 4),
+                  Text(
+                    'Done',
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.check_circle_rounded, color: Colors.green, size: 14),
-                      SizedBox(width: 4),
-                      Text(
-                        'Done',
-                        style: TextStyle(
-                          color: Colors.green,
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                ],
               ),
             )
           else

@@ -485,7 +485,7 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
               // Like
               _ReelActionButton(
                 icon: widget.post.liked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                iconColor: widget.post.liked ? Colors.redAccent : Colors.white,
+                iconColor: widget.post.liked ? AppColors.favorite : Colors.white,
                 label: '${widget.post.likesCount}',
                 onTap: () {
                   context.read<HomeFeedProvider>().toggleLike(widget.post.id);
