@@ -206,11 +206,11 @@ class _TrendingAuditionsCard extends StatelessWidget {
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             color: cardBg,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: cardBorder,
-              width: 1,
-            ),
+            // borderRadius: BorderRadius.circular(16),
+            // border: Border.all(
+            //   color: cardBorder,
+            //   width: 1,
+            // ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.03),
