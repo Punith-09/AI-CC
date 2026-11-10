@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../../../core/storage/local_storage.dart';
 import '../../../../features/home/data/models/feed_post_model.dart';
 import 'artist_model.dart';
 
@@ -125,7 +126,23 @@ class PortfolioModel {
       parsedViewsCount = int.tryParse(rawViews) ?? 0;
     }
 
-    final isLiked = json['liked'] == true || json['isLiked'] == true || json['is_liked'] == true;
+    bool isLiked = json['liked'] == true || json['isLiked'] == true || json['is_liked'] == true;
+    if (!isLiked && rawLikes is List) {
+      try {
+        final currentUserId = LocalStorage.instance.getUserId();
+        if (currentUserId != null && currentUserId.isNotEmpty) {
+          isLiked = rawLikes.any((like) {
+            if (like == null) return false;
+            if (like is String) return like == currentUserId;
+            if (like is Map) {
+              final uid = (like['_id'] ?? like['id'] ?? like['userId'] ?? like['user'])?.toString();
+              return uid == currentUserId;
+            }
+            return like.toString() == currentUserId;
+          });
+        }
+      } catch (_) {}
+    }
 
     return PortfolioModel(
       id: (json['id'] ?? json['_id'])?.toString() ?? '',

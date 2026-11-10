@@ -611,6 +611,82 @@ class ProfileProvider with ChangeNotifier {
     }
   }
 
+  void syncMediaLike(
+    String mediaId, {
+    String? mediaUrl,
+    required bool liked,
+    required int likesCount,
+  }) {
+    bool changed = false;
+
+    bool matches(PortfolioModel m) {
+      if (mediaId.isNotEmpty && m.id.isNotEmpty && (m.id == mediaId || m.id.endsWith(mediaId))) {
+        return true;
+      }
+      if (mediaUrl != null && mediaUrl.isNotEmpty) {
+        final targetKey = cleanMediaKey(mediaUrl);
+        if (targetKey.isNotEmpty) {
+          if (m.isVideo && cleanMediaKey(m.videoUrl) == targetKey) return true;
+          if (cleanMediaKey(m.image) == targetKey) return true;
+        }
+      }
+      return false;
+    }
+
+    PortfolioModel update(PortfolioModel m) => m.copyWith(
+          liked: liked,
+          likesCount: likesCount,
+        );
+
+    for (int i = 0; i < _viewedMedia.length; i++) {
+      if (matches(_viewedMedia[i])) {
+        _viewedMedia[i] = update(_viewedMedia[i]);
+        changed = true;
+      }
+    }
+
+    for (int i = 0; i < _myMedia.length; i++) {
+      if (matches(_myMedia[i])) {
+        _myMedia[i] = update(_myMedia[i]);
+        changed = true;
+      }
+    }
+
+    if (_viewedProfile != null && _viewedProfile!.portfolio.isNotEmpty) {
+      final updated = List<PortfolioModel>.from(_viewedProfile!.portfolio);
+      bool pChanged = false;
+      for (int i = 0; i < updated.length; i++) {
+        if (matches(updated[i])) {
+          updated[i] = update(updated[i]);
+          pChanged = true;
+        }
+      }
+      if (pChanged) {
+        _viewedProfile = _viewedProfile!.copyWith(portfolio: updated);
+        changed = true;
+      }
+    }
+
+    if (_currentProfile != null && _currentProfile!.portfolio.isNotEmpty) {
+      final updated = List<PortfolioModel>.from(_currentProfile!.portfolio);
+      bool pChanged = false;
+      for (int i = 0; i < updated.length; i++) {
+        if (matches(updated[i])) {
+          updated[i] = update(updated[i]);
+          pChanged = true;
+        }
+      }
+      if (pChanged) {
+        _currentProfile = _currentProfile!.copyWith(portfolio: updated);
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      notifyListeners();
+    }
+  }
+
   void clear() {
     _followingUserIds.clear();
     _followLoadingUserIds.clear();

@@ -143,7 +143,14 @@ class _AuditionScreenState extends State<AuditionScreen>
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _buildTabBar(isDark),
+              child: isDesktop
+                  ? Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 600),
+                        child: _buildTabBar(isDark),
+                      ),
+                    )
+                  : _buildTabBar(isDark),
             ),
           ),
 

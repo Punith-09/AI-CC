@@ -283,6 +283,9 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
           _post = _post.copyWith(commentsCount: _comments.length);
           _isPostingComment = false;
         });
+        try {
+          context.read<HomeFeedProvider>().updateCommentsCount(_post.id, _comments.length);
+        } catch (_) {}
       }
     } catch (e) {
       if (mounted) {
@@ -308,6 +311,37 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   // ACTIONS (LIKE, FOLLOW, MESSAGE, SHARE)
   // =========================================================
 
+  void _syncLikeAcrossProviders({required bool liked, required int likesCount}) {
+    if (_post.id.isEmpty) return;
+    try {
+      context.read<HomeFeedProvider>().syncPostLike(
+        _post.id,
+        liked: liked,
+        likesCount: likesCount,
+      );
+    } catch (_) {}
+
+    try {
+      if (sl.isRegistered<ProfileProvider>()) {
+        sl<ProfileProvider>().syncMediaLike(
+          _post.id,
+          mediaUrl: _post.mediaUrl,
+          liked: liked,
+          likesCount: likesCount,
+        );
+      }
+    } catch (_) {}
+
+    try {
+      context.read<ProfileProvider>().syncMediaLike(
+        _post.id,
+        mediaUrl: _post.mediaUrl,
+        liked: liked,
+        likesCount: likesCount,
+      );
+    } catch (_) {}
+  }
+
   Future<void> _toggleLike() async {
     if (_post.id.isEmpty) return;
 
@@ -331,16 +365,9 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
     setState(() {
       _post = _post.copyWith(liked: isLiked, likesCount: likesCount);
     });
+    _syncLikeAcrossProviders(liked: isLiked, likesCount: likesCount);
 
     try {
-      try {
-        context.read<HomeFeedProvider>().syncPostLike(
-          _post.id,
-          liked: isLiked,
-          likesCount: likesCount,
-        );
-      } catch (_) {}
-
       final res = await sl<HomeRepository>().toggleLike(
         id: _post.id,
         isVideo: _post.isVideo,
@@ -367,13 +394,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
               likesCount: finalCount,
             );
           });
-          try {
-            context.read<HomeFeedProvider>().syncPostLike(
-              _post.id,
-              liked: finalLiked,
-              likesCount: finalCount,
-            );
-          } catch (_) {}
+          _syncLikeAcrossProviders(liked: finalLiked, likesCount: finalCount);
         }
       }
     } catch (e) {
@@ -381,13 +402,10 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
         setState(() {
           _post = originalPost;
         });
-        try {
-          context.read<HomeFeedProvider>().syncPostLike(
-            _post.id,
-            liked: originalPost.liked,
-            likesCount: originalPost.likesCount,
-          );
-        } catch (_) {}
+        _syncLikeAcrossProviders(
+          liked: originalPost.liked,
+          likesCount: originalPost.likesCount,
+        );
 
         // TODO: Re-enable subscription revert/limit logic when ready
         // if (isLiked) {

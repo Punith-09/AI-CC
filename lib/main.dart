@@ -35,11 +35,13 @@ import 'features/live_stats/presentation/providers/live_stats_provider.dart';
 import 'features/notifications/presentation/providers/notifications_provider.dart';
 import 'core/services/deep_link_service.dart';
 import 'core/services/push_notification_service.dart';
+import 'core/utils/url_strategy/url_strategy_helper.dart';
 import 'features/notifications/presentation/widgets/foreground_notification_banner.dart';
 import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  configureUrlStrategy();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );

@@ -374,11 +374,16 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
     final mediaBottom = MediaQuery.of(context).padding.bottom;
-    // Scaffold(extendBody: true) accounts for the bottom navbar height in padding.bottom (~72px).
-    // Ensure we clear the navbar with a tight 12px margin, without duplicate empty voids.
-    final navClearance = mediaBottom >= 64.0 ? mediaBottom : (72.0 + mediaBottom);
-    final controlsBottom = navClearance + 12.0;
+    // On mobile, Scaffold(extendBody: true) places the body behind the bottom navbar (~72px).
+    // On web/desktop, there is no bottom navbar, so controls should be positioned cleanly at the bottom.
+    final navClearance = isDesktop
+        ? 0.0
+        : (mediaBottom >= 64.0 ? mediaBottom : (72.0 + mediaBottom));
+    final controlsBottom = isDesktop
+        ? 16.0
+        : (navClearance + 12.0);
 
     final isFollowing = context.watch<HomeFeedProvider>().isFollowing(widget.post.creatorId);
     final myUserId = LocalStorage.instance.getUserId();
@@ -499,13 +504,21 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
                 iconColor: Colors.white,
                 label: '${widget.post.commentsCount}',
                 onTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    barrierColor: Colors.black.withValues(alpha: 0.65),
-                    builder: (context) => CommentsBottomSheet(post: widget.post),
-                  );
+                  if (isDesktop) {
+                    _controller?.pause();
+                    context.push(
+                      '${AppRoutes.watchVideo}?focusComment=true',
+                      extra: widget.post,
+                    );
+                  } else {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      barrierColor: Colors.black.withValues(alpha: 0.65),
+                      builder: (context) => CommentsBottomSheet(post: widget.post),
+                    );
+                  }
                 },
               ),
               const SizedBox(height: 14),

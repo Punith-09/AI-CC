@@ -1152,7 +1152,19 @@ class _GalleryTab extends StatelessWidget {
           item: item,
           onDelete: onDelete != null ? () => onDelete!(item) : null,
           onTap: () {
-            final post = item.toFeedPostModel(artist: profile);
+            var post = item.toFeedPostModel(artist: profile);
+            try {
+              final homePosts = context.read<HomeFeedProvider>().posts;
+              final match = homePosts.firstWhere(
+                (p) => (p.id.isNotEmpty && p.id == post.id) ||
+                    (p.mediaUrl.isNotEmpty && (p.mediaUrl == post.mediaUrl || p.mediaUrl == item.image || p.mediaUrl == item.videoUrl)),
+              );
+              post = post.copyWith(
+                liked: match.liked,
+                likesCount: match.likesCount,
+              );
+            } catch (_) {}
+
             final enrichedPost = post.copyWith(
               creatorId: (post.creatorId != null && post.creatorId!.isNotEmpty)
                   ? post.creatorId

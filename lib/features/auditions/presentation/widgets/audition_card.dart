@@ -501,12 +501,16 @@ class AuditionCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             if (formattedDeadline.isNotEmpty)
-              Text(
-                'Apply before $formattedDeadline',
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
+              Flexible(
+                child: Text(
+                  'Apply before $formattedDeadline',
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             if (daysLeft >= 0 || daysLeft == 0)

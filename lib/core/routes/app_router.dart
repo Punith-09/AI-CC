@@ -238,8 +238,19 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.watchVideo,
       builder: (context, state) {
         final extra = state.extra;
+        final autoFocus = state.uri.queryParameters['focusComment'] == 'true' ||
+            (extra is Map && extra['autoFocusComment'] == true);
         if (extra is FeedPostModel) {
-          return WatchMediaScreen(post: extra);
+          return WatchMediaScreen(
+            post: extra,
+            autoFocusComment: autoFocus,
+          );
+        }
+        if (extra is Map && extra['post'] is FeedPostModel) {
+          return WatchMediaScreen(
+            post: extra['post'] as FeedPostModel,
+            autoFocusComment: autoFocus,
+          );
         }
         // Notification tap passes a String post/video ID
         if (extra is String && extra.isNotEmpty) {

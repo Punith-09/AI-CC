@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../apply_job/presentation/providers/apply_job_provider.dart';
 import '../../data/models/audition_model.dart';
@@ -83,7 +84,48 @@ class AuditionCards extends StatelessWidget {
     final list = (auditions != null && auditions!.isNotEmpty)
         ? auditions!
         : const [demoAudition];
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
 
+    if (isDesktop) {
+      // 3 audition cards per row for web/desktop view
+      final List<List<AuditionModel>> rows = [];
+      for (int i = 0; i < list.length; i += 3) {
+        final end = (i + 3 < list.length) ? i + 3 : list.length;
+        rows.add(list.sublist(i, end));
+      }
+
+      return Column(
+        children: rows.map((row) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (int i = 0; i < 3; i++) ...[
+                if (i < row.length)
+                  Expanded(
+                    child: AuditionCard(
+                      audition: row[i],
+                      isPast: isPast,
+                      onView: () => context.push(
+                        AppRoutes.auditionDetails,
+                        extra: row[i],
+                      ),
+                      onApply: () => _applyDirectly(context, row[i]),
+                      onDelete: row[i].applied
+                          ? () => _confirmAndDelete(context, row[i])
+                          : null,
+                    ),
+                  )
+                else
+                  const Expanded(child: SizedBox()),
+                if (i < 2) const SizedBox(width: 20),
+              ],
+            ],
+          );
+        }).toList(),
+      );
+    }
+
+    // Mobile view: 1 audition card per row (full width)
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),

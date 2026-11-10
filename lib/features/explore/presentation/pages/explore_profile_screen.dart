@@ -10,6 +10,7 @@ import 'package:aicc/features/artist_profile/data/models/artist_model.dart';
 import 'package:aicc/features/artist_profile/data/models/portfolio_model.dart';
 import 'package:aicc/features/artist_profile/presentation/providers/profile_provider.dart';
 import 'package:aicc/features/home/data/models/feed_post_model.dart';
+import 'package:aicc/features/home/presentation/providers/home_feed_provider.dart';
 import 'package:aicc/features/messages/presentation/providers/messages_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -1137,7 +1138,19 @@ class _ArtistPortfolioGrid extends StatelessWidget {
   });
 
   void _openMedia(BuildContext context, PortfolioModel item) {
-    final post = item.toFeedPostModel(artist: profile);
+    var post = item.toFeedPostModel(artist: profile);
+    try {
+      final homePosts = context.read<HomeFeedProvider>().posts;
+      final match = homePosts.firstWhere(
+        (p) => (p.id.isNotEmpty && p.id == post.id) ||
+            (p.mediaUrl.isNotEmpty && (p.mediaUrl == post.mediaUrl || p.mediaUrl == item.image || p.mediaUrl == item.videoUrl)),
+      );
+      post = post.copyWith(
+        liked: match.liked,
+        likesCount: match.likesCount,
+      );
+    } catch (_) {}
+
     final enrichedPost = post.copyWith(
       creatorId: (post.creatorId != null && post.creatorId!.isNotEmpty)
           ? post.creatorId

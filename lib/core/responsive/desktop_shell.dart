@@ -24,7 +24,7 @@ class DesktopShell extends StatelessWidget {
       case AppRoutes.explore:
         return 920.0;
       case AppRoutes.auditions:
-        return 860.0;
+        return 1200.0;
       case AppRoutes.artistProfile:
       case AppRoutes.subscription:
       case AppRoutes.editArtistProfile:

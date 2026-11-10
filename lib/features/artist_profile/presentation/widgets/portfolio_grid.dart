@@ -3,7 +3,9 @@ import 'package:aicc/core/responsive/responsive_breakpoints.dart';
 import 'package:aicc/core/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
+import '../../../../features/home/presentation/providers/home_feed_provider.dart';
 import '../../data/models/artist_model.dart';
 import '../../data/models/portfolio_model.dart';
 import 'portfolio_card.dart';
@@ -89,7 +91,19 @@ class PortfolioGrid extends StatelessWidget {
           item: item,
           onDelete: onDelete != null ? () => onDelete!(item) : null,
           onTap: () {
-            final post = item.toFeedPostModel(artist: profile);
+            var post = item.toFeedPostModel(artist: profile);
+            try {
+              final homePosts = context.read<HomeFeedProvider>().posts;
+              final match = homePosts.firstWhere(
+                (p) => (p.id.isNotEmpty && p.id == post.id) ||
+                    (p.mediaUrl.isNotEmpty && (p.mediaUrl == post.mediaUrl || p.mediaUrl == item.image || p.mediaUrl == item.videoUrl)),
+              );
+              post = post.copyWith(
+                liked: match.liked,
+                likesCount: match.likesCount,
+              );
+            } catch (_) {}
+
             final enrichedPost = post.copyWith(
               creatorId: (post.creatorId != null && post.creatorId!.isNotEmpty)
                   ? post.creatorId
