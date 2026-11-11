@@ -7,7 +7,8 @@ import '../models/feed_post_model.dart';
 
 abstract class HomeRemoteDataSource {
   Future<List<PhotoModel>> getPhotos();
-  Future<List<VideoModel>> getVideos();
+  Future<List<VideoModel>> getVideos({int? limit, int? offset});
+  Future<List<FeedPostModel>> getVideosFeed({int limit = 4, int offset = 0});
   Future<FeedPostModel?> getVideoById(String id);
   Future<List<FeedPostModel>> getFeedPosts();
   Future<Map<String, dynamic>> toggleLike({required String id, required bool isVideo});
@@ -20,6 +21,8 @@ abstract class HomeRemoteDataSource {
 
 class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   final DioClient _dioClient;
+  Map<String, dynamic>? _cachedUserMeta;
+  DateTime? _userMetaLastFetched;
 
   HomeRemoteDataSourceImpl(this._dioClient);
 
@@ -51,9 +54,16 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   }
 
   @override
-  Future<List<VideoModel>> getVideos() async {
+  Future<List<VideoModel>> getVideos({int? limit, int? offset}) async {
+    final queryParams = <String, dynamic>{};
+    if (limit != null) queryParams['limit'] = limit;
+    if (offset != null) queryParams['offset'] = offset;
+
     try {
-      final response = await _dioClient.get(ApiEndpoints.videos);
+      final response = await _dioClient.get(
+        ApiEndpoints.videos,
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
 
       dynamic listData;
       if (response.data is List) {
@@ -73,6 +83,9 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       }
       return [];
     } catch (e) {
+      if (limit != null || offset != null) {
+        rethrow;
+      }
       return [];
     }
   }
@@ -152,20 +165,123 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     };
   }
 
+  Future<Map<String, dynamic>> _getUserMetaCached() async {
+    final now = DateTime.now();
+    if (_cachedUserMeta != null &&
+        _userMetaLastFetched != null &&
+        now.difference(_userMetaLastFetched!).inMinutes < 5) {
+      return _cachedUserMeta!;
+    }
+    final meta = await _fetchUserLocations();
+    _cachedUserMeta = meta;
+    _userMetaLastFetched = now;
+    return meta;
+  }
+
+  FeedPostModel _enrichPost(FeedPostModel post, Map<String, dynamic> userMeta) {
+    final userLocations = (userMeta['locations'] as Map<String, String>?) ?? {};
+    final nameToId = (userMeta['nameToId'] as Map<String, String>?) ?? {};
+    final idToUser = (userMeta['idToUser'] as Map<String, Map<String, String>>?) ?? {};
+
+    var enriched = post;
+
+    // If creatorId is missing, resolve it from nameToId
+    if (enriched.creatorId == null || enriched.creatorId!.isEmpty) {
+      final id = nameToId[enriched.creatorName.toLowerCase().trim()];
+      if (id != null && id.isNotEmpty) {
+        enriched = enriched.copyWith(creatorId: id);
+      }
+    }
+
+    // Enrich creatorName / creatorPic / creatorCategory from user directory
+    final cId = enriched.creatorId;
+    if (cId != null && cId.isNotEmpty) {
+      final userInfo = idToUser[cId];
+      if (userInfo != null) {
+        final resolvedName = userInfo['name'] ?? '';
+        final resolvedPic = userInfo['pic'] ?? '';
+        final resolvedRole = userInfo['role'] ?? '';
+        // Only overwrite if currently empty / generic fallback
+        final needsName = enriched.creatorName.isEmpty ||
+            enriched.creatorName == 'Creator' ||
+            enriched.creatorName == 'Actor';
+        final needsPic = enriched.creatorPic == null || enriched.creatorPic!.isEmpty;
+        final needsRole = enriched.creatorCategory == null ||
+            enriched.creatorCategory!.isEmpty ||
+            enriched.creatorCategory == 'Artist' ||
+            enriched.creatorCategory == 'Actor';
+        if ((needsName && resolvedName.isNotEmpty) ||
+            (needsPic && resolvedPic.isNotEmpty) ||
+            (needsRole && resolvedRole.isNotEmpty)) {
+          enriched = enriched.copyWith(
+            creatorName: needsName && resolvedName.isNotEmpty
+                ? resolvedName
+                : null,
+            creatorPic: needsPic && resolvedPic.isNotEmpty ? resolvedPic : null,
+            creatorCategory: needsRole && resolvedRole.isNotEmpty ? resolvedRole : null,
+          );
+        }
+      }
+    }
+
+    // Enrich location dynamically from creator profile if not on post object
+    if (enriched.location.isEmpty) {
+      String? loc;
+      if (enriched.creatorId != null && enriched.creatorId!.isNotEmpty) {
+        loc = userLocations[enriched.creatorId!];
+      }
+      if (loc == null || loc.isEmpty) {
+        loc = userLocations[enriched.creatorName.toLowerCase().trim()];
+      }
+      if (loc != null && loc.isNotEmpty) {
+        enriched = enriched.copyWith(location: loc);
+      }
+    }
+
+    return enriched;
+  }
+
+  @override
+  Future<List<FeedPostModel>> getVideosFeed({int limit = 4, int offset = 0}) async {
+    final videos = await getVideos(limit: limit, offset: offset);
+    if (videos.isEmpty) return [];
+
+    Map<String, dynamic> userMeta = {};
+    try {
+      userMeta = await _getUserMetaCached();
+    } catch (_) {}
+
+    final List<FeedPostModel> feedPosts = [];
+    for (final video in videos) {
+      final isVid = FeedPostModel.isVideoMediaUrl(video.url, category: video.category);
+      if (!isVid || (video.category ?? '').trim().toLowerCase() == 'photos') {
+        continue;
+      }
+      final post = FeedPostModel.fromVideoModel(video);
+      feedPosts.add(_enrichPost(post, userMeta));
+    }
+
+    // Client-side slice if backend returned all items at once without server-side pagination
+    if (videos.length > limit) {
+      if (offset >= feedPosts.length) return [];
+      final end = (offset + limit < feedPosts.length) ? offset + limit : feedPosts.length;
+      return feedPosts.sublist(offset, end);
+    }
+
+    return feedPosts;
+  }
+
   @override
   Future<List<FeedPostModel>> getFeedPosts() async {
     final results = await Future.wait([
       getPhotos(),
       getVideos(),
-      _fetchUserLocations(),
+      _getUserMetaCached(),
     ]);
 
     final photos = results[0] as List<PhotoModel>;
     final videos = results[1] as List<VideoModel>;
     final userMeta = results[2] as Map<String, dynamic>;
-    final userLocations = (userMeta['locations'] as Map<String, String>?) ?? {};
-    final nameToId = (userMeta['nameToId'] as Map<String, String>?) ?? {};
-    final idToUser = (userMeta['idToUser'] as Map<String, Map<String, String>>?) ?? {};
 
     final List<FeedPostModel> rawFeed = [
       ...photos.map(FeedPostModel.fromPhotoModel),
@@ -188,58 +304,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
         continue; // Skip duplicate URL
       }
 
-      // If creatorId is missing, resolve it from nameToId
-      if (post.creatorId == null || post.creatorId!.isEmpty) {
-        final id = nameToId[post.creatorName.toLowerCase().trim()];
-        if (id != null && id.isNotEmpty) {
-          post = post.copyWith(creatorId: id);
-        }
-      }
-
-      // Enrich creatorName / creatorPic / creatorCategory from user directory
-      final cId = post.creatorId;
-      if (cId != null && cId.isNotEmpty) {
-        final userInfo = idToUser[cId];
-        if (userInfo != null) {
-          final resolvedName = userInfo['name'] ?? '';
-          final resolvedPic = userInfo['pic'] ?? '';
-          final resolvedRole = userInfo['role'] ?? '';
-          // Only overwrite if currently empty / generic fallback
-          final needsName = post.creatorName.isEmpty ||
-              post.creatorName == 'Creator' ||
-              post.creatorName == 'Actor';
-          final needsPic = post.creatorPic == null || post.creatorPic!.isEmpty;
-          final needsRole = post.creatorCategory == null ||
-              post.creatorCategory!.isEmpty ||
-              post.creatorCategory == 'Artist' ||
-              post.creatorCategory == 'Actor';
-          if ((needsName && resolvedName.isNotEmpty) ||
-              (needsPic && resolvedPic.isNotEmpty) ||
-              (needsRole && resolvedRole.isNotEmpty)) {
-            post = post.copyWith(
-              creatorName: needsName && resolvedName.isNotEmpty
-                  ? resolvedName
-                  : null,
-              creatorPic: needsPic && resolvedPic.isNotEmpty ? resolvedPic : null,
-              creatorCategory: needsRole && resolvedRole.isNotEmpty ? resolvedRole : null,
-            );
-          }
-        }
-      }
-
-      // Enrich location dynamically from creator profile if not on post object
-      if (post.location.isEmpty) {
-        String? loc;
-        if (post.creatorId != null && post.creatorId!.isNotEmpty) {
-          loc = userLocations[post.creatorId!];
-        }
-        if (loc == null || loc.isEmpty) {
-          loc = userLocations[post.creatorName.toLowerCase().trim()];
-        }
-        if (loc != null && loc.isNotEmpty) {
-          post = post.copyWith(location: loc);
-        }
-      }
+      post = _enrichPost(post, userMeta);
 
       if (hasId) seenIds.add(post.id);
       if (hasUrl) seenUrls.add(post.mediaUrl);
@@ -269,11 +334,11 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       final response = await _dioClient.get('/videos/$id');
       dynamic data = response.data;
       if (data is Map) {
-        final map = Map<String, dynamic>.from(data as Map);
+        final map = Map<String, dynamic>.from(data);
         // Backend may wrap in 'data' or 'video'
         final raw = map['data'] ?? map['video'] ?? map;
         if (raw is Map) {
-          final videoMap = Map<String, dynamic>.from(raw as Map);
+          final videoMap = Map<String, dynamic>.from(raw);
           final video = VideoModel.fromJson(videoMap);
           return FeedPostModel.fromVideoModel(video);
         }

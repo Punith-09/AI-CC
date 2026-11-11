@@ -37,8 +37,8 @@ class _VideosScreenState extends State<VideosScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final feed = context.read<HomeFeedProvider>();
-      if (feed.videoPosts.isEmpty && !feed.isLoading) {
-        feed.fetchFeed();
+      if (!feed.hasFetchedVideos && !feed.isVideoLoading) {
+        feed.fetchVideos();
       }
     });
   }
@@ -59,18 +59,71 @@ class _VideosScreenState extends State<VideosScreen> {
   Widget build(BuildContext context) {
     final feedProvider = context.watch<HomeFeedProvider>();
     final videoPosts = feedProvider.videoPosts;
-    final isLoading = feedProvider.isLoading;
+    final isVideoLoading = feedProvider.isVideoLoading;
+    final isLoadingMore = feedProvider.isLoadingMoreVideos;
+    final errorMessage = feedProvider.videoErrorMessage;
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
 
     Widget body;
 
-    if (isLoading && videoPosts.isEmpty) {
+    if (isVideoLoading && videoPosts.isEmpty) {
       body = const ColoredBox(
         color: Colors.black,
         child: Center(
           child: CircularProgressIndicator(
             color: AppColors.primary,
             strokeWidth: 2.5,
+          ),
+        ),
+      );
+    } else if (errorMessage != null && videoPosts.isEmpty) {
+      body = ColoredBox(
+        color: Colors.black,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: Colors.redAccent,
+                  size: 56,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Failed to load videos',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  errorMessage,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () => feedProvider.fetchVideos(isRefresh: true),
+                  icon: const Icon(Icons.refresh, size: 18),
+                  label: const Text('Retry'),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -113,7 +166,7 @@ class _VideosScreenState extends State<VideosScreen> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                onPressed: () => feedProvider.fetchFeed(isRefresh: true),
+                onPressed: () => feedProvider.fetchVideos(isRefresh: true),
                 icon: const Icon(Icons.refresh, size: 18),
                 label: const Text('Refresh'),
               ),
@@ -122,26 +175,55 @@ class _VideosScreenState extends State<VideosScreen> {
         ),
       );
     } else {
+      final totalCount = videoPosts.length + (isLoadingMore ? 1 : 0);
+
       body = ColoredBox(
         color: Colors.black,
-        child: PageView.builder(
-          controller: _pageController,
-          scrollDirection: Axis.vertical,
-          itemCount: videoPosts.length,
-          onPageChanged: (index) {
-            setState(() {
-              _currentPage = index;
-            });
+        child: RefreshIndicator(
+          color: AppColors.primary,
+          backgroundColor: Colors.black,
+          onRefresh: () async {
+            await feedProvider.fetchVideos(isRefresh: true);
+            if (mounted && _pageController.hasClients) {
+              _pageController.jumpToPage(0);
+              setState(() {
+                _currentPage = 0;
+              });
+            }
           },
-          itemBuilder: (context, index) {
-            return _ReelVideoItem(
-              key: ValueKey(videoPosts[index].id),
-              post: videoPosts[index],
-              isCurrent: _currentPage == index,
-              isMuted: _isMuted,
-              onToggleMute: _toggleMute,
-            );
-          },
+          child: PageView.builder(
+            controller: _pageController,
+            scrollDirection: Axis.vertical,
+            itemCount: totalCount,
+            onPageChanged: (index) {
+              setState(() {
+                _currentPage = index;
+              });
+              if (index >= videoPosts.length - 2) {
+                feedProvider.fetchMoreVideos();
+              }
+            },
+            itemBuilder: (context, index) {
+              if (index >= videoPosts.length) {
+                return const ColoredBox(
+                  color: Colors.black,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.primary,
+                      strokeWidth: 2.5,
+                    ),
+                  ),
+                );
+              }
+              return _ReelVideoItem(
+                key: ValueKey(videoPosts[index].id),
+                post: videoPosts[index],
+                isCurrent: _currentPage == index,
+                isMuted: _isMuted,
+                onToggleMute: _toggleMute,
+              );
+            },
+          ),
         ),
       );
     }
@@ -223,7 +305,8 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
   }
 
   Future<void> _initController() async {
-    if (effectiveMediaUrl.isEmpty) {
+    if (effectiveMediaUrl.isEmpty ||
+        !FeedPostModel.isVideoMediaUrl(effectiveMediaUrl, category: widget.post.category)) {
       if (mounted) setState(() { _isLoading = false; _hasError = true; });
       return;
     }
@@ -722,33 +805,50 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
     }
 
     if (_hasError || _controller == null || !_isInitialized) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline, color: Colors.white54, size: 42),
-            const SizedBox(height: 12),
-            const Text(
-              'Could not load video',
-              style: TextStyle(color: Colors.white70, fontSize: 14),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
+      final thumbUrl = widget.post.thumbnailUrl;
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          if (thumbUrl != null && thumbUrl.isNotEmpty)
+            Positioned.fill(
+              child: Opacity(
+                opacity: 0.35,
+                child: Image.network(
+                  ApiEndpoints.formatMediaUrl(thumbUrl),
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
               ),
-              onPressed: () {
-                setState(() {
-                  _isLoading = true;
-                  _hasError = false;
-                });
-                _initController();
-              },
-              child: const Text('Retry'),
             ),
-          ],
-        ),
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white54, size: 42),
+                const SizedBox(height: 12),
+                const Text(
+                  'Could not load video',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isLoading = true;
+                      _hasError = false;
+                    });
+                    _initController();
+                  },
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        ],
       );
     }
 
