@@ -252,9 +252,17 @@ final GoRouter appRouter = GoRouter(
             autoFocusComment: autoFocus,
           );
         }
-        // Notification tap passes a String post/video ID
+        // Notification tap or deep link passes a String post/video ID
         if (extra is String && extra.isNotEmpty) {
           return _PostLoaderScreen(postId: extra);
+        }
+        final queryId = state.uri.queryParameters['id'] ??
+            state.uri.queryParameters['postId'] ??
+            state.uri.queryParameters['post_id'] ??
+            state.uri.queryParameters['videoId'] ??
+            state.uri.queryParameters['video_id'];
+        if (queryId != null && queryId.isNotEmpty) {
+          return _PostLoaderScreen(postId: queryId);
         }
         return const Scaffold(body: Center(child: Text('Media not found')));
       },

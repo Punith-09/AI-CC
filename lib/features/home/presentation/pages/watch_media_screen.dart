@@ -14,6 +14,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/deep_link_service.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../../artist_profile/data/repository/profile_repository.dart';
 import '../../../artist_profile/presentation/providers/profile_provider.dart';
@@ -1643,39 +1644,37 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
           ),
 
           // Share Button
-          // InkWell(
-          //   onTap: () {
-          //     ScaffoldMessenger.of(context).showSnackBar(
-          //       const SnackBar(
-          //         content: Text('Link copied to clipboard!'),
-          //         duration: Duration(seconds: 2),
-          //       ),
-          //     );
-          //   },
-          //   borderRadius: BorderRadius.circular(12),
-          //   child: Padding(
-          //     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          //     child: Column(
-          //       mainAxisSize: MainAxisSize.min,
-          //       children: [
-          //         Icon(
-          //           LucideIcons.share2,
-          //           color: actionColor,
-          //           size: 22,
-          //         ),
-          //         const SizedBox(height: 4),
-          //         Text(
-          //           'Share',
-          //           style: GoogleFonts.poppins(
-          //             color: actionColor,
-          //             fontSize: 12,
-          //             fontWeight: FontWeight.w500,
-          //           ),
-          //         ),
-          //       ],
-          //     ),
-          //   ),
-          // ),
+          InkWell(
+            onTap: () {
+              DeepLinkService.instance.sharePost(
+                context: context,
+                post: widget.post,
+              );
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    LucideIcons.share2,
+                    color: actionColor,
+                    size: 22,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Share',
+                    style: GoogleFonts.poppins(
+                      color: actionColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

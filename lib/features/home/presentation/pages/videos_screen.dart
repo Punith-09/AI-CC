@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../common/widgets/user_avatar.dart';
@@ -12,7 +11,9 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/deep_link_service.dart';
 import '../../../../core/storage/local_storage.dart';
+import '../../../../core/utils/media_downloader/media_downloader.dart';
 import '../../data/models/feed_post_model.dart';
 import '../../data/repository/home_repository.dart';
 import '../providers/home_feed_provider.dart';
@@ -315,12 +316,16 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
               ListTile(
                 leading: const Icon(Icons.copy_rounded, color: Colors.white),
                 title: const Text('Copy Link', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Clipboard.setData(ClipboardData(text: effectiveMediaUrl));
+                onTap: () async {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Video link copied to clipboard')),
-                  );
+                  final link =
+                      await DeepLinkService.instance.createPostShareLink(widget.post);
+                  await Clipboard.setData(ClipboardData(text: link));
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Video link copied to clipboard')),
+                    );
+                  }
                 },
               ),
               ListTile(
@@ -338,7 +343,18 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
                 title: const Text('Share', style: TextStyle(color: Colors.white)),
                 onTap: () {
                   Navigator.pop(context);
-                  Share.share(effectiveMediaUrl, subject: widget.post.title);
+                  DeepLinkService.instance.sharePost(
+                    context: context,
+                    post: widget.post,
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.download_rounded, color: Colors.white),
+                title: const Text('Download', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pop(context);
+                  MediaDownloader.downloadPostMedia(context, widget.post);
                 },
               ),
               const SizedBox(height: 12),
@@ -538,7 +554,10 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
                 iconColor: Colors.white,
                 label: 'Share',
                 onTap: () {
-                  Share.share(effectiveMediaUrl, subject: widget.post.title);
+                  DeepLinkService.instance.sharePost(
+                    context: context,
+                    post: widget.post,
+                  );
                 },
               ),
               const SizedBox(height: 14),

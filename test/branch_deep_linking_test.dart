@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:aicc/core/storage/local_storage.dart';
 import 'package:aicc/core/services/deep_link_service.dart';
+import 'package:aicc/features/home/data/models/feed_post_model.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -116,6 +117,37 @@ void main() {
       expect(link, contains('email=user%40example.com'));
       expect(link, contains('af_dp=treeko%3A%2F%2FforgotPassword%3Ftoken%3Dabc123xyz789token'));
       expect(link, contains('af_web_dp=https%3A%2F%2Fcasting-be-1.onrender.com%2Fauth%2Freset-password%3Ftoken%3Dabc123xyz789token'));
+    });
+
+    test('createPostShareLink generates OneLink carrying post_id and type', () async {
+      final service = DeepLinkService.instance;
+      const testPost = FeedPostModel(
+        id: 'post-98765',
+        type: FeedMediaType.video,
+        title: 'Exciting Short Film Teaser',
+        description: 'Check out our new teaser',
+        mediaUrl: 'https://example.com/video.mp4',
+        creatorName: 'Arjun Director',
+      );
+
+      final link = await service.createPostShareLink(testPost);
+
+      expect(link, isNotEmpty);
+      expect(link, contains('treeko.onelink.me/CEaN'));
+      expect(link, contains('deep_link_value=post_post-98765'));
+      expect(link, contains('post_id=post-98765'));
+      expect(link, contains('type=video'));
+      expect(link, contains('af_dp=treeko%3A%2F%2Fpost%3Fid%3Dpost-98765'));
+    });
+
+    test('Post deep link flow: saves pending post ID when logged out and clears when consumed', () async {
+      expect(LocalStorage.instance.hasToken(), false);
+
+      await LocalStorage.instance.savePendingPostId('post-deferred-555');
+      expect(LocalStorage.instance.getPendingPostId(), 'post-deferred-555');
+
+      await LocalStorage.instance.clearPendingPostId();
+      expect(LocalStorage.instance.getPendingPostId(), isNull);
     });
   });
 }

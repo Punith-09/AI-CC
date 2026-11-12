@@ -13,6 +13,7 @@ class LocalStorage {
   static const String _keyUserJson = 'user_data';
   static const String _keyThemeMode = 'app_theme_mode';
   static const String _keyPendingProfileId = 'pending_profile_id';
+  static const String _keyPendingPostId = 'pending_post_id';
 
   static LocalStorage? _instance;
   static SharedPreferences? _prefs;
@@ -339,6 +340,18 @@ class LocalStorage {
 
   Future<void> clearPendingProfileId() async {
     await _prefs?.remove(_keyPendingProfileId);
+  }
+
+  Future<void> savePendingPostId(String id) async {
+    await _prefs?.setString(_keyPendingPostId, id);
+  }
+
+  String? getPendingPostId() {
+    return _prefs?.getString(_keyPendingPostId);
+  }
+
+  Future<void> clearPendingPostId() async {
+    await _prefs?.remove(_keyPendingPostId);
   }
 
   Future<void> savePendingRoute(String route) async {
