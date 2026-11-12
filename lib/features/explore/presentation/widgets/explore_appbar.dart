@@ -8,12 +8,13 @@ class ExploreAppbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Text(
         "Explore Talent",
         style: GoogleFonts.poppins(
           fontWeight: FontWeight.w700,
-          color: AppColors.white,
+          color: isDark ? AppColors.white : AppColors.black,
           fontSize: 22,
           letterSpacing: 0.3,
         ),
