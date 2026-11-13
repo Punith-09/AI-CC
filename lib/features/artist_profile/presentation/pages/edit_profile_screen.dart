@@ -10,6 +10,8 @@ import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:aicc/core/network/dio_client.dart';
 import 'package:aicc/core/api/api_endpoints.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:aicc/features/otp_auth/presentation/phone_screen.dart';
 
 
 class EditProfileScreen extends StatefulWidget {
@@ -119,6 +121,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           setState(() {
             _currentPhotoUrl = photoUrl;
           });
+          if (!mounted) return;
           context.read<ProfileProvider>().updateProfilePhotoLocally(photoUrl);
         }
       } catch (e) {
@@ -350,6 +353,63 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           controller: _qualificationController,
                           hint: 'Btech',
 
+                        ),
+
+                        const SizedBox(height: 36),
+
+                        // ── Link Phone via OTP ───────────────────
+                        InkWell(
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  const PhoneScreen(isLinkMode: true),
+                            ),
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 4, vertical: 14),
+                            decoration: const BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                    color: AppColors.primary, width: 1),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.phone_android,
+                                    color: AppColors.primary, size: 20),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _mobileController.text.isNotEmpty
+                                            ? 'Change linked phone number'
+                                            : 'Link a phone number',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Verify via OTP',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          color: AppColors.hint,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Icon(Icons.arrow_forward_ios,
+                                    size: 14, color: AppColors.hint),
+                              ],
+                            ),
+                          ),
                         ),
 
                         const SizedBox(height: 36),

@@ -34,7 +34,9 @@ bool _isValidMobile(String mobile) {
 }
 
 class SignupScreen extends StatefulWidget {
-  const SignupScreen({super.key});
+  final String? initialMobile;
+
+  const SignupScreen({super.key, this.initialMobile});
 
   @override
   State<SignupScreen> createState() => _SignupScreenState();
@@ -45,7 +47,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _mobileController = TextEditingController();
+  late final TextEditingController _mobileController;
   final TextEditingController _ageController = TextEditingController();
   String? _selectedGender;
   bool _agreedToTerms = false;
@@ -53,6 +55,13 @@ class _SignupScreenState extends State<SignupScreen> {
 
   final greyColor = const Color(0xFF9E9E9E);
   final borderGrey = const Color(0xFFE0E0E0);
+
+  @override
+  void initState() {
+    super.initState();
+    _mobileController =
+        TextEditingController(text: widget.initialMobile ?? '');
+  }
 
   @override
   void dispose() {

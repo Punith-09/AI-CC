@@ -9,6 +9,14 @@ class ApiEndpoints {
     // return 'https://enrolled-plastic-sub-minerals.trycloudflare.com';
   }
 
+  // ── OTP auth endpoints ──────────────────────────────────────
+  static const String otpSend       = '/auth/otp/send';
+  static const String otpResend     = '/auth/otp/resend';
+  static const String otpVerify     = '/auth/otp/verify';
+  static const String otpSignup     = '/auth/otp/signup';
+  static const String otpLinkSend   = '/auth/otp/link/send';
+  static const String otpLinkVerify = '/auth/otp/link/verify';
+
   static const String login = '/auth/login';
   static const String register = '/auth/register';
   static const String googleLogin = '/auth/google';
