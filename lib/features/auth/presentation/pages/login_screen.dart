@@ -9,6 +9,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/services/branch_service.dart';
 import '../providers/auth_provider.dart';
+import '../../../../features/otp_auth/presentation/phone_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -389,6 +390,49 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               )
                                   .animate(delay: 700.ms)
+                                  .fade(duration: 600.ms)
+                                  .slideY(begin: 0.1, end: 0),
+
+                              const SizedBox(height: 14),
+
+                              // ----------------------------------------------------
+                              // PHONE / OTP LOGIN BUTTON
+                              // ----------------------------------------------------
+                              SizedBox(
+                                width: double.infinity,
+                                height: 48,
+                                child: OutlinedButton.icon(
+                                  icon: const Icon(
+                                      Icons.phone_android, size: 18),
+                                  label: Text(
+                                    'Continue with phone number',
+                                    style: GoogleFonts.sora(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  onPressed: () =>
+                                      Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const PhoneScreen(),
+                                    ),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    backgroundColor: AppColors.black,
+                                    foregroundColor: AppColors.primary,
+                                    side: const BorderSide(
+                                      color: AppColors.primary,
+                                      width: 1.2,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(16),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                ),
+                              )
+                                  .animate(delay: 800.ms)
                                   .fade(duration: 600.ms)
                                   .slideY(begin: 0.1, end: 0),
 

@@ -28,6 +28,7 @@ import '../../features/live_stats/presentation/providers/live_stats_provider.dar
 import '../../features/notifications/data/datasource/notifications_remote_datasource.dart';
 import '../../features/notifications/data/repository/notifications_repository.dart';
 import '../../features/notifications/presentation/providers/notifications_provider.dart';
+import '../../features/otp_auth/data/otp_auth_repository.dart';
 
 final GetIt sl = GetIt.instance;
 
@@ -228,6 +229,13 @@ Future<void> initDependencies() async {
   if (!sl.isRegistered<NotificationsProvider>()) {
     sl.registerLazySingleton<NotificationsProvider>(
       () => NotificationsProvider(sl<NotificationsRepository>()),
+    );
+  }
+
+  // OTP Auth Feature
+  if (!sl.isRegistered<OtpAuthRepository>()) {
+    sl.registerLazySingleton<OtpAuthRepository>(
+      () => OtpAuthRepository(),
     );
   }
 }

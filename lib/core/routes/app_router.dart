@@ -26,6 +26,7 @@ import '../../features/auditions/presentation/pages/audition_details.dart';
 import '../../features/messages/data/models/chat_model.dart';
 import '../../features/auditions/presentation/pages/auditions_screen.dart';
 import '../../features/auth/presentation/pages/login_screen.dart';
+import '../../features/otp_auth/presentation/phone_screen.dart';
 import '../../features/auth/presentation/pages/signup_screen.dart';
 import '../../features/auth/presentation/pages/forgot_password_screen.dart';
 import '../../features/auth/presentation/pages/welcome_screen.dart';
@@ -67,7 +68,9 @@ final GoRouter appRouter = GoRouter(
         location == AppRoutes.signup ||
         location.startsWith('/auth/') ||
         location.startsWith('/reset') ||
-        location.startsWith('/delete');
+        location.startsWith('/delete') ||
+        location == AppRoutes.phoneLogin ||
+        location == AppRoutes.linkPhone;
 
     // Redirect logged-in users away from auth screens.
     if (isLoggedIn && (location == AppRoutes.welcome || location == AppRoutes.login)) {
@@ -88,7 +91,14 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: AppRoutes.welcome  , builder: (_, __) => const WelcomeScreen()),
 
     GoRoute(path: AppRoutes.login, builder: (_, __) => const LoginScreen()),
-    GoRoute(path: AppRoutes.signup, builder: (_, __) => const SignupScreen()),
+    GoRoute(
+      path: AppRoutes.signup,
+      builder: (context, state) {
+        final mobile = state.uri.queryParameters['mobile'] ??
+            (state.extra as String?);
+        return SignupScreen(initialMobile: mobile);
+      },
+    ),
     GoRoute(
       path: AppRoutes.forgotPassword,
       builder: (context, state) {
@@ -106,6 +116,16 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.deleteAccount,
       builder: (_, __) => const DeleteAccountScreen(),
+    ),
+
+    // ── OTP auth routes ────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.phoneLogin,
+      builder: (_, __) => const PhoneScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.linkPhone,
+      builder: (_, __) => const PhoneScreen(isLinkMode: true),
     ),
 
     GoRoute(
