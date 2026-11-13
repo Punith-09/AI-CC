@@ -261,6 +261,7 @@ class _ReelVideoItem extends StatefulWidget {
 
 class _ReelVideoItemState extends State<_ReelVideoItem> {
   VideoPlayerController? _controller;
+  VoidCallback? _timingListener;
   bool _isInitialized = false;
   bool _isLoading = true;
   bool _hasError = false;
@@ -311,12 +312,32 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
       return;
     }
 
-    try {
-      final uri = Uri.parse(effectiveMediaUrl);
-      final controller = VideoPlayerController.networkUrl(uri);
-      _controller = controller;
+    final videoId = widget.post.id;
+    final uri = Uri.parse(effectiveMediaUrl);
+    final controller = VideoPlayerController.networkUrl(uri);
+    _controller = controller;
+    final timer = Stopwatch()..start();
 
+    try {
       await controller.initialize();
+      debugPrint('[VIDEO_TIMING] video_id=$videoId '
+          'initialize_ms=${timer.elapsedMilliseconds}');
+
+      void listener() {
+        final value = controller.value;
+        if (value.position > Duration.zero && !value.isBuffering) {
+          debugPrint('[VIDEO_TIMING] video_id=$videoId '
+              'playing_ms=${timer.elapsedMilliseconds}');
+          controller.removeListener(listener);
+          if (_timingListener == listener) {
+            _timingListener = null;
+          }
+        }
+      }
+
+      _timingListener = listener;
+      controller.addListener(listener);
+
       await controller.setLooping(true);
       await controller.setVolume(widget.isMuted ? 0.0 : 1.0);
 
@@ -330,17 +351,20 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
         });
 
         if (widget.isCurrent) {
-          controller.play();
+          await controller.play();
           _incrementViewIfNeeded();
         }
       }
-    } catch (_) {
+    } catch (error) {
+      debugPrint('[VIDEO_TIMING] video_id=$videoId '
+          'player_failed_ms=${timer.elapsedMilliseconds} error=$error');
       if (mounted) {
         setState(() {
           _isLoading = false;
           _hasError = true;
         });
       }
+      rethrow;
     }
   }
 
@@ -450,6 +474,10 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
 
   @override
   void dispose() {
+    if (_timingListener != null) {
+      _controller?.removeListener(_timingListener!);
+      _timingListener = null;
+    }
     _controller?.removeListener(_onControllerUpdate);
     _controller?.dispose();
     super.dispose();

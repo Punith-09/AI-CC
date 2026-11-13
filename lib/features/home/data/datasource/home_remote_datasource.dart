@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../post/data/models/photo_model.dart';
@@ -59,11 +60,14 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     if (limit != null) queryParams['limit'] = limit;
     if (offset != null) queryParams['offset'] = offset;
 
+    final timer = Stopwatch()..start();
     try {
       final response = await _dioClient.get(
         ApiEndpoints.videos,
         queryParameters: queryParams.isNotEmpty ? queryParams : null,
       );
+      debugPrint('[VIDEO_TIMING] api_ms=${timer.elapsedMilliseconds} '
+          'status=${response.statusCode}');
 
       dynamic listData;
       if (response.data is List) {
@@ -82,7 +86,9 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
             .toList();
       }
       return [];
-    } catch (e) {
+    } catch (error) {
+      debugPrint('[VIDEO_TIMING] api_failed_ms=${timer.elapsedMilliseconds} '
+          'error=$error');
       if (limit != null || offset != null) {
         rethrow;
       }

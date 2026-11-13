@@ -46,6 +46,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
 
   // Video Controller State
   VideoPlayerController? _videoController;
+  VoidCallback? _timingListener;
   bool _isVideoInitialized = false;
   bool _isVideoLoading = false;
   bool _isVideoPlaying = false;
@@ -116,6 +117,10 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   @override
   void dispose() {
     _hideControlsTimer?.cancel();
+    if (_timingListener != null) {
+      _videoController?.removeListener(_timingListener!);
+      _timingListener = null;
+    }
     _videoController?.dispose();
     _commentController.dispose();
     _commentFocusNode.dispose();
@@ -140,14 +145,37 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
       _hasVideoError = false;
     });
 
+    final videoId = _post.id;
+    final timer = Stopwatch()..start();
+
     try {
       final uri = Uri.parse(videoUrl);
-      _videoController = VideoPlayerController.networkUrl(uri);
-      await _videoController!.initialize();
-      await _videoController!.setLooping(true);
-      await _videoController!.play();
+      final controller = VideoPlayerController.networkUrl(uri);
+      _videoController = controller;
 
-      _videoController!.addListener(_onVideoStateChanged);
+      await controller.initialize();
+      debugPrint('[VIDEO_TIMING] video_id=$videoId '
+          'initialize_ms=${timer.elapsedMilliseconds}');
+
+      void listener() {
+        final value = controller.value;
+        if (value.position > Duration.zero && !value.isBuffering) {
+          debugPrint('[VIDEO_TIMING] video_id=$videoId '
+              'playing_ms=${timer.elapsedMilliseconds}');
+          controller.removeListener(listener);
+          if (_timingListener == listener) {
+            _timingListener = null;
+          }
+        }
+      }
+
+      _timingListener = listener;
+      controller.addListener(listener);
+
+      await controller.setLooping(true);
+      await controller.play();
+
+      controller.addListener(_onVideoStateChanged);
 
       if (mounted) {
         setState(() {
@@ -158,13 +186,16 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
         });
         _scheduleHideControls();
       }
-    } catch (_) {
+    } catch (error) {
+      debugPrint('[VIDEO_TIMING] video_id=$videoId '
+          'player_failed_ms=${timer.elapsedMilliseconds} error=$error');
       if (mounted) {
         setState(() {
           _isVideoLoading = false;
           _hasVideoError = true;
         });
       }
+      rethrow;
     }
   }
 

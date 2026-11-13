@@ -27,6 +27,7 @@ class FeedVideoPlayer extends StatefulWidget {
 
 class _FeedVideoPlayerState extends State<FeedVideoPlayer> {
   VideoPlayerController? _controller;
+  VoidCallback? _timingListener;
   bool _isInitialized = false;
   bool _isLoading = false;
   bool _isPlaying = false;
@@ -120,6 +121,11 @@ class _FeedVideoPlayerState extends State<FeedVideoPlayer> {
   void dispose() {
     _scrollPosition?.removeListener(_onScroll);
     _hideControlsTimer?.cancel();
+    if (_timingListener != null) {
+      _controller?.removeListener(_timingListener!);
+      _timingListener = null;
+    }
+    _controller?.removeListener(_onPlayerStateChanged);
     _controller?.dispose();
     super.dispose();
   }
@@ -141,15 +147,37 @@ class _FeedVideoPlayerState extends State<FeedVideoPlayer> {
       _hasError = false;
     });
 
+    final videoId = widget.post.id;
+    final timer = Stopwatch()..start();
+
     try {
       final uri = Uri.parse(effectiveVideoUrl);
-      _controller = VideoPlayerController.networkUrl(uri);
+      final controller = VideoPlayerController.networkUrl(uri);
+      _controller = controller;
 
-      await _controller!.initialize();
-      await _controller!.setLooping(true);
-      await _controller!.play();
+      await controller.initialize();
+      debugPrint('[VIDEO_TIMING] video_id=$videoId '
+          'initialize_ms=${timer.elapsedMilliseconds}');
 
-      _controller!.addListener(_onPlayerStateChanged);
+      void listener() {
+        final value = controller.value;
+        if (value.position > Duration.zero && !value.isBuffering) {
+          debugPrint('[VIDEO_TIMING] video_id=$videoId '
+              'playing_ms=${timer.elapsedMilliseconds}');
+          controller.removeListener(listener);
+          if (_timingListener == listener) {
+            _timingListener = null;
+          }
+        }
+      }
+
+      _timingListener = listener;
+      controller.addListener(listener);
+
+      await controller.setLooping(true);
+      await controller.play();
+
+      controller.addListener(_onPlayerStateChanged);
 
       if (mounted) {
         setState(() {
@@ -167,13 +195,16 @@ class _FeedVideoPlayerState extends State<FeedVideoPlayer> {
         _hasIncrementedView = true;
         sl<HomeRepository>().incrementVideoView(widget.post.id);
       }
-    } catch (e) {
+    } catch (error) {
+      debugPrint('[VIDEO_TIMING] video_id=$videoId '
+          'player_failed_ms=${timer.elapsedMilliseconds} error=$error');
       if (mounted) {
         setState(() {
           _isLoading = false;
           _hasError = true;
         });
       }
+      rethrow;
     }
   }
 
