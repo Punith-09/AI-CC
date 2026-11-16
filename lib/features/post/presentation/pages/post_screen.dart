@@ -228,51 +228,10 @@ class _PostScreenState extends State<PostScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Category Pills
+                  // Category Dropdown
                   _buildLabel('Category'),
-                  const SizedBox(height: 10),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: _categories.map((cat) {
-                        final isSelected = _selectedCategory == cat;
-                        return GestureDetector(
-                          onTap: () => setState(() => _selectedCategory = cat),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 180),
-                            margin: const EdgeInsets.only(right: 10),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 18,
-                              vertical: 9,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : (isDark
-                                        ? AppColors.darkCard
-                                        : AppColors.lightCard),
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(color: AppColors.primary),
-                            ),
-                            child: Text(
-                              cat,
-                              style: TextStyle(
-                                color: isSelected
-                                    ? Colors.white
-                                    : (isDark
-                                          ? Colors.grey.shade400
-                                          : const Color(0xFF475569)),
-                                fontSize: 13,
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.w400,
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
+                  const SizedBox(height: 8),
+                  _buildCategorySelector(isDesktop: false),
                   const SizedBox(height: 20),
 
                   // Role Seeking
@@ -667,9 +626,9 @@ class _PostScreenState extends State<PostScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Category Pills
+                  // Category Dropdown
                   _buildLabel('Category'),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   _buildCategorySelector(isDesktop: true),
                   const SizedBox(height: 20),
 
@@ -964,56 +923,83 @@ class _PostScreenState extends State<PostScreen> {
 
   Widget _buildCategorySelector({bool isDesktop = false}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: _categories.map((cat) {
-          final isSelected = _selectedCategory == cat;
-          return MouseRegion(
-            cursor: isDesktop ? SystemMouseCursors.click : MouseCursor.defer,
-            child: GestureDetector(
-              onTap: () => setState(() => _selectedCategory = cat),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                margin: const EdgeInsets.only(right: 10),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 9,
-                ),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.primary
-                      : (isDark
-                            ? (isDesktop ? const Color(0xFF1B202D) : AppColors.darkCard)
-                            : (isDesktop ? const Color(0xFFF1F5F9) : AppColors.lightCard)),
-                  borderRadius: BorderRadius.circular(isDesktop ? 12 : 24),
-                  border: Border.all(
-                    color: isSelected
-                        ? AppColors.primary
-                        : (isDesktop
-                            ? (isDark ? const Color(0xFF2B3347) : const Color(0xFFE2E8F0))
-                            : AppColors.primary),
-                  ),
-                ),
-                child: Text(
-                  cat,
-                  style: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : (isDark
-                              ? Colors.grey.shade400
-                              : const Color(0xFF475569)),
-                    fontSize: 13,
-                    fontWeight: isSelected
-                        ? FontWeight.w600
-                        : FontWeight.w400,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
+    final radius = isDesktop ? 12.0 : 14.0;
+    final fillColor = isDesktop
+        ? (isDark ? const Color(0xFF0F121A) : const Color(0xFFF8FAFC))
+        : (isDark ? AppColors.darkCard : AppColors.lightCard);
+    final borderColor = isDesktop
+        ? (isDark ? const Color(0xFF262D3D) : const Color(0xFFE2E8F0))
+        : AppColors.primary;
+    final dropdownBg = isDark ? const Color(0xFF1E2430) : Colors.white;
+
+    final selectedValue = _categories.contains(_selectedCategory)
+        ? _selectedCategory
+        : (_categories.isNotEmpty ? _categories.first : null);
+
+    return DropdownButtonFormField<String>(
+      initialValue: selectedValue,
+      isExpanded: true,
+      dropdownColor: dropdownBg,
+      style: TextStyle(
+        color: isDark ? Colors.white : AppColors.lightText,
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
       ),
+      icon: Icon(
+        Icons.keyboard_arrow_down_rounded,
+        color: isDark ? Colors.grey : const Color(0xFF64748B),
+        size: 24,
+      ),
+      decoration: InputDecoration(
+        hintText: 'Select Category',
+        hintStyle: TextStyle(
+          color: isDark ? Colors.grey.shade500 : const Color(0xFF94A3B8),
+        ),
+        filled: true,
+        fillColor: fillColor,
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 16,
+          horizontal: 16,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radius),
+          borderSide: BorderSide(color: borderColor, width: isDesktop ? 1.2 : 1.0),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radius),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radius),
+          borderSide: const BorderSide(color: AppColors.danger),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radius),
+          borderSide: const BorderSide(color: AppColors.danger, width: 1.5),
+        ),
+      ),
+      items: _categories.map((cat) {
+        return DropdownMenuItem<String>(
+          value: cat,
+          child: Text(
+            cat,
+            style: TextStyle(
+              color: isDark ? Colors.white : AppColors.lightText,
+              fontSize: 14,
+            ),
+          ),
+        );
+      }).toList(),
+      onChanged: (val) {
+        if (val != null) {
+          setState(() {
+            _selectedCategory = val;
+          });
+        }
+      },
+      validator: (val) => val == null || val.trim().isEmpty
+          ? 'Please select a category'
+          : null,
     );
   }
 

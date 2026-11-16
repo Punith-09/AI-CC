@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/services/deep_link_service.dart';
 
 import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../data/models/feed_post_model.dart';
@@ -24,8 +25,6 @@ class FeedActions extends StatefulWidget {
 }
 
 class _FeedActionsState extends State<FeedActions> {
-  bool _saved = false;
-
   /// Format large numbers: 1200 → "1.2k", 1_200_000 → "1.2M"
   String _formatCount(int count) {
     if (count >= 1000000) {
@@ -177,14 +176,19 @@ class _FeedActionsState extends State<FeedActions> {
           const SizedBox(width: 4),
 
           // Share Button
-          // IconButton(
-          //   onPressed: () {},
-          //   icon: Icon(
-          //     LucideIcons.send,
-          //     size: 25,
-          //     color: iconColor,
-          //   ),
-          // ),
+          IconButton(
+            onPressed: () {
+              DeepLinkService.instance.sharePost(
+                context: context,
+                post: widget.post,
+              );
+            },
+            icon: Icon(
+              LucideIcons.send,
+              size: 25,
+              color: iconColor,
+            ),
+          ),
 
           const Spacer(),
 

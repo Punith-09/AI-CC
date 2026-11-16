@@ -349,10 +349,24 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
           return FeedPostModel.fromVideoModel(video);
         }
       }
-      return null;
-    } catch (_) {
-      return null;
-    }
+    } catch (_) {}
+
+    // Fallback: try /photos/$id in case shared post is a photo post
+    try {
+      final response = await _dioClient.get('/photos/$id');
+      dynamic data = response.data;
+      if (data is Map) {
+        final map = Map<String, dynamic>.from(data);
+        final raw = map['data'] ?? map['photo'] ?? map;
+        if (raw is Map) {
+          final photoMap = Map<String, dynamic>.from(raw);
+          final photo = PhotoModel.fromJson(photoMap);
+          return FeedPostModel.fromPhotoModel(photo);
+        }
+      }
+    } catch (_) {}
+
+    return null;
   }
 
   @override

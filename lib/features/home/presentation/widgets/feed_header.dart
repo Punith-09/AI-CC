@@ -7,9 +7,9 @@ import '../../../../common/widgets/user_avatar.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/storage/local_storage.dart';
+import '../../../../core/utils/media_downloader/media_downloader.dart';
 import '../../data/models/feed_post_model.dart';
 import '../../../artist_profile/presentation/providers/profile_provider.dart';
-import '../providers/home_feed_provider.dart';
 
 class FeedHeader extends StatelessWidget {
   final FeedPostModel post;
@@ -46,6 +46,55 @@ class FeedHeader extends StatelessWidget {
     if (targetUserId != null && targetUserId.isNotEmpty) {
       context.push(AppRoutes.exploreProfile, extra: targetUserId);
     }
+  }
+
+  void _showMoreOptions(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : AppColors.black;
+    final iconColor = isDark ? Colors.white70 : Colors.black87;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: bgColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (bottomSheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white24 : Colors.black26,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                leading: Icon(Icons.download_rounded, color: iconColor),
+                title: Text(
+                  'Download',
+                  style: TextStyle(
+                    color: textColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(bottomSheetContext);
+                  MediaDownloader.downloadPostMedia(context, post);
+                },
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -252,10 +301,16 @@ class FeedHeader extends StatelessWidget {
             const SizedBox(width: 8),
           ],
 
-          // Icon(
-          //   Icons.more_vert,
-          //   color: iconColor,
-          // ),
+          IconButton(
+            icon: Icon(
+              Icons.more_vert,
+              color: iconColor,
+            ),
+            onPressed: () => _showMoreOptions(context),
+            splashRadius: 20,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
         ],
       ),
     );

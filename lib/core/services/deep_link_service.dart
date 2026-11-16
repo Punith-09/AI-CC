@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import '../routes/app_router.dart';
 import '../routes/app_routes.dart';
 import '../storage/local_storage.dart';
+import '../../features/home/data/models/feed_post_model.dart';
 
 /// AppsFlyer OneLink & Deferred Deep Linking Service for TreeKo.
 ///
@@ -64,6 +65,11 @@ class DeepLinkService {
               await LocalStorage.instance.setHasProcessedDeferredInstall(true);
             }
 
+            final postId = deepLink.getStringValue('post_id') ??
+                deepLink.getStringValue('postId') ??
+                deepLink.getStringValue('video_id') ??
+                deepLink.getStringValue('videoId');
+
             final payload = deepLink.deepLinkValue ??
                 deepLink.getStringValue('profile_id') ??
                 deepLink.getStringValue('id') ??
@@ -80,8 +86,10 @@ class DeepLinkService {
                 deepLink.getStringValue('deep_link_sub3') ??
                 deepLink.afSub3;
 
-            debugPrint('🌿 [AppsFlyer UDL] Found payload: $payload, token: $token (isDeferred: ${deepLink.isDeferred})');
-            if (payload != null && payload.isNotEmpty) {
+            debugPrint('🌿 [AppsFlyer UDL] Found payload: $payload, postId: $postId, token: $token (isDeferred: ${deepLink.isDeferred})');
+            if (postId != null && postId.isNotEmpty) {
+              _routeToPost(postId);
+            } else if (payload != null && payload.isNotEmpty) {
               _routeDestination(payload, token: token, email: email);
             } else if (token != null && token.isNotEmpty) {
               _routeToResetPassword(token: token, email: email);
@@ -114,6 +122,11 @@ class DeepLinkService {
 
           await LocalStorage.instance.setHasProcessedDeferredInstall(true);
 
+          final postId = data['post_id']?.toString() ??
+              data['postId']?.toString() ??
+              data['video_id']?.toString() ??
+              data['videoId']?.toString();
+
           final payload = data['deep_link_value']?.toString() ??
               data['profile_id']?.toString() ??
               data['id']?.toString() ??
@@ -130,7 +143,9 @@ class DeepLinkService {
               data['deep_link_sub3']?.toString() ??
               data['af_sub3']?.toString();
 
-          if (payload != null && payload.isNotEmpty) {
+          if (postId != null && postId.isNotEmpty) {
+            _routeToPost(postId);
+          } else if (payload != null && payload.isNotEmpty) {
             _routeDestination(payload, token: token, email: email);
           } else if (token != null && token.isNotEmpty) {
             _routeToResetPassword(token: token, email: email);
@@ -238,6 +253,43 @@ class DeepLinkService {
         return;
       }
 
+      // Check if URI specifically points to a post/video
+      final postId = uri.queryParameters['post_id'] ??
+          uri.queryParameters['postId'] ??
+          uri.queryParameters['video_id'] ??
+          uri.queryParameters['videoId'];
+      if (postId != null && postId.trim().isNotEmpty) {
+        debugPrint('🌿 [DeepLink] Resolved post ID from query: $postId');
+        _routeToPost(postId.trim());
+        return;
+      }
+
+      // Check path segments for /post/123 or /video/123 or /watch/123
+      final segments = uri.pathSegments;
+      if (segments.length >= 2 &&
+          (segments[0] == 'post' ||
+              segments[0] == 'video' ||
+              segments[0] == 'watch' ||
+              segments[0] == 'videos')) {
+        debugPrint('🌿 [DeepLink] Resolved post ID from path: ${segments[1]}');
+        _routeToPost(segments[1].trim());
+        return;
+      }
+
+      // Scheme treeko://post?id=123 or treeko://post/123 or treeko://watchVideo?id=123
+      if (uri.scheme == 'treeko' &&
+          (uri.host == 'post' ||
+              uri.host == 'video' ||
+              uri.host == 'watchVideo' ||
+              uri.host == 'watch')) {
+        final id = uri.queryParameters['id'] ?? (segments.isNotEmpty ? segments[0] : null);
+        if (id != null && id.trim().isNotEmpty) {
+          debugPrint('🌿 [DeepLink] Resolved post ID from scheme host: $id');
+          _routeToPost(id.trim());
+          return;
+        }
+      }
+
       String? payload;
       final token = uri.queryParameters['token'] ??
           uri.queryParameters['deep_link_sub1'] ??
@@ -310,6 +362,18 @@ class DeepLinkService {
         lower == 'forgot_password') {
       _routeToResetPassword(token: token, email: email);
       return;
+    }
+
+    if (lower.startsWith('post_') ||
+        lower.startsWith('video_') ||
+        lower.startsWith('post:') ||
+        lower.startsWith('video:')) {
+      final sepIndex = clean.indexOf(RegExp(r'[_:]'));
+      final actualId = clean.substring(sepIndex + 1).trim();
+      if (actualId.isNotEmpty) {
+        _routeToPost(actualId);
+        return;
+      }
     }
 
     // Default: artist profile ID
@@ -410,6 +474,39 @@ class DeepLinkService {
     }
   }
 
+  /// Routes to the shared post/video or stores it if sign-in is required first.
+  void _routeToPost(String postId) {
+    final cleanId = postId.trim();
+    if (cleanId.isEmpty) return;
+
+    final cacheKey = 'post_$cleanId';
+    if (_lastRoutedProfileId == cacheKey &&
+        _lastRoutedTime != null &&
+        DateTime.now().difference(_lastRoutedTime!).inSeconds < 5) {
+      debugPrint('🌿 [DeepLink] Skipping duplicate post route: $cleanId');
+      return;
+    }
+    _lastRoutedProfileId = cacheKey;
+    _lastRoutedTime = DateTime.now();
+
+    final bool isLoggedIn = LocalStorage.instance.hasToken();
+
+    if (isLoggedIn) {
+      // User is already signed in -> navigate directly to watchVideo with postId
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        try {
+          appRouter.push(AppRoutes.watchVideo, extra: cleanId);
+        } catch (e) {
+          debugPrint('⚠️ Failed to route to post: $e');
+        }
+      });
+    } else {
+      // User needs to sign in first -> save as deferred destination
+      debugPrint('🌿 User not signed in. Storing pending post ID: $cleanId');
+      LocalStorage.instance.savePendingPostId(cleanId);
+    }
+  }
+
   /// Checks and navigates to any pending deferred destination (Delete Account or Profile) after sign-in.
   /// Called after successful login, signup, or home screen loading.
   Future<bool> handlePendingProfileIfAny(BuildContext context) async {
@@ -446,7 +543,37 @@ class DeepLinkService {
         }
       }
 
-      // 2. Check pending profile
+      // 2. Check pending post / video
+      final pendingPostId = LocalStorage.instance.getPendingPostId();
+      if (pendingPostId != null && pendingPostId.trim().isNotEmpty) {
+        await LocalStorage.instance.clearPendingPostId();
+        debugPrint('🌿 Resuming deferred deep link to post: $pendingPostId');
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(Icons.movie_creation_outlined, color: Colors.white, size: 20),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text('Opening shared post...'),
+                  ),
+                ],
+              ),
+              backgroundColor: const Color(0xFF1E293B),
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          );
+
+          appRouter.push(AppRoutes.watchVideo, extra: pendingPostId.trim());
+          return true;
+        }
+      }
+
+      // 3. Check pending profile
       final pendingId = LocalStorage.instance.getPendingProfileId();
       if (pendingId != null && pendingId.trim().isNotEmpty) {
         await LocalStorage.instance.clearPendingProfileId();
@@ -572,6 +699,61 @@ class DeepLinkService {
     await Share.share(
       text,
       subject: "Check out $displayName on TreeKo",
+    );
+  }
+
+  /// Creates a shareable OneLink URL carrying the post ID.
+  Future<String> createPostShareLink(FeedPostModel post) async {
+    final cleanId = post.id.trim();
+    final postTitle = post.title.trim().isNotEmpty
+        ? post.title.trim()
+        : (post.isVideo ? 'Video on TreeKo' : 'Post on TreeKo');
+
+    if (oneLinkTemplateId.isNotEmpty) {
+      final query = Uri(
+        queryParameters: {
+          'deep_link_value': 'post_$cleanId',
+          'post_id': cleanId,
+          'type': post.isVideo ? 'video' : 'photo',
+          'af_sub1': postTitle,
+          'af_dp': 'treeko://post?id=$cleanId',
+          'af_web_dp': playStoreBaseUrl,
+        },
+      ).query;
+      return 'https://$oneLinkDomain/$oneLinkTemplateId?$query';
+    }
+
+    final encodedReferrer = Uri.encodeComponent('post_id=$cleanId');
+    return '$playStoreBaseUrl&referrer=$encodedReferrer';
+  }
+
+  /// Complete post share action: triggers the native OS share sheet with a single clickable link!
+  Future<void> sharePost({
+    required BuildContext context,
+    required FeedPostModel post,
+  }) async {
+    final cleanId = post.id.trim();
+    if (cleanId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot share post: missing post ID')),
+      );
+      return;
+    }
+
+    final shareUrl = await createPostShareLink(post);
+
+    final title = post.title.trim().isNotEmpty ? post.title.trim() : null;
+    final creator =
+        post.creatorName.trim().isNotEmpty ? post.creatorName.trim() : 'a creator';
+    final mediaType = post.isVideo ? 'video' : 'post';
+
+    final text = title != null
+        ? 'Check out "$title" by $creator on TreeKo! 🎬\n\n$shareUrl'
+        : 'Check out this $mediaType by $creator on TreeKo! 🎬\n\n$shareUrl';
+
+    await Share.share(
+      text,
+      subject: title ?? 'Check out this $mediaType on TreeKo',
     );
   }
 
