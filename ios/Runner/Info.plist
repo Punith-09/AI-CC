@@ -67,6 +67,10 @@
 		<string>remote-notification</string>
 		<string>fetch</string>
 	</array>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>TreeKo needs access to save photos and videos to your gallery.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>TreeKo needs access to save photos and videos to your gallery.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

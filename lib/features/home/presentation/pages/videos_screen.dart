@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
@@ -18,6 +19,7 @@ import '../../data/models/feed_post_model.dart';
 import '../../data/repository/home_repository.dart';
 import '../providers/home_feed_provider.dart';
 import '../widgets/comments_bottom_sheet.dart';
+import '../widgets/reels_video_controller_manager.dart';
 
 class VideosScreen extends StatefulWidget {
   const VideosScreen({super.key});
@@ -28,18 +30,24 @@ class VideosScreen extends StatefulWidget {
 
 class _VideosScreenState extends State<VideosScreen> {
   late final PageController _pageController;
+  late final ReelsVideoControllerManager _preloadManager;
   int _currentPage = 0;
   bool _isMuted = false;
+  int _lastLoadedPage = -1;
+  int _lastPostsCount = 0;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+    _preloadManager = ReelsVideoControllerManager();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final feed = context.read<HomeFeedProvider>();
-      if (feed.videoPosts.isEmpty && !feed.isLoading) {
-        feed.fetchFeed();
+      if (!feed.hasFetchedVideos && !feed.isVideoLoading) {
+        feed.fetchVideos();
+      } else if (feed.videoPosts.isNotEmpty) {
+        _preloadManager.updateWindow(0, feed.videoPosts);
       }
     });
   }
@@ -47,6 +55,7 @@ class _VideosScreenState extends State<VideosScreen> {
   @override
   void dispose() {
     _pageController.dispose();
+    _preloadManager.disposeAll();
     super.dispose();
   }
 
@@ -54,24 +63,90 @@ class _VideosScreenState extends State<VideosScreen> {
     setState(() {
       _isMuted = !_isMuted;
     });
+    _preloadManager.setMuted(_isMuted);
   }
 
   @override
   Widget build(BuildContext context) {
     final feedProvider = context.watch<HomeFeedProvider>();
     final videoPosts = feedProvider.videoPosts;
-    final isLoading = feedProvider.isLoading;
+    final isVideoLoading = feedProvider.isVideoLoading;
+    final isLoadingMore = feedProvider.isLoadingMoreVideos;
+    final errorMessage = feedProvider.videoErrorMessage;
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+
+    // Keep preloading sliding window updated when page or post list changes (deferred to post-frame)
+    if (videoPosts.isNotEmpty &&
+        (_lastLoadedPage != _currentPage || _lastPostsCount != videoPosts.length)) {
+      _lastLoadedPage = _currentPage;
+      _lastPostsCount = videoPosts.length;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _preloadManager.updateWindow(_currentPage, videoPosts);
+        }
+      });
+    }
 
     Widget body;
 
-    if (isLoading && videoPosts.isEmpty) {
+    if (isVideoLoading && videoPosts.isEmpty) {
       body = const ColoredBox(
         color: Colors.black,
         child: Center(
           child: CircularProgressIndicator(
             color: AppColors.primary,
             strokeWidth: 2.5,
+          ),
+        ),
+      );
+    } else if (errorMessage != null && videoPosts.isEmpty) {
+      body = ColoredBox(
+        color: Colors.black,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: Colors.redAccent,
+                  size: 56,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Failed to load videos',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  errorMessage,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () => feedProvider.fetchVideos(isRefresh: true),
+                  icon: const Icon(Icons.refresh, size: 18),
+                  label: const Text('Retry'),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -114,7 +189,7 @@ class _VideosScreenState extends State<VideosScreen> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                onPressed: () => feedProvider.fetchFeed(isRefresh: true),
+                onPressed: () => feedProvider.fetchVideos(isRefresh: true),
                 icon: const Icon(Icons.refresh, size: 18),
                 label: const Text('Refresh'),
               ),
@@ -123,26 +198,59 @@ class _VideosScreenState extends State<VideosScreen> {
         ),
       );
     } else {
+      final totalCount = videoPosts.length + (isLoadingMore ? 1 : 0);
+
       body = ColoredBox(
         color: Colors.black,
-        child: PageView.builder(
-          controller: _pageController,
-          scrollDirection: Axis.vertical,
-          itemCount: videoPosts.length,
-          onPageChanged: (index) {
-            setState(() {
-              _currentPage = index;
-            });
+        child: RefreshIndicator(
+          color: AppColors.primary,
+          backgroundColor: Colors.black,
+          onRefresh: () async {
+            await feedProvider.fetchVideos(isRefresh: true);
+            if (mounted && _pageController.hasClients) {
+              _pageController.jumpToPage(0);
+              setState(() {
+                _currentPage = 0;
+              });
+              _preloadManager.updateWindow(0, feedProvider.videoPosts);
+            }
           },
-          itemBuilder: (context, index) {
-            return _ReelVideoItem(
-              key: ValueKey(videoPosts[index].id),
-              post: videoPosts[index],
-              isCurrent: _currentPage == index,
-              isMuted: _isMuted,
-              onToggleMute: _toggleMute,
-            );
-          },
+          child: PageView.builder(
+            controller: _pageController,
+            scrollDirection: Axis.vertical,
+            itemCount: totalCount,
+            onPageChanged: (index) {
+              setState(() {
+                _currentPage = index;
+              });
+              _preloadManager.updateWindow(index, videoPosts);
+              if (index >= videoPosts.length - 2) {
+                feedProvider.fetchMoreVideos();
+              }
+            },
+            itemBuilder: (context, index) {
+              if (index >= videoPosts.length) {
+                return const ColoredBox(
+                  color: Colors.black,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.primary,
+                      strokeWidth: 2.5,
+                    ),
+                  ),
+                );
+              }
+              return _ReelVideoItem(
+                key: ValueKey(videoPosts[index].id),
+                index: index,
+                post: videoPosts[index],
+                isCurrent: _currentPage == index,
+                isMuted: _isMuted,
+                onToggleMute: _toggleMute,
+                manager: _preloadManager,
+              );
+            },
+          ),
         ),
       );
     }
@@ -161,17 +269,21 @@ class _VideosScreenState extends State<VideosScreen> {
 }
 
 class _ReelVideoItem extends StatefulWidget {
+  final int index;
   final FeedPostModel post;
   final bool isCurrent;
   final bool isMuted;
   final VoidCallback onToggleMute;
+  final ReelsVideoControllerManager manager;
 
   const _ReelVideoItem({
     super.key,
+    required this.index,
     required this.post,
     required this.isCurrent,
     required this.isMuted,
     required this.onToggleMute,
+    required this.manager,
   });
 
   @override
@@ -184,81 +296,182 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
   bool _isLoading = true;
   bool _hasError = false;
   bool _isPlaying = true;
+  bool _isBuffering = false;
   bool _hasIncrementedView = false;
 
   String get effectiveMediaUrl =>
-      ApiEndpoints.formatMediaUrl(widget.post.mediaUrl);
+      ApiEndpoints.optimizeVideoUrl(widget.post.mediaUrl);
+
+  String? get effectiveThumbUrl {
+    final thumb = widget.post.thumbnailUrl;
+    if (thumb != null && thumb.trim().isNotEmpty) {
+      return ApiEndpoints.formatMediaUrl(thumb);
+    }
+    return null;
+  }
 
   @override
   void initState() {
     super.initState();
-    _initController();
+    _syncWithManager();
   }
 
   @override
   void didUpdateWidget(covariant _ReelVideoItem oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (widget.isCurrent && !oldWidget.isCurrent) {
-      if (_controller != null && _isInitialized) {
-        _controller!.play();
-        _incrementViewIfNeeded();
+    if (oldWidget.index != widget.index || oldWidget.post.id != widget.post.id) {
+      _controller?.removeListener(_onControllerUpdate);
+      _syncWithManager();
+    } else {
+      if (widget.isCurrent && !oldWidget.isCurrent) {
+        // User swiped to this reel
+        if (_controller != null && _isInitialized) {
+          _playCurrentVideo();
+        } else {
+          // If not initialized yet, immediately promote to active high-priority loading!
+          _syncWithManager(forceActive: true);
+        }
+      } else if (!widget.isCurrent && oldWidget.isCurrent) {
+        _pauseCurrentVideo();
       }
-    } else if (!widget.isCurrent && oldWidget.isCurrent) {
-      _controller?.pause();
+
+      if (widget.isMuted != oldWidget.isMuted) {
+        _controller?.setVolume(widget.isMuted ? 0.0 : 1.0);
+      }
+    }
+  }
+
+  void _syncWithManager({bool forceActive = false}) {
+    final manager = widget.manager;
+    final index = widget.index;
+    final isTargetActive = widget.isCurrent || forceActive;
+
+    final existingCtrl = manager.getController(index);
+
+    if (existingCtrl != null && existingCtrl.value.isInitialized) {
+      // PRELOAD HIT! Instant zero-lag playback!
+      _controller = existingCtrl;
+      _isInitialized = true;
+      _isLoading = false;
+      _hasError = false;
+      _isPlaying = isTargetActive;
+
+      _controller!.removeListener(_onControllerUpdate);
+      _controller!.addListener(_onControllerUpdate);
+
+      if (isTargetActive) {
+        _playCurrentVideo();
+      }
+      return;
     }
 
-    if (widget.isMuted != oldWidget.isMuted) {
-      _controller?.setVolume(widget.isMuted ? 0.0 : 1.0);
+    if (isTargetActive) {
+      // High-priority active load for current video
+      _controller = null;
+      _isInitialized = false;
+      _isLoading = true;
+      _hasError = false;
+
+      manager.loadActive(index, widget.post).then((success) {
+        if (!mounted || widget.index != index) return;
+        if (success) {
+          final newCtrl = manager.getController(index);
+          if (newCtrl != null && newCtrl.value.isInitialized) {
+            setState(() {
+              _controller = newCtrl;
+              _isInitialized = true;
+              _isLoading = false;
+              _hasError = false;
+              _isPlaying = widget.isCurrent;
+            });
+
+            newCtrl.removeListener(_onControllerUpdate);
+            newCtrl.addListener(_onControllerUpdate);
+
+            if (widget.isCurrent) {
+              _playCurrentVideo();
+            }
+          }
+        } else {
+          // Only show error if the user is STILL on this video
+          if (widget.isCurrent) {
+            setState(() {
+              _isLoading = false;
+              _hasError = true;
+            });
+          }
+        }
+      });
+    } else {
+      // Background item waiting for sequential preloader
+      _isInitialized = false;
+      _isLoading = true;
+      _hasError = false;
     }
+  }
+
+  Future<void> _playCurrentVideo() async {
+    if (_controller != null && _isInitialized) {
+      try {
+        await _controller!.play();
+        if (mounted) setState(() => _isPlaying = true);
+        _incrementViewIfNeeded();
+      } catch (e) {
+        debugPrint('[REELS_PLAY] Error playing: $e');
+      }
+    }
+  }
+
+  void _pauseCurrentVideo() {
+    _controller?.pause();
+    if (mounted) setState(() => _isPlaying = false);
   }
 
   void _onControllerUpdate() {
     if (!mounted || _controller == null) return;
-    final isPlaying = _controller!.value.isPlaying;
-    if (_isPlaying != isPlaying) {
-      setState(() {
-        _isPlaying = isPlaying;
-      });
-    }
-  }
+    final value = _controller!.value;
 
-  Future<void> _initController() async {
-    if (effectiveMediaUrl.isEmpty) {
-      if (mounted) setState(() { _isLoading = false; _hasError = true; });
+    if (value.hasError && !_hasError) {
+      debugPrint('[REELS_ITEM] Controller error on index ${widget.index}: ${value.errorDescription}');
+      if (widget.isCurrent) {
+        setState(() {
+          _hasError = true;
+          _isLoading = false;
+        });
+      }
       return;
     }
 
-    try {
-      final uri = Uri.parse(effectiveMediaUrl);
-      final controller = VideoPlayerController.networkUrl(uri);
-      _controller = controller;
+    final isPlaying = value.isPlaying;
+    final isBuffering = value.isBuffering;
 
-      await controller.initialize();
-      await controller.setLooping(true);
-      await controller.setVolume(widget.isMuted ? 0.0 : 1.0);
-
-      controller.addListener(_onControllerUpdate);
-
-      if (mounted) {
+    if (value.isInitialized) {
+      if (_isPlaying != isPlaying || _isBuffering != isBuffering) {
         setState(() {
-          _isInitialized = true;
-          _isLoading = false;
-          _isPlaying = widget.isCurrent;
-        });
-
-        if (widget.isCurrent) {
-          controller.play();
-          _incrementViewIfNeeded();
-        }
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _hasError = true;
+          _isPlaying = isPlaying;
+          _isBuffering = isBuffering;
         });
       }
+    }
+  }
+
+  Future<void> _handleRetry() async {
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+    });
+
+    final success = await widget.manager.retry(widget.index, widget.post);
+    if (!mounted) return;
+
+    if (success) {
+      _syncWithManager(forceActive: true);
+    } else {
+      setState(() {
+        _isLoading = false;
+        _hasError = true;
+      });
     }
   }
 
@@ -298,7 +511,7 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
+      builder: (bottomSheetContext) {
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -317,22 +530,21 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
                 leading: const Icon(Icons.copy_rounded, color: Colors.white),
                 title: const Text('Copy Link', style: TextStyle(color: Colors.white)),
                 onTap: () async {
-                  Navigator.pop(context);
+                  final messenger = ScaffoldMessenger.maybeOf(context);
+                  Navigator.pop(bottomSheetContext);
                   final link =
                       await DeepLinkService.instance.createPostShareLink(widget.post);
                   await Clipboard.setData(ClipboardData(text: link));
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Video link copied to clipboard')),
-                    );
-                  }
+                  messenger?.showSnackBar(
+                    const SnackBar(content: Text('Video link copied to clipboard')),
+                  );
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.person_outline_rounded, color: Colors.white),
                 title: const Text('View Profile', style: TextStyle(color: Colors.white)),
                 onTap: () {
-                  Navigator.pop(context);
+                  Navigator.pop(bottomSheetContext);
                   if (widget.post.creatorId != null && widget.post.creatorId!.isNotEmpty) {
                     context.push(AppRoutes.exploreProfile, extra: widget.post.creatorId);
                   }
@@ -342,7 +554,7 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
                 leading: const Icon(Icons.share_outlined, color: Colors.white),
                 title: const Text('Share', style: TextStyle(color: Colors.white)),
                 onTap: () {
-                  Navigator.pop(context);
+                  Navigator.pop(bottomSheetContext);
                   DeepLinkService.instance.sharePost(
                     context: context,
                     post: widget.post,
@@ -353,7 +565,7 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
                 leading: const Icon(Icons.download_rounded, color: Colors.white),
                 title: const Text('Download', style: TextStyle(color: Colors.white)),
                 onTap: () {
-                  Navigator.pop(context);
+                  Navigator.pop(bottomSheetContext);
                   MediaDownloader.downloadPostMedia(context, widget.post);
                 },
               ),
@@ -384,7 +596,6 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
   @override
   void dispose() {
     _controller?.removeListener(_onControllerUpdate);
-    _controller?.dispose();
     super.dispose();
   }
 
@@ -410,7 +621,7 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // 1. Video Layer (pure visual, clicks handled above it)
+        // 1. Video Layer & Instant Poster
         Container(
           color: Colors.black,
           child: _buildVideoContent(),
@@ -445,24 +656,6 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
               ),
             ),
           ),
-
-        // 3. Top-Left Badge
-        // Positioned(
-        //   top: MediaQuery.of(context).padding.top + 10,
-        //   left: 16,
-        //   child: Container(
-        //     padding: const EdgeInsets.all(6),
-        //     decoration: BoxDecoration(
-        //       color: Colors.black.withValues(alpha: 0.25),
-        //       shape: BoxShape.circle,
-        //     ),
-        //     child: const Icon(
-        //       Icons.workspace_premium_rounded,
-        //       color: Color(0xFFFFB800),
-        //       size: 28,
-        //     ),
-        //   ),
-        // ),
 
         // 4. Subtle Gradient Shade at Bottom for Text Readability
         Positioned(
@@ -731,59 +924,120 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
   }
 
   Widget _buildVideoContent() {
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(
-          color: Colors.white,
-          strokeWidth: 2.5,
-        ),
-      );
-    }
+    final thumb = effectiveThumbUrl;
 
-    if (_hasError || _controller == null || !_isInitialized) {
-      return Center(
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // 1. Instant Poster Thumbnail (always visible until video frames play)
+        if (thumb != null && thumb.isNotEmpty)
+          Positioned.fill(
+            child: CachedNetworkImage(
+              imageUrl: thumb,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => const ColoredBox(color: Colors.black),
+              errorWidget: (context, url, error) => const ColoredBox(color: Colors.black),
+            ),
+          )
+        else
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF1E1E24), Color(0xFF0F0F12)],
+                ),
+              ),
+            ),
+          ),
+
+        // 2. Video Player layer
+        if (_isInitialized && _controller != null)
+          Center(
+            child: SizedBox.expand(
+              child: FittedBox(
+                fit: _controller!.value.size.height >= _controller!.value.size.width
+                    ? BoxFit.cover
+                    : BoxFit.contain,
+                child: SizedBox(
+                  width: _controller!.value.size.width,
+                  height: _controller!.value.size.height,
+                  child: IgnorePointer(
+                    child: VideoPlayer(_controller!),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+        // 3. Centered subtle loading spinner (only if not initialized yet or buffering mid-playback)
+        if (_isLoading || (_isInitialized && _controller != null && (_isBuffering || _controller!.value.isBuffering)))
+          Center(
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.4),
+                shape: BoxShape.circle,
+              ),
+              child: const SizedBox(
+                width: 26,
+                height: 26,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.5,
+                ),
+              ),
+            ),
+          ),
+
+        // 4. Error state overlay with Retry
+        if (_hasError)
+          _buildErrorOverlay(),
+      ],
+    );
+  }
+
+  Widget _buildErrorOverlay() {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.75),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white12),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, color: Colors.white54, size: 42),
+            const Icon(Icons.error_outline_rounded, color: Colors.white54, size: 40),
             const SizedBox(height: 12),
             const Text(
               'Could not load video',
-              style: TextStyle(color: Colors.white70, fontSize: 14),
+              style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: 12),
-            ElevatedButton(
+            const SizedBox(height: 6),
+            const Text(
+              'Check your connection and try again',
+              style: TextStyle(color: Colors.white60, fontSize: 12),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
-              onPressed: () {
-                setState(() {
-                  _isLoading = true;
-                  _hasError = false;
-                });
-                _initController();
-              },
-              child: const Text('Retry'),
+              onPressed: _handleRetry,
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('Retry'),
             ),
           ],
-        ),
-      );
-    }
-
-    final isPortrait = _controller!.value.size.height >= _controller!.value.size.width;
-
-    return Center(
-      child: SizedBox.expand(
-        child: FittedBox(
-          fit: isPortrait ? BoxFit.cover : BoxFit.contain,
-          child: SizedBox(
-            width: _controller!.value.size.width,
-            height: _controller!.value.size.height,
-            child: IgnorePointer(
-              child: VideoPlayer(_controller!),
-            ),
-          ),
         ),
       ),
     );

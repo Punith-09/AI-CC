@@ -5,13 +5,26 @@ import 'package:provider/provider.dart';
 
 import '../../../../common/widgets/user_avatar.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/di/injection_container.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/storage/local_storage.dart';
 import '../../../../core/utils/media_downloader/media_downloader.dart';
 import '../../data/models/feed_post_model.dart';
+import '../../../artist_profile/data/repository/profile_repository.dart';
 import '../../../artist_profile/presentation/providers/profile_provider.dart';
 
-class FeedHeader extends StatelessWidget {
+/// In-memory cache for creator TRK codes (app IDs) to guarantee instant display.
+class FeedHeaderUserTrkCache {
+  static final Map<String, String> _cache = {};
+  static String? get(String userId) => _cache[userId];
+  static void set(String userId, String trk) {
+    if (userId.isNotEmpty && trk.isNotEmpty) {
+      _cache[userId] = trk;
+    }
+  }
+}
+
+class FeedHeader extends StatefulWidget {
   final FeedPostModel post;
 
   const FeedHeader({
@@ -19,8 +32,55 @@ class FeedHeader extends StatelessWidget {
     required this.post,
   });
 
+  @override
+  State<FeedHeader> createState() => _FeedHeaderState();
+}
+
+class _FeedHeaderState extends State<FeedHeader> {
+  bool _isFetchingTrk = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAndResolveTrkCode();
+  }
+
+  @override
+  void didUpdateWidget(covariant FeedHeader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.post.creatorId != widget.post.creatorId ||
+        oldWidget.post.creatorTrkCode != widget.post.creatorTrkCode) {
+      _checkAndResolveTrkCode();
+    }
+  }
+
+  void _checkAndResolveTrkCode() {
+    final trk = widget.post.creatorTrkCode;
+    final creatorId = widget.post.creatorId ?? '';
+
+    if (trk != null && trk.isNotEmpty && creatorId.isNotEmpty) {
+      FeedHeaderUserTrkCache.set(creatorId, trk);
+      return;
+    }
+
+    if (creatorId.isNotEmpty &&
+        FeedHeaderUserTrkCache.get(creatorId) == null &&
+        !_isFetchingTrk &&
+        sl.isRegistered<ProfileRepository>()) {
+      _isFetchingTrk = true;
+      sl<ProfileRepository>().getUserProfile(creatorId).then((profile) {
+        if (mounted && profile.trkCode.isNotEmpty) {
+          FeedHeaderUserTrkCache.set(creatorId, profile.trkCode);
+          setState(() {});
+        }
+      }).catchError((_) {}).whenComplete(() {
+        _isFetchingTrk = false;
+      });
+    }
+  }
+
   void _navigateToProfile(BuildContext context) {
-    final targetUserId = post.creatorId;
+    final targetUserId = widget.post.creatorId;
     String? currentUserId;
     String? currentUserName;
 
@@ -33,9 +93,9 @@ class FeedHeader extends StatelessWidget {
             targetUserId.isNotEmpty &&
             currentUserId != null &&
             targetUserId == currentUserId) ||
-        (post.creatorName.isNotEmpty &&
+        (widget.post.creatorName.isNotEmpty &&
             currentUserName != null &&
-            post.creatorName.trim().toLowerCase() ==
+            widget.post.creatorName.trim().toLowerCase() ==
                 currentUserName.trim().toLowerCase());
 
     if (isMe) {
@@ -86,7 +146,7 @@ class FeedHeader extends StatelessWidget {
                 ),
                 onTap: () {
                   Navigator.pop(bottomSheetContext);
-                  MediaDownloader.downloadPostMedia(context, post);
+                  MediaDownloader.downloadPostMedia(context, widget.post);
                 },
               ),
               const SizedBox(height: 12),
@@ -112,20 +172,37 @@ class FeedHeader extends StatelessWidget {
       currentUserName = LocalStorage.instance.getUserName();
     } catch (_) {}
 
-    final targetUserId = post.creatorId;
+    final targetUserId = widget.post.creatorId;
     final isMe = (targetUserId != null &&
             targetUserId.isNotEmpty &&
             currentUserId != null &&
             targetUserId == currentUserId) ||
-        (post.creatorName.isNotEmpty &&
+        (widget.post.creatorName.isNotEmpty &&
             currentUserName != null &&
-            post.creatorName.trim().toLowerCase() ==
+            widget.post.creatorName.trim().toLowerCase() ==
                 currentUserName.trim().toLowerCase());
 
     final profileProvider = context.watch<ProfileProvider>();
-    final creatorId = post.creatorId ?? '';
+    final creatorId = widget.post.creatorId ?? '';
     final isFollowing = profileProvider.isFollowing(creatorId);
     final isFollowLoading = profileProvider.isFollowLoading(creatorId);
+
+    // Resolve effective TRK code (App ID)
+    String? effectiveTrk = widget.post.creatorTrkCode;
+    if (effectiveTrk == null || effectiveTrk.trim().isEmpty) {
+      if (isMe) {
+        effectiveTrk = LocalStorage.instance.getUserTrkCode() ??
+            profileProvider.currentProfile?.trkCode;
+      } else if (creatorId.isNotEmpty) {
+        effectiveTrk = FeedHeaderUserTrkCache.get(creatorId);
+      }
+    }
+    effectiveTrk = effectiveTrk?.trim();
+
+    final hasTrk = effectiveTrk != null && effectiveTrk.isNotEmpty;
+    final hasCategory = widget.post.creatorCategory != null &&
+        widget.post.creatorCategory!.trim().isNotEmpty;
+    final hasLocation = widget.post.location.trim().isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.only(left: 16, top: 16, right: 16, bottom: 0),
@@ -135,8 +212,8 @@ class FeedHeader extends StatelessWidget {
             behavior: HitTestBehavior.opaque,
             onTap: () => _navigateToProfile(context),
             child: UserAvatar(
-              imageUrl: post.creatorPic,
-              name: post.creatorName,
+              imageUrl: widget.post.creatorPic,
+              name: widget.post.creatorName,
               radius: 22,
               fontSize: 16,
               backgroundColor: AppColors.whiteShade,
@@ -154,7 +231,7 @@ class FeedHeader extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          post.creatorName,
+                          widget.post.creatorName,
                           style: TextStyle(
                             fontSize: 16.5,
                             fontWeight: FontWeight.w600,
@@ -165,14 +242,12 @@ class FeedHeader extends StatelessWidget {
                       ),
                     ],
                   ),
-                  if (post.location.isNotEmpty ||
-                      (post.creatorCategory != null &&
-                          post.creatorCategory!.isNotEmpty))
+                  if (hasLocation || hasTrk || hasCategory)
                     Padding(
                       padding: const EdgeInsets.only(top: 2),
                       child: Row(
                         children: [
-                          if (post.location.isNotEmpty) ...[
+                          if (hasLocation) ...[
                             Icon(
                               LucideIcons.mapPin,
                               size: 12,
@@ -180,36 +255,52 @@ class FeedHeader extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              post.location,
+                              widget.post.location,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: subColor,
                               ),
                             ),
+                            if (hasTrk || hasCategory) ...[
+                              const SizedBox(width: 6),
+                              Text(
+                                '•  ',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: subColor,
+                                ),
+                              ),
+                            ],
                           ],
-                          if (post.location.isNotEmpty &&
-                              post.creatorCategory != null &&
-                              post.creatorCategory!.isNotEmpty) ...[
-                            const SizedBox(width: 6),
+                          if (hasTrk) ...[
                             Text(
-                              '•  ${post.creatorCategory}',
+                              effectiveTrk,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: accentColor,
+                                color: subColor,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                          ] else if (post.creatorCategory != null &&
-                              post.creatorCategory!.isNotEmpty) ...[
+                            if (hasCategory) ...[
+                              Text(
+                                ' - ',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: subColor,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                          ],
+                          if (hasCategory)
                             Text(
-                              post.creatorCategory!,
+                              widget.post.creatorCategory!,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: accentColor,
-                                fontWeight: FontWeight.w900,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                          ],
                         ],
                       ),
                     ),
@@ -227,14 +318,15 @@ class FeedHeader extends StatelessWidget {
                   : () async {
                       try {
                         final newFollowing =
-                            await profileProvider.toggleFollowUser(creatorId, userName: post.creatorName);
+                            await profileProvider.toggleFollowUser(creatorId,
+                                userName: widget.post.creatorName);
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
                                 newFollowing
-                                    ? 'Following ${post.creatorName}'
-                                    : 'Unfollowed ${post.creatorName}',
+                                    ? 'Following ${widget.post.creatorName}'
+                                    : 'Unfollowed ${widget.post.creatorName}',
                               ),
                               duration: const Duration(seconds: 2),
                               backgroundColor: AppColors.primary,

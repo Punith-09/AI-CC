@@ -4,10 +4,18 @@ class ApiEndpoints {
   static String get baseUrl {
     // return 'http://localhost:3000';
     // return 'http://10.0.2.2:3000';
-    // return 'http://54.79.238.124';
-    return 'https://casting-be-1.onrender.com/';
+    return 'http://54.79.238.124';
+    // return 'https://casting-be-1.onrender.com/';
     // return 'https://enrolled-plastic-sub-minerals.trycloudflare.com';
   }
+
+  // ── OTP auth endpoints ──────────────────────────────────────
+  static const String otpSend       = '/auth/otp/send';
+  static const String otpResend     = '/auth/otp/resend';
+  static const String otpVerify     = '/auth/otp/verify';
+  static const String otpSignup     = '/auth/otp/signup';
+  static const String otpLinkSend   = '/auth/otp/link/send';
+  static const String otpLinkVerify = '/auth/otp/link/verify';
 
   static const String login = '/auth/login';
   static const String register = '/auth/register';
@@ -56,6 +64,62 @@ class ApiEndpoints {
     }
     if (url.startsWith('/')) return '$baseUrl$url';
     return '$baseUrl/$url';
+  }
+
+  /// Optimizes video URLs for fast mobile streaming.
+  /// For Cloudinary video streams, injects dynamic mobile-friendly transformations:
+  /// - `q_auto`: AI-based dynamic bitrate & compression (reduces size up to 80%)
+  /// - `w_720,c_limit`: Caps resolution to 720p for fast buffer and decoder safety
+  /// - `f_mp4`: Ensures standard H.264 MP4 container with moov atom at byte 0 (faststart)
+  static String optimizeVideoUrl(String url) {
+    if (url.isEmpty) return url;
+    String formatted = formatMediaUrl(url).trim();
+
+    // Optimize Cloudinary video URLs
+    if (formatted.contains('/video/upload/')) {
+      final uploadIndex = formatted.indexOf('/video/upload/');
+      final afterUpload = formatted.substring(uploadIndex + '/video/upload/'.length);
+      // Avoid re-injecting if already transformed
+      if (!afterUpload.startsWith('q_') &&
+          !afterUpload.startsWith('w_') &&
+          !afterUpload.startsWith('f_') &&
+          !afterUpload.startsWith('c_')) {
+        formatted = formatted.replaceFirst(
+          '/video/upload/',
+          '/video/upload/q_auto,w_720,c_limit,f_mp4/',
+        );
+      }
+    }
+
+    return formatted;
+  }
+
+  /// Optimizes video URLs for fast, high-quality downloading to the device gallery.
+  /// For Cloudinary video streams, injects dynamic mobile-friendly transformations:
+  /// - `q_auto`: AI-based perceptual compression (~80% file size reduction)
+  /// - `w_1080,c_limit`: Caps resolution to 1080p (prevents multi-gigabyte 4K downloads from stalling)
+  /// - `f_mp4`: Guarantees universal standard H.264/AAC MP4 container for device galleries
+  static String optimizeVideoDownloadUrl(String url) {
+    if (url.isEmpty) return url;
+    String formatted = formatMediaUrl(url).trim();
+
+    // Optimize Cloudinary video URLs
+    if (formatted.contains('/video/upload/')) {
+      final uploadIndex = formatted.indexOf('/video/upload/');
+      final afterUpload = formatted.substring(uploadIndex + '/video/upload/'.length);
+      // Avoid re-injecting if already transformed
+      if (!afterUpload.startsWith('q_') &&
+          !afterUpload.startsWith('w_') &&
+          !afterUpload.startsWith('f_') &&
+          !afterUpload.startsWith('c_')) {
+        formatted = formatted.replaceFirst(
+          '/video/upload/',
+          '/video/upload/q_auto,w_1080,c_limit,f_mp4/',
+        );
+      }
+    }
+
+    return formatted;
   }
 
   static const String chats = "/chats";

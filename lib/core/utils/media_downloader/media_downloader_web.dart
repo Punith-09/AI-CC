@@ -2,7 +2,11 @@
 import 'dart:html' as html;
 import 'package:dio/dio.dart';
 
-Future<String> downloadFile(String url, String fileName) async {
+Future<String> downloadFile(
+  String url,
+  String fileName, {
+  bool isVideo = false,
+}) async {
   try {
     final response = await Dio().get<List<int>>(
       url,
