@@ -38,4 +38,7 @@ class AppRoutes {
   static const String storyViewer = "/storyViewer";
   static const String liveStats = "/liveStats";
   static const String statUsersList = "/statUsersList";
+
+  static const String phoneLogin = '/phoneLogin';
+  static const String linkPhone  = '/linkPhone';
 }

@@ -69,6 +69,13 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Called by OTP screens after a successful verify / signup.
+  /// Triggers the same provider-sync lifecycle as a normal email login.
+  void syncAfterOtpLogin(String? userId) {
+    _syncUserSessionOnLogin(userId);
+    notifyListeners();
+  }
+
   Future<bool> login(String identifier, String password) async {
     _isLoading = true;
     _errorMessage = null;

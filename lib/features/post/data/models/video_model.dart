@@ -7,6 +7,7 @@ class VideoModel {
   final String? creatorName;
   final String? creatorPic;
   final String? creatorCategory;
+  final String? creatorTrkCode;
   final String? location;
   final String? city;
   final String? state;
@@ -26,6 +27,7 @@ class VideoModel {
     this.creatorName,
     this.creatorPic,
     this.creatorCategory,
+    this.creatorTrkCode,
     this.location,
     this.city,
     this.state,
@@ -101,6 +103,7 @@ class VideoModel {
       creatorName: json['creatorName'] as String? ?? creatorMap?['fullName'] as String? ?? creatorMap?['name'] as String?,
       creatorPic: json['creatorPic'] as String? ?? creatorMap?['profilePhoto'] as String? ?? creatorMap?['avatar'] as String?,
       creatorCategory: json['creatorCategory'] as String? ?? creatorMap?['role'] as String? ?? creatorMap?['category'] as String?,
+      creatorTrkCode: (json['trkCode'] ?? json['trk_code'] ?? json['creatorTrkCode'] ?? json['creator_trk_code'] ?? creatorMap?['trkCode'] ?? creatorMap?['trk_code'])?.toString().trim(),
       location: json['location'] as String? ?? creatorMap?['location'] as String?,
       city: json['city'] as String? ?? json['creatorCity'] as String? ?? creatorMap?['city'] as String?,
       state: json['state'] as String? ?? json['creatorState'] as String? ?? creatorMap?['state'] as String?,
@@ -135,6 +138,7 @@ class VideoModel {
       'creatorName': creatorName,
       'creatorPic': creatorPic,
       'creatorCategory': creatorCategory,
+      'creatorTrkCode': creatorTrkCode,
       'title': title,
       'desc': desc,
       'url': url,

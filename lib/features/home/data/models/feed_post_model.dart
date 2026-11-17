@@ -19,6 +19,7 @@ class FeedPostModel {
   final String creatorName;
   final String? creatorPic;
   final String? creatorCategory;
+  final String? creatorTrkCode;
   final int likesCount;
   final int commentsCount;
   final int viewsCount;
@@ -40,6 +41,7 @@ class FeedPostModel {
     required this.creatorName,
     this.creatorPic,
     this.creatorCategory,
+    this.creatorTrkCode,
     this.likesCount = 0,
     this.commentsCount = 0,
     this.viewsCount = 0,
@@ -145,6 +147,7 @@ class FeedPostModel {
     String? creatorName,
     String? creatorPic,
     String? creatorCategory,
+    String? creatorTrkCode,
     int? likesCount,
     int? commentsCount,
     int? viewsCount,
@@ -166,6 +169,7 @@ class FeedPostModel {
       creatorName: creatorName ?? this.creatorName,
       creatorPic: creatorPic ?? this.creatorPic,
       creatorCategory: creatorCategory ?? this.creatorCategory,
+      creatorTrkCode: creatorTrkCode ?? this.creatorTrkCode,
       likesCount: likesCount ?? this.likesCount,
       commentsCount: commentsCount ?? this.commentsCount,
       viewsCount: viewsCount ?? this.viewsCount,
@@ -340,6 +344,7 @@ class FeedPostModel {
           : 'Creator',
       creatorPic: photo.creatorPic,
       creatorCategory: photo.creatorCategory ?? (isVid ? 'Actor' : 'Artist'),
+      creatorTrkCode: photo.creatorTrkCode,
       likesCount: photo.likesCount,
       commentsCount: 0,
       viewsCount: photo.viewsCount,
@@ -385,6 +390,7 @@ class FeedPostModel {
           : 'Creator',
       creatorPic: video.creatorPic,
       creatorCategory: video.creatorCategory ?? (isVid ? 'Actor' : 'Artist'),
+      creatorTrkCode: video.creatorTrkCode,
       likesCount: video.likesCount,
       commentsCount: 0,
       viewsCount: video.viewsCount,
@@ -485,6 +491,7 @@ class FeedPostModel {
       creatorName: json['creatorName'] as String? ?? creatorMap?['fullName'] as String? ?? creatorMap?['name'] as String? ?? 'Creator',
       creatorPic: json['creatorPic'] as String? ?? creatorMap?['profilePhoto'] as String? ?? creatorMap?['avatar'] as String?,
       creatorCategory: json['creatorCategory'] as String? ?? creatorMap?['role'] as String? ?? creatorMap?['category'] as String? ?? 'Artist',
+      creatorTrkCode: (json['trkCode'] ?? json['trk_code'] ?? json['creatorTrkCode'] ?? json['creator_trk_code'] ?? creatorMap?['trkCode'] ?? creatorMap?['trk_code'])?.toString().trim(),
       likesCount: parsedLikesCount,
       commentsCount: json['commentsCount'] as int? ?? (json['comments'] is List ? (json['comments'] as List).length : 0),
       viewsCount: parsedViewsCount,
