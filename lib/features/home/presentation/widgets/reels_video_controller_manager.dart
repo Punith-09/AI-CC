@@ -10,16 +10,16 @@ import '../../data/models/feed_post_model.dart';
 ///
 /// Features:
 /// 1. Prioritized Pipeline: The active video (what the user sees) gets 100% of
-///    available bandwidth with high priority. Upcoming videos (N+1, N+2) preload
+///    available bandwidth with high priority. Upcoming video (N+1) preloads
 ///    sequentially ONLY after the active video is ready, eliminating bandwidth contention.
-/// 2. Fault Tolerance: Generous timeouts (30s) + exponential backoff retries for active videos.
+/// 2. Fault Tolerance: 15s timeout with backoff retry for active videos.
 /// 3. Error Isolation: Failures in background preloading are silent and NEVER mark
 ///    the video as failed for the user. When the user swipes to that video, it
 ///    triggers a fresh active load.
-/// 4. URL Sanitization: Safely encodes spaces and malformed characters in media URLs.
-/// 5. Resource Management: Keeps at most 4 controllers in memory:
-///    `[currentIndex - 1, currentIndex, currentIndex + 1, currentIndex + 2]`
-///    and disposes out-of-window controllers immediately to prevent decoder saturation.
+/// 4. URL Optimization: Applies dynamic Cloudinary mobile transformations (`q_auto,w_720,c_limit,f_mp4`)
+///    and encodes spaces.
+/// 5. Resource Management: Keeps at most 2 controllers in memory:
+///    `[currentIndex, currentIndex + 1]` to prevent hardware decoder saturation on mobile devices.
 class ReelsVideoControllerManager {
   final Map<int, VideoPlayerController> _controllers = {};
   final Map<int, Completer<bool>> _loadingCompleters = {};
@@ -56,13 +56,12 @@ class ReelsVideoControllerManager {
     return _loadingCompleters.containsKey(index);
   }
 
-  /// Safely sanitizes raw media URLs into valid URIs.
+  /// Safely sanitizes and optimizes raw media URLs into fast streaming URIs.
   static Uri? sanitizeVideoUri(String rawUrl) {
     if (rawUrl.trim().isEmpty) return null;
-    final formatted = ApiEndpoints.formatMediaUrl(rawUrl).trim();
+    final formatted = ApiEndpoints.optimizeVideoUrl(rawUrl);
     if (formatted.isEmpty) return null;
 
-    // Encode spaces to %20 so ExoPlayer and HTTP servers don't reject the request
     final escaped = formatted.replaceAll(' ', '%20');
     try {
       final uri = Uri.parse(escaped);
@@ -75,7 +74,7 @@ class ReelsVideoControllerManager {
   }
 
   /// Loads the ACTIVE video with MAXIMUM priority.
-  /// Uses a generous 30-second timeout and up to 3 retry attempts with backoff.
+  /// Uses a 15-second timeout and up to 2 retry attempts with backoff.
   Future<bool> loadActive(int index, FeedPostModel post) async {
     _failedIndices.remove(index);
 
@@ -102,23 +101,26 @@ class ReelsVideoControllerManager {
     }
 
     bool success = false;
-    const maxAttempts = 3;
+    const maxAttempts = 2;
 
     for (int attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        // Clean up previous dead controller if any
         _controllers[index]?.dispose();
         _controllers.remove(index);
 
         final controller = VideoPlayerController.networkUrl(
           uri,
           videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+          httpHeaders: const {
+            'User-Agent': 'TreeKo/1.0.8 (Mobile; Android)',
+            'Accept': '*/*',
+          },
         );
 
         _controllers[index] = controller;
 
-        // 30-second timeout for active video to accommodate slow mobile networks
-        await controller.initialize().timeout(const Duration(seconds: 30));
+        // 15-second timeout for active video to accommodate mobile networks
+        await controller.initialize().timeout(const Duration(seconds: 15));
         await controller.setLooping(true);
         await controller.setVolume(_isMuted ? 0.0 : 1.0);
 
@@ -131,8 +133,7 @@ class ReelsVideoControllerManager {
         _controllers.remove(index);
 
         if (attempt < maxAttempts) {
-          // Exponential backoff between attempts: 500ms, 1500ms
-          await Future.delayed(Duration(milliseconds: attempt * 750));
+          await Future.delayed(const Duration(milliseconds: 500));
         }
       }
     }
@@ -149,7 +150,7 @@ class ReelsVideoControllerManager {
     return success;
   }
 
-  /// Silently preloads upcoming videos in the background.
+  /// Silently preloads upcoming video in the background.
   /// Failures are non-fatal and NEVER populate [_failedIndices].
   Future<bool> _preloadBackground(int index, FeedPostModel post, int seqId) async {
     // If sequence changed (user swiped away), abort
@@ -176,12 +177,16 @@ class ReelsVideoControllerManager {
       final controller = VideoPlayerController.networkUrl(
         uri,
         videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+        httpHeaders: const {
+          'User-Agent': 'TreeKo/1.0.8 (Mobile; Android)',
+          'Accept': '*/*',
+        },
       );
 
       _controllers[index] = controller;
 
-      // 18-second timeout for background preloads
-      await controller.initialize().timeout(const Duration(seconds: 18));
+      // 12-second timeout for background preloads
+      await controller.initialize().timeout(const Duration(seconds: 12));
       await controller.setLooping(true);
       await controller.setVolume(_isMuted ? 0.0 : 1.0);
       await controller.pause(); // frame 0 ready
@@ -209,21 +214,16 @@ class ReelsVideoControllerManager {
 
   /// Updates the sliding window around [currentIndex] using a prioritized pipeline.
   ///
-  /// Sequential Preload Priority:
-  /// 1. [currentIndex] (High Priority - 100% bandwidth)
-  /// 2. [currentIndex + 1] (Next video - buffered only after active video is safe)
-  /// 3. [currentIndex + 2] (Next-next video)
+  /// On mobile devices, keeps strictly 2 controllers [currentIndex, currentIndex + 1]
+  /// to ensure 100% bandwidth for the active video and prevent hardware decoder exhaustion.
   void updateWindow(int currentIndex, List<FeedPostModel> posts) {
     if (posts.isEmpty) return;
 
     final currentSeq = ++_sequenceId;
-
-    final prev1 = currentIndex - 1;
     final next1 = currentIndex + 1;
-    final next2 = currentIndex + 2;
 
-    // Evict controllers outside the sliding window [currentIndex - 1 .. currentIndex + 2]
-    final allowed = {prev1, currentIndex, next1, next2};
+    // Evict controllers outside [currentIndex, next1]
+    final allowed = {currentIndex, next1};
     final toRemove = _controllers.keys.where((k) => !allowed.contains(k)).toList();
     for (final k in toRemove) {
       _controllers[k]?.dispose();
@@ -237,16 +237,9 @@ class ReelsVideoControllerManager {
       loadActive(currentIndex, posts[currentIndex]).then((ready) {
         if (!ready || _sequenceId != currentSeq) return;
 
-        // Step 2: Once active video is ready and user is still on it, preload N+1
+        // Step 2: Once active video is ready and user is still on it, preload ONLY N+1
         if (next1 < posts.length) {
-          _preloadBackground(next1, posts[next1], currentSeq).then((readyNext1) {
-            if (!readyNext1 || _sequenceId != currentSeq) return;
-
-            // Step 3: Once N+1 is ready, preload N+2
-            if (next2 < posts.length) {
-              _preloadBackground(next2, posts[next2], currentSeq);
-            }
-          });
+          _preloadBackground(next1, posts[next1], currentSeq);
         }
       });
     }

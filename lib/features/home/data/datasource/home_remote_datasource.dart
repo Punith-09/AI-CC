@@ -1,3 +1,4 @@
+import '../../../../core/storage/local_storage.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/network/dio_client.dart';
@@ -99,6 +100,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
   Future<Map<String, dynamic>> _fetchUserLocations() async {
     final Map<String, String> locationMap = {};
     final Map<String, String> nameToIdMap = {};
+    final Map<String, String> nameToTrkMap = {};
     // id -> {name, pic, role}
     final Map<String, Map<String, String>> idToUser = {};
     try {
@@ -126,6 +128,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
                 item['photo']?.toString() ??
                 '';
             final role = item['role']?.toString() ?? item['type']?.toString() ?? item['category']?.toString() ?? '';
+            final trkCode = (item['trkCode'] ?? item['trk_code'] ?? item['userTrkCode'] ?? (item['user'] is Map ? (item['user']['trkCode'] ?? item['user']['trk_code']) : null) ?? (item['artist'] is Map ? (item['artist']['trkCode'] ?? item['artist']['trk_code']) : null) ?? (item['details'] is Map ? (item['details']['trkCode'] ?? item['details']['trk_code']) : null))?.toString().trim() ?? '';
             final city = item['city']?.toString().trim() ?? '';
             final state = item['state']?.toString().trim() ?? '';
             final loc = item['location']?.toString().trim() ?? '';
@@ -158,7 +161,11 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
                 'name': name ?? '',
                 'pic': pic,
                 'role': role,
+                'trkCode': trkCode,
               };
+              if (name != null && name.trim().isNotEmpty && trkCode.isNotEmpty) {
+                nameToTrkMap[name.trim().toLowerCase()] = trkCode;
+              }
             }
           }
         }
@@ -168,6 +175,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       'locations': locationMap,
       'nameToId': nameToIdMap,
       'idToUser': idToUser,
+      'nameToTrk': nameToTrkMap,
     };
   }
 
@@ -188,6 +196,7 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
     final userLocations = (userMeta['locations'] as Map<String, String>?) ?? {};
     final nameToId = (userMeta['nameToId'] as Map<String, String>?) ?? {};
     final idToUser = (userMeta['idToUser'] as Map<String, Map<String, String>>?) ?? {};
+    final nameToTrk = (userMeta['nameToTrk'] as Map<String, String>?) ?? {};
 
     var enriched = post;
 
@@ -242,6 +251,36 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
       if (loc != null && loc.isNotEmpty) {
         enriched = enriched.copyWith(location: loc);
       }
+    }
+
+        // Enrich creatorTrkCode
+    if (enriched.creatorTrkCode == null || enriched.creatorTrkCode!.isEmpty) {
+      String? resolvedTrk;
+      if (cId != null && cId.isNotEmpty) {
+        resolvedTrk = idToUser[cId]?['trkCode'];
+      }
+      if ((resolvedTrk == null || resolvedTrk.isEmpty) && enriched.creatorName.isNotEmpty) {
+        resolvedTrk = nameToTrk[enriched.creatorName.trim().toLowerCase()];
+      }
+      if (resolvedTrk != null && resolvedTrk.isNotEmpty) {
+        enriched = enriched.copyWith(creatorTrkCode: resolvedTrk);
+      }
+    }
+
+    // If it's the current user, check LocalStorage
+    if (enriched.creatorTrkCode == null || enriched.creatorTrkCode!.isEmpty) {
+      try {
+        final currentUserId = LocalStorage.instance.getUserId();
+        final currentUserName = LocalStorage.instance.getUserName();
+        final isMe = (enriched.creatorId != null && enriched.creatorId == currentUserId) ||
+            (currentUserName != null && enriched.creatorName.trim().toLowerCase() == currentUserName.trim().toLowerCase());
+        if (isMe) {
+          final myTrk = LocalStorage.instance.getUserTrkCode();
+          if (myTrk != null && myTrk.isNotEmpty) {
+            enriched = enriched.copyWith(creatorTrkCode: myTrk);
+          }
+        }
+      } catch (_) {}
     }
 
     return enriched;

@@ -135,7 +135,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
   // =========================================================
 
   Future<void> _initializeVideo() async {
-    final videoUrl = ApiEndpoints.formatMediaUrl(_post.mediaUrl);
+    final videoUrl = ApiEndpoints.optimizeVideoUrl(_post.mediaUrl);
     if (videoUrl.isEmpty) {
       setState(() => _hasVideoError = true);
       return;
@@ -1272,7 +1272,7 @@ class _WatchMediaScreenState extends State<WatchMediaScreen> {
 
   Widget _buildThumbnail() {
     if (_post.isVideo) {
-      final videoUrl = ApiEndpoints.formatMediaUrl(_post.mediaUrl);
+      final videoUrl = ApiEndpoints.optimizeVideoUrl(_post.mediaUrl);
       if (videoUrl.isNotEmpty) {
         return VideoFrameThumbnail(
           videoUrl: videoUrl,

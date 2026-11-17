@@ -23,6 +23,7 @@ class TalentModel {
   final List<String> skills;
   final String role;
   final String projectType;
+  final String trkCode;
 
   const TalentModel({
     this.id = '',
@@ -46,6 +47,7 @@ class TalentModel {
     this.skills = const [],
     this.role = '',
     this.projectType = '',
+    this.trkCode = '',
   });
 
   bool get hasCity => city.trim().isNotEmpty;
@@ -258,6 +260,7 @@ class TalentModel {
     List<String>? skills,
     String? role,
     String? projectType,
+    String? trkCode,
   }) {
     return TalentModel(
       id: id,
@@ -281,6 +284,7 @@ class TalentModel {
       skills: skills ?? this.skills,
       role: role ?? this.role,
       projectType: projectType ?? this.projectType,
+      trkCode: trkCode ?? this.trkCode,
     );
   }
 

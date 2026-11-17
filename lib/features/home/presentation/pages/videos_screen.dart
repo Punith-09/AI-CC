@@ -33,6 +33,8 @@ class _VideosScreenState extends State<VideosScreen> {
   late final ReelsVideoControllerManager _preloadManager;
   int _currentPage = 0;
   bool _isMuted = false;
+  int _lastLoadedPage = -1;
+  int _lastPostsCount = 0;
 
   @override
   void initState() {
@@ -44,6 +46,8 @@ class _VideosScreenState extends State<VideosScreen> {
       final feed = context.read<HomeFeedProvider>();
       if (!feed.hasFetchedVideos && !feed.isVideoLoading) {
         feed.fetchVideos();
+      } else if (feed.videoPosts.isNotEmpty) {
+        _preloadManager.updateWindow(0, feed.videoPosts);
       }
     });
   }
@@ -71,9 +75,16 @@ class _VideosScreenState extends State<VideosScreen> {
     final errorMessage = feedProvider.videoErrorMessage;
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
 
-    // Keep preloading sliding window updated whenever posts are available
-    if (videoPosts.isNotEmpty) {
-      _preloadManager.updateWindow(_currentPage, videoPosts);
+    // Keep preloading sliding window updated when page or post list changes (deferred to post-frame)
+    if (videoPosts.isNotEmpty &&
+        (_lastLoadedPage != _currentPage || _lastPostsCount != videoPosts.length)) {
+      _lastLoadedPage = _currentPage;
+      _lastPostsCount = videoPosts.length;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _preloadManager.updateWindow(_currentPage, videoPosts);
+        }
+      });
     }
 
     Widget body;
@@ -289,7 +300,7 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
   bool _hasIncrementedView = false;
 
   String get effectiveMediaUrl =>
-      ApiEndpoints.formatMediaUrl(widget.post.mediaUrl);
+      ApiEndpoints.optimizeVideoUrl(widget.post.mediaUrl);
 
   String? get effectiveThumbUrl {
     final thumb = widget.post.thumbnailUrl;
@@ -500,7 +511,7 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
+      builder: (bottomSheetContext) {
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -519,22 +530,21 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
                 leading: const Icon(Icons.copy_rounded, color: Colors.white),
                 title: const Text('Copy Link', style: TextStyle(color: Colors.white)),
                 onTap: () async {
-                  Navigator.pop(context);
+                  final messenger = ScaffoldMessenger.maybeOf(context);
+                  Navigator.pop(bottomSheetContext);
                   final link =
                       await DeepLinkService.instance.createPostShareLink(widget.post);
                   await Clipboard.setData(ClipboardData(text: link));
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Video link copied to clipboard')),
-                    );
-                  }
+                  messenger?.showSnackBar(
+                    const SnackBar(content: Text('Video link copied to clipboard')),
+                  );
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.person_outline_rounded, color: Colors.white),
                 title: const Text('View Profile', style: TextStyle(color: Colors.white)),
                 onTap: () {
-                  Navigator.pop(context);
+                  Navigator.pop(bottomSheetContext);
                   if (widget.post.creatorId != null && widget.post.creatorId!.isNotEmpty) {
                     context.push(AppRoutes.exploreProfile, extra: widget.post.creatorId);
                   }
@@ -544,7 +554,7 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
                 leading: const Icon(Icons.share_outlined, color: Colors.white),
                 title: const Text('Share', style: TextStyle(color: Colors.white)),
                 onTap: () {
-                  Navigator.pop(context);
+                  Navigator.pop(bottomSheetContext);
                   DeepLinkService.instance.sharePost(
                     context: context,
                     post: widget.post,
@@ -555,7 +565,7 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
                 leading: const Icon(Icons.download_rounded, color: Colors.white),
                 title: const Text('Download', style: TextStyle(color: Colors.white)),
                 onTap: () {
-                  Navigator.pop(context);
+                  Navigator.pop(bottomSheetContext);
                   MediaDownloader.downloadPostMedia(context, widget.post);
                 },
               ),

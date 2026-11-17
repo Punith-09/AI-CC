@@ -42,7 +42,7 @@ class _FeedVideoPlayerState extends State<FeedVideoPlayer> {
   ScrollPosition? _scrollPosition;
 
   String get effectiveVideoUrl =>
-      ApiEndpoints.formatMediaUrl(widget.post.mediaUrl);
+      ApiEndpoints.optimizeVideoUrl(widget.post.mediaUrl);
 
   String get effectiveThumbUrl =>
       ApiEndpoints.formatMediaUrl(widget.post.thumbnailUrl ?? widget.post.mediaUrl);

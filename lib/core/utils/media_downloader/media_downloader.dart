@@ -13,49 +13,60 @@ class MediaDownloader {
   static Future<String> download({
     required String url,
     required String fileName,
+    bool isVideo = false,
   }) async {
-    return await impl.downloadFile(url, fileName);
+    return await impl.downloadFile(url, fileName, isVideo: isVideo);
   }
 
   static Future<void> downloadPostMedia(BuildContext context, FeedPostModel post) async {
+    // Capture the ScaffoldMessenger upfront before any async operations or modal pops
+    final messenger = ScaffoldMessenger.maybeOf(context);
+
     final rawUrl = post.mediaUrl;
     if (rawUrl.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger?.showSnackBar(
         const SnackBar(content: Text('No media URL found to download.')),
       );
       return;
     }
 
-    final effectiveUrl = ApiEndpoints.formatMediaUrl(rawUrl);
+    // For videos, use optimized download URL (compresses Cloudinary streams to 1080p H.264 MP4)
+    final effectiveUrl = post.isVideo
+        ? ApiEndpoints.optimizeVideoDownloadUrl(rawUrl)
+        : ApiEndpoints.formatMediaUrl(rawUrl);
 
-    // Determine file extension
+    // Determine clean file extension
     String ext = post.isVideo ? '.mp4' : '.jpg';
-    try {
-      final uri = Uri.parse(effectiveUrl);
-      final path = uri.path.toLowerCase();
-      if (path.endsWith('.mp4')) {
-        ext = '.mp4';
-      } else if (path.endsWith('.mov')) {
-        ext = '.mov';
-      } else if (path.endsWith('.webm')) {
-        ext = '.webm';
-      } else if (path.endsWith('.png')) {
-        ext = '.png';
-      } else if (path.endsWith('.jpeg')) {
-        ext = '.jpeg';
-      } else if (path.endsWith('.jpg')) {
-        ext = '.jpg';
-      } else if (path.endsWith('.webp')) {
-        ext = '.webp';
-      }
-    } catch (_) {}
+    if (!post.isVideo) {
+      try {
+        final uri = Uri.parse(effectiveUrl);
+        final path = uri.path.toLowerCase();
+        if (path.endsWith('.png')) {
+          ext = '.png';
+        } else if (path.endsWith('.jpeg')) {
+          ext = '.jpeg';
+        } else if (path.endsWith('.jpg')) {
+          ext = '.jpg';
+        } else if (path.endsWith('.webp')) {
+          ext = '.webp';
+        }
+      } catch (_) {}
+    }
 
-    final safeTitle = post.title.trim().isNotEmpty
-        ? post.title.trim().replaceAll(RegExp(r'[^\w\-]'), '_')
-        : (post.id.isNotEmpty ? post.id : 'media_${DateTime.now().millisecondsSinceEpoch}');
-    final fileName = '${safeTitle}_${DateTime.now().millisecondsSinceEpoch}$ext';
+    // Sanitize title to safe ASCII filename
+    String cleanTitle = post.title.trim().replaceAll(RegExp(r'[^\w\-]'), '_');
+    cleanTitle = cleanTitle.replaceAll(RegExp(r'_+'), '_').replaceAll(RegExp(r'^_|_$'), '');
+    if (cleanTitle.length > 25) {
+      cleanTitle = cleanTitle.substring(0, 25);
+    }
+    if (cleanTitle.isEmpty) {
+      cleanTitle = post.isVideo ? 'video' : 'photo';
+    }
+    final fileName = '${cleanTitle}_${DateTime.now().millisecondsSinceEpoch}$ext';
 
-    ScaffoldMessenger.of(context).showSnackBar(
+    // Show persistent progress snackbar while downloading
+    messenger?.hideCurrentSnackBar();
+    messenger?.showSnackBar(
       const SnackBar(
         content: Row(
           children: [
@@ -71,7 +82,7 @@ class MediaDownloader {
             Text('Downloading...'),
           ],
         ),
-        duration: Duration(seconds: 2),
+        duration: Duration(minutes: 5),
       ),
     );
 
@@ -79,29 +90,30 @@ class MediaDownloader {
       await MediaDownloader.download(
         url: effectiveUrl,
         fileName: fileName,
+        isVideo: post.isVideo,
       );
 
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Downloaded successfully: $fileName'),
-            backgroundColor: AppColors.success,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
+      messenger?.hideCurrentSnackBar();
+      messenger?.showSnackBar(
+        const SnackBar(
+          content: Text('Downloaded Successfully'),
+          backgroundColor: AppColors.success,
+          duration: Duration(seconds: 3),
+        ),
+      );
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to download media. Please try again.'),
-            backgroundColor: AppColors.danger,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
+      messenger?.hideCurrentSnackBar();
+      final rawMsg = e.toString().replaceFirst('Exception: ', '').trim();
+      final displayMsg = (rawMsg.isNotEmpty && !rawMsg.startsWith('DioException'))
+          ? rawMsg
+          : 'Failed to download media. Please try again.';
+      messenger?.showSnackBar(
+        SnackBar(
+          content: Text(displayMsg),
+          backgroundColor: AppColors.danger,
+          duration: const Duration(seconds: 3),
+        ),
+      );
     }
   }
 }
