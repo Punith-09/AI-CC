@@ -153,6 +153,41 @@ class OtpAuthRepository {
 
   // ── Public API ─────────────────────────────────────────────
 
+  /// Checks if the phone number is already registered in the database.
+  Future<bool> checkPhoneExists(String phone10) async {
+    try {
+      final fullPath = '${ApiEndpoints.baseUrl}/auth/login';
+      await _dioClient.dio.post(
+        fullPath,
+        data: {
+          'identifier': phone10,
+          'password': 'check_phone_exists_probe',
+        },
+      );
+      return true;
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      if (data is Map) {
+        final message = (data['message'] ?? data['error'] ?? '').toString();
+        // If "No account found", the number is NOT in the database
+        if (message.toLowerCase().contains('no account found')) {
+          return false;
+        }
+        // If "Password does not match" or any other credential check, the account DOES exist
+        if (message.toLowerCase().contains('password does not match') ||
+            e.response?.statusCode == 401) {
+          return true;
+        }
+      }
+      if (e.response?.statusCode == 404) {
+        return false;
+      }
+      return true;
+    } catch (_) {
+      return true;
+    }
+  }
+
   Future<int> sendOtp(String phone10) async {
     final d = await _post('/auth/otp/send', {'phone': phone10});
     return (d['resend_after_seconds'] as num?)?.toInt() ?? 30;

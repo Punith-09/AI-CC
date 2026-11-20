@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:aicc/core/constants/app_colors.dart';
 import 'package:aicc/core/di/injection_container.dart';
+import 'package:aicc/features/auth/presentation/pages/signup_screen.dart';
 import 'package:aicc/features/otp_auth/data/otp_auth_repository.dart';
 import 'otp_screen.dart';
 
@@ -32,6 +33,65 @@ class _PhoneScreenState extends State<PhoneScreen> {
       _error = null;
     });
     try {
+      if (!widget.isLinkMode) {
+        // ── Check with database HERE ONLY if number is registered ──
+        final exists = await _repo.checkPhoneExists(_controller.text);
+        if (!exists) {
+          if (!mounted) return;
+          setState(() {
+            _loading = false;
+            _error = 'Mobile number is not registered';
+          });
+
+          await showDialog<void>(
+            context: context,
+            barrierDismissible: false,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: const Color(0xFF1A1A1A),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Text(
+                'Number Not Registered',
+                style: GoogleFonts.sora(
+                  color: AppColors.primary,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              content: Text(
+                'This mobile number is not linked to any account.\n\nYou\'ll be taken to the sign-up page to create a new account.',
+                style: GoogleFonts.inter(
+                  color: Colors.white70,
+                  fontSize: 13,
+                  height: 1.6,
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) =>
+                          SignupScreen(initialMobile: _controller.text),
+                    ));
+                  },
+                  child: Text(
+                    'Create Account',
+                    style: GoogleFonts.sora(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+          return;
+        }
+      }
+
+      // If number is in the database, proceed to send OTP
       final int seconds;
       if (widget.isLinkMode) {
         seconds = await _repo.sendLinkOtp(_controller.text);
@@ -48,6 +108,8 @@ class _PhoneScreenState extends State<PhoneScreen> {
       ));
     } on OtpApiException catch (e) {
       setState(() => _error = e.message);
+    } catch (_) {
+      setState(() => _error = 'An error occurred. Please try again.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
