@@ -32,7 +32,9 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProfileProvider>().fetchUserProfile(widget.userId);
+      final p = context.read<ProfileProvider>();
+      final hasCached = p.viewedProfile != null && p.viewedProfile!.id == widget.userId;
+      p.fetchUserProfile(widget.userId, silent: hasCached);
     });
   }
 
@@ -121,7 +123,10 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
       body: SafeArea(
         child: Consumer<ProfileProvider>(
           builder: (context, provider, _) {
-            if (provider.isLoading) {
+            final profile = provider.viewedProfile;
+            final isViewingThisUser = profile != null && profile.id == widget.userId;
+
+            if (provider.isLoading && !isViewingThisUser) {
               return const Center(
                 child: CircularProgressIndicator(
                   color: AppColors.primary,
@@ -129,7 +134,7 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
               );
             }
 
-            if (provider.error != null) {
+            if (provider.error != null && !isViewingThisUser) {
               return Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
@@ -168,7 +173,6 @@ class _ExploreProfileScreenState extends State<ExploreProfileScreen> {
               );
             }
 
-            final profile = provider.viewedProfile;
             final mediaList = provider.viewedMedia;
 
             final fullName = profile?.name ?? '';

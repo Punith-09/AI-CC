@@ -32,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context.read<HomeFeedProvider>().fetchFeed();
       context.read<MessagesProvider>().fetchChats(silent: true);
       context.read<StoriesProvider>().fetchStories(silent: true);
-      context.read<ProfileProvider>().fetchMyProfile();
+      context.read<ProfileProvider>().fetchMyProfile(silent: true);
       context.read<ProfileProvider>().fetchProfileCompletion();
       context.read<NotificationsProvider>().fetchNotifications(silent: true);
     });

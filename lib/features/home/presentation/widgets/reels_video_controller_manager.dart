@@ -56,25 +56,50 @@ class ReelsVideoControllerManager {
     return _loadingCompleters.containsKey(index);
   }
 
-  /// Safely sanitizes and optimizes raw media URLs into fast streaming URIs.
-  static Uri? sanitizeVideoUri(String rawUrl) {
-    if (rawUrl.trim().isEmpty) return null;
-    final formatted = ApiEndpoints.optimizeVideoUrl(rawUrl);
-    if (formatted.isEmpty) return null;
-
-    final escaped = formatted.replaceAll(' ', '%20');
+  static Uri? _parseUri(String url) {
+    if (url.trim().isEmpty) return null;
+    final escaped = url.trim().replaceAll(' ', '%20');
     try {
       final uri = Uri.parse(escaped);
-      if (!uri.hasScheme) return null;
-      return uri;
-    } catch (e) {
-      debugPrint('[REELS_MANAGER] Failed to parse URI: $escaped ($e)');
-      return null;
+      if (uri.hasScheme) return uri;
+    } catch (_) {}
+    return null;
+  }
+
+  /// Extracts ordered candidate URIs to try for playback:
+  /// 1. Cloudinary optimized stream (q_auto, w_720, c_limit) for fast start & low data.
+  /// 2. Raw fallback stream directly from source (guarantees playback if on-the-fly transformation fails on large/long videos).
+  static List<Uri> getCandidateUris(FeedPostModel post) {
+    final List<Uri> candidates = [];
+
+    final raw = ApiEndpoints.formatMediaUrl(post.mediaUrl).trim();
+    final optimized = ApiEndpoints.optimizeVideoUrl(post.mediaUrl).trim();
+
+    if (optimized.isNotEmpty) {
+      final optUri = _parseUri(optimized);
+      if (optUri != null) candidates.add(optUri);
     }
+
+    if (raw.isNotEmpty) {
+      final rawUri = _parseUri(raw);
+      if (rawUri != null && !candidates.contains(rawUri)) {
+        candidates.add(rawUri);
+      }
+    }
+
+    return candidates;
+  }
+
+  /// Safely sanitizes raw media URL into a valid URI.
+  static Uri? sanitizeVideoUri(String rawUrl) {
+    if (rawUrl.trim().isEmpty) return null;
+    final optimized = ApiEndpoints.optimizeVideoUrl(rawUrl);
+    return _parseUri(optimized) ?? _parseUri(ApiEndpoints.formatMediaUrl(rawUrl));
   }
 
   /// Loads the ACTIVE video with MAXIMUM priority.
-  /// Uses a 15-second timeout and up to 2 retry attempts with backoff.
+  /// Tries optimized URL first; if it fails or times out (common for large Cloudinary videos),
+  /// immediately falls back to the original raw video stream.
   Future<bool> loadActive(int index, FeedPostModel post) async {
     _failedIndices.remove(index);
 
@@ -92,8 +117,8 @@ class ReelsVideoControllerManager {
     final completer = Completer<bool>();
     _loadingCompleters[index] = completer;
 
-    final uri = sanitizeVideoUri(post.mediaUrl);
-    if (uri == null) {
+    final candidates = getCandidateUris(post);
+    if (candidates.isEmpty) {
       _failedIndices.add(index);
       _loadingCompleters.remove(index);
       completer.complete(false);
@@ -101,9 +126,16 @@ class ReelsVideoControllerManager {
     }
 
     bool success = false;
-    const maxAttempts = 2;
 
-    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+    for (int cIdx = 0; cIdx < candidates.length; cIdx++) {
+      final uri = candidates[cIdx];
+      final isLastCandidate = cIdx == candidates.length - 1;
+      // If we have a fallback available, don't stall on candidate 1 for 15s; give candidate 1 (transformed) 7 seconds.
+      // If it's stuck or fails, immediately try candidate 2 (raw) with 20 seconds!
+      final timeoutDuration = (!isLastCandidate)
+          ? const Duration(seconds: 7)
+          : const Duration(seconds: 20);
+
       try {
         _controllers[index]?.dispose();
         _controllers.remove(index);
@@ -111,16 +143,17 @@ class ReelsVideoControllerManager {
         final controller = VideoPlayerController.networkUrl(
           uri,
           videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
-          httpHeaders: const {
-            'User-Agent': 'TreeKo/1.0.8 (Mobile; Android)',
-            'Accept': '*/*',
-          },
+          httpHeaders: kIsWeb
+              ? const {}
+              : const {
+                  'User-Agent': 'TreeKo/1.0.8 (Mobile; Android)',
+                  'Accept': '*/*',
+                },
         );
 
         _controllers[index] = controller;
 
-        // 15-second timeout for active video to accommodate mobile networks
-        await controller.initialize().timeout(const Duration(seconds: 15));
+        await controller.initialize().timeout(timeoutDuration);
         await controller.setLooping(true);
         await controller.setVolume(_isMuted ? 0.0 : 1.0);
 
@@ -128,13 +161,9 @@ class ReelsVideoControllerManager {
         success = true;
         break;
       } catch (e) {
-        debugPrint('[REELS_ACTIVE] Load attempt $attempt failed for index $index: $e');
+        debugPrint('[REELS_ACTIVE] Candidate $uri failed for index $index: $e');
         _controllers[index]?.dispose();
         _controllers.remove(index);
-
-        if (attempt < maxAttempts) {
-          await Future.delayed(const Duration(milliseconds: 500));
-        }
       }
     }
 
@@ -166,42 +195,54 @@ class ReelsVideoControllerManager {
       return _loadingCompleters[index]!.future;
     }
 
-    final uri = sanitizeVideoUri(post.mediaUrl);
-    if (uri == null) return false;
+    final candidates = getCandidateUris(post);
+    if (candidates.isEmpty) return false;
 
     final completer = Completer<bool>();
     _loadingCompleters[index] = completer;
 
     bool success = false;
-    try {
-      final controller = VideoPlayerController.networkUrl(
-        uri,
-        videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
-        httpHeaders: const {
-          'User-Agent': 'TreeKo/1.0.8 (Mobile; Android)',
-          'Accept': '*/*',
-        },
-      );
+    for (int cIdx = 0; cIdx < candidates.length; cIdx++) {
+      if (_sequenceId != seqId) break;
+      final uri = candidates[cIdx];
+      final isLastCandidate = cIdx == candidates.length - 1;
+      final timeoutDuration = (!isLastCandidate)
+          ? const Duration(seconds: 6)
+          : const Duration(seconds: 15);
 
-      _controllers[index] = controller;
+      try {
+        final controller = VideoPlayerController.networkUrl(
+          uri,
+          videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+          httpHeaders: kIsWeb
+              ? const {}
+              : const {
+                  'User-Agent': 'TreeKo/1.0.8 (Mobile; Android)',
+                  'Accept': '*/*',
+                },
+        );
 
-      // 12-second timeout for background preloads
-      await controller.initialize().timeout(const Duration(seconds: 12));
-      await controller.setLooping(true);
-      await controller.setVolume(_isMuted ? 0.0 : 1.0);
-      await controller.pause(); // frame 0 ready
+        _controllers[index] = controller;
 
-      if (_sequenceId == seqId) {
-        success = true;
-      } else {
-        // User moved far away, dispose
-        controller.dispose();
+        await controller.initialize().timeout(timeoutDuration);
+        await controller.setLooping(true);
+        await controller.setVolume(_isMuted ? 0.0 : 1.0);
+        await controller.pause(); // frame 0 ready
+
+        if (_sequenceId == seqId) {
+          success = true;
+          break;
+        } else {
+          // User moved far away, dispose
+          controller.dispose();
+          _controllers.remove(index);
+          break;
+        }
+      } catch (e) {
+        debugPrint('[REELS_PRELOAD_BG] Candidate $uri failed for index $index: $e');
+        _controllers[index]?.dispose();
         _controllers.remove(index);
       }
-    } catch (e) {
-      debugPrint('[REELS_PRELOAD_BG] Silent fail for index $index: $e');
-      _controllers[index]?.dispose();
-      _controllers.remove(index);
     }
 
     _loadingCompleters.remove(index);

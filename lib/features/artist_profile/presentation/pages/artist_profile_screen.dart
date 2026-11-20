@@ -40,11 +40,15 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final profileProvider = context.read<ProfileProvider>();
       if (widget.userId != null) {
-        context.read<ProfileProvider>().fetchUserProfile(widget.userId!);
+        final hasCached = profileProvider.viewedProfile != null &&
+            profileProvider.viewedProfile!.id == widget.userId;
+        profileProvider.fetchUserProfile(widget.userId!, silent: hasCached);
       } else {
-        context.read<ProfileProvider>().fetchMyProfile();
-        context.read<ProfileProvider>().fetchProfileCompletion();
+        final hasCached = profileProvider.currentProfile != null;
+        profileProvider.fetchMyProfile(silent: hasCached);
+        profileProvider.fetchProfileCompletion();
       }
     });
   }
@@ -258,15 +262,6 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
       builder: (context, provider, themeProvider, child) {
         final isDark = themeProvider.isDarkMode;
 
-        if (provider.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        // Error state
-        if (provider.error != null) {
-          return _buildErrorState(provider, isDark);
-        }
-
         final profile = widget.userId != null
             ? provider.viewedProfile
             : provider.currentProfile;
@@ -274,6 +269,16 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
             ? provider.viewedMedia
             : provider.myMedia;
         final mediaList = ProfileProvider.deduplicateMedia(rawMedia);
+
+        // Only show full-screen spinner if we have NO profile data at all and are currently loading
+        if (provider.isLoading && profile == null) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        // Only show full-screen error if there is NO profile data to display
+        if (provider.error != null && profile == null) {
+          return _buildErrorState(provider, isDark);
+        }
 
         return _buildProfileContent(
           context: context,
@@ -346,7 +351,6 @@ class _ArtistProfileScreenState extends State<ArtistProfileScreen>
         : mediaList.length;
     final followersCount = profile?.followers ?? '0';
     final followingCount = profile?.followingCount ?? '0';
-    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
     return RefreshIndicator(
       color: AppColors.primary,
       backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
