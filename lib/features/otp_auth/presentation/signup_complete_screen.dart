@@ -32,7 +32,17 @@ class _SignupCompleteScreenState extends State<SignupCompleteScreen> {
       RegExp(r'^[a-zA-Z0-9_.]{3,30}$').hasMatch(_username.text.trim());
 
   Future<void> _submit() async {
-    if (!_valid || _busy) return;
+    final username = _username.text.trim();
+    if (username.isEmpty) {
+      setState(() => _error = 'Please enter a username');
+      return;
+    }
+    if (!_valid) {
+      setState(() => _error =
+          'Username must be 3-30 characters (letters, numbers, _, .)');
+      return;
+    }
+    if (_busy) return;
     setState(() {
       _busy = true;
       _error = null;
@@ -40,7 +50,7 @@ class _SignupCompleteScreenState extends State<SignupCompleteScreen> {
     try {
       await _repo.otpSignup(
         signupToken: widget.signupToken,
-        username: _username.text.trim(),
+        username: username,
         email: _email.text.trim(),
         fullName: _name.text.trim(),
       );
@@ -79,11 +89,21 @@ class _SignupCompleteScreenState extends State<SignupCompleteScreen> {
           backgroundColor: AppColors.black,
           foregroundColor: AppColors.white,
           elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppColors.white),
+            onPressed: () {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              } else {
+                context.go(AppRoutes.phoneLogin);
+              }
+            },
+          ),
           title: Text(
             'Complete your profile',
             style: GoogleFonts.sora(
               color: AppColors.white,
-              fontSize: 17,
+              fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -100,8 +120,8 @@ class _SignupCompleteScreenState extends State<SignupCompleteScreen> {
                   Text(
                     'Almost there!',
                     style: GoogleFonts.sora(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
                       color: AppColors.primary,
                     ),
                   ).animate().fade(duration: 400.ms).slideY(begin: 0.1, end: 0),
@@ -111,7 +131,9 @@ class _SignupCompleteScreenState extends State<SignupCompleteScreen> {
                   Text(
                     'Pick a username to complete sign-up.',
                     style: GoogleFonts.inter(
-                        fontSize: 13, color: AppColors.hint),
+                      fontSize: 13,
+                      color: AppColors.hint,
+                    ),
                   ).animate(delay: 100.ms).fade(duration: 400.ms),
 
                   const SizedBox(height: 28),
@@ -142,17 +164,16 @@ class _SignupCompleteScreenState extends State<SignupCompleteScreen> {
                     width: double.infinity,
                     height: 48,
                     child: OutlinedButton(
-                      onPressed: _valid && !_busy ? _submit : null,
+                      onPressed: _busy ? null : _submit,
                       style: OutlinedButton.styleFrom(
                         backgroundColor: AppColors.black,
-                        foregroundColor: AppColors.primary,
+                        foregroundColor: AppColors.white,
                         side: BorderSide(
-                          color:
-                              _valid ? AppColors.primary : AppColors.hint,
+                          color: _valid ? AppColors.primary : const Color(0xFF3E4347),
                           width: 1.2,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(30),
                         ),
                         elevation: 0,
                       ),
@@ -171,9 +192,7 @@ class _SignupCompleteScreenState extends State<SignupCompleteScreen> {
                               style: GoogleFonts.sora(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
-                                color: _valid
-                                    ? AppColors.primary
-                                    : AppColors.hint,
+                                color: Colors.white,
                               ),
                             ),
                     ),

@@ -1,17 +1,19 @@
 import 'dart:async';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pinput/pinput.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:aicc/core/constants/app_colors.dart';
 import 'package:aicc/core/di/injection_container.dart';
 import 'package:aicc/core/routes/app_routes.dart';
 import 'package:aicc/core/storage/local_storage.dart';
 import 'package:aicc/features/auth/presentation/providers/auth_provider.dart';
 import 'package:aicc/features/otp_auth/data/otp_auth_repository.dart';
-import 'package:aicc/features/auth/presentation/pages/signup_screen.dart';
+import 'signup_complete_screen.dart';
 
 class OtpScreen extends StatefulWidget {
   final String phone;
@@ -33,6 +35,7 @@ class _OtpScreenState extends State<OtpScreen> {
   final _repo = sl<OtpAuthRepository>();
   final _pin = TextEditingController();
   final _pinFocusNode = FocusNode();
+  late final TapGestureRecognizer _termsRecognizer;
   Timer? _timer;
   int _left = 0;
   bool _busy = false;
@@ -51,7 +54,21 @@ class _OtpScreenState extends State<OtpScreen> {
   @override
   void initState() {
     super.initState();
+    _termsRecognizer = TapGestureRecognizer()..onTap = _openTermsAndConditions;
     _startTimer(widget.initialSeconds);
+  }
+
+  Future<void> _openTermsAndConditions() async {
+    final uri = Uri.parse('https://www.treemediaagency.com/terms-and-conditions');
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        await launchUrl(uri);
+      }
+    } catch (e) {
+      debugPrint('Error opening terms URL: $e');
+    }
   }
 
   void _startTimer(int s) {
@@ -65,6 +82,13 @@ class _OtpScreenState extends State<OtpScreen> {
 
   Future<void> _verify(String otp) async {
     if (_busy || otp.length != 6) return;
+
+    if (!_agreedToTerms) {
+      setState(() {
+        _error = 'Please agree to the Terms & Privacy Policy to continue';
+      });
+      return;
+    }
 
     setState(() {
       _busy = true;
@@ -138,9 +162,11 @@ class _OtpScreenState extends State<OtpScreen> {
         );
 
         if (!mounted) return;
-        // Navigate to full registration screen (Image 2)
+        // Navigate to "Complete your profile" screen (Image 2)
         Navigator.of(context).pushReplacement(MaterialPageRoute(
-          builder: (_) => SignupScreen(initialMobile: widget.phone),
+          builder: (_) => SignupCompleteScreen(
+            signupToken: r.signupToken ?? '',
+          ),
         ));
       } else {
         // ── Phone exists: sync session and go home ───────────────
@@ -181,6 +207,7 @@ class _OtpScreenState extends State<OtpScreen> {
     _timer?.cancel();
     _pin.dispose();
     _pinFocusNode.dispose();
+    _termsRecognizer.dispose();
     super.dispose();
   }
 
@@ -313,7 +340,16 @@ class _OtpScreenState extends State<OtpScreen> {
                   errorPinTheme: errorPinTheme,
                   forceErrorState: _error != null,
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  onCompleted: _verify,
+                  onCompleted: (val) {
+                    if (_agreedToTerms) {
+                      _verify(val);
+                    } else {
+                      setState(() {
+                        _error =
+                            'Please agree to the Terms & Privacy Policy to continue';
+                      });
+                    }
+                  },
                 ),
 
                 const SizedBox(height: 20),
@@ -364,8 +400,16 @@ class _OtpScreenState extends State<OtpScreen> {
                       height: 20,
                       child: Checkbox(
                         value: _agreedToTerms,
-                        onChanged: (v) =>
-                            setState(() => _agreedToTerms = v ?? false),
+                        onChanged: (v) {
+                          setState(() {
+                            _agreedToTerms = v ?? false;
+                            if (_agreedToTerms &&
+                                _error ==
+                                    'Please agree to the Terms & Privacy Policy to continue') {
+                              _error = null;
+                            }
+                          });
+                        },
                         activeColor: AppColors.primary,
                         checkColor: Colors.black,
                         side: const BorderSide(
@@ -377,27 +421,43 @@ class _OtpScreenState extends State<OtpScreen> {
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: RichText(
-                        text: TextSpan(
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            color: Colors.white54,
-                            height: 1.5,
-                          ),
-                          children: [
-                            const TextSpan(text: 'I agree to the '),
-                            TextSpan(
-                              text: 'Terms & Privacy Policy',
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                color: AppColors.primary,
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _agreedToTerms = !_agreedToTerms;
+                            if (_agreedToTerms &&
+                                _error ==
+                                    'Please agree to the Terms & Privacy Policy to continue') {
+                              _error = null;
+                            }
+                          });
+                        },
+                        child: RichText(
+                          text: TextSpan(
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: Colors.white54,
+                              height: 1.5,
+                            ),
+                            children: [
+                              const TextSpan(text: 'I agree to the '),
+                              TextSpan(
+                                text: 'Terms & Privacy Policy',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  color: AppColors.primary,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                recognizer: _termsRecognizer,
                               ),
-                            ),
-                            const TextSpan(
-                              text:
-                                  '. Producers, Directors & Casting teams can see my number for casting only.',
-                            ),
-                          ],
+                              const TextSpan(
+                                text:
+                                    '. Producers, Directors & Casting teams can see my number for casting only.',
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -411,15 +471,17 @@ class _OtpScreenState extends State<OtpScreen> {
                   width: double.infinity,
                   height: 50,
                   child: OutlinedButton(
-                    onPressed: _busy
-                        ? null
-                        : () => _verify(_pin.text),
+                    onPressed: (_agreedToTerms && !_busy)
+                        ? () => _verify(_pin.text)
+                        : null,
                     style: OutlinedButton.styleFrom(
                       backgroundColor: Colors.transparent,
                       foregroundColor: AppColors.primary,
-                      disabledForegroundColor: Colors.white30,
+                      disabledForegroundColor: Colors.white38,
                       side: BorderSide(
-                        color: _busy ? Colors.white24 : AppColors.primary,
+                        color: (_agreedToTerms && !_busy)
+                            ? AppColors.primary
+                            : Colors.white24,
                         width: 1.4,
                       ),
                       shape: RoundedRectangleBorder(
@@ -442,7 +504,9 @@ class _OtpScreenState extends State<OtpScreen> {
                             style: GoogleFonts.sora(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
+                              color: (_agreedToTerms && !_busy)
+                                  ? AppColors.primary
+                                  : Colors.white38,
                             ),
                           ),
                   ),
