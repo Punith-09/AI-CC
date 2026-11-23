@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
@@ -6,7 +7,6 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/api/api_endpoints.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/responsive/responsive_breakpoints.dart';
 import '../../../../core/routes/app_routes.dart';
@@ -48,7 +48,10 @@ class _ChatScreenState extends State<ChatScreen> {
             if (meRes.data is Map) {
               final meData = meRes.data['data'] ?? meRes.data['user'] ?? meRes.data;
               if (meData is Map) {
-                final meId = meData['_id']?.toString() ?? meData['id']?.toString() ?? meData['userId']?.toString() ?? '';
+                final meId = meData['_id']?.toString() ??
+                    meData['id']?.toString() ??
+                    meData['userId']?.toString() ??
+                    '';
                 if (meId.isNotEmpty) {
                   await LocalStorage.instance.saveUserId(meId);
                   if (mounted) setState(() => _currentUserId = meId);
@@ -62,7 +65,8 @@ class _ChatScreenState extends State<ChatScreen> {
             context.read<MessagesProvider>().markChatAsRead(_chat!.id);
             _loadMessages();
           } else if (_chat!.participantId.isNotEmpty) {
-            final newChat = await context.read<MessagesProvider>().startChat(_chat!.participantId);
+            final newChat =
+                await context.read<MessagesProvider>().startChat(_chat!.participantId);
             if (newChat != null && mounted) {
               setState(() => _chat = newChat);
               _loadMessages();
@@ -95,7 +99,8 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToBottom();
 
     // Check if participant name is empty or needs resolution
-    if (_chat != null && (_chat!.participantName.isEmpty || _chat!.participantAvatar.isEmpty)) {
+    if (_chat != null &&
+        (_chat!.participantName.isEmpty || _chat!.participantAvatar.isEmpty)) {
       String resolvedUserId = _chat!.participantId;
       if (resolvedUserId.isEmpty) {
         final msgs = provider.messagesForChat(_chat!.id);
@@ -122,9 +127,23 @@ class _ChatScreenState extends State<ChatScreen> {
           if (list != null) {
             for (final c in list) {
               if (c is Map && (c['id'] == _chat!.id || c['_id'] == _chat!.id)) {
-                final cId = (c['creatorId'] ?? c['creator_id'] ?? c['participantId'])?.toString() ?? '';
-                final cName = (c['creatorName'] ?? c['creator_name'] ?? c['name'] ?? c['fullName'])?.toString() ?? '';
-                final cPic = (c['creatorPic'] ?? c['creator_pic'] ?? c['profilePhoto'] ?? c['avatar'])?.toString() ?? '';
+                final cId = (c['creatorId'] ??
+                        c['creator_id'] ??
+                        c['participantId'])
+                    ?.toString() ??
+                    '';
+                final cName = (c['creatorName'] ??
+                        c['creator_name'] ??
+                        c['name'] ??
+                        c['fullName'])
+                    ?.toString() ??
+                    '';
+                final cPic = (c['creatorPic'] ??
+                        c['creator_pic'] ??
+                        c['profilePhoto'] ??
+                        c['avatar'])
+                    ?.toString() ??
+                    '';
                 if (cId.isNotEmpty) resolvedUserId = cId;
                 if (cName.isNotEmpty || cPic.isNotEmpty) {
                   if (mounted) {
@@ -144,10 +163,13 @@ class _ChatScreenState extends State<ChatScreen> {
         } catch (_) {}
       }
 
-      if (resolvedUserId.isNotEmpty && (_chat?.participantName.isEmpty == true || _chat?.participantAvatar.isEmpty == true)) {
+      if (resolvedUserId.isNotEmpty &&
+          (_chat?.participantName.isEmpty == true ||
+              _chat?.participantAvatar.isEmpty == true)) {
         try {
           final dioClient = GetIt.instance<DioClient>();
-          final res = await dioClient.get(ApiEndpoints.userProfile(resolvedUserId));
+          final res =
+              await dioClient.get(ApiEndpoints.userProfile(resolvedUserId));
           final data = res.data;
           Map<String, dynamic> p = {};
           if (data is Map<String, dynamic>) {
@@ -155,7 +177,9 @@ class _ChatScreenState extends State<ChatScreen> {
               final d = data['data'] as Map<String, dynamic>;
               p = d['user'] is Map<String, dynamic>
                   ? d['user'] as Map<String, dynamic>
-                  : (d['talent'] is Map<String, dynamic> ? d['talent'] as Map<String, dynamic> : d);
+                  : (d['talent'] is Map<String, dynamic>
+                      ? d['talent'] as Map<String, dynamic>
+                      : d);
             } else if (data['user'] is Map<String, dynamic>) {
               p = data['user'] as Map<String, dynamic>;
             } else if (data['talent'] is Map<String, dynamic>) {
@@ -164,12 +188,26 @@ class _ChatScreenState extends State<ChatScreen> {
               p = data;
             }
           }
-          final name = p['fullName']?.toString() ?? p['name']?.toString() ?? p['username']?.toString() ?? p['displayName'] ?? '';
-          final avatar = p['profilePhoto']?.toString() ?? p['profileImage']?.toString() ?? p['profile_photo']?.toString() ?? p['avatar']?.toString() ?? p['pic'] ?? p['photo'] ?? '';
-          final rawRole = p['role'] ?? p['roles'] ?? p['category'] ?? p['type'];
-          final role = (rawRole is List && rawRole.isNotEmpty) ? rawRole.first.toString() : (rawRole?.toString() ?? '');
+          final name = p['fullName']?.toString() ??
+              p['name']?.toString() ??
+              p['username']?.toString() ??
+              p['displayName'] ??
+              '';
+          final avatar = p['profilePhoto']?.toString() ??
+              p['profileImage']?.toString() ??
+              p['profile_photo']?.toString() ??
+              p['avatar']?.toString() ??
+              p['pic'] ??
+              p['photo'] ??
+              '';
+          final rawRole =
+              p['role'] ?? p['roles'] ?? p['category'] ?? p['type'];
+          final role = (rawRole is List && rawRole.isNotEmpty)
+              ? rawRole.first.toString()
+              : (rawRole?.toString() ?? '');
 
-          if (mounted && (name.isNotEmpty || avatar.isNotEmpty || role.isNotEmpty)) {
+          if (mounted &&
+              (name.isNotEmpty || avatar.isNotEmpty || role.isNotEmpty)) {
             setState(() {
               _chat = _chat?.copyWith(
                 participantId: resolvedUserId,
@@ -209,21 +247,50 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToBottom(animated: true);
   }
 
-
+  Widget _avatarFallback(String name, {bool isDark = false}) {
+    final initials = name.trim().isEmpty
+        ? '?'
+        : name.trim().split(' ').take(2).map((w) => w[0]).join().toUpperCase();
+    final bg = isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
+    final textColor = isDark ? Colors.white : const Color(0xFF111827);
+    return Container(
+      color: bg,
+      child: Center(
+        child: Text(
+          initials,
+          style: TextStyle(
+            color: textColor,
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final chat = _chat;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final appBarBg = isDark ? AppColors.darkCard : Colors.white;
-    final titleColor = isDark ? AppColors.darkText : const Color(0xFF111827);
-    final bodyBg = isDark ? AppColors.darkScaffold : const Color(0xFFF8FAFC);
     final isDesktop = ResponsiveBreakpoints.isDesktop(context);
 
+    // Instagram / Facebook Messenger styling colors
+    final bg = isDark ? Colors.black : Colors.white;
+    final textPrimary = isDark ? Colors.white : const Color(0xFF111827);
+    final textSecondary =
+        isDark ? const Color(0xFFA8A8A8) : const Color(0xFF65676B);
+    final dividerColor =
+        isDark ? const Color(0xFF262626) : const Color(0xFFEFEFEF);
+    final desktopScaffoldBg =
+        isDark ? const Color(0xFF121212) : const Color(0xFFF0F2F5);
+
+    // Instagram / Messenger Style AppBar
     final appBar = AppBar(
-      backgroundColor: appBarBg,
+      backgroundColor: bg,
       elevation: 0,
-      centerTitle: true,
+      scrolledUnderElevation: 0,
+      centerTitle: false,
+      titleSpacing: 0,
       automaticallyImplyLeading: false,
       leading: IconButton(
         onPressed: () {
@@ -233,45 +300,167 @@ class _ChatScreenState extends State<ChatScreen> {
             context.go(AppRoutes.messages);
           }
         },
-        icon: Icon(Icons.arrow_back_ios_new, color: titleColor, size: 18),
-      ),
-      title: Text(
-        chat?.participantName.isNotEmpty == true
-            ? chat!.participantName
-            : 'Chat',
-        style: TextStyle(
-          color: titleColor,
-          fontWeight: FontWeight.bold,
-          fontSize: 18,
+        icon: Icon(
+          Icons.arrow_back_ios_new,
+          color: textPrimary,
+          size: 20,
         ),
       ),
-      actions: const [],
+      title: GestureDetector(
+        onTap: () {
+          if (chat?.participantId.isNotEmpty == true) {
+            context.push(AppRoutes.exploreProfile, extra: chat!.participantId);
+          }
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Row(
+          children: [
+            // Circular Avatar with online dot
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: isDark
+                      ? const Color(0xFF1E293B)
+                      : const Color(0xFFE2E8F0),
+                  child: chat?.participantAvatar.isNotEmpty == true
+                      ? ClipOval(
+                          child: CachedNetworkImage(
+                            imageUrl: ApiEndpoints.formatMediaUrl(
+                                chat!.participantAvatar),
+                            width: 36,
+                            height: 36,
+                            fit: BoxFit.cover,
+                            errorWidget: (ctx, url, err) => _avatarFallback(
+                              chat.participantName,
+                              isDark: isDark,
+                            ),
+                          ),
+                        )
+                      : _avatarFallback(
+                          chat?.participantName ?? '',
+                          isDark: isDark,
+                        ),
+                ),
+                if (chat?.isOnline == true)
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF31A24C),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: bg,
+                          width: 1.8,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    chat?.participantName.isNotEmpty == true
+                        ? chat!.participantName
+                        : 'Chat',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: textPrimary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15.5,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 1.5),
+                  // Row(
+                  //   mainAxisSize: MainAxisSize.min,
+                  //   children: [
+                  //     if (chat?.isOnline == true) ...[
+                  //       Container(
+                  //         width: 6,
+                  //         height: 6,
+                  //         margin: const EdgeInsets.only(right: 4),
+                  //         decoration: const BoxDecoration(
+                  //           color: Color(0xFF31A24C),
+                  //           shape: BoxShape.circle,
+                  //         ),
+                  //       ),
+                  //       const Text(
+                  //         'Active now',
+                  //         style: TextStyle(
+                  //           color: Color(0xFF31A24C),
+                  //           fontSize: 11.5,
+                  //           fontWeight: FontWeight.w500,
+                  //         ),
+                  //       ),
+                  //     ] else ...[
+                  //       Text(
+                  //         chat?.participantRole.isNotEmpty == true
+                  //             ? chat!.participantRole
+                  //             : 'Active recently',
+                  //         style: TextStyle(
+                  //           color: textSecondary,
+                  //           fontSize: 11.5,
+                  //           fontWeight: FontWeight.w400,
+                  //         ),
+                  //       ),
+                  //     ],
+                  //   ],
+                  // ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      // actions: [
+      //   IconButton(
+      //     onPressed: () {},
+      //     icon: Icon(Icons.call_outlined, color: textPrimary, size: 22),
+      //   ),
+      //   IconButton(
+      //     onPressed: () {},
+      //     icon: Icon(Icons.videocam_outlined, color: textPrimary, size: 24),
+      //   ),
+      //   IconButton(
+      //     onPressed: () {
+      //       if (chat?.participantId.isNotEmpty == true) {
+      //         context.push(AppRoutes.exploreProfile,
+      //             extra: chat!.participantId);
+      //       }
+      //     },
+      //     icon: Icon(Icons.info_outline, color: textPrimary, size: 22),
+      //   ),
+      //   const SizedBox(width: 4),
+      // ],
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(0.8),
+        child: Container(
+          color: dividerColor,
+          height: 0.8,
+        ),
+      ),
     );
 
     final chatContent = Column(
       children: [
-        // Profile header (original widget, now dynamic)
-        ProfileHeader(
-          chat: chat,
-          onViewProfile: () {
-            if (chat?.participantId.isNotEmpty == true) {
-              context.push(AppRoutes.exploreProfile, extra: chat!.participantId);
-            }
-          },
-        ),
-
-        Divider(
-          color: isDark ? AppColors.darkDivider : const Color(0xFFE2E8F0),
-          height: 1,
-        ),
-
         // Messages list
         Expanded(
           child: chat == null
-              ? const Center(
+              ? Center(
                   child: Text(
                     'Open a conversation to start chatting.',
-                    style: TextStyle(color: Color(0xFF64748B)),
+                    style: TextStyle(color: textSecondary),
                   ),
                 )
               : Consumer<MessagesProvider>(
@@ -280,7 +469,10 @@ class _ChatScreenState extends State<ChatScreen> {
                         provider.messagesForChat(chat.id).isEmpty) {
                       return const Center(
                         child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation(Color(0xFF7C3AED)),
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation(
+                            Color(0xFF7000FF),
+                          ),
                         ),
                       );
                     }
@@ -288,25 +480,61 @@ class _ChatScreenState extends State<ChatScreen> {
                     final messages = provider.messagesForChat(chat.id);
 
                     if (messages.isEmpty) {
-                      return Center(
-                        child: Text(
-                          'No messages yet.\nSay hello! 👋',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
-                            fontSize: 15,
-                          ),
+                      return ListView(
+                        controller: _scrollController,
+                        physics: const AlwaysScrollableScrollPhysics(
+                          parent: BouncingScrollPhysics(),
                         ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        children: [
+                          ProfileHeader(
+                            chat: chat,
+                            onViewProfile: () {
+                              if (chat.participantId.isNotEmpty) {
+                                context.push(AppRoutes.exploreProfile,
+                                    extra: chat.participantId);
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          Center(
+                            child: Text(
+                              'No messages yet.\nSay hello to start the conversation! 👋',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: textSecondary,
+                                fontSize: 13.5,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ],
                       );
                     }
 
                     return ListView.builder(
                       controller: _scrollController,
-                      reverse: false,
-                      padding: const EdgeInsets.fromLTRB(18, 20, 18, 20),
-                      itemCount: messages.length,
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics(),
+                      ),
+                      padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
+                      itemCount: messages.length + 1,
                       itemBuilder: (context, index) {
-                        final msg = messages[index];
+                        // Top item is Instagram-style profile card
+                        if (index == 0) {
+                          return ProfileHeader(
+                            chat: chat,
+                            onViewProfile: () {
+                              if (chat.participantId.isNotEmpty) {
+                                context.push(AppRoutes.exploreProfile,
+                                    extra: chat.participantId);
+                              }
+                            },
+                          );
+                        }
+
+                        final msgIndex = index - 1;
+                        final msg = messages[msgIndex];
                         final isMe = msg.isMe ||
                             (_currentUserId != null &&
                                 _currentUserId!.isNotEmpty &&
@@ -315,26 +543,27 @@ class _ChatScreenState extends State<ChatScreen> {
                         // Date separator
                         Widget? separator;
                         final curDay = _dayOf(msg.createdAt);
-                        if (index == 0) {
-                          separator = _DateChip(label: _dateLabel(msg.createdAt));
+                        if (msgIndex == 0) {
+                          separator =
+                              _DateChip(label: _dateLabel(msg.createdAt));
                         } else {
-                          final prevDay = _dayOf(messages[index - 1].createdAt);
+                          final prevDay =
+                              _dayOf(messages[msgIndex - 1].createdAt);
                           if (prevDay != curDay) {
-                            separator = _DateChip(label: _dateLabel(msg.createdAt));
+                            separator =
+                                _DateChip(label: _dateLabel(msg.createdAt));
                           }
                         }
 
                         return Column(
                           children: [
                             ?separator,
-                            if (separator != null) const SizedBox(height: 8),
                             MessageBubble(
                               isSender: isMe,
                               message: msg.content,
                               time: _formatTime(msg.createdAt),
                               participantAvatar: chat.participantAvatar,
                             ),
-                            const SizedBox(height: 12),
                           ],
                         );
                       },
@@ -343,7 +572,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
         ),
 
-        // Chat input (original widget, now with real send callback)
+        // Instagram Style Chat input
         Consumer<MessagesProvider>(
           builder: (context, provider, _) => ChatInput(
             controller: _controller,
@@ -356,24 +585,25 @@ class _ChatScreenState extends State<ChatScreen> {
 
     if (isDesktop) {
       return Scaffold(
-        backgroundColor: isDark ? AppColors.darkScaffold : const Color(0xFFF1F5F9),
+        backgroundColor: desktopScaffoldBg,
         resizeToAvoidBottomInset: true,
-        appBar: appBar,
         body: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 880),
             child: Container(
               decoration: BoxDecoration(
-                color: bodyBg,
+                color: bg,
                 border: Border.symmetric(
                   vertical: BorderSide(
-                    color: isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0),
-                    width: 1,
+                    color: dividerColor,
+                    width: 0.8,
                   ),
                 ),
               ),
-              child: SafeArea(
-                child: chatContent,
+              child: Scaffold(
+                backgroundColor: bg,
+                appBar: appBar,
+                body: SafeArea(child: chatContent),
               ),
             ),
           ),
@@ -382,15 +612,11 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     return Scaffold(
-      backgroundColor: appBarBg,
+      backgroundColor: bg,
       resizeToAvoidBottomInset: true,
-      extendBodyBehindAppBar: false,
       appBar: appBar,
-      body: Container(
-        color: bodyBg,
-        child: SafeArea(
-          child: chatContent,
-        ),
+      body: SafeArea(
+        child: chatContent,
       ),
     );
   }
@@ -448,23 +674,24 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final dt = _parseDate(iso);
       final now = DateTime.now();
+      final timeStr = DateFormat('h:mm a').format(dt).toUpperCase();
       if (dt.year == now.year && dt.month == now.month && dt.day == now.day) {
-        return 'TODAY';
+        return 'TODAY $timeStr';
       }
       final yesterday = now.subtract(const Duration(days: 1));
       if (dt.year == yesterday.year &&
           dt.month == yesterday.month &&
           dt.day == yesterday.day) {
-        return 'YESTERDAY';
+        return 'YESTERDAY $timeStr';
       }
-      return DateFormat('MMM d, y').format(dt);
+      return DateFormat('MMM d, y, h:mm a').format(dt).toUpperCase();
     } catch (_) {
       return '';
     }
   }
 }
 
-// ─── Date separator chip (matches original "TODAY" chip style) ───────────────
+// ─── Instagram / Messenger Date Separator ─────────────────────────────────────
 
 class _DateChip extends StatelessWidget {
   final String label;
@@ -474,21 +701,16 @@ class _DateChip extends StatelessWidget {
   Widget build(BuildContext context) {
     if (label.isEmpty) return const SizedBox.shrink();
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : const Color(0xFFE2E8F0),
-          borderRadius: BorderRadius.circular(12),
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Center(
         child: Text(
           label,
           style: TextStyle(
-            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF475569),
+            color: isDark ? const Color(0xFFA8A8A8) : const Color(0xFF8E8E8E),
             fontSize: 11,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.5,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0.3,
           ),
         ),
       ),
