@@ -142,7 +142,7 @@ class ReelsVideoControllerManager {
 
         final controller = VideoPlayerController.networkUrl(
           uri,
-          videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+          videoPlayerOptions: VideoPlayerOptions(mixWithOthers: false),
           httpHeaders: kIsWeb
               ? const {}
               : const {
@@ -213,7 +213,7 @@ class ReelsVideoControllerManager {
       try {
         final controller = VideoPlayerController.networkUrl(
           uri,
-          videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+          videoPlayerOptions: VideoPlayerOptions(mixWithOthers: false),
           httpHeaders: kIsWeb
               ? const {}
               : const {
@@ -292,6 +292,28 @@ class ReelsVideoControllerManager {
     _loadingCompleters.remove(index);
     _failedIndices.remove(index);
     return loadActive(index, post);
+  }
+
+  /// Immediately pauses every controller and silences their audio.
+  /// Call this whenever the user navigates away from the Reels screen.
+  void pauseAll() {
+    for (final ctrl in _controllers.values) {
+      if (ctrl.value.isInitialized) {
+        ctrl.setVolume(0.0);
+        ctrl.pause();
+      }
+    }
+  }
+
+  /// Pauses every controller EXCEPT [activeIndex], which is left for the
+  /// caller to play. Used when swiping between reels to enforce 1-at-a-time playback.
+  void playOnly(int activeIndex) {
+    for (final entry in _controllers.entries) {
+      if (entry.key != activeIndex && entry.value.value.isInitialized) {
+        entry.value.setVolume(0.0);
+        entry.value.pause();
+      }
+    }
   }
 
   void disposeAll() {

@@ -28,7 +28,7 @@ class VideosScreen extends StatefulWidget {
   State<VideosScreen> createState() => _VideosScreenState();
 }
 
-class _VideosScreenState extends State<VideosScreen> {
+class _VideosScreenState extends State<VideosScreen> with WidgetsBindingObserver {
   late final PageController _pageController;
   late final ReelsVideoControllerManager _preloadManager;
   int _currentPage = 0;
@@ -36,11 +36,15 @@ class _VideosScreenState extends State<VideosScreen> {
   int _lastLoadedPage = -1;
   int _lastPostsCount = 0;
 
+  // GoRouter listener – detects tab switches and pushed routes
+  VoidCallback? _routerListener;
+
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
     _preloadManager = ReelsVideoControllerManager();
+    WidgetsBinding.instance.addObserver(this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -50,11 +54,46 @@ class _VideosScreenState extends State<VideosScreen> {
       } else if (feed.videoPosts.isNotEmpty) {
         _preloadManager.updateWindow(0, feed.videoPosts);
       }
+
+      // Start listening to route changes so we can pause when navigating away
+      _attachRouterListener();
     });
+  }
+
+  void _attachRouterListener() {
+    if (!mounted) return;
+    final router = GoRouter.of(context);
+    _routerListener = () {
+      if (!mounted) return;
+      final location = router.routerDelegate.currentConfiguration.uri.toString();
+      // If the current top route is NOT the videos tab, pause everything
+      if (location != AppRoutes.videos) {
+        _preloadManager.pauseAll();
+      }
+    };
+    router.routerDelegate.addListener(_routerListener!);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Pause all video when app goes to background / becomes inactive
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      _preloadManager.pauseAll();
+    }
   }
 
   @override
   void dispose() {
+    // Remove GoRouter listener
+    if (_routerListener != null && mounted) {
+      try {
+        GoRouter.of(context).routerDelegate.removeListener(_routerListener!);
+      } catch (_) {}
+    }
+    WidgetsBinding.instance.removeObserver(this);
+    _preloadManager.pauseAll();
     _pageController.dispose();
     _preloadManager.disposeAll();
     super.dispose();
@@ -225,6 +264,8 @@ class _VideosScreenState extends State<VideosScreen> {
               setState(() {
                 _currentPage = index;
               });
+              // Stop every other reel immediately when user swipes
+              _preloadManager.playOnly(index);
               _preloadManager.updateWindow(index, videoPosts);
               if (index >= videoPosts.length - 2) {
                 feedProvider.fetchMoreVideos();
