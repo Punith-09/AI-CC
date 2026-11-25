@@ -1,6 +1,5 @@
+import 'package:aicc/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/responsive/responsive_breakpoints.dart';
 
 class ChatInput extends StatefulWidget {
   final TextEditingController controller;
@@ -19,248 +18,143 @@ class ChatInput extends StatefulWidget {
 }
 
 class _ChatInputState extends State<ChatInput> {
+  bool _isComposing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _isComposing = widget.controller.text.trim().isNotEmpty;
+    widget.controller.addListener(_onTextChanged);
+  }
+
+  void _onTextChanged() {
+    final hasText = widget.controller.text.trim().isNotEmpty;
+    if (hasText != _isComposing) {
+      setState(() {
+        _isComposing = hasText;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onTextChanged);
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
-    final containerBg = isDark ? AppColors.darkCard : Colors.white;
-    final borderTopColor = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
-    final inputFieldBg = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final inputBorder = isDark ? AppColors.primary : const Color(0xFFE2E8F0);
-    final textColor = isDark ? AppColors.darkText : const Color(0xFF111827);
-    final hintColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8);
-    final attachIconColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B);
-    final micBg = isDark ? AppColors.darkSurface : const Color(0xFFF1F5F9);
-    final micBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
-    final micIconColor = isDark ? AppColors.darkTextSecondary : const Color(0xFF475569);
+
+    // Instagram / Messenger colors
+    final barBg = isDark ? Colors.black : Colors.white;
+    final pillBg = isDark ? const Color(0xFF262626) : const Color(0xFFEFEFEF);
+    final borderTop =
+        isDark ? const Color(0xFF262626) : const Color(0xFFEFEFEF);
+    final textColor = isDark ? Colors.white : const Color(0xFF000000);
+    final hintColor =
+        isDark ? const Color(0xFFA8A8A8) : const Color(0xFF8E8E8E);
 
     return SafeArea(
       top: false,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
         decoration: BoxDecoration(
-          color: containerBg,
+          color: barBg,
           border: Border(
-            top: BorderSide(color: borderTopColor, width: 1),
+            top: BorderSide(color: borderTop, width: 0.8),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            /// Quick Actions
-            // SingleChildScrollView(
-            //   scrollDirection: Axis.horizontal,
-            //   child: Row(
-            //     children: [
-            //       _QuickActionChip(icon: Icons.folder_open, title: "Portfolio", isDark: isDark),
-            //       const SizedBox(width: 8),
-            //       _QuickActionChip(icon: Icons.calendar_today, title: "Schedule", isDark: isDark),
-            //       const SizedBox(width: 8),
-            //       _QuickActionChip(icon: Icons.person_outline, title: "Profile", isDark: isDark),
-            //       const SizedBox(width: 8),
-            //       _QuickActionChip(icon: Icons.video_camera_back_outlined, title: "Audition", isDark: isDark),
-            //     ],
-            //   ),
-            // ),
-
-            const SizedBox(height: 12),
-
-            Row(
-              children: [
-                // IconButton(
-                //   onPressed: () {},
-                //   icon: Icon(Icons.attach_file, color: attachIconColor),
-                // ),
-
-                // Expanded(
-                //   child: Container(
-                //     decoration: BoxDecoration(
-                //       color: inputFieldBg,
-                //       borderRadius: BorderRadius.circular(30),
-                //       border: Border.all(color: AppColors.primary),
-                //     ),
-                //     child: TextField(
-                //       controller: widget.controller,
-                //       style: TextStyle(
-                //         color: textColor,
-                //         fontSize: 14.5,
-                //       ),
-                //       textInputAction: TextInputAction.send,
-                //       onSubmitted: (_) => widget.onSend?.call(),
-                //       decoration: InputDecoration(
-                //         hintText: "Type a message...",
-                //         hintStyle: TextStyle(color: hintColor),
-                //         border: OutlineInputBorder(
-                //           borderRadius: BorderRadius.circular(30),
-                //           borderSide: BorderSide(color: AppColors.purple,width: isDesktop ? 1.2 : 1.5),
-                //         ),
-                //         enabledBorder: InputBorder.none,
-                //         focusedBorder: InputBorder.none,
-                //         contentPadding: const EdgeInsets.symmetric(
-                //           horizontal: 16,
-                //           vertical: 12,
-                //         ),
-                //         // suffixIcon: IconButton(
-                //         //   onPressed: () {},
-                //         //   icon: Icon(
-                //         //     Icons.emoji_emotions_outlined,
-                //         //     color: hintColor,
-                //         //   ),
-                //         // ),
-                //       ),
-                //     ),
-                //   ),
-                // ),
-
-
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: inputFieldBg,
-                      borderRadius: BorderRadius.circular(30),
-                      // border: Border.all(
-                      //   color: AppColors.primary,
-                      //   width: 1.2,
-                      // ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: barBg,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          padding: const EdgeInsets.fromLTRB(16, 4, 4, 4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Text Field
+              Expanded(
+                child: TextField(
+                  controller: widget.controller,
+                  minLines: 1,
+                  maxLines: 5,
+                  textInputAction: TextInputAction.send,
+                  onSubmitted: (_) {
+                    if (!widget.isSending) {
+                      widget.onSend?.call();
+                    }
+                  },
+                  cursorColor:
+                      isDark ? AppColors.white : AppColors.black,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 15,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: "Message...",
+                    hintStyle: TextStyle(
+                      color: hintColor,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w400,
                     ),
-                    child: TextField(
-                      controller: widget.controller,
-                      style: TextStyle(
-                        color: textColor,
-                        fontSize: 14.5,
-                      ),
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => widget.onSend?.call(),
-                      decoration: InputDecoration(
-                        hintText: "Type a message...",
-                        hintStyle: TextStyle(color: hintColor),
-
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide: BorderSide(
-                            color: AppColors.hint,
-                            width: 1.2,
-                          ),
-                        ),
-
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide: BorderSide(
-                            color: AppColors.hint,
-                            width: 1.2,
-                          ),
-                        ),
-
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide: BorderSide(
-                            color: AppColors.primary,
-                            width: 1.5,
-                          ),
-                        ),
-
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 0,
+                      vertical: 8,
                     ),
                   ),
                 ),
+              ),
 
-                const SizedBox(width: 10),
+              const SizedBox(width: 8),
 
-                GestureDetector(
-                  onTap: widget.isSending ? null : widget.onSend,
+              // Send Icon Button
+              GestureDetector(
+                onTap: widget.isSending ? null : widget.onSend,
+                behavior: HitTestBehavior.opaque,
+                child: AnimatedOpacity(
+                  opacity: _isComposing ? 1.0 : 0.65,
+                  duration: const Duration(milliseconds: 150),
                   child: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
+                    width: 34,
+                    height: 34,
+                    decoration:  BoxDecoration(
+                      color: Color(0xFFDC8B20),
                       shape: BoxShape.circle,
-                      color: AppColors.buttonPrimary,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.buttonPrimary.withValues(alpha: 0.35),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                      // gradient: LinearGradient(
+                      //   colors: [
+                      //     Color(0xFF7000FF),
+                      //     Color(0xFFD9008F),
+                      //   ],
+                      //   begin: Alignment.bottomLeft,
+                      //   end: Alignment.topRight,
+                      // )
+
                     ),
                     child: widget.isSending
                         ? const Padding(
-                            padding: EdgeInsets.all(12),
+                            padding: EdgeInsets.all(8),
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation(Colors.white),
                             ),
                           )
-                        : const Icon(Icons.send, color: Colors.white, size: 20),
+                        : const Icon(
+                            Icons.send_rounded,
+                            color: Colors.white,
+                            size: 17,
+                          ),
                   ),
                 ),
-
-                // const SizedBox(width: 6),
-
-                // Container(
-                //   decoration: BoxDecoration(
-                //     color: micBg,
-                //     borderRadius: BorderRadius.circular(24),
-                //     border: Border.all(color: micBorder),
-                //   ),
-                //   child: IconButton(
-                //     onPressed: () {},
-                //     icon: Icon(Icons.mic_none, color: micIconColor, size: 20),
-                //   ),
-                // ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _QuickActionChip extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final bool isDark;
-
-  const _QuickActionChip({required this.icon, required this.title, this.isDark = false});
-
-  @override
-  Widget build(BuildContext context) {
-    final chipBg = isDark ? AppColors.darkSurface : const Color(0xFFF1F5F9);
-    final chipBorder = isDark ? AppColors.darkBorder : const Color(0xFFE2E8F0);
-    final textColor = isDark ? AppColors.darkText : const Color(0xFF111827);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-      decoration: BoxDecoration(
-        color: chipBg,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: chipBorder),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: AppColors.primary),
-          const SizedBox(width: 6),
-          Text(
-            title,
-            style: TextStyle(
-              color: textColor,
-              fontSize: 12.5,
-              fontWeight: FontWeight.w600,
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
