@@ -169,6 +169,7 @@ class AuditionModel {
   final int viewCount;            // number of views from API
   final int positionsAvailable;   // number of open positions
   final String producer;          // producer name
+  final int? explicitApplicantsCount;
 
   const AuditionModel({
     this.id = '',
@@ -201,9 +202,50 @@ class AuditionModel {
     this.viewCount = 0,
     this.positionsAvailable = 0,
     this.producer = '',
+    this.explicitApplicantsCount,
   });
 
-  int get applicantsCount => applicants.length;
+  int get applicantsCount => explicitApplicantsCount ?? applicants.length;
+
+  AuditionModel copyWith({
+    bool? applied,
+    String? applicationStatus,
+    int? explicitApplicantsCount,
+  }) {
+    return AuditionModel(
+      id: id,
+      creatorId: creatorId,
+      title: title,
+      category: category,
+      role: role,
+      roleAgeMin: roleAgeMin,
+      roleAgeMax: roleAgeMax,
+      roleGender: roleGender,
+      language: language,
+      pay: pay,
+      location: location,
+      deadline: deadline,
+      description: description,
+      director: director,
+      contactName: contactName,
+      createdAt: createdAt,
+      applied: applied ?? this.applied,
+      createdByMe: createdByMe,
+      phone: phone,
+      email: email,
+      applicants: applicants,
+      auditionDate: auditionDate,
+      age: age,
+      gender: gender,
+      experience: experience,
+      skills: skills,
+      applicationStatus: applicationStatus ?? this.applicationStatus,
+      viewCount: viewCount,
+      positionsAvailable: positionsAvailable,
+      producer: producer,
+      explicitApplicantsCount: explicitApplicantsCount ?? this.explicitApplicantsCount,
+    );
+  }
 
   String get effectiveContact => director.isNotEmpty
       ? director
@@ -259,6 +301,26 @@ class AuditionModel {
       viewCount: parseIntField(json['viewCount'] ?? json['views'] ?? json['view_count']) ?? 0,
       positionsAvailable: parseIntField(json['position'] ?? json['positions'] ?? json['positionsAvailable'] ?? json['openPositions']) ?? 0,
       producer: (json['producer'] ?? json['producerName'] ?? '') as String? ?? '',
+      explicitApplicantsCount: parseIntField(
+            json['applicationCount'] ??
+            json['application_count'] ??
+            json['applicantsCount'] ??
+            json['applicants_count'] ??
+            json['totalApplicants'] ??
+            json['total_applicants'] ??
+            json['applicationsCount'] ??
+            json['applications_count'] ??
+            json['applicantCount'],
+          ) ??
+          (json['applicants'] is int
+              ? json['applicants'] as int
+              : (json['applications'] is int
+                  ? json['applications'] as int
+                  : (json['applicants'] is List && (json['applicants'] as List).isNotEmpty
+                      ? (json['applicants'] as List).length
+                      : (json['applications'] is List && (json['applications'] as List).isNotEmpty
+                          ? (json['applications'] as List).length
+                          : null)))),
     );
   }
 
@@ -291,6 +353,7 @@ class AuditionModel {
         'skills': skills,
         'applicationStatus': applicationStatus,
         'viewCount': viewCount,
+        'applicationCount': applicantsCount,
         'position': positionsAvailable,
         'producer': producer,
       };

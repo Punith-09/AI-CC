@@ -569,9 +569,12 @@ class ArtistModel {
       'awards': awards,
       'following': following,
       'following_ids': followingIds,
+      'followingCount': followingCount,
       'experience': experience,
       'languages': languages,
       'portfolio': portfolio.map((e) => e.toJson()).toList(),
+      'plan': plan,
+      'isVerified': isVerified,
       'email': email,
       'mobile': mobile,
       'gender': gender,
@@ -581,6 +584,7 @@ class ArtistModel {
       'age': age,
       'skills': skills,
       'preferredLanguage': preferredLanguages,
+      'preferredLanguages': preferredLanguages,
       'trkCode': trkCode,
     };
   }

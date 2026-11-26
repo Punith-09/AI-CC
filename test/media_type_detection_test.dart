@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:aicc/core/api/api_endpoints.dart';
 import 'package:aicc/features/home/data/models/feed_post_model.dart';
 import 'package:aicc/features/post/data/models/video_model.dart';
 import 'package:aicc/features/post/data/models/photo_model.dart';
@@ -90,6 +91,33 @@ void main() {
       expect(FeedPostModel.isVideoMediaUrl('https://site.com/vid.avi'), isTrue);
       expect(FeedPostModel.isVideoMediaUrl('assets/videos/sample.mp4'), isTrue);
       expect(FeedPostModel.isVideoMediaUrl('https://res.cloudinary.com/demo/video/upload/sample'), isTrue);
+    });
+
+    test('getVideoStartingFrameUrl extracts poster image accurately', () {
+      // Cloudinary video URLs
+      expect(
+        ApiEndpoints.getVideoStartingFrameUrl('https://res.cloudinary.com/demo/video/upload/sample.mp4'),
+        equals('https://res.cloudinary.com/demo/video/upload/so_0,w_720,c_limit,q_auto/sample.jpg'),
+      );
+      expect(
+        ApiEndpoints.getVideoStartingFrameUrl('https://res.cloudinary.com/demo/video/upload/v123456/sample.mp4'),
+        equals('https://res.cloudinary.com/demo/video/upload/so_0,w_720,c_limit,q_auto/v123456/sample.jpg'),
+      );
+      expect(
+        ApiEndpoints.getVideoStartingFrameUrl('https://res.cloudinary.com/demo/video/upload/q_auto,w_720,c_limit,f_mp4/v123456/sample.mp4'),
+        equals('https://res.cloudinary.com/demo/video/upload/so_0,w_720,c_limit,q_auto/v123456/sample.jpg'),
+      );
+      // Non-Cloudinary returns null
+      expect(ApiEndpoints.getVideoStartingFrameUrl('https://example.com/video.mp4'), isNull);
+      expect(ApiEndpoints.getVideoStartingFrameUrl(''), isNull);
+    });
+
+    test('isDefaultClapperboardOrPlaceholder correctly detects placeholder and clapperboard URLs', () {
+      expect(ApiEndpoints.isDefaultClapperboardOrPlaceholder(null), isTrue);
+      expect(ApiEndpoints.isDefaultClapperboardOrPlaceholder(''), isTrue);
+      expect(ApiEndpoints.isDefaultClapperboardOrPlaceholder('https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&w=800&q=80'), isTrue);
+      expect(ApiEndpoints.isDefaultClapperboardOrPlaceholder('https://example.com/clapperboard.png'), isTrue);
+      expect(ApiEndpoints.isDefaultClapperboardOrPlaceholder('https://res.cloudinary.com/demo/image/upload/custom_cover.jpg'), isFalse);
     });
   });
 }

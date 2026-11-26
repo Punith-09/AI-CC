@@ -402,7 +402,14 @@ class FeedPostModel {
   }
 
   factory FeedPostModel.fromJson(Map<String, dynamic> json, {FeedMediaType? defaultType}) {
-    final rawUrl = json['url'] as String? ?? '';
+    final rawUrl = (json['url'] ??
+            json['videoUrl'] ??
+            json['mediaUrl'] ??
+            json['media'] ??
+            json['video'] ??
+            json['file'] ??
+            '')
+        .toString();
     final category = json['category'] as String?;
     final isVid = isVideoMediaUrl(rawUrl, category: category);
 

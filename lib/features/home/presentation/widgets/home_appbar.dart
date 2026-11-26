@@ -6,7 +6,6 @@ import "package:lucide_icons_flutter/lucide_icons.dart";
 import "package:provider/provider.dart";
 
 import "../../../../core/constants/app_colors.dart";
-import "../../../../core/theme/theme_provider.dart";
 import "../../../messages/presentation/providers/messages_provider.dart";
 import "../../../notifications/presentation/providers/notifications_provider.dart";
 
@@ -15,60 +14,50 @@ class HomeAppbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.read<ThemeProvider>().isDarkMode;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iconColor = isDark ? AppColors.white : AppColors.black;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Container(
-          //   padding: const EdgeInsets.all(5),
-          //   decoration: BoxDecoration(
-          //     color: AppColors.white,
-          //     borderRadius: BorderRadius.circular(8),
-          //     boxShadow: [
-          //       BoxShadow(
-          //         color: Colors.blue.withValues(alpha: 2.0),
-          //         blurRadius: 20,
-          //         spreadRadius: 1,
-          //       ),
-          //     ],
-          //   ),
-          //   child: const Icon(
-          //     LucideIcons.clapperboard,
-          //     size: 26,
-          //     color: AppColors.black,
-          //   ),
-          // ),
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               IconButton(
-            onPressed: () => mainScaffoldKey.currentState?.openDrawer(),
-            icon: Icon(LucideIcons.menu, color: isDark ? AppColors.white : AppColors.black, size: 26),
-          ),
-              // SizedBox(width: 4),
+                onPressed: () => mainScaffoldKey.currentState?.openDrawer(),
+                icon: Icon(
+                  LucideIcons.menu,
+                  color: iconColor,
+                  size: 26,
+                ),
+              ),
               Image.asset(
                 'assets/images/treekologo.png',
                 width: 47,
                 height: 38,
                 fit: BoxFit.contain,
               ),
-              SizedBox(width: 4),
+              const SizedBox(width: 4),
               Image.asset(
                 'assets/images/TreeKo.png',
                 width: 104,
                 height: 34,
                 fit: BoxFit.contain,
-              )
+              ),
             ],
           ),
           Row(
             children: [
               // ─── Notification Bell with badge ───
               Consumer<NotificationsProvider>(
-                builder: (_, notifProvider, __) {
+                builder: (ctx, notifProvider, _) {
                   final unreadNotif = notifProvider.unreadNotifications.length;
+                  final currentIconColor =
+                      Theme.of(ctx).brightness == Brightness.dark
+                          ? AppColors.white
+                          : AppColors.black;
                   return Stack(
                     clipBehavior: Clip.none,
                     children: [
@@ -79,7 +68,7 @@ class HomeAppbar extends StatelessWidget {
                         icon: Icon(
                           LucideIcons.bell,
                           size: 26,
-                          color: isDark ? AppColors.white : AppColors.black,
+                          color: currentIconColor,
                         ),
                       ),
                       if (unreadNotif > 0)
@@ -114,8 +103,12 @@ class HomeAppbar extends StatelessWidget {
               ),
               // ─── Messages icon with badge ───
               Consumer<MessagesProvider>(
-                builder: (_, provider, __) {
+                builder: (ctx, provider, _) {
                   final unread = provider.totalUnreadCount;
+                  final currentIconColor =
+                      Theme.of(ctx).brightness == Brightness.dark
+                          ? AppColors.white
+                          : AppColors.black;
                   return Stack(
                     clipBehavior: Clip.none,
                     children: [
@@ -126,7 +119,7 @@ class HomeAppbar extends StatelessWidget {
                         icon: Icon(
                           LucideIcons.messageCircleMore,
                           size: 26,
-                          color: isDark ? AppColors.white : AppColors.black,
+                          color: currentIconColor,
                         ),
                       ),
                       if (unread > 0)
@@ -159,14 +152,6 @@ class HomeAppbar extends StatelessWidget {
                   );
                 },
               ),
-              // const SizedBox(width: 15),
-              // IconButton(
-              //   onPressed: () {
-              //     // context.push(AppRoutes.activity);
-              //     context.push(AppRoutes.splash);
-              //   },
-              //   icon: const Icon(LucideIcons.bell, size: 26),
-              // ),
             ],
           ),
         ],

@@ -15,6 +15,29 @@ class ProfileProvider with ChangeNotifier {
 
   ProfileProvider(this._repository) {
     _loadPersistedFollows();
+    _loadPersistedProfile();
+  }
+
+  void _loadPersistedProfile() {
+    try {
+      final savedUser = LocalStorage.instance.getUserData();
+      if (savedUser != null && savedUser.isNotEmpty) {
+        _currentProfile = ArtistModel.fromJson(savedUser);
+        if (_currentProfile?.plan != null && _currentProfile!.plan!.isNotEmpty) {
+          _myActivePlan = _currentProfile!.plan;
+        }
+        if (_currentProfile?.portfolio.isNotEmpty == true) {
+          _myMedia = deduplicateMedia(_currentProfile!.portfolio);
+        }
+      }
+    } catch (e) {
+      debugPrint('Failed to restore cached profile: $e');
+    }
+  }
+
+  void loadPersistedProfile() {
+    _loadPersistedProfile();
+    notifyListeners();
   }
 
   final Set<String> _followingUserIds = {};
@@ -135,7 +158,9 @@ class ProfileProvider with ChangeNotifier {
   }
 
   Future<void> fetchMyProfile({bool silent = false}) async {
-    if (!silent) {
+    final bool actuallySilent = silent || _currentProfile != null;
+
+    if (!actuallySilent) {
       _isLoading = true;
       _error = null;
       notifyListeners();
@@ -201,16 +226,29 @@ class ProfileProvider with ChangeNotifier {
           }
         }
         _myMedia = deduplicateMedia(combined);
-        _currentProfile = _currentProfile!.copyWith(projects: _myMedia.length);
+        _currentProfile = _currentProfile!.copyWith(
+          projects: _myMedia.length,
+          portfolio: _myMedia,
+        );
       } else {
         _myMedia = deduplicateMedia(_currentProfile?.portfolio ?? []);
+        _currentProfile = _currentProfile?.copyWith(
+          portfolio: _myMedia,
+        );
+      }
+
+      // Persist the full profile to local storage for instant offline & cache-first loading
+      if (_currentProfile != null) {
+        try {
+          await LocalStorage.instance.saveUserData(_currentProfile!.toJson());
+        } catch (_) {}
       }
 
       try {
         _completion = await _repository.getProfileCompletion();
       } catch (_) {}
     } catch (e) {
-      if (!silent) {
+      if (!actuallySilent) {
         _error = e.toString();
       }
     } finally {
@@ -304,6 +342,9 @@ class ProfileProvider with ChangeNotifier {
         portfolio: updatedPortfolio,
         projects: _myMedia.length,
       );
+      try {
+        LocalStorage.instance.saveUserData(_currentProfile!.toJson());
+      } catch (_) {}
     }
 
     notifyListeners();
@@ -319,11 +360,19 @@ class ProfileProvider with ChangeNotifier {
     } catch (_) {}
   }
 
-  Future<void> fetchUserProfile(String id) async {
-    _isLoading = true;
-    _error = null;
-    _viewedMedia = [];
-    notifyListeners();
+  Future<void> fetchUserProfile(String id, {bool silent = false}) async {
+    final bool isSameUser = _viewedProfile?.id == id;
+    final bool actuallySilent = silent && isSameUser;
+
+    if (!actuallySilent) {
+      _isLoading = true;
+      _error = null;
+      if (!isSameUser) {
+        _viewedProfile = null;
+        _viewedMedia = [];
+      }
+      notifyListeners();
+    }
 
     try {
       _viewedProfile = await _repository.getUserProfile(id);
@@ -358,8 +407,14 @@ class ProfileProvider with ChangeNotifier {
         }
       }
       _viewedMedia = deduplicateMedia(combined);
+      _viewedProfile = _viewedProfile?.copyWith(
+        projects: _viewedMedia.length,
+        portfolio: _viewedMedia,
+      );
     } catch (e) {
-      _error = e.toString();
+      if (!actuallySilent) {
+        _error = e.toString();
+      }
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -568,6 +623,12 @@ class ProfileProvider with ChangeNotifier {
         } catch (_) {}
       }
 
+      if (_currentProfile != null) {
+        try {
+          await LocalStorage.instance.saveUserData(_currentProfile!.toJson());
+        } catch (_) {}
+      }
+
       try {
         _completion = await _repository.getProfileCompletion();
       } catch (_) {}
@@ -595,6 +656,9 @@ class ProfileProvider with ChangeNotifier {
             portfolio: updatedPortfolio,
             projects: currentProjects > 0 ? currentProjects - 1 : 0,
           );
+          try {
+            await LocalStorage.instance.saveUserData(_currentProfile!.toJson());
+          } catch (_) {}
         }
 
         if (sl.isRegistered<HomeFeedProvider>()) {

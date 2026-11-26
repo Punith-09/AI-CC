@@ -28,7 +28,7 @@ class VideosScreen extends StatefulWidget {
   State<VideosScreen> createState() => _VideosScreenState();
 }
 
-class _VideosScreenState extends State<VideosScreen> {
+class _VideosScreenState extends State<VideosScreen> with WidgetsBindingObserver {
   late final PageController _pageController;
   late final ReelsVideoControllerManager _preloadManager;
   int _currentPage = 0;
@@ -36,24 +36,64 @@ class _VideosScreenState extends State<VideosScreen> {
   int _lastLoadedPage = -1;
   int _lastPostsCount = 0;
 
+  // GoRouter listener – detects tab switches and pushed routes
+  VoidCallback? _routerListener;
+
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
     _preloadManager = ReelsVideoControllerManager();
+    WidgetsBinding.instance.addObserver(this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final feed = context.read<HomeFeedProvider>();
       if (!feed.hasFetchedVideos && !feed.isVideoLoading) {
         feed.fetchVideos();
       } else if (feed.videoPosts.isNotEmpty) {
         _preloadManager.updateWindow(0, feed.videoPosts);
       }
+
+      // Start listening to route changes so we can pause when navigating away
+      _attachRouterListener();
     });
+  }
+
+  void _attachRouterListener() {
+    if (!mounted) return;
+    final router = GoRouter.of(context);
+    _routerListener = () {
+      if (!mounted) return;
+      final location = router.routerDelegate.currentConfiguration.uri.toString();
+      // If the current top route is NOT the videos tab, pause everything
+      if (location != AppRoutes.videos) {
+        _preloadManager.pauseAll();
+      }
+    };
+    router.routerDelegate.addListener(_routerListener!);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Pause all video when app goes to background / becomes inactive
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      _preloadManager.pauseAll();
+    }
   }
 
   @override
   void dispose() {
+    // Remove GoRouter listener
+    if (_routerListener != null && mounted) {
+      try {
+        GoRouter.of(context).routerDelegate.removeListener(_routerListener!);
+      } catch (_) {}
+    }
+    WidgetsBinding.instance.removeObserver(this);
+    _preloadManager.pauseAll();
     _pageController.dispose();
     _preloadManager.disposeAll();
     super.dispose();
@@ -220,9 +260,12 @@ class _VideosScreenState extends State<VideosScreen> {
             scrollDirection: Axis.vertical,
             itemCount: totalCount,
             onPageChanged: (index) {
+              _lastLoadedPage = index;
               setState(() {
                 _currentPage = index;
               });
+              // Stop every other reel immediately when user swipes
+              _preloadManager.playOnly(index);
               _preloadManager.updateWindow(index, videoPosts);
               if (index >= videoPosts.length - 2) {
                 feedProvider.fetchMoreVideos();
@@ -240,12 +283,14 @@ class _VideosScreenState extends State<VideosScreen> {
                   ),
                 );
               }
+              final post = videoPosts[index];
               return _ReelVideoItem(
-                key: ValueKey(videoPosts[index].id),
+                key: ValueKey('reel_${post.id}_$index'),
                 index: index,
-                post: videoPosts[index],
+                post: post,
                 isCurrent: _currentPage == index,
                 isMuted: _isMuted,
+                isFollowing: feedProvider.isFollowing(post.creatorId),
                 onToggleMute: _toggleMute,
                 manager: _preloadManager,
               );
@@ -273,6 +318,7 @@ class _ReelVideoItem extends StatefulWidget {
   final FeedPostModel post;
   final bool isCurrent;
   final bool isMuted;
+  final bool isFollowing;
   final VoidCallback onToggleMute;
   final ReelsVideoControllerManager manager;
 
@@ -282,6 +328,7 @@ class _ReelVideoItem extends StatefulWidget {
     required this.post,
     required this.isCurrent,
     required this.isMuted,
+    required this.isFollowing,
     required this.onToggleMute,
     required this.manager,
   });
@@ -303,10 +350,22 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
       ApiEndpoints.optimizeVideoUrl(widget.post.mediaUrl);
 
   String? get effectiveThumbUrl {
+    // 1. Prioritize video starting frame (frame 0) from video URL
+    final startingFrame =
+        ApiEndpoints.getVideoStartingFrameUrl(widget.post.mediaUrl);
+    if (startingFrame != null && startingFrame.isNotEmpty) {
+      return startingFrame;
+    }
+
+    // 2. Fall back to custom thumbnail only if it is not the default clapperboard/stock placeholder
     final thumb = widget.post.thumbnailUrl;
     if (thumb != null && thumb.trim().isNotEmpty) {
-      return ApiEndpoints.formatMediaUrl(thumb);
+      final formatted = ApiEndpoints.formatMediaUrl(thumb).trim();
+      if (!ApiEndpoints.isDefaultClapperboardOrPlaceholder(formatted)) {
+        return formatted;
+      }
     }
+
     return null;
   }
 
@@ -430,30 +489,33 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
 
   void _onControllerUpdate() {
     if (!mounted || _controller == null) return;
-    final value = _controller!.value;
+    if (widget.manager.getController(widget.index) != _controller) return;
+    try {
+      final value = _controller!.value;
 
-    if (value.hasError && !_hasError) {
-      debugPrint('[REELS_ITEM] Controller error on index ${widget.index}: ${value.errorDescription}');
-      if (widget.isCurrent) {
-        setState(() {
-          _hasError = true;
-          _isLoading = false;
-        });
+      if (value.hasError && !_hasError) {
+        debugPrint('[REELS_ITEM] Controller error on index ${widget.index}: ${value.errorDescription}');
+        if (widget.isCurrent) {
+          setState(() {
+            _hasError = true;
+            _isLoading = false;
+          });
+        }
+        return;
       }
-      return;
-    }
 
-    final isPlaying = value.isPlaying;
-    final isBuffering = value.isBuffering;
+      final isPlaying = value.isPlaying;
+      final isBuffering = value.isBuffering;
 
-    if (value.isInitialized) {
-      if (_isPlaying != isPlaying || _isBuffering != isBuffering) {
-        setState(() {
-          _isPlaying = isPlaying;
-          _isBuffering = isBuffering;
-        });
+      if (value.isInitialized) {
+        if (_isPlaying != isPlaying || _isBuffering != isBuffering) {
+          setState(() {
+            _isPlaying = isPlaying;
+            _isBuffering = isBuffering;
+          });
+        }
       }
-    }
+    } catch (_) {}
   }
 
   Future<void> _handleRetry() async {
@@ -595,7 +657,10 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
 
   @override
   void dispose() {
-    _controller?.removeListener(_onControllerUpdate);
+    try {
+      _controller?.removeListener(_onControllerUpdate);
+    } catch (_) {}
+    _controller = null;
     super.dispose();
   }
 
@@ -612,7 +677,7 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
         ? 16.0
         : (navClearance + 12.0);
 
-    final isFollowing = context.watch<HomeFeedProvider>().isFollowing(widget.post.creatorId);
+    final isFollowing = widget.isFollowing;
     final myUserId = LocalStorage.instance.getUserId();
     final isOwner = widget.post.creatorId != null &&
         widget.post.creatorId!.isNotEmpty &&
@@ -940,20 +1005,15 @@ class _ReelVideoItemState extends State<_ReelVideoItem> {
             ),
           )
         else
-          Positioned.fill(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF1E1E24), Color(0xFF0F0F12)],
-                ),
-              ),
-            ),
+          const Positioned.fill(
+            child: ColoredBox(color: Colors.black),
           ),
 
         // 2. Video Player layer
-        if (_isInitialized && _controller != null)
+        if (_isInitialized &&
+            _controller != null &&
+            _controller!.value.isInitialized &&
+            widget.manager.getController(widget.index) == _controller)
           Center(
             child: SizedBox.expand(
               child: FittedBox(

@@ -28,7 +28,8 @@ class AuthProvider extends ChangeNotifier {
         if (userId != null && userId.isNotEmpty) {
           profile.loadPersistedFollowsForUser(userId);
         }
-        profile.fetchMyProfile();
+        profile.loadPersistedProfile();
+        profile.fetchMyProfile(silent: profile.currentProfile != null);
       }
       if (sl.isRegistered<HomeFeedProvider>()) {
         sl<HomeFeedProvider>().clear();

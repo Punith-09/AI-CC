@@ -152,34 +152,10 @@ class AuditionsProvider extends ChangeNotifier {
   void markAuditionApplied(String auditionId) {
     _auditions = _auditions.map((a) {
       if (a.id == auditionId) {
-        return AuditionModel(
-          id: a.id,
-          creatorId: a.creatorId,
-          title: a.title,
-          category: a.category,
-          role: a.role,
-          language: a.language,
-          pay: a.pay,
-          location: a.location,
-          deadline: a.deadline,
-          description: a.description,
-          director: a.director,
-          contactName: a.contactName,
-          createdAt: a.createdAt,
+        final newCount = a.applied ? a.applicantsCount : a.applicantsCount + 1;
+        return a.copyWith(
           applied: true,
-          createdByMe: a.createdByMe,
-          phone: a.phone,
-          email: a.email,
-          applicants: a.applicants,
-          auditionDate: a.auditionDate,
-          age: a.age,
-          gender: a.gender,
-          experience: a.experience,
-          skills: a.skills,
-          applicationStatus: a.applicationStatus,
-          viewCount: a.viewCount,
-          positionsAvailable: a.positionsAvailable,
-          producer: a.producer,
+          explicitApplicantsCount: newCount,
         );
       }
       return a;
@@ -187,34 +163,10 @@ class AuditionsProvider extends ChangeNotifier {
 
     if (_selectedAudition?.id == auditionId) {
       final a = _selectedAudition!;
-      _selectedAudition = AuditionModel(
-        id: a.id,
-        creatorId: a.creatorId,
-        title: a.title,
-        category: a.category,
-        role: a.role,
-        language: a.language,
-        pay: a.pay,
-        location: a.location,
-        deadline: a.deadline,
-        description: a.description,
-        director: a.director,
-        contactName: a.contactName,
-        createdAt: a.createdAt,
+      final newCount = a.applied ? a.applicantsCount : a.applicantsCount + 1;
+      _selectedAudition = a.copyWith(
         applied: true,
-        createdByMe: a.createdByMe,
-        phone: a.phone,
-        email: a.email,
-        applicants: a.applicants,
-        auditionDate: a.auditionDate,
-        age: a.age,
-        gender: a.gender,
-        experience: a.experience,
-        skills: a.skills,
-        applicationStatus: a.applicationStatus,
-        viewCount: a.viewCount,
-        positionsAvailable: a.positionsAvailable,
-        producer: a.producer,
+        explicitApplicantsCount: newCount,
       );
     }
 
@@ -224,34 +176,13 @@ class AuditionsProvider extends ChangeNotifier {
   void markAuditionUnapplied(String auditionId) {
     _auditions = _auditions.map((a) {
       if (a.id == auditionId) {
-        return AuditionModel(
-          id: a.id,
-          creatorId: a.creatorId,
-          title: a.title,
-          category: a.category,
-          role: a.role,
-          language: a.language,
-          pay: a.pay,
-          location: a.location,
-          deadline: a.deadline,
-          description: a.description,
-          director: a.director,
-          contactName: a.contactName,
-          createdAt: a.createdAt,
+        final newCount = (a.applied && a.applicantsCount > 0)
+            ? a.applicantsCount - 1
+            : a.applicantsCount;
+        return a.copyWith(
           applied: false,
-          createdByMe: a.createdByMe,
-          phone: a.phone,
-          email: a.email,
-          applicants: a.applicants,
-          auditionDate: a.auditionDate,
-          age: a.age,
-          gender: a.gender,
-          experience: a.experience,
-          skills: a.skills,
           applicationStatus: '',
-          viewCount: a.viewCount,
-          positionsAvailable: a.positionsAvailable,
-          producer: a.producer,
+          explicitApplicantsCount: newCount,
         );
       }
       return a;
@@ -259,34 +190,13 @@ class AuditionsProvider extends ChangeNotifier {
 
     if (_selectedAudition?.id == auditionId) {
       final a = _selectedAudition!;
-      _selectedAudition = AuditionModel(
-        id: a.id,
-        creatorId: a.creatorId,
-        title: a.title,
-        category: a.category,
-        role: a.role,
-        language: a.language,
-        pay: a.pay,
-        location: a.location,
-        deadline: a.deadline,
-        description: a.description,
-        director: a.director,
-        contactName: a.contactName,
-        createdAt: a.createdAt,
+      final newCount = (a.applied && a.applicantsCount > 0)
+          ? a.applicantsCount - 1
+          : a.applicantsCount;
+      _selectedAudition = a.copyWith(
         applied: false,
-        createdByMe: a.createdByMe,
-        phone: a.phone,
-        email: a.email,
-        applicants: a.applicants,
-        auditionDate: a.auditionDate,
-        age: a.age,
-        gender: a.gender,
-        experience: a.experience,
-        skills: a.skills,
         applicationStatus: '',
-        viewCount: a.viewCount,
-        positionsAvailable: a.positionsAvailable,
-        producer: a.producer,
+        explicitApplicantsCount: newCount,
       );
     }
 
@@ -296,45 +206,13 @@ class AuditionsProvider extends ChangeNotifier {
   /// Called after a recruiter shortlists or rejects an applicant — updates the
   /// applicant's own audition card badge on the Auditions list screen.
   void markAuditionApplicationStatus(String auditionId, String status) {
-    AuditionModel _copyWith(AuditionModel a, String newStatus) {
-      return AuditionModel(
-        id: a.id,
-        creatorId: a.creatorId,
-        title: a.title,
-        category: a.category,
-        role: a.role,
-        language: a.language,
-        pay: a.pay,
-        location: a.location,
-        deadline: a.deadline,
-        description: a.description,
-        director: a.director,
-        contactName: a.contactName,
-        createdAt: a.createdAt,
-        applied: a.applied,
-        createdByMe: a.createdByMe,
-        phone: a.phone,
-        email: a.email,
-        applicants: a.applicants,
-        auditionDate: a.auditionDate,
-        age: a.age,
-        gender: a.gender,
-        experience: a.experience,
-        skills: a.skills,
-        applicationStatus: newStatus,
-        viewCount: a.viewCount,
-        positionsAvailable: a.positionsAvailable,
-        producer: a.producer,
-      );
-    }
-
     _auditions = _auditions.map((a) {
-      if (a.id == auditionId) return _copyWith(a, status);
+      if (a.id == auditionId) return a.copyWith(applicationStatus: status);
       return a;
     }).toList();
 
     if (_selectedAudition?.id == auditionId) {
-      _selectedAudition = _copyWith(_selectedAudition!, status);
+      _selectedAudition = _selectedAudition!.copyWith(applicationStatus: status);
     }
 
     notifyListeners();

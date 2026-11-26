@@ -81,12 +81,20 @@ class _OtpScreenState extends State<OtpScreen> {
   }
 
   Future<void> _verify(String otp) async {
-    if (_busy || otp.length != 6) return;
+    if (_busy) return;
 
     if (!_agreedToTerms) {
       setState(() {
         _error = 'Please agree to the Terms & Privacy Policy to continue';
       });
+      return;
+    }
+
+    if (otp.length != 6) {
+      setState(() {
+        _error = 'Please enter the 6-digit OTP';
+      });
+      _pinFocusNode.requestFocus();
       return;
     }
 
@@ -340,14 +348,12 @@ class _OtpScreenState extends State<OtpScreen> {
                   errorPinTheme: errorPinTheme,
                   forceErrorState: _error != null,
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  onChanged: (_) {
+                    if (_error != null) setState(() => _error = null);
+                  },
                   onCompleted: (val) {
                     if (_agreedToTerms) {
                       _verify(val);
-                    } else {
-                      setState(() {
-                        _error =
-                            'Please agree to the Terms & Privacy Policy to continue';
-                      });
                     }
                   },
                 ),
@@ -392,76 +398,82 @@ class _OtpScreenState extends State<OtpScreen> {
                 const SizedBox(height: 24),
 
                 // ── Terms & Privacy checkbox ──────────────────────
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: Checkbox(
-                        value: _agreedToTerms,
-                        onChanged: (v) {
-                          setState(() {
-                            _agreedToTerms = v ?? false;
-                            if (_agreedToTerms &&
-                                _error ==
-                                    'Please agree to the Terms & Privacy Policy to continue') {
-                              _error = null;
-                            }
-                          });
-                        },
-                        activeColor: AppColors.primary,
-                        checkColor: Colors.black,
-                        side: const BorderSide(
-                            color: Colors.white38, width: 1.2),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _agreedToTerms = !_agreedToTerms;
-                            if (_agreedToTerms &&
-                                _error ==
-                                    'Please agree to the Terms & Privacy Policy to continue') {
-                              _error = null;
-                            }
-                          });
-                        },
-                        child: RichText(
-                          text: TextSpan(
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              color: Colors.white54,
-                              height: 1.5,
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      _agreedToTerms = !_agreedToTerms;
+                      if (_agreedToTerms &&
+                          _error ==
+                              'Please agree to the Terms & Privacy Policy to continue') {
+                        _error = null;
+                      }
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: Checkbox(
+                            value: _agreedToTerms,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                            onChanged: (v) {
+                              setState(() {
+                                _agreedToTerms = v ?? false;
+                                if (_agreedToTerms &&
+                                    _error ==
+                                        'Please agree to the Terms & Privacy Policy to continue') {
+                                  _error = null;
+                                }
+                              });
+                            },
+                            activeColor: AppColors.primary,
+                            checkColor: Colors.black,
+                            side: const BorderSide(
+                                color: Colors.white38, width: 1.2),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(3),
                             ),
-                            children: [
-                              const TextSpan(text: 'I agree to the '),
-                              TextSpan(
-                                text: 'Terms & Privacy Policy',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  color: AppColors.primary,
-                                  decoration: TextDecoration.underline,
-                                  decorationColor: AppColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                recognizer: _termsRecognizer,
-                              ),
-                              const TextSpan(
-                                text:
-                                    '. Producers, Directors & Casting teams can see my number for casting only.',
-                              ),
-                            ],
                           ),
                         ),
-                      ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: RichText(
+                            text: TextSpan(
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                color: Colors.white54,
+                                height: 1.5,
+                              ),
+                              children: [
+                                const TextSpan(text: 'I agree to the '),
+                                TextSpan(
+                                  text: 'Terms & Privacy Policy',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    color: AppColors.primary,
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: AppColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  recognizer: _termsRecognizer,
+                                ),
+                                const TextSpan(
+                                  text:
+                                      '. Producers, Directors & Casting teams can see my number for casting only.',
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
 
                 const SizedBox(height: 32),
@@ -471,17 +483,12 @@ class _OtpScreenState extends State<OtpScreen> {
                   width: double.infinity,
                   height: 50,
                   child: OutlinedButton(
-                    onPressed: (_agreedToTerms && !_busy)
-                        ? () => _verify(_pin.text)
-                        : null,
+                    onPressed: _busy ? null : () => _verify(_pin.text),
                     style: OutlinedButton.styleFrom(
                       backgroundColor: Colors.transparent,
                       foregroundColor: AppColors.primary,
-                      disabledForegroundColor: Colors.white38,
-                      side: BorderSide(
-                        color: (_agreedToTerms && !_busy)
-                            ? AppColors.primary
-                            : Colors.white24,
+                      side: const BorderSide(
+                        color: AppColors.primary,
                         width: 1.4,
                       ),
                       shape: RoundedRectangleBorder(
@@ -504,9 +511,7 @@ class _OtpScreenState extends State<OtpScreen> {
                             style: GoogleFonts.sora(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: (_agreedToTerms && !_busy)
-                                  ? AppColors.primary
-                                  : Colors.white38,
+                              color: AppColors.primary,
                             ),
                           ),
                   ),

@@ -87,11 +87,25 @@ class MediaDownloader {
     );
 
     try {
-      await MediaDownloader.download(
-        url: effectiveUrl,
-        fileName: fileName,
-        isVideo: post.isVideo,
-      );
+      try {
+        await MediaDownloader.download(
+          url: effectiveUrl,
+          fileName: fileName,
+          isVideo: post.isVideo,
+        );
+      } catch (firstError) {
+        // Fall back to original raw URL if Cloudinary transformation fails on large videos
+        final rawFallback = ApiEndpoints.formatMediaUrl(rawUrl);
+        if (rawFallback != effectiveUrl) {
+          await MediaDownloader.download(
+            url: rawFallback,
+            fileName: fileName,
+            isVideo: post.isVideo,
+          );
+        } else {
+          rethrow;
+        }
+      }
 
       messenger?.hideCurrentSnackBar();
       messenger?.showSnackBar(

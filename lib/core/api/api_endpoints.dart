@@ -4,8 +4,8 @@ class ApiEndpoints {
   static String get baseUrl {
     // return 'http://localhost:3000';
     // return 'http://10.0.2.2:3000';
-     //return 'http://54.79.238.124';
-    return 'https://casting-be-1.onrender.com';
+    return 'http://54.79.238.124';
+    // return 'https://casting-be-1.onrender.com';
     // return 'https://enrolled-plastic-sub-minerals.trycloudflare.com';
   }
 
@@ -86,12 +86,66 @@ class ApiEndpoints {
           !afterUpload.startsWith('c_')) {
         formatted = formatted.replaceFirst(
           '/video/upload/',
-          '/video/upload/q_auto,w_720,c_limit,f_mp4/',
+          '/video/upload/q_auto,w_720,c_limit/',
         );
       }
     }
 
     return formatted;
+  }
+
+  /// Checks whether a thumbnail URL is a default stock photo, clapperboard, or generic placeholder.
+  static bool isDefaultClapperboardOrPlaceholder(String? url) {
+    if (url == null || url.trim().isEmpty) return true;
+    final lower = url.trim().toLowerCase();
+    return lower.contains('unsplash.com') ||
+        lower.contains('1594909122845') || // Unsplash clapperboard photo ID
+        lower.contains('clapper') ||
+        lower.contains('placeholder') ||
+        lower.contains('default') ||
+        lower.contains('randomuser') ||
+        lower.contains('picsum.photos');
+  }
+
+  /// Extracts the starting frame (frame 0 / poster image) from a video URL.
+  /// For Cloudinary video URLs, dynamically returns a lightweight JPG of the video's first frame:
+  /// e.g. `/video/upload/so_0,w_720,c_limit,q_auto/.../video.jpg`
+  static String? getVideoStartingFrameUrl(String videoUrl) {
+    if (videoUrl.isEmpty) return null;
+    final formatted = formatMediaUrl(videoUrl).trim();
+    if (!formatted.contains('/video/upload/')) return null;
+
+    final uploadIndex = formatted.indexOf('/video/upload/');
+    final prefix = formatted.substring(0, uploadIndex + '/video/upload/'.length);
+    var rest = formatted.substring(uploadIndex + '/video/upload/'.length);
+
+    // Strip any existing transformation segment(s) before version/public ID
+    while (true) {
+      final slashIndex = rest.indexOf('/');
+      if (slashIndex == -1) break;
+      final segment = rest.substring(0, slashIndex);
+      final isTransform = segment.isNotEmpty &&
+          segment.split(',').every((part) => RegExp(r'^[a-z]{1,3}_').hasMatch(part.trim()));
+      if (isTransform) {
+        rest = rest.substring(slashIndex + 1);
+      } else {
+        break;
+      }
+    }
+
+    // Replace video extension with .jpg (preserving query strings if any)
+    final questionMarkIndex = rest.indexOf('?');
+    String path = questionMarkIndex != -1 ? rest.substring(0, questionMarkIndex) : rest;
+    final query = questionMarkIndex != -1 ? rest.substring(questionMarkIndex) : '';
+
+    final dotIndex = path.lastIndexOf('.');
+    if (dotIndex != -1) {
+      path = '${path.substring(0, dotIndex)}.jpg';
+    } else {
+      path = '$path.jpg';
+    }
+
+    return '$prefix' 'so_0,w_720,c_limit,q_auto/$path$query';
   }
 
   /// Optimizes video URLs for fast, high-quality downloading to the device gallery.
@@ -121,6 +175,7 @@ class ApiEndpoints {
 
     return formatted;
   }
+
 
   static const String chats = "/chats";
   static String startChat(String userId) => "/chats/start/$userId";

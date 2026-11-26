@@ -471,7 +471,7 @@ class AuditionCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Time ago · Views · Applications
+        // Time ago · Views · Applicants
         Row(
           children: [
             if (timeAgo.isNotEmpty) ...[
@@ -484,14 +484,16 @@ class AuditionCard extends StatelessWidget {
               Icon(Icons.remove_red_eye_outlined, size: 13, color: subtitleColor),
               const SizedBox(width: 4),
               Text(viewsCount.toString(), style: TextStyle(color: subtitleColor, fontSize: 12)),
-              const SizedBox(width: 14),
             ],
-            if (applicantsCount > 0) ...[
-              Text(
-                'Applications ($applicantsCount)',
-                style: TextStyle(color: subtitleColor, fontSize: 12),
+            const Spacer(),
+            Text(
+              'Applicants : $applicantsCount',
+              style: TextStyle(
+                color: subtitleColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
               ),
-            ],
+            ),
           ],
         ),
         const SizedBox(height: 8),

@@ -109,7 +109,13 @@ class VideoModel {
       state: json['state'] as String? ?? json['creatorState'] as String? ?? creatorMap?['state'] as String?,
       title: json['title'] as String? ?? '',
       desc: (json['desc'] ?? json['description']) as String?,
-      url: json['url'] as String? ?? '',
+      url: (json['url'] ??
+              json['videoUrl'] ??
+              json['mediaUrl'] ??
+              json['video'] ??
+              json['file'] ??
+              '')
+          .toString(),
       thumb: json['thumb'] as String?,
       likesCount: parsedLikesCount,
       viewsCount: parsedViewsCount,
